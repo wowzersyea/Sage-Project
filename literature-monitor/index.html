@@ -12,12 +12,16 @@
             --sage-50: #f6f7f6;
             --sage-100: #e3e7e3;
             --sage-200: #c7d0c7;
+            --sage-300: #9fb0a0;
+            --sage-400: #748c76;
             --sage-500: #567159;
             --sage-600: #435a46;
             --sage-700: #374839;
             --sage-800: #2d3b2f;
+            --sage-900: #1a231b;
             
             --warm-50: #fefdfb;
+            --warm-100: #fdf9f3;
             
             --accent-lavender: #9d8cb8;
             --accent-lavender-light: rgba(157, 140, 184, 0.15);
@@ -25,6 +29,10 @@
             --text-primary: #1a231b;
             --text-secondary: #567159;
             --text-muted: #748c76;
+            
+            --shadow-sm: 0 1px 2px rgba(26, 35, 27, 0.05);
+            --shadow-md: 0 4px 12px rgba(26, 35, 27, 0.08);
+            --shadow-lg: 0 12px 32px rgba(26, 35, 27, 0.12);
             
             --radius-sm: 8px;
             --radius-md: 12px;
@@ -127,116 +135,180 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: calc(100vh - 200px);
         }
 
-        .coming-soon {
+        .page-header {
             text-align: center;
-            padding: 4rem 2rem;
+            margin-bottom: 2rem;
         }
 
-        .coming-soon-icon {
-            width: 120px;
-            height: 120px;
-            background: var(--accent-lavender-light);
-            border-radius: 50%;
-            display: flex;
+        .tool-badge {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 2rem;
-        }
-
-        .coming-soon-icon svg {
-            width: 56px;
-            height: 56px;
+            gap: 8px;
+            background: var(--accent-lavender-light);
             color: var(--accent-lavender);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
         }
 
-        .coming-soon h1 {
+        .tool-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .page-header h1 {
             font-family: 'Source Serif 4', serif;
             font-size: 2.25rem;
             font-weight: 600;
             color: var(--sage-800);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
-        .coming-soon p {
+        .page-header p {
             color: var(--text-muted);
-            font-size: 1.1rem;
-            max-width: 500px;
-            margin: 0 auto 2rem;
+            font-size: 1.05rem;
         }
 
-        .feature-list {
+        .digest-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .digest-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .digest-meta svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .digest-content {
             background: white;
             border: 1px solid var(--sage-100);
             border-radius: var(--radius-lg);
-            padding: 2rem;
-            max-width: 500px;
-            margin: 0 auto;
-            text-align: left;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-sm);
         }
 
-        .feature-list h3 {
-            font-size: 1rem;
+        .digest-content h1 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--sage-800);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--sage-100);
+        }
+
+        .digest-content h2 {
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--sage-700);
-            margin-bottom: 1rem;
-        }
-
-        .feature-list ul {
-            list-style: none;
-        }
-
-        .feature-list li {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
-        }
-
-        .feature-list li:last-child {
-            margin-bottom: 0;
-        }
-
-        .feature-list li svg {
-            width: 20px;
-            height: 20px;
-            color: var(--accent-lavender);
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .countdown {
             margin-top: 2rem;
-            padding: 1rem 1.5rem;
-            background: var(--sage-50);
-            border-radius: var(--radius-md);
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--sage-100);
+        }
+
+        .digest-content h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
             color: var(--sage-600);
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .digest-content p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+
+        .digest-content ul, .digest-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .digest-content li {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .digest-content a {
+            color: var(--accent-lavender);
+            text-decoration: none;
+        }
+
+        .digest-content a:hover {
+            text-decoration: underline;
+        }
+
+        .digest-content strong {
+            color: var(--sage-700);
+        }
+
+        .digest-content blockquote {
+            border-left: 3px solid var(--accent-lavender);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .archive-link {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--sage-100);
+        }
+
+        .archive-link a {
+            color: var(--accent-lavender);
+            text-decoration: none;
             font-weight: 500;
         }
 
-        .countdown svg {
-            width: 20px;
-            height: 20px;
+        .archive-link a:hover {
+            text-decoration: underline;
         }
 
         footer {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 3rem auto 0;
             padding: 2rem;
             text-align: center;
             color: var(--text-muted);
             font-size: 0.9rem;
             border-top: 1px solid var(--sage-100);
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+
+            .digest-content {
+                padding: 1.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .digest-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -265,66 +337,72 @@
     </header>
 
     <main>
-        <div class="coming-soon">
-            <div class="coming-soon-icon">
+        <div class="page-header">
+            <div class="tool-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                    <line x1="8" y1="7" x2="16" y2="7"/>
-                    <line x1="8" y1="11" x2="14" y2="11"/>
                 </svg>
+                Literature Monitor
             </div>
-            <h1>Literature Monitor</h1>
-            <p>Your automated weekly digest is being set up. The first digest will appear here soon!</p>
+            <h1>Weekly Literature Digest</h1>
+            <p>Automated updates from pediatric ID journals and guidelines</p>
+            <div class="digest-meta">
+                <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    January 24 - January 31, 2026
+                </span>
+                <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Updated January 31, 2026
+                </span>
+            </div>
+        </div>
 
-            <div class="feature-list">
-                <h3>What you'll get every week:</h3>
-                <ul>
-                    <li>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>Updates from PIDJ, JPIDS, CID, Pediatrics, and more</span>
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>New guidelines from IDSA, AAP, PIDS, and CDC</span>
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>Outpatient stewardship highlights (priority focus)</span>
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>FDA safety communications and drug updates</span>
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>Practice-changing items flagged for action</span>
-                    </li>
-                </ul>
-            </div>
+        <div class="digest-content" id="digestContent">
+            <p>I'll search for recent literature and updates relevant to pediatric infectious diseases and antimicrobial stewardship for the week of January 24-31, 2026.Based on my searches, I'll now compile the literature digest for the week of January 24-31, 2026:</p>
+<h1>📚 Literature Digest: January 24 - January 31, 2026</h1>
+<h2>🚨 Practice-Changing / Action Required</h2>
+<p>IDSA issued a statement January 5, 2026 regarding changes to the U.S. childhood vaccine schedule, expressing concern that HHS is "drastically altering the U.S. childhood vaccine schedule without a transparent process or clear scientific justification." IDSA warns these actions "put families and communities at risk" and that "upending long-standing vaccine recommendations without transparent public review will undermine confidence in vaccines with the likely outcome of decreasing vaccination rates and increasing disease."</p>
+<h2>📋 Guideline Updates</h2>
+<p><strong>IDSA Complicated UTI Guidelines (January 2026):</strong> IDSA released its first clinical guidelines for treatment and management of complicated urinary tract infections (cUTIs), providing evidence-based recommendations for both inpatient and outpatient settings with a stepwise framework for empiric antibiotic selection. Key recommendations include prioritizing third- or fourth-generation cephalosporins, carbapenems, piperacillin-tazobactam, or fluoroquinolones for patients with sepsis. The guidelines clarify that nitrofurantoin should not be used for complicated UTIs due to poor tissue penetration, and oral fosfomycin is also not recommended.</p>
+<p><strong>FDA Vaccine Labeling Updates:</strong> FDA issued safety labeling notification letters on January 9, 2026 for multiple influenza vaccines including Fluzone, Flumist, Fluarix, Flulaval, Afluria, and Flucelvax.</p>
+<h2>💊 Stewardship Highlights</h2>
+<p><strong>State-of-the-Art Pediatric Stewardship Review:</strong> A January 2025 comprehensive review in MDPI Antibiotics highlighted that antimicrobial stewardship programs (ASPs) and diagnostic stewardship programs (DSPs) are essential strategies for managing infectious diseases and tackling antimicrobial resistance, with ASPs optimizing antimicrobial use and DSPs enhancing diagnostic accuracy.</p>
+<p>The review emphasized that implementation in pediatric settings requires considering additional factors such as parent anxiety and pressure to prescribe antibiotics, especially in outpatient care, with prescribers' decisions influenced by fear, diagnostic uncertainty, and communication challenges between doctors and parents.</p>
+<p>A recent Delphi consensus study found that outpatient clinics are responsible for more than 60% of prescribed antibiotics and use unnecessarily broad-spectrum agents in place of first-line antibiotics almost half the time, with currently no standard metrics for outpatient ASP.</p>
+<h2>🦠 Pediatric ID Updates</h2>
+<p><strong>PIDJ February 2026 Issue:</strong> Recent publications include studies on congenital cytomegalovirus infections, tuberculosis in children, and respiratory syncytial virus prevention strategies, though specific article details were not fully accessible in the search results.</p>
+<p><strong>Nirsevimab Effectiveness:</strong> An Emerging Infectious Diseases study from Italy (January 2026) demonstrated that nirsevimab, a long-acting monoclonal antibody with an extended half-life of ≈71 days, showed 75% efficacy in preventing RSV-associated acute lower respiratory tract infections, with 62% reduction in hospitalization (78.4% among preterm infants).</p>
+<h2>📰 General ID of Interest</h2>
+<p><strong>Measles Outbreak Update:</strong> A significant MMWR report published January 29, 2026 documented a Colorado measles outbreak from May-June 2025 associated with an infectious traveler, resulting in nine secondary cases and one tertiary case among Colorado residents, with six additional secondary cases reported by five other states. For 2025, a total of 2,267 confirmed measles cases were reported in the United States with 49 outbreaks, representing 89% of cases being outbreak-associated.</p>
+<p><strong>Clinical Infectious Diseases Guidance:</strong> CID published the "Infectious Diseases Society of America 2024 Guidance on the Treatment of Antimicrobial-Resistant Gram-Negative Infections" and IDSA's position statement on why IDSA did not endorse the Community-Acquired Pneumonia Guidelines 2025 Update.</p>
+<h2>💉 Vaccine &amp; Prevention Updates</h2>
+<p>CDC's seasonal influenza recommendations for 2025-2026 include oseltamivir treatment for all ages (FDA approval for ≥14 days) and for hospitalized patients (FDA approval for outpatients), with annual vaccination recommended for people ≥6 months.</p>
+<p>An IDSA Science Speaks blog (January 2026) advised clinicians to expect more patient inquiries about Lyme vaccine developments and to anchor counseling in IDSA resources while awaiting Phase 3 efficacy data for VLA15, with risk-stratified vaccination for tick-borne encephalitis in pre-travel consultations.</p>
+<h2>⚠️ Safety Communications</h2>
+<p><strong>FDA Antimicrobial Resistance Monitoring:</strong> FDA released a request for comments on January 8, 2025 soliciting public input on new opportunities for the National Antimicrobial Resistance Monitoring System (NARMS) 2026-2030 Strategic Plan, with a 75-day comment period from January 10 to March 26, 2025.</p>
+<p><strong>Antibiotic Recall:</strong> Amneal Pharmaceutical LLC issued a nationwide recall of sulfamethoxazole/trimethoprim tablets, USP, 400 mg/80 mg only, due to microbial contamination in June 2025.</p>
+<p><strong>New Antibiotic Approvals:</strong> The first-in-class oral antibiotic Nuzolvence (zoliflodacin) was approved for gonorrhea in December 2025, though pediatric safety and effectiveness have not been determined.</p>
+<hr>
+<p><strong>Note:</strong> This digest reflects the most current available information from literature searches conducted January 31, 2026. Some articles from the target week may not yet be indexed or accessible. Continue monitoring key journals and guidelines for emerging updates.</p>
+        </div>
 
-            <div class="countdown">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                First digest coming Sunday
-            </div>
+        <div class="archive-link">
+            <a href="archive.html">View Past Digests →</a>
         </div>
     </main>
 
     <footer>
-        <p>Sage Project · Literature Monitor · Automated weekly updates</p>
+        <p>Sage Project · Literature Monitor · Automatically generated weekly</p>
     </footer>
 </body>
 </html>
