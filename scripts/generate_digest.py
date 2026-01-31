@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 """
-Weekly Literature Digest Generator
-===================================
+Weekly Literature Digest Generator v2.0
+=======================================
 Automated agent that searches medical literature and generates
 a weekly digest for pediatric ID and antimicrobial stewardship.
 
-This script is run by GitHub Actions every Sunday.
+Improvements in v2.0:
+- Scientific rigor appropriate for ID physicians/scientists
+- Critical analysis of study design and limitations
+- Required links/DOIs for all articles
+- Memory system to avoid repeating articles
+- Strict 7-day date filtering
+- Cost controls and error handling
 """
 
 import anthropic
 import json
 import os
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Initialize the Anthropic client
 client = anthropic.Anthropic()
@@ -22,122 +29,210 @@ week_start = today - timedelta(days=7)
 date_range = f"{week_start.strftime('%B %d')} - {today.strftime('%B %d, %Y')}"
 file_date = today.strftime('%Y-%m-%d')
 
-SYSTEM_PROMPT = """You are a literature monitoring assistant for a pediatric infectious disease physician and antimicrobial stewardship director. Your job is to search for and summarize the latest publications, guidelines, and news relevant to their practice.
+# Memory file path
+MEMORY_FILE = "literature-monitor/digests/reviewed_articles.json"
 
-## Your Focus Areas:
-- Pediatric infectious diseases
-- Antimicrobial stewardship (especially OUTPATIENT stewardship - this is a current initiative)
-- Infection prevention
-- Antibiotic resistance patterns
-- Vaccine updates
 
-## Journals to Monitor (search for recent content from these):
+def load_memory():
+    """Load previously reviewed articles from memory file."""
+    if Path(MEMORY_FILE).exists():
+        with open(MEMORY_FILE, 'r') as f:
+            return json.load(f)
+    return {"reviewed_dois": [], "reviewed_titles": []}
 
-### Tier 1 - Core Pediatric ID:
+
+def save_memory(memory):
+    """Save reviewed articles to memory file."""
+    # Keep only last 6 months of memory to prevent file from growing too large
+    max_entries = 500
+    memory["reviewed_dois"] = memory["reviewed_dois"][-max_entries:]
+    memory["reviewed_titles"] = memory["reviewed_titles"][-max_entries:]
+    
+    with open(MEMORY_FILE, 'w') as f:
+        json.dump(memory, f, indent=2)
+
+
+def extract_articles_from_response(response_text):
+    """Extract article titles and DOIs from the response for memory."""
+    # This is a simple extraction - the AI will format articles consistently
+    articles = []
+    lines = response_text.split('\n')
+    for line in lines:
+        # Look for DOI patterns
+        if 'doi.org' in line.lower() or 'DOI:' in line:
+            articles.append(line.strip())
+        # Look for article title patterns (usually bold or in headers)
+        if line.startswith('**') and '**' in line[2:]:
+            title = line.split('**')[1] if len(line.split('**')) > 1 else ""
+            if title and len(title) > 20:  # Likely an article title
+                articles.append(title)
+    return articles
+
+
+SYSTEM_PROMPT = """You are a literature monitoring assistant for PEDIATRIC INFECTIOUS DISEASE PHYSICIANS AND SCIENTISTS. Your audience is highly trained specialists who expect rigorous, critical analysis.
+
+## CRITICAL REQUIREMENTS:
+
+### 1. SCIENTIFIC RIGOR
+For EVERY article you mention, you MUST include:
+- Study design (RCT, retrospective cohort, case series, meta-analysis, etc.)
+- Sample size (n=X)
+- Key findings with actual numbers/statistics when available
+- Critical limitations (selection bias, small sample, single-center, etc.)
+- Clinical applicability assessment
+
+### 2. REQUIRED LINKS
+EVERY article MUST have a link. Format:
+- Include DOI link: https://doi.org/10.xxxx/xxxxx
+- Or direct PubMed link: https://pubmed.ncbi.nlm.nih.gov/XXXXXXXX/
+- Or journal direct link
+- If you cannot find a link, DO NOT include the article
+
+### 3. DATE RESTRICTION — EXTREMELY IMPORTANT
+- ONLY include articles published or posted in the LAST 7 DAYS
+- Today's date is {today_date}
+- Only include articles from {start_date} to {today_date}
+- DO NOT include anything from 2025 or earlier unless it was published in the last 7 days
+- If you're unsure of the publication date, DO NOT include it
+
+### 4. PREVIOUSLY REVIEWED — DO NOT REPEAT
+The following articles have been reviewed in previous digests. DO NOT include them:
+{previously_reviewed}
+
+### 5. HONEST LIMITATIONS
+- If you cannot find recent articles in a category, say "No significant publications identified this week"
+- Do not fabricate or hallucinate articles
+- Do not include articles you're uncertain about
+
+## JOURNALS TO SEARCH (prioritize these):
 - Pediatric Infectious Disease Journal (PIDJ)
 - Journal of the Pediatric Infectious Diseases Society (JPIDS)
-- Pediatrics (ID-related articles)
-- JAMA Pediatrics (ID-related articles)
-
-### Tier 2 - Stewardship & General ID:
 - Clinical Infectious Diseases (CID)
-- Antimicrobial Agents and Chemotherapy (AAC)
-- Infection Control & Hospital Epidemiology (ICHE)
-- Open Forum Infectious Diseases (OFID)
+- Pediatrics (ID-relevant)
+- JAMA Pediatrics (ID-relevant)
+- Antimicrobial Agents and Chemotherapy
+- NEJM, JAMA, Lancet ID (major findings only)
 
-### Tier 3 - High-Impact (filter for ID content):
-- New England Journal of Medicine
-- JAMA
-- Lancet Infectious Diseases
+## GUIDELINE SOURCES:
+- IDSA, PIDS, AAP Red Book, CDC/MMWR
 
-## Guideline Sources to Check:
-- IDSA (Infectious Diseases Society of America)
-- PIDS (Pediatric Infectious Diseases Society)
-- AAP (American Academy of Pediatrics) / Red Book
-- CDC / MMWR
-- FDA safety communications
+## OUTPUT FORMAT:
 
-## Output Format:
-Structure your digest with these sections:
-
-# 📚 Literature Digest: [DATE RANGE]
+# 📚 Literature Digest: {date_range}
 
 ## 🚨 Practice-Changing / Action Required
-Items that may require immediate attention or protocol review. If none, state "No practice-changing items identified this week."
+[Only include if truly practice-changing. Most weeks this will be empty.]
 
 ## 📋 Guideline Updates
-New or revised guidelines from IDSA, PIDS, AAP, CDC. Include publication date and key changes.
+[New guidelines with links. Include key recommendation changes.]
 
-## 💊 Stewardship Highlights
-Focus on outpatient stewardship content, plus relevant inpatient stewardship. This is a priority area.
+## 💊 Stewardship Highlights  
+[Focus on outpatient stewardship. Include study design and critical analysis.]
 
-## 🦠 Pediatric ID Updates
-Key articles from PIDJ, JPIDS, Pediatrics, JAMA Pediatrics relevant to pediatric infectious diseases.
+## 🦠 Pediatric ID Studies
+For each article:
+**[Article Title]**
+*[Journal], [Publication Date]* | [DOI/Link]
+- **Design:** [Study type, n=X, setting]
+- **Key Findings:** [Actual results with numbers]
+- **Limitations:** [Critical assessment]
+- **Clinical Implications:** [1-2 sentences on relevance]
 
-## 📰 General ID of Interest
-Notable content from CID, NEJM, JAMA, Lancet ID that's relevant to pediatric practice.
+## 📰 Notable General ID
+[High-impact articles from major journals relevant to pediatrics]
 
-## 💉 Vaccine & Prevention Updates
-Any vaccine recommendations, schedules, or immunization-related news.
+## ⚠️ Safety & Drug Updates
+[FDA communications, drug shortages - only if relevant to peds ID]
 
-## ⚠️ Safety Communications
-FDA alerts, drug shortages, recalls relevant to pediatric ID.
-
-## Guidelines:
-- Be CONCISE - 2-3 sentences per article maximum
-- Focus on CLINICAL RELEVANCE and actionable findings
-- Include pediatric dosing details when mentioned
-- Note when something is particularly relevant to outpatient stewardship
-- If you cannot find recent content for a section, note "No significant updates identified"
-- Do not make up or hallucinate articles - only report what you actually find
+---
+*Digest generated {today_date}. Articles limited to publications from {start_date} to {today_date}.*
 """
 
-USER_PROMPT = f"""Please generate the weekly literature digest for {date_range}.
 
-Search for:
-1. Recent publications from the tracked journals (past 7-14 days)
-2. Any new guidelines or guideline updates
-3. CDC/MMWR publications relevant to pediatric ID
-4. FDA safety communications for antibiotics/antivirals
-5. Notable news in pediatric infectious diseases
+USER_PROMPT = """Generate the weekly literature digest for {date_range}.
 
-Focus particularly on:
-- Outpatient antimicrobial stewardship (HIGH PRIORITY)
-- Pediatric-specific content
-- Treatment recommendations
-- Resistance patterns
+IMPORTANT REMINDERS:
+1. ONLY articles from the last 7 days ({start_date} to {today_date})
+2. Every article MUST have a working link (DOI or direct URL)
+3. Provide critical analysis appropriate for ID physician specialists
+4. If a category has no recent publications, state that clearly
+5. Do NOT include previously reviewed articles listed in the system prompt
+6. Limit your web searches to be efficient - focus on the most important sources
 
-Be thorough but concise. Only include items you actually find through searching - do not fabricate any articles or citations."""
+Search strategy:
+1. Search for "[Journal name] January 2026" or "[Journal name] latest issue 2026" for each key journal
+2. Search "IDSA guidelines 2026" and "CDC MMWR January 2026" for guidelines
+3. Search "pediatric antimicrobial stewardship 2026" for stewardship content
+4. Be selective - quality over quantity
+
+Provide a thorough but focused digest with full critical analysis."""
 
 
 def generate_digest():
     """Generate the weekly literature digest using Claude with web search."""
     
     print(f"Generating literature digest for {date_range}...")
+    print(f"Date range: {week_start.strftime('%Y-%m-%d')} to {today.strftime('%Y-%m-%d')}")
     
-    # Call Claude with web search enabled
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=8000,
-        tools=[{
-            "type": "web_search_20250305",
-            "name": "web_search"
-        }],
-        system=SYSTEM_PROMPT,
-        messages=[{
-            "role": "user",
-            "content": USER_PROMPT
-        }]
+    # Load memory of previously reviewed articles
+    memory = load_memory()
+    previously_reviewed = "\n".join(memory.get("reviewed_titles", [])[-50:])  # Last 50 titles
+    if not previously_reviewed:
+        previously_reviewed = "None - this is the first digest."
+    
+    # Format the prompts with dates
+    system = SYSTEM_PROMPT.format(
+        today_date=today.strftime('%B %d, %Y'),
+        start_date=week_start.strftime('%B %d, %Y'),
+        date_range=date_range,
+        previously_reviewed=previously_reviewed
     )
     
-    # Extract the text content from the response
-    digest_content = ""
-    for block in response.content:
-        if block.type == "text":
-            digest_content += block.text
+    user = USER_PROMPT.format(
+        date_range=date_range,
+        start_date=week_start.strftime('%B %d, %Y'),
+        today_date=today.strftime('%B %d, %Y')
+    )
     
-    print("Digest generated successfully!")
-    return digest_content
+    try:
+        # Call Claude with web search enabled
+        # Using lower max_tokens and being explicit about efficiency
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=6000,  # Reduced from 8000
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search"
+            }],
+            system=system,
+            messages=[{
+                "role": "user",
+                "content": user
+            }]
+        )
+        
+        # Extract the text content from the response
+        digest_content = ""
+        for block in response.content:
+            if block.type == "text":
+                digest_content += block.text
+        
+        print("Digest generated successfully!")
+        
+        # Update memory with newly reviewed articles
+        new_articles = extract_articles_from_response(digest_content)
+        memory["reviewed_titles"].extend(new_articles)
+        memory["last_run"] = today.isoformat()
+        save_memory(memory)
+        
+        return digest_content
+        
+    except anthropic.APIError as e:
+        print(f"API Error: {e}")
+        raise
+    except Exception as e:
+        print(f"Error generating digest: {e}")
+        raise
 
 
 def save_digest(content):
@@ -164,8 +259,94 @@ def save_digest(content):
         json.dump(digest_data, f, indent=2)
     print("Updated latest.json")
     
+    # Update the archive manifest
+    update_archive_manifest(digest_data)
+    
     # Generate the HTML page
     generate_html_page(digest_data)
+
+
+def update_archive_manifest(new_digest):
+    """Update the archive manifest with the new digest."""
+    manifest_path = "literature-monitor/digests/manifest.json"
+    
+    if Path(manifest_path).exists():
+        with open(manifest_path, 'r') as f:
+            manifest = json.load(f)
+    else:
+        manifest = {"digests": []}
+    
+    # Add new digest to the beginning
+    manifest["digests"].insert(0, {
+        "date": new_digest["date"],
+        "date_range": new_digest["date_range"],
+        "generated": datetime.now().strftime('%B %d, %Y')
+    })
+    
+    # Keep only last 52 weeks
+    manifest["digests"] = manifest["digests"][:52]
+    
+    with open(manifest_path, 'w') as f:
+        json.dump(manifest, f, indent=2)
+    print("Updated archive manifest")
+
+
+def markdown_to_html(text):
+    """Convert markdown to HTML for display."""
+    import re
+    
+    html = text
+    
+    # Escape HTML entities (but preserve our markdown)
+    html = html.replace('&', '&amp;')
+    html = html.replace('<', '&lt;')
+    html = html.replace('>', '&gt;')
+    
+    # Headers
+    html = re.sub(r'^#### (.*$)', r'<h4>\1</h4>', html, flags=re.MULTILINE)
+    html = re.sub(r'^### (.*$)', r'<h3>\1</h3>', html, flags=re.MULTILINE)
+    html = re.sub(r'^## (.*$)', r'<h2>\1</h2>', html, flags=re.MULTILINE)
+    html = re.sub(r'^# (.*$)', r'<h1>\1</h1>', html, flags=re.MULTILINE)
+    
+    # Bold and italic
+    html = re.sub(r'\*\*\*(.*?)\*\*\*', r'<strong><em>\1</em></strong>', html)
+    html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html)
+    html = re.sub(r'\*(.*?)\*', r'<em>\1</em>', html)
+    
+    # Links - convert markdown links to HTML
+    html = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank" rel="noopener">\1</a>', html)
+    
+    # Also convert bare URLs to links
+    html = re.sub(r'(?<!href=")(https?://[^\s<>\)]+)', r'<a href="\1" target="_blank" rel="noopener">\1</a>', html)
+    
+    # Blockquotes
+    html = re.sub(r'^&gt; (.*$)', r'<blockquote>\1</blockquote>', html, flags=re.MULTILINE)
+    
+    # Unordered lists
+    html = re.sub(r'^\- (.*$)', r'<li>\1</li>', html, flags=re.MULTILINE)
+    html = re.sub(r'^\* (.*$)', r'<li>\1</li>', html, flags=re.MULTILINE)
+    
+    # Wrap consecutive li elements in ul
+    html = re.sub(r'(<li>.*?</li>\n?)+', lambda m: '<ul>' + m.group(0) + '</ul>', html)
+    
+    # Horizontal rules
+    html = re.sub(r'^---$', r'<hr>', html, flags=re.MULTILINE)
+    
+    # Paragraphs - wrap text blocks
+    paragraphs = html.split('\n\n')
+    processed = []
+    for p in paragraphs:
+        p = p.strip()
+        if p and not p.startswith('<h') and not p.startswith('<ul') and not p.startswith('<ol') and not p.startswith('<blockquote') and not p.startswith('<hr'):
+            p = f'<p>{p}</p>'
+        processed.append(p)
+    
+    html = '\n'.join(processed)
+    
+    # Clean up newlines within paragraphs
+    html = re.sub(r'<p>(.*?)</p>', lambda m: '<p>' + m.group(1).replace('\n', '<br>') + '</p>', html, flags=re.DOTALL)
+    
+    return html
 
 
 def generate_html_page(digest_data):
@@ -222,7 +403,7 @@ def generate_html_page(digest_data):
             font-family: 'Outfit', sans-serif;
             background: var(--warm-50);
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1.7;
             min-height: 100vh;
         }}
 
@@ -388,7 +569,7 @@ def generate_html_page(digest_data):
             font-size: 1.2rem;
             font-weight: 600;
             color: var(--sage-700);
-            margin-top: 2rem;
+            margin-top: 2.5rem;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid var(--sage-100);
@@ -396,6 +577,14 @@ def generate_html_page(digest_data):
 
         .digest-content h3 {{
             font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--sage-600);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }}
+        
+        .digest-content h4 {{
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--sage-600);
             margin-top: 1.25rem;
@@ -413,13 +602,14 @@ def generate_html_page(digest_data):
         }}
 
         .digest-content li {{
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             line-height: 1.6;
         }}
 
         .digest-content a {{
             color: var(--accent-lavender);
             text-decoration: none;
+            word-break: break-word;
         }}
 
         .digest-content a:hover {{
@@ -429,6 +619,10 @@ def generate_html_page(digest_data):
         .digest-content strong {{
             color: var(--sage-700);
         }}
+        
+        .digest-content em {{
+            color: var(--text-secondary);
+        }}
 
         .digest-content blockquote {{
             border-left: 3px solid var(--accent-lavender);
@@ -436,6 +630,12 @@ def generate_html_page(digest_data):
             margin: 1rem 0;
             color: var(--text-secondary);
             font-style: italic;
+        }}
+        
+        .digest-content hr {{
+            border: none;
+            border-top: 1px solid var(--sage-100);
+            margin: 2rem 0;
         }}
 
         .archive-link {{
@@ -519,7 +719,7 @@ def generate_html_page(digest_data):
                 Literature Monitor
             </div>
             <h1>Weekly Literature Digest</h1>
-            <p>Automated updates from pediatric ID journals and guidelines</p>
+            <p>Critical analysis for pediatric ID specialists</p>
             <div class="digest-meta">
                 <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -535,7 +735,7 @@ def generate_html_page(digest_data):
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Updated {datetime.now().strftime('%B %d, %Y')}
+                    Updated {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
                 </span>
             </div>
         </div>
@@ -550,7 +750,7 @@ def generate_html_page(digest_data):
     </main>
 
     <footer>
-        <p>Sage Project · Literature Monitor · Automatically generated weekly</p>
+        <p>Sage Project · Literature Monitor · Automated weekly with critical analysis for ID specialists</p>
     </footer>
 </body>
 </html>'''
@@ -559,60 +759,6 @@ def generate_html_page(digest_data):
     with open("literature-monitor/index.html", "w") as f:
         f.write(html_content)
     print("Updated literature-monitor/index.html")
-
-
-def markdown_to_html(text):
-    """Convert markdown to HTML for display."""
-    import re
-    
-    html = text
-    
-    # Escape HTML entities (but preserve our markdown)
-    html = html.replace('&', '&amp;')
-    html = html.replace('<', '&lt;')
-    html = html.replace('>', '&gt;')
-    
-    # Headers
-    html = re.sub(r'^### (.*$)', r'<h3>\1</h3>', html, flags=re.MULTILINE)
-    html = re.sub(r'^## (.*$)', r'<h2>\1</h2>', html, flags=re.MULTILINE)
-    html = re.sub(r'^# (.*$)', r'<h1>\1</h1>', html, flags=re.MULTILINE)
-    
-    # Bold and italic
-    html = re.sub(r'\*\*\*(.*?)\*\*\*', r'<strong><em>\1</em></strong>', html)
-    html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html)
-    html = re.sub(r'\*(.*?)\*', r'<em>\1</em>', html)
-    
-    # Links
-    html = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank">\1</a>', html)
-    
-    # Blockquotes
-    html = re.sub(r'^&gt; (.*$)', r'<blockquote>\1</blockquote>', html, flags=re.MULTILINE)
-    
-    # Unordered lists
-    html = re.sub(r'^\- (.*$)', r'<li>\1</li>', html, flags=re.MULTILINE)
-    html = re.sub(r'^\* (.*$)', r'<li>\1</li>', html, flags=re.MULTILINE)
-    
-    # Wrap consecutive li elements in ul
-    html = re.sub(r'(<li>.*?</li>\n?)+', lambda m: '<ul>' + m.group(0) + '</ul>', html)
-    
-    # Horizontal rules
-    html = re.sub(r'^---$', r'<hr>', html, flags=re.MULTILINE)
-    
-    # Paragraphs - wrap text blocks
-    paragraphs = html.split('\n\n')
-    processed = []
-    for p in paragraphs:
-        p = p.strip()
-        if p and not p.startswith('<h') and not p.startswith('<ul') and not p.startswith('<ol') and not p.startswith('<blockquote') and not p.startswith('<hr'):
-            p = f'<p>{p}</p>'
-        processed.append(p)
-    
-    html = '\n'.join(processed)
-    
-    # Clean up newlines within paragraphs
-    html = re.sub(r'<p>(.*?)</p>', lambda m: '<p>' + m.group(1).replace('\n', '<br>') + '</p>', html, flags=re.DOTALL)
-    
-    return html
 
 
 if __name__ == "__main__":
