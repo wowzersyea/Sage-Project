@@ -1,0 +1,35 @@
+name: Weekly Literature Digest
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+
+jobs:
+  generate-digest:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install anthropic
+
+      - name: Generate Literature Digest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/generate_digest.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📚 Weekly literature digest - $(date +'%Y-%m-%d')" && git push)
