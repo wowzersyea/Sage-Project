@@ -166,7 +166,7 @@ function parseDataFile(content, filename) {
 function parseCSV(content) {
     const lines = content.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
-    const data = [];
+    let data = [];
 
     for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',');
