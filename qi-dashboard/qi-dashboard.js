@@ -1385,3 +1385,309 @@ function updateLastUpdate() {
         el.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
     }
 }
+
+// ============================================
+// DEBUG & VALIDATION MODULE
+// ============================================
+
+const QIDebug = {
+    // Run all validation checks
+    runAll: function() {
+        console.log('%c=== QI Dashboard Debug Report ===', 'color: #567159; font-size: 16px; font-weight: bold;');
+        console.log('Timestamp:', new Date().toISOString());
+        console.log('');
+
+        const results = {
+            buttons: this.validateButtons(),
+            functions: this.validateFunctions(),
+            elements: this.validateElements(),
+            data: this.validateData(),
+            state: this.validateState()
+        };
+
+        // Summary
+        console.log('%c=== Summary ===', 'color: #567159; font-weight: bold;');
+        let totalIssues = 0;
+        for (const [category, result] of Object.entries(results)) {
+            const icon = result.issues.length === 0 ? '✅' : '❌';
+            console.log(`${icon} ${category}: ${result.issues.length} issues`);
+            totalIssues += result.issues.length;
+        }
+
+        if (totalIssues === 0) {
+            console.log('%c✅ All checks passed!', 'color: green; font-weight: bold;');
+        } else {
+            console.log(`%c❌ ${totalIssues} total issues found`, 'color: red; font-weight: bold;');
+        }
+
+        return results;
+    },
+
+    // Validate all buttons have proper handlers
+    validateButtons: function() {
+        console.log('%c--- Button Validation ---', 'color: #81b0c4; font-weight: bold;');
+        const issues = [];
+        const buttons = document.querySelectorAll('button');
+
+        buttons.forEach((btn, index) => {
+            const onclick = btn.getAttribute('onclick');
+            const type = btn.getAttribute('type');
+            const text = btn.textContent.trim().substring(0, 30);
+
+            // Check for type="button"
+            if (type !== 'button') {
+                issues.push({
+                    element: btn,
+                    issue: `Missing type="button"`,
+                    text: text
+                });
+                console.warn(`⚠️ Button "${text}" missing type="button"`);
+            }
+
+            // Check onclick handler exists
+            if (onclick) {
+                const funcMatch = onclick.match(/^(\w+)\(/);
+                if (funcMatch) {
+                    const funcName = funcMatch[1];
+                    if (typeof window[funcName] !== 'function') {
+                        issues.push({
+                            element: btn,
+                            issue: `Handler "${funcName}" not found`,
+                            text: text
+                        });
+                        console.error(`❌ Button "${text}" calls undefined function: ${funcName}`);
+                    } else {
+                        console.log(`✅ Button "${text}" → ${funcName}()`);
+                    }
+                }
+            } else if (!btn.closest('form')) {
+                // Button without onclick and not in a form
+                const hasEventListener = btn.onclick !== null;
+                if (!hasEventListener) {
+                    console.log(`ℹ️ Button "${text}" has no onclick attribute (may use addEventListener)`);
+                }
+            }
+        });
+
+        console.log(`Checked ${buttons.length} buttons, ${issues.length} issues found`);
+        return { total: buttons.length, issues };
+    },
+
+    // Validate all required functions exist
+    validateFunctions: function() {
+        console.log('%c--- Function Validation ---', 'color: #81b0c4; font-weight: bold;');
+        const issues = [];
+
+        const requiredFunctions = [
+            // Tab & Navigation
+            'switchTab',
+            // Project Management
+            'openNewProjectModal', 'closeNewProjectModal', 'createNewProject',
+            'loadProject', 'saveCurrentProject', 'deleteCurrentProject',
+            // Data
+            'refreshData', 'handleFileUpload', 'parseDataFile',
+            // Chart
+            'renderChart', 'updateGoalLine', 'clearGoalLine',
+            'onMedianToggle', 'onAggregationChange', 'updateAxisTitles',
+            // Interventions
+            'openInterventionModal', 'closeInterventionModal',
+            'addIntervention', 'removeIntervention', 'updateInterventionList',
+            // Export
+            'exportChart', 'exportData', 'resetDashboard',
+            // Display Tab
+            'renderDisplayTab', 'updateDisplayGrid', 'refreshAllDisplayCharts',
+            'toggleDisplayRefresh', 'createProjectCard', 'renderMiniChart',
+            // Utilities
+            'updateStatus', 'updateLastUpdate', 'generateUUID',
+            'calculateMedian', 'detectShift', 'calculateDynamicMedian',
+            'aggregateData'
+        ];
+
+        requiredFunctions.forEach(funcName => {
+            if (typeof window[funcName] === 'function') {
+                console.log(`✅ ${funcName}()`);
+            } else {
+                issues.push({ function: funcName, issue: 'Not defined' });
+                console.error(`❌ ${funcName}() - NOT FOUND`);
+            }
+        });
+
+        console.log(`Checked ${requiredFunctions.length} functions, ${issues.length} missing`);
+        return { total: requiredFunctions.length, issues };
+    },
+
+    // Validate required DOM elements exist
+    validateElements: function() {
+        console.log('%c--- Element Validation ---', 'color: #81b0c4; font-weight: bold;');
+        const issues = [];
+
+        const requiredElements = [
+            // Tabs
+            'creatorTab', 'displayTab',
+            // Project controls
+            'projectSelect', 'projectName', 'projectDescription',
+            // Chart controls
+            'showMedian', 'aggregationSelect', 'goalValue',
+            'xAxisTitle', 'yAxisTitle',
+            // Chart
+            'runChart', 'chartTitle', 'shiftInfo',
+            // Data
+            'fileInput', 'variableCheckboxes', 'calculatedMetricsInfo',
+            // Interventions
+            'interventionList', 'interventionDate', 'interventionLabel',
+            // Status
+            'dataStatus', 'dataStatusText', 'lastUpdate',
+            // Display tab
+            'chartGrid', 'columnsSelect', 'noProjectsMessage',
+            // Modals
+            'newProjectModal', 'interventionModal',
+            'newProjectName', 'newProjectDescription'
+        ];
+
+        requiredElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                console.log(`✅ #${id}`);
+            } else {
+                issues.push({ id, issue: 'Element not found' });
+                console.error(`❌ #${id} - NOT FOUND`);
+            }
+        });
+
+        console.log(`Checked ${requiredElements.length} elements, ${issues.length} missing`);
+        return { total: requiredElements.length, issues };
+    },
+
+    // Validate data state
+    validateData: function() {
+        console.log('%c--- Data Validation ---', 'color: #81b0c4; font-weight: bold;');
+        const issues = [];
+
+        console.log(`Projects loaded: ${projects.length}`);
+        console.log(`Current project ID: ${currentProjectId || 'none'}`);
+        console.log(`Current data rows: ${currentData ? currentData.length : 0}`);
+        console.log(`Selected variables: ${selectedVariables.join(', ') || 'none'}`);
+        console.log(`Interventions: ${interventions.length}`);
+        console.log(`Show median: ${showMedian}`);
+        console.log(`Aggregation: ${aggregation}`);
+        console.log(`Goal value: ${goalValue || 'not set'}`);
+
+        // Check for data issues
+        if (currentData && currentData.length > 0) {
+            const cols = Object.keys(currentData[0]);
+            console.log(`Data columns: ${cols.join(', ')}`);
+
+            // Check if selected variables exist in data
+            selectedVariables.forEach(v => {
+                if (!cols.includes(v)) {
+                    issues.push({ variable: v, issue: 'Selected variable not in data' });
+                    console.warn(`⚠️ Selected variable "${v}" not found in data columns`);
+                }
+            });
+        }
+
+        return { issues };
+    },
+
+    // Validate application state
+    validateState: function() {
+        console.log('%c--- State Validation ---', 'color: #81b0c4; font-weight: bold;');
+        const issues = [];
+
+        // Check localStorage
+        const storedProjects = localStorage.getItem('qi-dashboard-projects');
+        const storedActive = localStorage.getItem('qi-dashboard-active');
+        const storedTab = localStorage.getItem('qi-dashboard-tab');
+
+        console.log(`localStorage projects: ${storedProjects ? 'exists' : 'empty'}`);
+        console.log(`localStorage active project: ${storedActive || 'none'}`);
+        console.log(`localStorage tab: ${storedTab || 'default'}`);
+
+        // Check chart instance
+        console.log(`Chart instance: ${currentChart ? 'exists' : 'null'}`);
+        console.log(`Display charts: ${Object.keys(displayCharts).length}`);
+
+        // Check sync between memory and UI
+        const showMedianCheckbox = document.getElementById('showMedian');
+        if (showMedianCheckbox && showMedianCheckbox.checked !== showMedian) {
+            issues.push({ issue: 'showMedian checkbox out of sync with state' });
+            console.warn('⚠️ showMedian checkbox out of sync');
+        }
+
+        const aggSelect = document.getElementById('aggregationSelect');
+        if (aggSelect && aggSelect.value !== aggregation) {
+            issues.push({ issue: 'aggregation select out of sync with state' });
+            console.warn('⚠️ aggregation select out of sync');
+        }
+
+        return { issues };
+    },
+
+    // Fix common issues automatically
+    autoFix: function() {
+        console.log('%c=== Auto-Fix Mode ===', 'color: #e07a5f; font-size: 14px; font-weight: bold;');
+        let fixed = 0;
+
+        // Fix buttons missing type="button"
+        document.querySelectorAll('button:not([type])').forEach(btn => {
+            btn.setAttribute('type', 'button');
+            console.log(`Fixed: Added type="button" to "${btn.textContent.trim().substring(0, 20)}"`);
+            fixed++;
+        });
+
+        // Sync UI with state
+        const showMedianCheckbox = document.getElementById('showMedian');
+        if (showMedianCheckbox && showMedianCheckbox.checked !== showMedian) {
+            showMedianCheckbox.checked = showMedian;
+            console.log('Fixed: Synced showMedian checkbox');
+            fixed++;
+        }
+
+        const aggSelect = document.getElementById('aggregationSelect');
+        if (aggSelect && aggSelect.value !== aggregation) {
+            aggSelect.value = aggregation;
+            console.log('Fixed: Synced aggregation select');
+            fixed++;
+        }
+
+        console.log(`Auto-fix complete: ${fixed} issues fixed`);
+        return fixed;
+    },
+
+    // Test a specific function
+    testFunction: function(funcName, ...args) {
+        console.log(`Testing ${funcName}(${args.map(a => JSON.stringify(a)).join(', ')})`);
+        try {
+            const result = window[funcName](...args);
+            console.log('Result:', result);
+            return { success: true, result };
+        } catch (error) {
+            console.error('Error:', error);
+            return { success: false, error };
+        }
+    },
+
+    // Show help
+    help: function() {
+        console.log('%c=== QI Dashboard Debug Commands ===', 'color: #567159; font-size: 14px;');
+        console.log('QIDebug.runAll()       - Run all validation checks');
+        console.log('QIDebug.validateButtons() - Check all buttons');
+        console.log('QIDebug.validateFunctions() - Check all functions');
+        console.log('QIDebug.validateElements() - Check all DOM elements');
+        console.log('QIDebug.validateData() - Check data state');
+        console.log('QIDebug.validateState() - Check app state');
+        console.log('QIDebug.autoFix()      - Auto-fix common issues');
+        console.log('QIDebug.testFunction("name", args) - Test a function');
+        console.log('QIDebug.help()         - Show this help');
+    }
+};
+
+// Auto-run validation on load (in development)
+document.addEventListener('DOMContentLoaded', function() {
+    // Run validation after a short delay to ensure everything is initialized
+    setTimeout(() => {
+        console.log('%cQI Dashboard Debug available. Type QIDebug.help() for commands.', 'color: #567159;');
+        // Uncomment to auto-run on load:
+        // QIDebug.runAll();
+    }, 1000);
+});
