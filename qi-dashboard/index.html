@@ -27,22 +27,97 @@
         header {
             background: linear-gradient(135deg, #567159 0%, #435a46 100%);
             color: white;
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             text-align: center;
-            margin-bottom: 2rem;
-            border-radius: 12px;
+            margin-bottom: 0;
+            border-radius: 12px 12px 0 0;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         h1 {
             font-family: 'Source Serif 4', serif;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
         }
 
         .subtitle {
             opacity: 0.9;
-            font-size: 1.1rem;
+            font-size: 1rem;
+        }
+
+        /* Tab Styles */
+        .tab-container {
+            background: #435a46;
+            padding: 0 1rem;
+            border-radius: 0 0 12px 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tab-btn.active {
+            color: white;
+            border-bottom-color: #81b0c4;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Project Selector */
+        .project-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .project-bar label {
+            font-weight: 600;
+            color: #435a46;
+        }
+
+        .project-select {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .controls {
@@ -108,6 +183,19 @@
             background: #c96a52;
         }
 
+        button.danger {
+            background: #f44336;
+        }
+
+        button.danger:hover {
+            background: #d32f2f;
+        }
+
+        button.small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
         input[type="text"],
         input[type="number"],
         input[type="date"],
@@ -153,9 +241,23 @@
             margin-bottom: 2rem;
         }
 
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .chart-title {
+            color: #435a46;
+            font-size: 1.3rem;
+        }
+
         .chart-wrapper {
             width: 100%;
-            height: 500px;
+            height: 450px;
             position: relative;
         }
 
@@ -305,13 +407,191 @@
             gap: 1rem;
         }
 
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        /* Chart Options Row */
+        .chart-options {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .chart-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-option label {
+            font-weight: 500;
+            color: #435a46;
+            white-space: nowrap;
+        }
+
+        .chart-option select {
+            width: auto;
+            min-width: 120px;
+        }
+
+        /* Display Tab Styles */
+        .display-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .display-controls label {
+            font-weight: 600;
+            color: #435a46;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--columns, 2), 1fr);
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .chart-card-title {
+            font-weight: 600;
+            color: #435a46;
+            font-size: 1.1rem;
+        }
+
+        .chart-card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #567159;
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .trend-down {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .trend-stable {
+            background: #f5f5f5;
+            color: #616161;
+        }
+
+        .chart-card .chart-wrapper {
+            height: 200px;
+        }
+
+        .no-projects {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .no-projects h3 {
+            color: #435a46;
+            margin-bottom: 1rem;
+        }
+
+        .no-projects p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Info boxes */
+        .info-box {
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .info-box.success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .info-box.info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info-box.warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
         @media (max-width: 768px) {
-            .grid-2 {
+            .grid-2, .grid-3, .grid-4 {
                 grid-template-columns: 1fr;
             }
 
+            .chart-grid {
+                grid-template-columns: 1fr !important;
+            }
+
             h1 {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+
+            .project-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .project-select {
+                max-width: none;
+            }
+
+            .chart-options {
+                flex-direction: column;
+                gap: 1rem;
             }
         }
     </style>
@@ -319,77 +599,181 @@
 <body>
     <div class="container">
         <header>
-            <h1>🌿 QI Dashboard</h1>
-            <p class="subtitle">Quality Improvement Run Chart Analysis</p>
+            <h1>🌿 QI Metric Center</h1>
+            <p class="subtitle">Quality Improvement Run Chart Dashboard</p>
         </header>
 
-        <div class="status-bar">
-            <div class="status-item">
-                <div class="status-dot" id="dataStatus"></div>
-                <span id="dataStatusText">No data loaded</span>
-            </div>
-            <div class="status-item">
-                <span id="lastUpdate">Last updated: Never</span>
-            </div>
-            <button onclick="refreshData()" class="secondary">🔄 Refresh Data</button>
-        </div>
-
-        <div class="controls">
-            <div class="control-section">
-                <label class="control-label">Data Source</label>
-                <div class="data-upload" onclick="document.getElementById('fileInput').click()"
-                     ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                    <input type="file" id="fileInput" accept=".csv,.json" onchange="handleFileUpload(event)">
-                    <p>📁 Click to select or drag & drop CSV/JSON file</p>
-                    <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">Or place file in: data/qi-data.csv</p>
-                </div>
-                <div id="calculatedMetricsInfo" style="display: none; margin-top: 1rem; padding: 0.8rem; background: #e8f5e9; border-radius: 6px; font-size: 0.9rem;">
-                    <strong>✓ Auto-calculated:</strong> <span id="calculatedMetricsList"></span>
-                    <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.85rem;">Dashboard automatically calculated percentage rates from your raw count data.</p>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <label class="control-label">Select Variables to Display</label>
-                <div class="checkbox-group" id="variableCheckboxes">
-                    <!-- Dynamically populated -->
-                </div>
-            </div>
-
-            <div class="control-section">
-                <label class="control-label">Goal Target Line</label>
-                <div class="grid-2">
-                    <div>
-                        <input type="number" id="goalValue" placeholder="Enter goal value" step="0.1">
-                    </div>
-                    <div>
-                        <button onclick="updateGoalLine()">Set Goal</button>
-                        <button onclick="clearGoalLine()" class="secondary">Clear</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <label class="control-label">Interventions</label>
-                <button onclick="openInterventionModal()" class="add">+ Add Intervention</button>
-                <div class="intervention-list" id="interventionList">
-                    <p style="opacity: 0.6; font-size: 0.9rem;">No interventions added</p>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <div class="button-group">
-                    <button onclick="exportChart()">📊 Export Chart</button>
-                    <button onclick="exportData()" class="secondary">📥 Export Data</button>
-                    <button onclick="resetDashboard()" class="secondary">🔄 Reset Dashboard</button>
-                </div>
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="creator" onclick="switchTab('creator')">📝 Creator</button>
+                <button class="tab-btn" data-tab="display" onclick="switchTab('display')">📊 Display</button>
             </div>
         </div>
 
-        <div class="chart-container">
-            <h2 style="margin-bottom: 1rem; color: #435a46;">Run Chart</h2>
-            <div class="chart-wrapper">
-                <canvas id="runChart"></canvas>
+        <!-- CREATOR TAB -->
+        <div id="creatorTab" class="tab-content active">
+            <!-- Project Selector -->
+            <div class="project-bar">
+                <label>Project:</label>
+                <select id="projectSelect" class="project-select" onchange="loadProject(this.value)">
+                    <option value="">-- Select or Create Project --</option>
+                </select>
+                <div class="project-actions">
+                    <button onclick="openNewProjectModal()" class="small">+ New</button>
+                    <button onclick="saveCurrentProject()" class="small secondary">💾 Save</button>
+                    <button onclick="deleteCurrentProject()" class="small danger">🗑️ Delete</button>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot" id="dataStatus"></div>
+                    <span id="dataStatusText">No data loaded</span>
+                </div>
+                <div class="status-item">
+                    <span id="lastUpdate">Last updated: Never</span>
+                </div>
+                <button onclick="refreshData()" class="secondary small">🔄 Refresh</button>
+            </div>
+
+            <div class="controls">
+                <!-- Project Info -->
+                <div class="control-section">
+                    <label class="control-label">Project Details</label>
+                    <div class="grid-2">
+                        <div>
+                            <input type="text" id="projectName" placeholder="Project name">
+                        </div>
+                        <div>
+                            <input type="text" id="projectDescription" placeholder="Brief description">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Source -->
+                <div class="control-section">
+                    <label class="control-label">Data Source</label>
+                    <div class="data-upload" onclick="document.getElementById('fileInput').click()"
+                         ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <input type="file" id="fileInput" accept=".csv,.json" onchange="handleFileUpload(event)">
+                        <p>📁 Click to select or drag & drop CSV/JSON file</p>
+                        <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">Or place file in: data/qi-data.csv</p>
+                    </div>
+                    <div id="calculatedMetricsInfo" class="info-box success" style="display: none;">
+                        <strong>✓ Auto-calculated:</strong> <span id="calculatedMetricsList"></span>
+                        <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.85rem;">Dashboard automatically calculated percentage rates from your raw count data.</p>
+                    </div>
+                </div>
+
+                <!-- Variables -->
+                <div class="control-section">
+                    <label class="control-label">Select Variables to Display</label>
+                    <div class="checkbox-group" id="variableCheckboxes">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- Chart Options -->
+                <div class="control-section">
+                    <label class="control-label">Chart Options</label>
+                    <div class="chart-options">
+                        <div class="chart-option">
+                            <label>Aggregation:</label>
+                            <select id="aggregationSelect" onchange="onAggregationChange()">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="chart-option">
+                            <input type="checkbox" id="showMedian" onchange="onMedianToggle()">
+                            <label for="showMedian">Show Median Line</label>
+                        </div>
+                        <div class="chart-option">
+                            <label>Goal:</label>
+                            <input type="number" id="goalValue" placeholder="Target" step="0.1" style="width: 80px;">
+                            <button onclick="updateGoalLine()" class="small">Set</button>
+                            <button onclick="clearGoalLine()" class="small secondary">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interventions -->
+                <div class="control-section">
+                    <label class="control-label">Interventions</label>
+                    <button onclick="openInterventionModal()" class="add small">+ Add Intervention</button>
+                    <div class="intervention-list" id="interventionList">
+                        <p style="opacity: 0.6; font-size: 0.9rem;">No interventions added</p>
+                    </div>
+                </div>
+
+                <!-- Export Actions -->
+                <div class="control-section">
+                    <div class="button-group">
+                        <button onclick="exportChart()">📊 Export Chart</button>
+                        <button onclick="exportData()" class="secondary">📥 Export Data</button>
+                        <button onclick="resetDashboard()" class="secondary">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2 class="chart-title" id="chartTitle">Run Chart</h2>
+                    <div id="shiftInfo" class="info-box info" style="display: none; margin: 0;">
+                        <span id="shiftInfoText"></span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="runChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- DISPLAY TAB -->
+        <div id="displayTab" class="tab-content">
+            <div class="display-controls">
+                <label>Layout:</label>
+                <select id="columnsSelect" onchange="updateDisplayGrid()">
+                    <option value="1">1 Column</option>
+                    <option value="2" selected>2 Columns</option>
+                    <option value="3">3 Columns</option>
+                    <option value="4">4 Columns</option>
+                </select>
+                <div class="chart-option">
+                    <input type="checkbox" id="autoRefreshDisplay" onchange="toggleDisplayRefresh()">
+                    <label for="autoRefreshDisplay">Auto-Refresh (30s)</label>
+                </div>
+                <button onclick="refreshAllDisplayCharts()" class="secondary small">🔄 Refresh All</button>
+            </div>
+
+            <div id="chartGrid" class="chart-grid" style="--columns: 2;">
+                <!-- Dynamically populated with project charts -->
+            </div>
+
+            <div id="noProjectsMessage" class="no-projects" style="display: none;">
+                <h3>No QI Projects Yet</h3>
+                <p>Create your first project in the Creator tab to see it here.</p>
+                <button onclick="switchTab('creator')">Go to Creator</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div class="modal" id="newProjectModal">
+        <div class="modal-content">
+            <div class="modal-header">Create New Project</div>
+            <div class="form-group">
+                <label for="newProjectName">Project Name</label>
+                <input type="text" id="newProjectName" placeholder="e.g., Antibiotic Stewardship Q1 2026">
+            </div>
+            <div class="form-group">
+                <label for="newProjectDescription">Description</label>
+                <input type="text" id="newProjectDescription" placeholder="Brief description of QI initiative">
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeNewProjectModal()" class="secondary">Cancel</button>
+                <button onclick="createNewProject()">Create</button>
             </div>
         </div>
     </div>
