@@ -755,12 +755,43 @@ function updateAxisTitles() {
 }
 
 // ============================================
-// DATE AGGREGATION
+// DATE AGGREGATION & FORMATTING
 // ============================================
 
 function onAggregationChange() {
     aggregation = document.getElementById('aggregationSelect').value;
     renderChart();
+}
+
+// Format date based on aggregation mode
+function formatDate(dateStr, period) {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear().toString().slice(-2);
+
+    if (period === 'monthly') {
+        return `${month}/${year}`;
+    } else {
+        // Daily or weekly: m/d/y
+        return `${month}/${day}/${year}`;
+    }
+}
+
+// Get the first day of the week (Sunday) for a date
+function getWeekStart(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    return new Date(d.setDate(diff));
+}
+
+// Get the first day of the month
+function getMonthStart(date) {
+    const d = new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
 function aggregateData(data, period) {
@@ -777,18 +808,21 @@ function aggregateData(data, period) {
     data.forEach(row => {
         const dateStr = row[dateColumn];
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return;
 
-        let key;
+        let groupDate;
         if (period === 'weekly') {
-            key = getWeekKey(date);
+            groupDate = getWeekStart(date);
         } else if (period === 'monthly') {
-            key = getMonthKey(date);
+            groupDate = getMonthStart(date);
         }
 
+        // Use ISO string as key for sorting, store the actual date
+        const key = groupDate.toISOString().split('T')[0];
         if (!groups[key]) {
-            groups[key] = [];
+            groups[key] = { date: groupDate, rows: [] };
         }
-        groups[key].push(row);
+        groups[key].rows.push(row);
     });
 
     // Aggregate each group
@@ -799,8 +833,10 @@ function aggregateData(data, period) {
     });
 
     Object.keys(groups).sort().forEach(key => {
-        const rows = groups[key];
-        const result = { [dateColumn]: key };
+        const { date, rows } = groups[key];
+        // Format the date for display
+        const formattedDate = formatDate(date, period);
+        const result = { [dateColumn]: formattedDate, _rawDate: date };
 
         numericColumns.forEach(col => {
             const values = rows.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
@@ -815,18 +851,36 @@ function aggregateData(data, period) {
     return aggregated;
 }
 
-function getWeekKey(date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-    const yearStart = new Date(d.getFullYear(), 0, 1);
-    const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return `${d.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
-}
+// Find the closest label for an intervention date
+function findInterventionLabel(interventionDate, labels, displayData, period) {
+    const intDate = new Date(interventionDate);
+    if (isNaN(intDate.getTime())) return interventionDate;
 
-function getMonthKey(date) {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    // For daily view, format the intervention date to match label format
+    if (period === 'daily') {
+        return formatDate(interventionDate, 'daily');
+    }
+
+    // For weekly/monthly, find the period that contains this date
+    for (let i = 0; i < displayData.length; i++) {
+        const rawDate = displayData[i]._rawDate;
+        if (rawDate) {
+            let periodEnd;
+            if (period === 'weekly') {
+                periodEnd = new Date(rawDate);
+                periodEnd.setDate(periodEnd.getDate() + 6);
+            } else if (period === 'monthly') {
+                periodEnd = new Date(rawDate.getFullYear(), rawDate.getMonth() + 1, 0);
+            }
+
+            if (intDate >= rawDate && intDate <= periodEnd) {
+                return labels[i];
+            }
+        }
+    }
+
+    // Fallback: return formatted date
+    return formatDate(interventionDate, period);
 }
 
 // ============================================
@@ -857,13 +911,19 @@ function renderChart() {
     }
 
     // Apply aggregation
-    const displayData = aggregateData(currentData, aggregation);
+    let displayData = aggregateData(currentData, aggregation);
 
     const dateColumn = Object.keys(displayData[0]).find(key =>
         key.toLowerCase().includes('date')
     ) || Object.keys(displayData[0])[0];
 
-    const labels = displayData.map(row => row[dateColumn]);
+    // For daily view, format dates as m/d/y
+    let labels;
+    if (aggregation === 'daily') {
+        labels = displayData.map(row => formatDate(row[dateColumn], 'daily'));
+    } else {
+        labels = displayData.map(row => row[dateColumn]);
+    }
 
     // Build datasets
     const datasets = [];
@@ -959,22 +1019,25 @@ function renderChart() {
                     padding: 12
                 },
                 annotation: {
-                    annotations: interventions.map(intervention => ({
-                        type: 'line',
-                        xMin: intervention.date,
-                        xMax: intervention.date,
-                        borderColor: '#e07a5f',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        label: {
-                            content: intervention.label,
-                            display: true,
-                            position: 'start',
-                            backgroundColor: '#e07a5f',
-                            color: 'white',
-                            font: { size: 10 }
-                        }
-                    }))
+                    annotations: interventions.map(intervention => {
+                        const labelPos = findInterventionLabel(intervention.date, labels, displayData, aggregation);
+                        return {
+                            type: 'line',
+                            xMin: labelPos,
+                            xMax: labelPos,
+                            borderColor: '#e07a5f',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            label: {
+                                content: intervention.label,
+                                display: true,
+                                position: 'start',
+                                backgroundColor: '#e07a5f',
+                                color: 'white',
+                                font: { size: 10 }
+                            }
+                        };
+                    })
                 }
             },
             scales: {
@@ -1151,10 +1214,12 @@ function renderMiniChart(project) {
         key.toLowerCase().includes('date')
     ) || Object.keys(project.data[0])[0];
 
-    const labels = project.data.map(row => row[dateColumn]);
+    // Format labels as m/d/y
+    const labels = project.data.map(row => formatDate(row[dateColumn], 'daily'));
     const data = project.data.map(row => row[variable]);
 
     const datasets = [{
+        label: variable,
         data: data,
         borderColor: '#567159',
         borderWidth: 2,
@@ -1163,13 +1228,39 @@ function renderMiniChart(project) {
         fill: false
     }];
 
+    // Add median line if project has showMedian enabled
+    const showProjectMedian = project.settings.showMedian !== false;
+    if (showProjectMedian) {
+        const medianSegments = calculateDynamicMedian(project.data, variable);
+        medianSegments.forEach((segment, segIndex) => {
+            const medianData = project.data.map((_, i) => {
+                if (i >= segment.startIndex && i <= segment.endIndex) {
+                    return segment.median;
+                }
+                return null;
+            });
+
+            datasets.push({
+                label: segIndex === 0 ? 'Median' : null,
+                data: medianData,
+                borderColor: '#c0392b',
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0,
+                fill: false,
+                spanGaps: false
+            });
+        });
+    }
+
     // Add goal line
     if (project.settings.goalValue !== null) {
         datasets.push({
+            label: `Goal (${project.settings.goalValue}%)`,
             data: project.data.map(() => project.settings.goalValue),
             borderColor: '#27ae60',
             borderDash: [4, 2],
-            borderWidth: 1,
+            borderWidth: 1.5,
             pointRadius: 0,
             fill: false
         });
@@ -1182,15 +1273,40 @@ function renderMiniChart(project) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false }
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        filter: function(item) {
+                            return item.text !== null;
+                        },
+                        font: { size: 9 },
+                        boxWidth: 12,
+                        padding: 6,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: { enabled: true }
             },
             scales: {
-                x: { display: false },
+                x: {
+                    display: true,
+                    ticks: {
+                        maxTicksLimit: 5,
+                        font: { size: 8 },
+                        maxRotation: 0
+                    },
+                    grid: { display: false }
+                },
                 y: {
-                    display: false,
+                    display: true,
                     beginAtZero: true,
-                    suggestedMax: 100
+                    suggestedMax: 100,
+                    ticks: {
+                        font: { size: 8 },
+                        callback: value => value + '%'
+                    },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
                 }
             }
         }
