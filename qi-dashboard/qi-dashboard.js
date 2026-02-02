@@ -742,10 +742,16 @@ function onMedianToggle() {
     renderChart();
 }
 
+let axisUpdateTimeout = null;
 function updateAxisTitles() {
     xAxisTitle = document.getElementById('xAxisTitle').value || 'Date';
     yAxisTitle = document.getElementById('yAxisTitle').value || 'Rate (%)';
-    renderChart();
+
+    // Debounce to avoid excessive re-renders
+    if (axisUpdateTimeout) clearTimeout(axisUpdateTimeout);
+    axisUpdateTimeout = setTimeout(() => {
+        renderChart();
+    }, 300);
 }
 
 // ============================================
@@ -1072,25 +1078,39 @@ function createProjectCard(project) {
     card.id = `card-${project.id}`;
 
     // Get current value and trend
-    const variable = project.settings.selectedVariables[0];
+    let variable = project.settings.selectedVariables[0];
     let currentValue = '--';
     let trend = 'stable';
 
-    if (project.data && project.data.length > 0 && variable) {
-        const lastValue = project.data[project.data.length - 1][variable];
-        currentValue = typeof lastValue === 'number' ? lastValue.toFixed(1) + '%' : lastValue;
+    if (project.data && project.data.length > 0) {
+        // Validate variable exists in data, fallback to first rate variable
+        const dataKeys = Object.keys(project.data[0]);
+        if (!variable || !dataKeys.includes(variable)) {
+            // Find a rate variable
+            variable = dataKeys.find(k => k.toLowerCase().includes('rate')) ||
+                       dataKeys.find(k => typeof project.data[0][k] === 'number' && !k.toLowerCase().includes('date'));
+        }
 
-        // Calculate trend (compare last 5 to previous 5)
-        if (project.data.length >= 10) {
-            const recent = project.data.slice(-5).map(r => r[variable]).filter(v => !isNaN(v));
-            const previous = project.data.slice(-10, -5).map(r => r[variable]).filter(v => !isNaN(v));
+        if (variable) {
+            const lastValue = project.data[project.data.length - 1][variable];
+            if (lastValue !== undefined && lastValue !== null) {
+                currentValue = typeof lastValue === 'number' ? lastValue.toFixed(1) + '%' : lastValue;
+            }
 
-            const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
-            const prevAvg = previous.reduce((a, b) => a + b, 0) / previous.length;
+            // Calculate trend (compare last 5 to previous 5)
+            if (project.data.length >= 10) {
+                const recent = project.data.slice(-5).map(r => r[variable]).filter(v => !isNaN(v));
+                const previous = project.data.slice(-10, -5).map(r => r[variable]).filter(v => !isNaN(v));
 
-            const diff = recentAvg - prevAvg;
-            if (diff > 2) trend = 'up';
-            else if (diff < -2) trend = 'down';
+                if (recent.length > 0 && previous.length > 0) {
+                    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+                    const prevAvg = previous.reduce((a, b) => a + b, 0) / previous.length;
+
+                    const diff = recentAvg - prevAvg;
+                    if (diff > 2) trend = 'up';
+                    else if (diff < -2) trend = 'down';
+                }
+            }
         }
     }
 
@@ -1117,7 +1137,14 @@ function renderMiniChart(project) {
     const canvas = document.getElementById(`mini-chart-${project.id}`);
     if (!canvas || !project.data || project.data.length === 0) return;
 
-    const variable = project.settings.selectedVariables[0];
+    let variable = project.settings.selectedVariables[0];
+
+    // Validate variable exists in data, fallback to first rate variable
+    const dataKeys = Object.keys(project.data[0]);
+    if (!variable || !dataKeys.includes(variable)) {
+        variable = dataKeys.find(k => k.toLowerCase().includes('rate')) ||
+                   dataKeys.find(k => typeof project.data[0][k] === 'number' && !k.toLowerCase().includes('date'));
+    }
     if (!variable) return;
 
     const dateColumn = Object.keys(project.data[0]).find(key =>
@@ -1274,7 +1301,7 @@ function updateInterventionList() {
                     ${i.date}${i.description ? ' - ' + i.description : ''}
                 </div>
             </div>
-            <button class="remove-btn small" onclick="removeIntervention('${i.id}')">Remove</button>
+            <button type="button" class="remove-btn small" onclick="removeIntervention('${i.id}')">Remove</button>
         </div>
     `).join('');
 }
