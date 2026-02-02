@@ -2,7 +2,7 @@
 
 Track ongoing development and enhancements for Sage QI Dashboard.
 
-**Last Updated:** February 1, 2026
+**Last Updated:** February 2, 2026
 **Status:** ✅ MVP Complete, Deployed to GitHub
 
 ---
@@ -61,6 +61,34 @@ None currently!
 **Test data:** `data/test-raw-counts.csv`
 
 **Status:** ✅ Complete and tested
+
+---
+
+### Bug Fix: JavaScript Error on Production ✓ FIXED (Feb 2, 2026)
+
+**Issue:** Critical bug blocking dashboard on live site
+
+**Error:** "Assignment to constant variable"
+- Dashboard completely non-functional
+- JavaScript error on page load
+- Auto-calculation feature broken
+
+**Root cause:**
+- Line 169 in `qi-dashboard.js` declared `data` as `const`
+- Line 191 tried to reassign `data` in `calculateMetrics()`
+- JavaScript doesn't allow reassigning `const` variables
+
+**Fix:**
+- Changed `const data = []` to `let data = []` (line 169)
+- Single line change
+- Committed and deployed in <5 minutes
+
+**Files modified:**
+- ✅ `qi-dashboard.js` - Changed const to let (line 169)
+
+**Git commit:** `64927a9`
+
+**Status:** ✅ Fixed and deployed
 
 ---
 
@@ -285,6 +313,8 @@ f:\Coding\sage-qi-dashboard/
 - Chart.js 4.x requires explicit registration of plugins
 - GitHub Pages has ~2 minute deployment lag
 - localStorage persists per-domain (useful for settings)
+- Use `let` not `const` for variables that need reassignment
+- MCP memory server provides persistent context across sessions (configured Feb 2, 2026)
 
 ---
 
