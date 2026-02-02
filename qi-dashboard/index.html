@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QI Dashboard - Sage Project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fefdfb;
+            color: #2c3e2f;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #567159 0%, #435a46 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .control-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #435a46;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #567159;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #435a46;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button.secondary {
+            background: #81b0c4;
+        }
+
+        button.secondary:hover {
+            background: #6a99ad;
+        }
+
+        button.add {
+            background: #e07a5f;
+        }
+
+        button.add:hover {
+            background: #c96a52;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            padding: 0.6rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #567159;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 500px;
+            position: relative;
+        }
+
+        .status-bar {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+        }
+
+        .status-dot.warning {
+            background: #ff9800;
+        }
+
+        .status-dot.error {
+            background: #f44336;
+        }
+
+        .intervention-list {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .intervention-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .intervention-item:last-child {
+            border-bottom: none;
+        }
+
+        .remove-btn {
+            background: #f44336;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .remove-btn:hover {
+            background: #d32f2f;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #435a46;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+            color: #435a46;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .data-upload {
+            border: 2px dashed #567159;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .data-upload:hover {
+            background: #f5f5f5;
+            border-color: #435a46;
+        }
+
+        .data-upload.dragover {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 QI Dashboard</h1>
+            <p class="subtitle">Quality Improvement Run Chart Analysis</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot" id="dataStatus"></div>
+                <span id="dataStatusText">No data loaded</span>
+            </div>
+            <div class="status-item">
+                <span id="lastUpdate">Last updated: Never</span>
+            </div>
+            <button onclick="refreshData()" class="secondary">🔄 Refresh Data</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-section">
+                <label class="control-label">Data Source</label>
+                <div class="data-upload" onclick="document.getElementById('fileInput').click()"
+                     ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <input type="file" id="fileInput" accept=".csv,.json" onchange="handleFileUpload(event)">
+                    <p>📁 Click to select or drag & drop CSV/JSON file</p>
+                    <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">Or place file in: data/qi-data.csv</p>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <label class="control-label">Select Variables to Display</label>
+                <div class="checkbox-group" id="variableCheckboxes">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <div class="control-section">
+                <label class="control-label">Goal Target Line</label>
+                <div class="grid-2">
+                    <div>
+                        <input type="number" id="goalValue" placeholder="Enter goal value" step="0.1">
+                    </div>
+                    <div>
+                        <button onclick="updateGoalLine()">Set Goal</button>
+                        <button onclick="clearGoalLine()" class="secondary">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <label class="control-label">Interventions</label>
+                <button onclick="openInterventionModal()" class="add">+ Add Intervention</button>
+                <div class="intervention-list" id="interventionList">
+                    <p style="opacity: 0.6; font-size: 0.9rem;">No interventions added</p>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="button-group">
+                    <button onclick="exportChart()">📊 Export Chart</button>
+                    <button onclick="exportData()" class="secondary">📥 Export Data</button>
+                    <button onclick="resetDashboard()" class="secondary">🔄 Reset Dashboard</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2 style="margin-bottom: 1rem; color: #435a46;">Run Chart</h2>
+            <div class="chart-wrapper">
+                <canvas id="runChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intervention Modal -->
+    <div class="modal" id="interventionModal">
+        <div class="modal-content">
+            <div class="modal-header">Add Intervention</div>
+            <div class="form-group">
+                <label for="interventionDate">Date</label>
+                <input type="date" id="interventionDate">
+            </div>
+            <div class="form-group">
+                <label for="interventionLabel">Label</label>
+                <input type="text" id="interventionLabel" placeholder="e.g., Provider Education">
+            </div>
+            <div class="form-group">
+                <label for="interventionDescription">Description (optional)</label>
+                <input type="text" id="interventionDescription" placeholder="Brief description">
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeInterventionModal()" class="secondary">Cancel</button>
+                <button onclick="addIntervention()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="qi-dashboard.js"></script>
+</body>
+</html>

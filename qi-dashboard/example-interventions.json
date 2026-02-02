@@ -1,0 +1,17 @@
+[
+  {
+    "date": "2025-02-15",
+    "label": "Provider Education",
+    "description": "Grand rounds presentation on appropriate antibiotic use in viral URIs"
+  },
+  {
+    "date": "2025-03-01",
+    "label": "Clinical Guidelines",
+    "description": "Updated institutional guidelines for pediatric URI management"
+  },
+  {
+    "date": "2025-03-15",
+    "label": "EHR Alert",
+    "description": "Implemented decision support alert for viral diagnosis codes"
+  }
+]
