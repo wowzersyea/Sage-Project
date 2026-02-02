@@ -15,6 +15,8 @@ let interventions = [];
 let goalValue = null;
 let showMedian = true;
 let aggregation = 'daily';
+let xAxisTitle = 'Date';
+let yAxisTitle = 'Rate (%)';
 let dataFilePath = 'data/qi-data.csv';
 let lastFileModified = null;
 
@@ -105,7 +107,7 @@ function saveProjects() {
 
 function loadAppState() {
     currentProjectId = localStorage.getItem('qi-dashboard-active') || null;
-    const savedTab = localStorage.getItem('qi-dashboard-tab') || 'creator';
+    const savedTab = localStorage.getItem('qi-dashboard-tab') || 'display';
     switchTab(savedTab, false);
 }
 
@@ -194,6 +196,8 @@ function loadProject(projectId) {
     interventions = project.settings.interventions || [];
     showMedian = project.settings.showMedian !== false;
     aggregation = project.settings.aggregation || 'daily';
+    xAxisTitle = project.settings.xAxisTitle || 'Date';
+    yAxisTitle = project.settings.yAxisTitle || 'Rate (%)';
 
     // Update UI
     document.getElementById('projectName').value = project.name;
@@ -201,6 +205,8 @@ function loadProject(projectId) {
     document.getElementById('projectSelect').value = projectId;
     document.getElementById('showMedian').checked = showMedian;
     document.getElementById('aggregationSelect').value = aggregation;
+    document.getElementById('xAxisTitle').value = xAxisTitle;
+    document.getElementById('yAxisTitle').value = yAxisTitle;
 
     if (goalValue !== null) {
         document.getElementById('goalValue').value = goalValue;
@@ -231,6 +237,8 @@ function clearCurrentProject() {
     interventions = [];
     showMedian = true;
     aggregation = 'daily';
+    xAxisTitle = 'Date';
+    yAxisTitle = 'Rate (%)';
 
     document.getElementById('projectName').value = '';
     document.getElementById('projectDescription').value = '';
@@ -238,6 +246,8 @@ function clearCurrentProject() {
     document.getElementById('variableCheckboxes').innerHTML = '';
     document.getElementById('showMedian').checked = true;
     document.getElementById('aggregationSelect').value = 'daily';
+    document.getElementById('xAxisTitle').value = 'Date';
+    document.getElementById('yAxisTitle').value = 'Rate (%)';
 
     if (currentChart) {
         currentChart.destroy();
@@ -266,7 +276,9 @@ function saveCurrentProject() {
         goalValue: goalValue,
         interventions: interventions,
         showMedian: showMedian,
-        aggregation: aggregation
+        aggregation: aggregation,
+        xAxisTitle: xAxisTitle,
+        yAxisTitle: yAxisTitle
     };
 
     saveProjects();
@@ -730,6 +742,12 @@ function onMedianToggle() {
     renderChart();
 }
 
+function updateAxisTitles() {
+    xAxisTitle = document.getElementById('xAxisTitle').value || 'Date';
+    yAxisTitle = document.getElementById('yAxisTitle').value || 'Rate (%)';
+    renderChart();
+}
+
 // ============================================
 // DATE AGGREGATION
 // ============================================
@@ -958,7 +976,7 @@ function renderChart() {
                     type: 'category',
                     title: {
                         display: true,
-                        text: 'Date',
+                        text: xAxisTitle || 'Date',
                         font: { size: 14, weight: 'bold' }
                     },
                     grid: { display: false },
@@ -969,7 +987,7 @@ function renderChart() {
                     suggestedMax: isRateChart() ? 100 : undefined,
                     title: {
                         display: true,
-                        text: isRateChart() ? 'Rate (%)' : 'Value',
+                        text: yAxisTitle || (isRateChart() ? 'Rate (%)' : 'Value'),
                         font: { size: 14, weight: 'bold' }
                     },
                     grid: { color: 'rgba(0, 0, 0, 0.1)' },

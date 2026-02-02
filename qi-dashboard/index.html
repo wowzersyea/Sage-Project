@@ -605,13 +605,13 @@
 
         <div class="tab-container">
             <div class="tab-buttons">
-                <button class="tab-btn active" data-tab="creator" onclick="switchTab('creator')">📝 Creator</button>
-                <button class="tab-btn" data-tab="display" onclick="switchTab('display')">📊 Display</button>
+                <button type="button" class="tab-btn" data-tab="creator" onclick="switchTab('creator')">📝 Creator</button>
+                <button type="button" class="tab-btn active" data-tab="display" onclick="switchTab('display')">📊 Display</button>
             </div>
         </div>
 
         <!-- CREATOR TAB -->
-        <div id="creatorTab" class="tab-content active">
+        <div id="creatorTab" class="tab-content">
             <!-- Project Selector -->
             <div class="project-bar">
                 <label>Project:</label>
@@ -619,9 +619,9 @@
                     <option value="">-- Select or Create Project --</option>
                 </select>
                 <div class="project-actions">
-                    <button onclick="openNewProjectModal()" class="small">+ New</button>
-                    <button onclick="saveCurrentProject()" class="small secondary">💾 Save</button>
-                    <button onclick="deleteCurrentProject()" class="small danger">🗑️ Delete</button>
+                    <button type="button" onclick="openNewProjectModal()" class="small">+ New</button>
+                    <button type="button" onclick="saveCurrentProject()" class="small secondary">💾 Save</button>
+                    <button type="button" onclick="deleteCurrentProject()" class="small danger">🗑️ Delete</button>
                 </div>
             </div>
 
@@ -633,7 +633,7 @@
                 <div class="status-item">
                     <span id="lastUpdate">Last updated: Never</span>
                 </div>
-                <button onclick="refreshData()" class="secondary small">🔄 Refresh</button>
+                <button type="button" onclick="refreshData()" class="secondary small">🔄 Refresh</button>
             </div>
 
             <div class="controls">
@@ -678,6 +678,14 @@
                     <label class="control-label">Chart Options</label>
                     <div class="chart-options">
                         <div class="chart-option">
+                            <label>X-Axis:</label>
+                            <input type="text" id="xAxisTitle" placeholder="Date" style="width: 100px;" onchange="updateAxisTitles()">
+                        </div>
+                        <div class="chart-option">
+                            <label>Y-Axis:</label>
+                            <input type="text" id="yAxisTitle" placeholder="Rate (%)" style="width: 100px;" onchange="updateAxisTitles()">
+                        </div>
+                        <div class="chart-option">
                             <label>Aggregation:</label>
                             <select id="aggregationSelect" onchange="onAggregationChange()">
                                 <option value="daily">Daily</option>
@@ -686,14 +694,14 @@
                             </select>
                         </div>
                         <div class="chart-option">
-                            <input type="checkbox" id="showMedian" onchange="onMedianToggle()">
+                            <input type="checkbox" id="showMedian" checked onchange="onMedianToggle()">
                             <label for="showMedian">Show Median Line</label>
                         </div>
                         <div class="chart-option">
                             <label>Goal:</label>
                             <input type="number" id="goalValue" placeholder="Target" step="0.1" style="width: 80px;">
-                            <button onclick="updateGoalLine()" class="small">Set</button>
-                            <button onclick="clearGoalLine()" class="small secondary">Clear</button>
+                            <button type="button" onclick="updateGoalLine()" class="small">Set</button>
+                            <button type="button" onclick="clearGoalLine()" class="small secondary">Clear</button>
                         </div>
                     </div>
                 </div>
@@ -701,7 +709,7 @@
                 <!-- Interventions -->
                 <div class="control-section">
                     <label class="control-label">Interventions</label>
-                    <button onclick="openInterventionModal()" class="add small">+ Add Intervention</button>
+                    <button type="button" onclick="openInterventionModal()" class="add small">+ Add Intervention</button>
                     <div class="intervention-list" id="interventionList">
                         <p style="opacity: 0.6; font-size: 0.9rem;">No interventions added</p>
                     </div>
@@ -710,9 +718,9 @@
                 <!-- Export Actions -->
                 <div class="control-section">
                     <div class="button-group">
-                        <button onclick="exportChart()">📊 Export Chart</button>
-                        <button onclick="exportData()" class="secondary">📥 Export Data</button>
-                        <button onclick="resetDashboard()" class="secondary">🔄 Reset</button>
+                        <button type="button" onclick="exportChart()">📊 Export Chart</button>
+                        <button type="button" onclick="exportData()" class="secondary">📥 Export Data</button>
+                        <button type="button" onclick="resetDashboard()" class="secondary">🔄 Reset</button>
                     </div>
                 </div>
             </div>
@@ -731,7 +739,7 @@
         </div>
 
         <!-- DISPLAY TAB -->
-        <div id="displayTab" class="tab-content">
+        <div id="displayTab" class="tab-content active">
             <div class="display-controls">
                 <label>Layout:</label>
                 <select id="columnsSelect" onchange="updateDisplayGrid()">
@@ -744,17 +752,17 @@
                     <input type="checkbox" id="autoRefreshDisplay" onchange="toggleDisplayRefresh()">
                     <label for="autoRefreshDisplay">Auto-Refresh (30s)</label>
                 </div>
-                <button onclick="refreshAllDisplayCharts()" class="secondary small">🔄 Refresh All</button>
+                <button type="button" onclick="refreshAllDisplayCharts()" class="secondary small">🔄 Refresh All</button>
             </div>
 
             <div id="chartGrid" class="chart-grid" style="--columns: 2;">
                 <!-- Dynamically populated with project charts -->
             </div>
 
-            <div id="noProjectsMessage" class="no-projects" style="display: none;">
+            <div id="noProjectsMessage" class="no-projects">
                 <h3>No QI Projects Yet</h3>
                 <p>Create your first project in the Creator tab to see it here.</p>
-                <button onclick="switchTab('creator')">Go to Creator</button>
+                <button type="button" onclick="switchTab('creator')">Go to Creator</button>
             </div>
         </div>
     </div>
@@ -772,8 +780,8 @@
                 <input type="text" id="newProjectDescription" placeholder="Brief description of QI initiative">
             </div>
             <div class="modal-buttons">
-                <button onclick="closeNewProjectModal()" class="secondary">Cancel</button>
-                <button onclick="createNewProject()">Create</button>
+                <button type="button" onclick="closeNewProjectModal()" class="secondary">Cancel</button>
+                <button type="button" onclick="createNewProject()">Create</button>
             </div>
         </div>
     </div>
@@ -795,8 +803,8 @@
                 <input type="text" id="interventionDescription" placeholder="Brief description">
             </div>
             <div class="modal-buttons">
-                <button onclick="closeInterventionModal()" class="secondary">Cancel</button>
-                <button onclick="addIntervention()">Add</button>
+                <button type="button" onclick="closeInterventionModal()" class="secondary">Cancel</button>
+                <button type="button" onclick="addIntervention()">Add</button>
             </div>
         </div>
     </div>
