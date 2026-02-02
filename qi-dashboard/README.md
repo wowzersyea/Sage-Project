@@ -69,13 +69,38 @@ Your CSV should have:
 - **First column**: Date (any format)
 - **Other columns**: Numeric metrics you want to track
 
-Example:
+**NEW! Auto-Calculation Feature** ✨
+
+The dashboard now automatically calculates percentage rates from raw counts!
+
+### Option 1: Raw Counts (Recommended for Epic Exports)
+
+Upload just the numerator and denominator:
 ```csv
-DATE,TOTAL_ENCOUNTERS,ANTIBIOTICS_PRESCRIBED,ANTIBIOTIC_RATE
+DATE,TOTAL_ENCOUNTERS,ABX_PRESCRIBED
+2025-01-01,45,34
+2025-01-02,38,29
+2025-01-03,52,41
+```
+
+**Dashboard automatically calculates:** `ABX_RATE = (ABX_PRESCRIBED / TOTAL_ENCOUNTERS) × 100`
+
+Supported patterns:
+- `ABX_PRESCRIBED` / `TOTAL_ENCOUNTERS` → `ABX_RATE`
+- `INFECTIONS` / `LINE_DAYS` → `INFECTION_RATE`
+- `READMISSIONS` / `DISCHARGES` → `READMISSION_RATE`
+
+### Option 2: Pre-Calculated Rates
+
+Or include the rate yourself:
+```csv
+DATE,TOTAL_ENCOUNTERS,ABX_PRESCRIBED,ABX_RATE
 2025-01-01,45,34,75.6
 2025-01-02,38,29,76.3
 2025-01-03,52,41,78.8
 ```
+
+Both formats work! Use whichever is easier for your workflow.
 
 ### JSON Format
 

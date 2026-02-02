@@ -187,7 +187,108 @@ function parseCSV(content) {
         data.push(row);
     }
 
+    // Auto-calculate percentage rates if raw count columns detected
+    data = calculateMetrics(data, headers);
+
     return data;
+}
+
+// Auto-calculate percentage metrics from raw counts
+function calculateMetrics(data, headers) {
+    if (data.length === 0) return data;
+
+    // Common patterns for numerator/denominator columns
+    const patterns = [
+        {
+            numerator: ['ABX_PRESCRIBED', 'ANTIBIOTICS_PRESCRIBED', 'ANTIBIOTICS', 'ABX'],
+            denominator: ['TOTAL_ENCOUNTERS', 'ENCOUNTERS', 'TOTAL', 'DENOMINATOR'],
+            rateName: 'ABX_RATE',
+            displayName: 'Antibiotic Rate (%)'
+        },
+        {
+            numerator: ['INFECTIONS', 'CLABSI_COUNT', 'INFECTION_COUNT'],
+            denominator: ['LINE_DAYS', 'DEVICE_DAYS', 'PATIENT_DAYS'],
+            rateName: 'INFECTION_RATE',
+            displayName: 'Infection Rate'
+        },
+        {
+            numerator: ['READMISSIONS', 'READMISSION_COUNT'],
+            denominator: ['DISCHARGES', 'TOTAL_DISCHARGES'],
+            rateName: 'READMISSION_RATE',
+            displayName: 'Readmission Rate (%)'
+        }
+    ];
+
+    // Track calculated metrics
+    const calculatedMetrics = [];
+
+    patterns.forEach(pattern => {
+        // Find numerator column
+        const numeratorCol = headers.find(h =>
+            pattern.numerator.some(n => h.toUpperCase().includes(n))
+        );
+
+        // Find denominator column
+        const denominatorCol = headers.find(h =>
+            pattern.denominator.some(d => h.toUpperCase().includes(d))
+        );
+
+        // If both found and rate doesn't already exist, calculate it
+        if (numeratorCol && denominatorCol && !headers.includes(pattern.rateName)) {
+            console.log(`Auto-calculating ${pattern.rateName} from ${numeratorCol} / ${denominatorCol}`);
+
+            data.forEach(row => {
+                const numerator = parseFloat(row[numeratorCol]) || 0;
+                const denominator = parseFloat(row[denominatorCol]) || 1; // Avoid division by zero
+
+                if (denominator > 0) {
+                    // Calculate percentage rate
+                    const rate = (numerator / denominator) * 100;
+                    row[pattern.rateName] = parseFloat(rate.toFixed(2));
+                } else {
+                    row[pattern.rateName] = 0;
+                }
+            });
+
+            calculatedMetrics.push({
+                name: pattern.rateName,
+                display: pattern.displayName,
+                from: `${numeratorCol} / ${denominatorCol}`
+            });
+        }
+    });
+
+    // Show calculated metrics info
+    if (calculatedMetrics.length > 0) {
+        showCalculatedMetricsInfo(calculatedMetrics);
+    } else {
+        hideCalculatedMetricsInfo();
+    }
+
+    return data;
+}
+
+// Show info about auto-calculated metrics
+function showCalculatedMetricsInfo(metrics) {
+    const infoDiv = document.getElementById('calculatedMetricsInfo');
+    const listSpan = document.getElementById('calculatedMetricsList');
+
+    if (infoDiv && listSpan) {
+        const metricsList = metrics.map(m =>
+            `<strong>${m.name}</strong> (${m.from})`
+        ).join(', ');
+
+        listSpan.innerHTML = metricsList;
+        infoDiv.style.display = 'block';
+    }
+}
+
+// Hide calculated metrics info
+function hideCalculatedMetricsInfo() {
+    const infoDiv = document.getElementById('calculatedMetricsInfo');
+    if (infoDiv) {
+        infoDiv.style.display = 'none';
+    }
 }
 
 // Initialize variable checkboxes
