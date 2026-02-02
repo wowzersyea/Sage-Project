@@ -414,7 +414,10 @@ function renderChart() {
         key.toLowerCase().includes('date')
     ) || Object.keys(currentData[0])[0];
 
-    // Prepare datasets
+    // Extract dates as labels for X-axis
+    const labels = currentData.map(row => row[dateColumn]);
+
+    // Prepare datasets with simple value arrays (not {x,y} objects)
     const datasets = selectedVariables.map((variable, index) => {
         const colors = [
             '#567159', // Sage green
@@ -427,32 +430,29 @@ function renderChart() {
 
         return {
             label: variable,
-            data: currentData.map(row => ({
-                x: row[dateColumn],
-                y: row[variable]
-            })),
+            data: currentData.map(row => row[variable]),
             borderColor: colors[index % colors.length],
             backgroundColor: colors[index % colors.length] + '20',
             borderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.1
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0,  // Straight lines between points (true run chart style)
+            fill: false
         };
     });
 
-    // Add goal line if set
+    // Add goal line if set (horizontal dashed line)
     if (goalValue !== null) {
         datasets.push({
-            label: 'Goal',
-            data: currentData.map(row => ({
-                x: row[dateColumn],
-                y: goalValue
-            })),
-            borderColor: '#f44336',
-            borderDash: [10, 5],
+            label: `Goal (${goalValue}%)`,
+            data: currentData.map(() => goalValue),  // Same value for all points
+            borderColor: '#e74c3c',
+            borderDash: [8, 4],
             borderWidth: 2,
             pointRadius: 0,
-            fill: false
+            pointHoverRadius: 0,
+            fill: false,
+            tension: 0
         });
     }
 
@@ -460,7 +460,10 @@ function renderChart() {
     const ctx = document.getElementById('runChart').getContext('2d');
     currentChart = new Chart(ctx, {
         type: 'line',
-        data: { datasets },
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
         options: {
             responsive: true,
             maintainAspectRatio: false,
