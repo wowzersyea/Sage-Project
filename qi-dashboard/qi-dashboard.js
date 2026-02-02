@@ -298,13 +298,35 @@ function initializeVariableSelection() {
     const container = document.getElementById('variableCheckboxes');
     container.innerHTML = '';
 
+    // Columns to exclude from variable selection (these are for X axis or raw counts)
+    const excludePatterns = [
+        'date', 'time', 'timestamp', 'period',  // Date columns
+        'total_encounters', 'encounters', 'total', 'denominator',  // Denominators
+        'abx_prescribed', 'antibiotics_prescribed', 'antibiotics',  // Numerators
+        'infections', 'clabsi_count', 'infection_count',  // Other numerators
+        'readmissions', 'readmission_count',
+        'line_days', 'device_days', 'patient_days', 'discharges'  // Other denominators
+    ];
+
     // Get all numeric columns (potential variables)
     const firstRow = currentData[0];
     const variables = Object.keys(firstRow).filter(key => {
-        // Include if numeric or looks like it could be a metric
+        const keyLower = key.toLowerCase();
+
+        // Exclude date and raw count columns
+        if (excludePatterns.some(pattern => keyLower.includes(pattern))) {
+            return false;
+        }
+
+        // Include if numeric
         const value = firstRow[key];
         return typeof value === 'number' || !isNaN(parseFloat(value));
     });
+
+    // Prioritize rate/percentage variables for auto-selection
+    const rateVariables = variables.filter(v =>
+        v.toLowerCase().includes('rate') || v.toLowerCase().includes('percent') || v.toLowerCase().includes('pct')
+    );
 
     // Create checkboxes
     variables.forEach(variable => {
@@ -315,7 +337,11 @@ function initializeVariableSelection() {
         checkbox.type = 'checkbox';
         checkbox.id = `var_${variable}`;
         checkbox.value = variable;
-        checkbox.checked = selectedVariables.includes(variable) || selectedVariables.length === 0;
+
+        // Auto-select rate variables, or use saved selection
+        const isRateVar = rateVariables.includes(variable);
+        checkbox.checked = selectedVariables.includes(variable) ||
+                          (selectedVariables.length === 0 && isRateVar);
         checkbox.onchange = handleVariableChange;
 
         const label = document.createElement('label');
@@ -327,11 +353,18 @@ function initializeVariableSelection() {
         div.appendChild(label);
         container.appendChild(div);
 
-        // Auto-select if first time
-        if (selectedVariables.length === 0) {
+        // Auto-select rate variables if first time
+        if (selectedVariables.length === 0 && isRateVar) {
             selectedVariables.push(variable);
         }
     });
+
+    // If no rate variables found, select the first available variable
+    if (selectedVariables.length === 0 && variables.length > 0) {
+        selectedVariables.push(variables[0]);
+        const firstCheckbox = document.getElementById(`var_${variables[0]}`);
+        if (firstCheckbox) firstCheckbox.checked = true;
+    }
 }
 
 // Handle variable checkbox changes
@@ -348,6 +381,15 @@ function handleVariableChange(event) {
 
     renderChart();
     saveToLocalStorage();
+}
+
+// Check if we're displaying rate/percentage variables
+function isRateChart() {
+    return selectedVariables.some(v =>
+        v.toLowerCase().includes('rate') ||
+        v.toLowerCase().includes('percent') ||
+        v.toLowerCase().includes('pct')
+    );
 }
 
 // Render the chart
@@ -475,7 +517,7 @@ function renderChart() {
                     type: 'category',
                     title: {
                         display: true,
-                        text: dateColumn,
+                        text: 'Date',
                         font: {
                             size: 14,
                             weight: 'bold'
@@ -483,20 +525,30 @@ function renderChart() {
                     },
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
                     }
                 },
                 y: {
-                    beginAtZero: false,
+                    beginAtZero: true,
+                    suggestedMax: isRateChart() ? 100 : undefined,
                     title: {
                         display: true,
-                        text: 'Value',
+                        text: isRateChart() ? 'Rate (%)' : 'Value',
                         font: {
                             size: 14,
                             weight: 'bold'
                         }
                     },
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return isRateChart() ? value + '%' : value;
+                        }
                     }
                 }
             }
