@@ -1,0 +1,13 @@
+Organism,N,Ampicillin,Amox-Clav,Cefazolin,Ceftriaxone,Ciprofloxacin,Levofloxacin,Nitrofurantoin,TMP-SMX,Oxacillin,Penicillin,Clindamycin,Vancomycin,Doxycycline,Tetracycline
+Escherichia coli,6452,50,86,89,91,81,87,98,70,,,,,,-
+Klebsiella pneumoniae,1266,-,91,88,91,95,84,52,85,,,,,,-
+Proteus mirabilis,755,83,92,97,98,93,94,10,89,,,,,,-
+Enterobacter cloacae,244,-,-,40,77,93,96,37,90,,,,,,-
+Citrobacter koseri,158,-,98,96,99,99,98,86,98,,,,,,-
+Citrobacter freundii,108,-,-,90,84,88,93,89,84,,,,,,-
+Morganella morganii,138,-,-,-,94,80,86,-,84,,,,,,-
+Klebsiella oxytoca,140,-,93,88,93,93,90,98,87,,,,,,-
+Staphylococcus aureus,725,,,,71,,,,95,71,-,66,100,85,48
+Streptococcus agalactiae,85,100,,-,100,,,,,-,100,29,100,-,13
+Coagulase-Negative Staphylococcus,303,,,,57,,,,77,57,-,52,100,-,40
+Enterococcus faecalis,211,100,,,-,,,,99,-,-,-,98,-,-

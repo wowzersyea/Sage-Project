@@ -1,0 +1,164 @@
+{
+  "UTI": {
+    "uncomplicated": {
+      "description": "Uncomplicated cystitis (lower UTI) in otherwise healthy patients",
+      "target_organisms": ["Escherichia coli", "Klebsiella pneumoniae", "Proteus mirabilis", "Enterobacter cloacae"],
+      "organism_weights": {
+        "Escherichia coli": 0.80,
+        "Klebsiella pneumoniae": 0.10,
+        "Proteus mirabilis": 0.05,
+        "Enterobacter cloacae": 0.03,
+        "Other": 0.02
+      },
+      "antibiotics": {
+        "Nitrofurantoin": {
+          "tier": 1,
+          "notes": "First-line for uncomplicated cystitis. NOT for pyelonephritis (poor tissue penetration). Avoid if CrCl <30.",
+          "duration": "5-7 days",
+          "dosing": {
+            "pediatric": "5-7 mg/kg/day divided q6h (max 400mg/day)",
+            "adult": "100mg BID (macrocrystal) or 100mg q6h (microcrystal)"
+          },
+          "contraindications": ["Pyelonephritis", "CrCl <30", "G6PD deficiency", "Pregnancy at term"],
+          "proteus_caveat": true
+        },
+        "TMP-SMX": {
+          "tier": 1,
+          "notes": "First-line option. Check local resistance (often >20% in many areas).",
+          "duration": "3 days (uncomplicated), 7-14 days (complicated)",
+          "dosing": {
+            "pediatric": "8-12 mg TMP/kg/day divided BID (max 320mg TMP/day)",
+            "adult": "1 DS tablet (160/800mg) BID"
+          },
+          "contraindications": ["Sulfa allergy", "Pregnancy (1st trimester)", "G6PD deficiency"]
+        },
+        "Cephalexin": {
+          "tier": 2,
+          "notes": "Second-line. Good for pregnancy. Use cefazolin susceptibility to predict.",
+          "duration": "5-7 days",
+          "dosing": {
+            "pediatric": "25-50 mg/kg/day divided TID-QID (max 4g/day)",
+            "adult": "500mg TID-QID"
+          },
+          "cefazolin_predicts": true
+        },
+        "Cefdinir": {
+          "tier": 2,
+          "notes": "Second-line oral cephalosporin. Once daily option. Use cefazolin susceptibility to predict.",
+          "duration": "5-7 days",
+          "dosing": {
+            "pediatric": "14 mg/kg/day once daily or divided BID (max 600mg/day)",
+            "adult": "300mg BID or 600mg daily"
+          },
+          "cefazolin_predicts": true
+        },
+        "Ciprofloxacin": {
+          "tier": 3,
+          "notes": "Reserve for resistant organisms or pyelonephritis. Avoid in children unless no alternatives.",
+          "duration": "3 days (uncomplicated), 7-14 days (complicated/pyelo)",
+          "dosing": {
+            "pediatric": "20-30 mg/kg/day divided BID (max 1.5g/day) - USE WITH CAUTION",
+            "adult": "250-500mg BID"
+          },
+          "contraindications": ["Children (relative)", "Tendon disorders", "QT prolongation"]
+        },
+        "Amox-Clav": {
+          "tier": 2,
+          "notes": "Alternative when others not suitable. Higher GI side effects.",
+          "duration": "5-7 days",
+          "dosing": {
+            "pediatric": "25-45 mg/kg/day (amox component) divided BID-TID",
+            "adult": "875/125mg BID"
+          }
+        }
+      }
+    }
+  },
+  "Cellulitis": {
+    "non_purulent": {
+      "description": "Non-purulent cellulitis (no abscess/drainage) - Target Streptococcus",
+      "target_organisms": ["Streptococcus agalactiae", "Streptococcus pyogenes"],
+      "notes": "Beta-hemolytic strep remain universally susceptible to beta-lactams",
+      "antibiotics": {
+        "Cephalexin": {
+          "tier": 1,
+          "notes": "First-line for non-purulent cellulitis. Excellent strep coverage.",
+          "duration": "5-7 days (may extend to 10-14 days if slow response)",
+          "dosing": {
+            "pediatric": "25-50 mg/kg/day divided TID-QID (max 4g/day)",
+            "adult": "500mg QID"
+          }
+        },
+        "Amoxicillin": {
+          "tier": 1,
+          "notes": "Alternative first-line. Excellent strep coverage.",
+          "duration": "5-7 days",
+          "dosing": {
+            "pediatric": "25-50 mg/kg/day divided TID (max 3g/day)",
+            "adult": "500mg TID"
+          }
+        },
+        "Clindamycin": {
+          "tier": 2,
+          "notes": "For penicillin allergy. Check local strep resistance (can be 15-30%).",
+          "duration": "5-7 days",
+          "dosing": {
+            "pediatric": "20-30 mg/kg/day divided TID-QID (max 1.8g/day)",
+            "adult": "300-450mg TID-QID"
+          },
+          "allergy_alternative": true
+        }
+      }
+    },
+    "purulent": {
+      "description": "Purulent cellulitis/abscess - Target Staphylococcus aureus including MRSA",
+      "target_organisms": ["Staphylococcus aureus"],
+      "notes": "I&D is PRIMARY treatment for abscesses. Antibiotics adjunctive.",
+      "mrsa_coverage_required": true,
+      "antibiotics": {
+        "TMP-SMX": {
+          "tier": 1,
+          "notes": "First-line for outpatient MRSA. Covers most CA-MRSA.",
+          "duration": "5-10 days",
+          "dosing": {
+            "pediatric": "8-12 mg TMP/kg/day divided BID",
+            "adult": "1-2 DS tablets BID"
+          },
+          "mrsa_active": true
+        },
+        "Doxycycline": {
+          "tier": 1,
+          "notes": "Alternative first-line. Good MRSA coverage. Avoid in children <8 years.",
+          "duration": "5-10 days",
+          "dosing": {
+            "pediatric": "2-4 mg/kg/day divided BID (>8 years only, max 200mg/day)",
+            "adult": "100mg BID"
+          },
+          "contraindications": ["Children <8 years", "Pregnancy"],
+          "mrsa_active": true
+        },
+        "Clindamycin": {
+          "tier": 2,
+          "notes": "Alternative. Check D-test for inducible resistance. Good bone penetration.",
+          "duration": "5-10 days",
+          "dosing": {
+            "pediatric": "30-40 mg/kg/day divided TID-QID (max 1.8g/day)",
+            "adult": "300-450mg TID-QID"
+          },
+          "mrsa_active": true,
+          "check_d_test": true
+        }
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2026-02-03",
+    "references": [
+      "IDSA Guidelines for UTI Management 2025",
+      "IDSA SSTI Guidelines 2024",
+      "Sanford Guide 2026",
+      "Local antibiogram data"
+    ]
+  }
+}
