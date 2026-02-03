@@ -407,9 +407,14 @@ function renderUTIResults() {
         }
     });
 
-    // Sort by tier first (lower = better), then by percent descending within tier
+    // Sort by effective tier (accounting for poor coverage), then by percent
+    // If a first-line agent has <75% coverage, demote it below agents with good coverage
     results.sort((a, b) => {
-        if (a.tier !== b.tier) return a.tier - b.tier;
+        // Calculate effective tier: demote agents with poor coverage (<75%)
+        const aEffectiveTier = a.percent < 75 ? Math.max(a.tier, 3) : a.tier;
+        const bEffectiveTier = b.percent < 75 ? Math.max(b.tier, 3) : b.tier;
+
+        if (aEffectiveTier !== bEffectiveTier) return aEffectiveTier - bEffectiveTier;
         return b.percent - a.percent;
     });
 
@@ -701,11 +706,11 @@ function renderCellulitisResults() {
             strepPercent = null;
             staphPercent = coverage.staph;
         } else {
-            // Unknown: calculate combined score (minimum of both)
+            // Unknown: calculate combined score (50/50 odds of Strep vs Staph)
             strepPercent = coverage.strep;
             staphPercent = coverage.staph;
-            // Use minimum as the "effective" coverage since you need BOTH
-            percent = Math.min(strepPercent || 0, staphPercent || 0);
+            // Average of both coverages assuming equal probability of either organism
+            percent = Math.round(((strepPercent || 0) + (staphPercent || 0)) / 2);
         }
 
         if (percent !== null) {
@@ -850,7 +855,7 @@ function renderCellulitisResults() {
                 <div class="rec-item">
                     <div class="rec-label">⚠️ Clinical Note</div>
                     <div class="rec-value" style="color: var(--text-secondary); font-size: 0.9rem;">
-                        % shown = minimum of Strep & Staph coverage (worst-case).<br>
+                        % shown = average of Strep & Staph (assumes 50/50 odds).<br>
                         Consider re-assessing: Is it purulent or non-purulent?
                     </div>
                 </div>
