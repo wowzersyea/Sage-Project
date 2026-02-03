@@ -98,30 +98,38 @@ function loadProjects() {
     if (saved) {
         try {
             projects = JSON.parse(saved);
+            console.log('Loaded', projects.length, 'projects from localStorage');
         } catch (e) {
             console.error('Error loading projects from localStorage:', e);
             projects = [];
         }
+    } else {
+        console.log('No projects in localStorage');
     }
 
     // Then try to load from Firebase
     if (window.db) {
+        console.log('Firebase database available, setting up listener...');
         setupFirebaseListener();
+    } else {
+        console.warn('Firebase database not available - running in offline mode');
     }
 }
 
 function setupFirebaseListener() {
     if (firebaseListener) return; // Already set up
 
+    console.log('Setting up Firebase listener...');
     const projectsRef = window.db.ref('qi-projects');
 
     firebaseListener = projectsRef.on('value', (snapshot) => {
+        console.log('Firebase data received');
         const data = snapshot.val();
         if (data) {
             projects = Object.values(data);
             // Cache to localStorage
             localStorage.setItem('qi-dashboard-projects', JSON.stringify(projects));
-            console.log('Projects synced from Firebase:', projects.length);
+            console.log('Projects synced from Firebase:', projects.length, 'projects');
 
             // Update UI if already loaded
             if (firebaseInitialized) {
@@ -139,6 +147,8 @@ function setupFirebaseListener() {
                     }
                 }
             }
+        } else {
+            console.log('Firebase connected but database is empty (this is normal for first use)');
         }
         firebaseInitialized = true;
     }, (error) => {
@@ -523,15 +533,28 @@ function parseCSV(content) {
     const headers = lines[0].split(',').map(h => h.trim());
     let data = [];
 
+    // Identify which columns are date columns (keep as strings)
+    const dateColumnIndices = headers.map((h, i) =>
+        h.toLowerCase().includes('date') ? i : -1
+    ).filter(i => i >= 0);
+
     for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',');
         const row = {};
 
         headers.forEach((header, index) => {
             let value = values[index]?.trim() || '';
-            const numValue = parseFloat(value);
-            if (!isNaN(numValue)) {
-                value = numValue;
+
+            // Don't convert date columns to numbers
+            if (!dateColumnIndices.includes(index)) {
+                // Check if it's a pure number (not a date like "12/31/24")
+                // Only convert if it doesn't contain "/" or "-" (date separators)
+                if (!value.includes('/') && !value.includes('-')) {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue) && isFinite(numValue)) {
+                        value = numValue;
+                    }
+                }
             }
             row[header] = value;
         });
@@ -829,11 +852,25 @@ function parseLocalDate(dateStr) {
 
     // If it's already a Date object
     if (dateStr instanceof Date) {
-        return dateStr;
+        return isNaN(dateStr.getTime()) ? null : dateStr;
+    }
+
+    // Handle numbers (might be numeric representation)
+    if (typeof dateStr === 'number') {
+        // Could be a timestamp or invalid
+        if (dateStr > 19000000 && dateStr < 30000000) {
+            // Looks like YYYYMMDD format
+            const y = Math.floor(dateStr / 10000);
+            const m = Math.floor((dateStr % 10000) / 100) - 1;
+            const d = dateStr % 100;
+            return new Date(y, m, d);
+        }
+        return null; // Invalid numeric date
     }
 
     // Convert to string if needed
     const str = String(dateStr).trim();
+    if (!str) return null;
 
     // ISO format: YYYY-MM-DD - parse directly to avoid timezone issues
     const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -841,7 +878,7 @@ function parseLocalDate(dateStr) {
         return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
     }
 
-    // Already formatted as M/D/Y or M/D/YY
+    // M/D/YYYY or M/D/YY format
     const mdyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (mdyMatch) {
         let year = parseInt(mdyMatch[3]);
@@ -849,7 +886,7 @@ function parseLocalDate(dateStr) {
         return new Date(year, parseInt(mdyMatch[1]) - 1, parseInt(mdyMatch[2]));
     }
 
-    // M/Y format (monthly)
+    // M/Y format (monthly labels like "10/25")
     const myMatch = str.match(/^(\d{1,2})\/(\d{2,4})$/);
     if (myMatch) {
         let year = parseInt(myMatch[2]);
@@ -857,15 +894,32 @@ function parseLocalDate(dateStr) {
         return new Date(year, parseInt(myMatch[1]) - 1, 1);
     }
 
-    // Fallback to standard parsing
+    // YYYY format (just year)
+    const yearMatch = str.match(/^(\d{4})$/);
+    if (yearMatch) {
+        return new Date(parseInt(yearMatch[1]), 0, 1);
+    }
+
+    // Fallback to standard parsing - but be careful
     const date = new Date(str);
-    return isNaN(date.getTime()) ? null : date;
+    if (!isNaN(date.getTime())) {
+        // Verify it's a reasonable date (between 1990 and 2100)
+        const year = date.getFullYear();
+        if (year >= 1990 && year <= 2100) {
+            return date;
+        }
+    }
+
+    return null;
 }
 
 // Format date based on aggregation mode
 function formatDate(dateStr, period) {
     const date = parseLocalDate(dateStr);
-    if (!date) return dateStr;
+    if (!date) {
+        console.warn('Failed to parse date:', dateStr);
+        return String(dateStr);
+    }
 
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -873,8 +927,11 @@ function formatDate(dateStr, period) {
 
     if (period === 'monthly') {
         return `${month}/${year}`;
+    } else if (period === 'weekly') {
+        // Show week starting date
+        return `${month}/${day}/${year}`;
     } else {
-        // Daily or weekly: m/d/y
+        // Daily: m/d/yy
         return `${month}/${day}/${year}`;
     }
 }
@@ -1019,13 +1076,20 @@ function renderChart() {
         key.toLowerCase().includes('date')
     ) || Object.keys(displayData[0])[0];
 
-    // For daily view, format dates as m/d/y
+    // Debug: Log first few dates
+    console.log('Aggregation:', aggregation, '| Date column:', dateColumn);
+    console.log('First 3 raw dates:', displayData.slice(0, 3).map(r => r[dateColumn]));
+
+    // Format labels based on aggregation
     let labels;
     if (aggregation === 'daily') {
         labels = displayData.map(row => formatDate(row[dateColumn], 'daily'));
     } else {
+        // For weekly/monthly, dates are pre-formatted by aggregateData
         labels = displayData.map(row => row[dateColumn]);
     }
+
+    console.log('First 3 formatted labels:', labels.slice(0, 3));
 
     // Build datasets
     const datasets = [];
