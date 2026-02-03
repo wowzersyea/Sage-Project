@@ -763,10 +763,49 @@ function onAggregationChange() {
     renderChart();
 }
 
+// Parse a date string safely (handling timezone issues)
+function parseLocalDate(dateStr) {
+    if (!dateStr) return null;
+
+    // If it's already a Date object
+    if (dateStr instanceof Date) {
+        return dateStr;
+    }
+
+    // Convert to string if needed
+    const str = String(dateStr).trim();
+
+    // ISO format: YYYY-MM-DD - parse directly to avoid timezone issues
+    const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+        return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+    }
+
+    // Already formatted as M/D/Y or M/D/YY
+    const mdyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (mdyMatch) {
+        let year = parseInt(mdyMatch[3]);
+        if (year < 100) year += 2000;
+        return new Date(year, parseInt(mdyMatch[1]) - 1, parseInt(mdyMatch[2]));
+    }
+
+    // M/Y format (monthly)
+    const myMatch = str.match(/^(\d{1,2})\/(\d{2,4})$/);
+    if (myMatch) {
+        let year = parseInt(myMatch[2]);
+        if (year < 100) year += 2000;
+        return new Date(year, parseInt(myMatch[1]) - 1, 1);
+    }
+
+    // Fallback to standard parsing
+    const date = new Date(str);
+    return isNaN(date.getTime()) ? null : date;
+}
+
 // Format date based on aggregation mode
 function formatDate(dateStr, period) {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
+    const date = parseLocalDate(dateStr);
+    if (!date) return dateStr;
 
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -782,15 +821,17 @@ function formatDate(dateStr, period) {
 
 // Get the first day of the week (Sunday) for a date
 function getWeekStart(date) {
-    const d = new Date(date);
+    const d = date instanceof Date ? new Date(date.getTime()) : parseLocalDate(date);
+    if (!d) return null;
     const day = d.getDay();
     const diff = d.getDate() - day;
-    return new Date(d.setDate(diff));
+    return new Date(d.getFullYear(), d.getMonth(), diff);
 }
 
 // Get the first day of the month
 function getMonthStart(date) {
-    const d = new Date(date);
+    const d = date instanceof Date ? date : parseLocalDate(date);
+    if (!d) return null;
     return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
@@ -807,8 +848,8 @@ function aggregateData(data, period) {
 
     data.forEach(row => {
         const dateStr = row[dateColumn];
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return;
+        const date = parseLocalDate(dateStr);
+        if (!date) return;
 
         let groupDate;
         if (period === 'weekly') {
@@ -817,8 +858,10 @@ function aggregateData(data, period) {
             groupDate = getMonthStart(date);
         }
 
-        // Use ISO string as key for sorting, store the actual date
-        const key = groupDate.toISOString().split('T')[0];
+        if (!groupDate) return;
+
+        // Use YYYY-MM-DD format as key for sorting
+        const key = `${groupDate.getFullYear()}-${String(groupDate.getMonth() + 1).padStart(2, '0')}-${String(groupDate.getDate()).padStart(2, '0')}`;
         if (!groups[key]) {
             groups[key] = { date: groupDate, rows: [] };
         }
@@ -853,8 +896,8 @@ function aggregateData(data, period) {
 
 // Find the closest label for an intervention date
 function findInterventionLabel(interventionDate, labels, displayData, period) {
-    const intDate = new Date(interventionDate);
-    if (isNaN(intDate.getTime())) return interventionDate;
+    const intDate = parseLocalDate(interventionDate);
+    if (!intDate) return interventionDate;
 
     // For daily view, format the intervention date to match label format
     if (period === 'daily') {
@@ -867,8 +910,7 @@ function findInterventionLabel(interventionDate, labels, displayData, period) {
         if (rawDate) {
             let periodEnd;
             if (period === 'weekly') {
-                periodEnd = new Date(rawDate);
-                periodEnd.setDate(periodEnd.getDate() + 6);
+                periodEnd = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate() + 6);
             } else if (period === 'monthly') {
                 periodEnd = new Date(rawDate.getFullYear(), rawDate.getMonth() + 1, 0);
             }
