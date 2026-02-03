@@ -86,23 +86,83 @@ function generateUUID() {
 }
 
 // ============================================
-// PROJECT MANAGEMENT
+// PROJECT MANAGEMENT (Firebase + localStorage fallback)
 // ============================================
 
+let firebaseInitialized = false;
+let firebaseListener = null;
+
 function loadProjects() {
+    // First load from localStorage as fallback/cache
     const saved = localStorage.getItem('qi-dashboard-projects');
     if (saved) {
         try {
             projects = JSON.parse(saved);
         } catch (e) {
-            console.error('Error loading projects:', e);
+            console.error('Error loading projects from localStorage:', e);
             projects = [];
         }
     }
+
+    // Then try to load from Firebase
+    if (window.db) {
+        setupFirebaseListener();
+    }
+}
+
+function setupFirebaseListener() {
+    if (firebaseListener) return; // Already set up
+
+    const projectsRef = window.db.ref('qi-projects');
+
+    firebaseListener = projectsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            projects = Object.values(data);
+            // Cache to localStorage
+            localStorage.setItem('qi-dashboard-projects', JSON.stringify(projects));
+            console.log('Projects synced from Firebase:', projects.length);
+
+            // Update UI if already loaded
+            if (firebaseInitialized) {
+                populateProjectSelector();
+                renderDisplayTab();
+
+                // Reload current project if it exists
+                if (currentProjectId) {
+                    const project = projects.find(p => p.id === currentProjectId);
+                    if (project) {
+                        currentData = project.data;
+                        selectedVariables = project.settings.selectedVariables || [];
+                        interventions = project.settings.interventions || [];
+                        renderChart();
+                    }
+                }
+            }
+        }
+        firebaseInitialized = true;
+    }, (error) => {
+        console.error('Firebase read error:', error);
+        firebaseInitialized = true;
+    });
 }
 
 function saveProjects() {
+    // Save to localStorage as cache/fallback
     localStorage.setItem('qi-dashboard-projects', JSON.stringify(projects));
+
+    // Save to Firebase
+    if (window.db) {
+        const projectsRef = window.db.ref('qi-projects');
+        const projectsObj = {};
+        projects.forEach(p => {
+            projectsObj[p.id] = p;
+        });
+
+        projectsRef.set(projectsObj)
+            .then(() => console.log('Projects saved to Firebase'))
+            .catch(err => console.error('Firebase save error:', err));
+    }
 }
 
 function loadAppState() {

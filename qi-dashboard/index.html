@@ -809,6 +809,26 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCm-eMjCvJzQmx6x8LOgQxsIVyUWbW5R8w",
+            authDomain: "sage-project-244fc.firebaseapp.com",
+            databaseURL: "https://sage-project-244fc-default-rtdb.firebaseio.com",
+            projectId: "sage-project-244fc",
+            storageBucket: "sage-project-244fc.firebasestorage.app",
+            messagingSenderId: "261707661204",
+            appId: "1:261707661204:web:d70aecc4902cc048d6d981"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.database();
+    </script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
