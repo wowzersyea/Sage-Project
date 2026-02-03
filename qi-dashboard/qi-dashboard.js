@@ -1376,13 +1376,25 @@ function renderMiniChart(project) {
     }
     if (!variable) return;
 
-    const dateColumn = Object.keys(project.data[0]).find(key =>
-        key.toLowerCase().includes('date')
-    ) || Object.keys(project.data[0])[0];
+    // Get the project's saved aggregation setting (default to daily)
+    const projectAggregation = project.settings.aggregation || 'daily';
 
-    // Format labels as m/d/y
-    const labels = project.data.map(row => formatDate(row[dateColumn], 'daily'));
-    const data = project.data.map(row => row[variable]);
+    // Apply aggregation to get display data
+    const displayData = aggregateData(project.data, projectAggregation);
+
+    const dateColumn = Object.keys(displayData[0]).find(key =>
+        key.toLowerCase().includes('date')
+    ) || Object.keys(displayData[0])[0];
+
+    // Format labels based on aggregation
+    let labels;
+    if (projectAggregation === 'daily') {
+        labels = displayData.map(row => formatDate(row[dateColumn], 'daily'));
+    } else {
+        // Weekly/monthly dates are pre-formatted by aggregateData
+        labels = displayData.map(row => row[dateColumn]);
+    }
+    const data = displayData.map(row => row[variable]);
 
     const datasets = [{
         label: variable,
@@ -1397,9 +1409,9 @@ function renderMiniChart(project) {
     // Add median line if project has showMedian enabled
     const showProjectMedian = project.settings.showMedian !== false;
     if (showProjectMedian) {
-        const medianSegments = calculateDynamicMedian(project.data, variable);
+        const medianSegments = calculateDynamicMedian(displayData, variable);
         medianSegments.forEach((segment, segIndex) => {
-            const medianData = project.data.map((_, i) => {
+            const medianData = displayData.map((_, i) => {
                 if (i >= segment.startIndex && i <= segment.endIndex) {
                     return segment.median;
                 }
@@ -1423,7 +1435,7 @@ function renderMiniChart(project) {
     if (project.settings.goalValue !== null) {
         datasets.push({
             label: `Goal (${project.settings.goalValue}%)`,
-            data: project.data.map(() => project.settings.goalValue),
+            data: displayData.map(() => project.settings.goalValue),
             borderColor: '#27ae60',
             borderDash: [4, 2],
             borderWidth: 1.5,
