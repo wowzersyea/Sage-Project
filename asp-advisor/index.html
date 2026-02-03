@@ -848,13 +848,17 @@
                     <h2>Outpatient Cellulitis - Empiric Recommendations</h2>
 
                     <div class="type-selector">
-                        <button type="button" class="type-btn active" onclick="selectCellulitisType('non-purulent')">
+                        <button type="button" class="type-btn active" data-type="non-purulent" onclick="selectCellulitisType('non-purulent')">
                             Non-Purulent
                             <br><small style="font-weight: normal; font-size: 0.8rem;">No abscess/drainage</small>
                         </button>
-                        <button type="button" class="type-btn" onclick="selectCellulitisType('purulent')">
+                        <button type="button" class="type-btn" data-type="purulent" onclick="selectCellulitisType('purulent')">
                             Purulent
                             <br><small style="font-weight: normal; font-size: 0.8rem;">Abscess or drainage</small>
+                        </button>
+                        <button type="button" class="type-btn" data-type="unknown" onclick="selectCellulitisType('unknown')">
+                            Unknown/Both
+                            <br><small style="font-weight: normal; font-size: 0.8rem;">Cover Strep + Staph</small>
                         </button>
                     </div>
 

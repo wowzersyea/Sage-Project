@@ -367,16 +367,16 @@ function renderUTIResults() {
         return;
     }
 
-    // UTI-relevant antibiotics
+    // UTI-relevant antibiotics with stewardship tier (lower = preferred)
     const utiAntibiotics = [
-        { name: 'Nitrofurantoin', caveat: 'Not for Proteus or pyelonephritis' },
-        { name: 'TMP-SMX', alias: 'Trimethoprim/Sulfamethoxazole' },
-        { name: 'Cefazolin', displayAs: 'Cefdinir*', note: '*Predicted from Cefazolin' },
-        { name: 'Cephalexin', alias: 'Cefazolin' },
-        { name: 'Amox-Clav', alias: 'Amoxicillin/Clavulanate' },
-        { name: 'Ciprofloxacin', caveat: 'Reserve for resistant cases' },
-        { name: 'Levofloxacin', caveat: 'Reserve for resistant cases' },
-        { name: 'Ampicillin' }
+        { name: 'Nitrofurantoin', tier: 1, caveat: 'Not for Proteus or pyelonephritis' },
+        { name: 'TMP-SMX', tier: 1, alias: 'Trimethoprim/Sulfamethoxazole' },
+        { name: 'Cephalexin', tier: 2, alias: 'Cefazolin' },
+        { name: 'Amox-Clav', tier: 2, alias: 'Amoxicillin/Clavulanate' },
+        { name: 'Ampicillin', tier: 2 },
+        { name: 'Cefazolin', tier: 3, displayAs: 'Cefdinir*', note: '*Predicted from Cefazolin susceptibility' },
+        { name: 'Ciprofloxacin', tier: 4, caveat: 'Reserve for resistant cases' },
+        { name: 'Levofloxacin', tier: 4, caveat: 'Reserve for resistant cases' }
     ];
 
     const results = [];
@@ -401,13 +401,17 @@ function renderUTIResults() {
                 percent: success,
                 category: getSuccessCategory(success),
                 caveat: abx.caveat,
-                note: abx.note
+                note: abx.note,
+                tier: abx.tier
             });
         }
     });
 
-    // Sort by percent descending
-    results.sort((a, b) => b.percent - a.percent);
+    // Sort by tier first (lower = better), then by percent descending within tier
+    results.sort((a, b) => {
+        if (a.tier !== b.tier) return a.tier - b.tier;
+        return b.percent - a.percent;
+    });
 
     if (results.length === 0) {
         container.innerHTML = `
@@ -496,7 +500,8 @@ function selectCellulitisType(type) {
     currentCellulitisType = type;
 
     document.querySelectorAll('.type-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(type.replace('-', ' ')));
+        const btnType = btn.dataset.type;
+        btn.classList.toggle('active', btnType === type);
     });
 
     renderCellulitisResults();
@@ -529,57 +534,84 @@ function calculateCellulitisSuccess(antibiotic, type) {
 
     if (type === 'non-purulent') {
         // Non-purulent: Target Strep - virtually 100% susceptible to beta-lactams
-        // Check for actual strep data if available
-        const strep = Object.entries(antibiogramData.organisms).find(([name]) =>
-            name.toLowerCase().includes('streptococcus')
-        );
+        return { strep: calculateStrepCoverage(antibiotic), staph: null };
+    } else if (type === 'purulent') {
+        // Purulent: Target S. aureus including MRSA
+        return { strep: null, staph: calculateStaphCoverage(antibiotic) };
+    } else {
+        // Unknown: Need to cover BOTH Strep and Staph - return both coverages
+        return {
+            strep: calculateStrepCoverage(antibiotic),
+            staph: calculateStaphCoverage(antibiotic)
+        };
+    }
+}
 
+function calculateStrepCoverage(antibiotic) {
+    // Check for actual strep data if available
+    const strep = Object.entries(antibiogramData.organisms).find(([name]) =>
+        name.toLowerCase().includes('streptococcus')
+    );
+
+    if (strep) {
+        const [, org] = strep;
+        const susc = org.susceptibility[antibiotic];
+        if (susc !== undefined) return susc;
+    }
+
+    // Default assumptions for strep
+    const betaLactams = ['Cephalexin', 'Amoxicillin', 'Penicillin', 'Ampicillin', 'Ceftriaxone'];
+    if (betaLactams.some(bl => antibiotic.includes(bl))) {
+        return 99; // Strep essentially always susceptible to beta-lactams
+    }
+
+    if (antibiotic === 'Clindamycin') {
+        // Check actual clindamycin data for strep
+        if (strep) {
+            const [, org] = strep;
+            return org.susceptibility['Clindamycin'] || 75;
+        }
+        return 75; // Variable
+    }
+
+    // TMP-SMX and Doxycycline have poor strep coverage
+    if (antibiotic === 'TMP-SMX' || antibiotic === 'Doxycycline') {
+        // Check actual data if available
         if (strep) {
             const [, org] = strep;
             const susc = org.susceptibility[antibiotic];
             if (susc !== undefined) return susc;
         }
-
-        // Default assumptions for strep
-        const betaLactams = ['Cephalexin', 'Amoxicillin', 'Penicillin', 'Ampicillin', 'Ceftriaxone'];
-        if (betaLactams.some(bl => antibiotic.includes(bl))) {
-            return 99; // Strep essentially always susceptible
-        }
-
-        if (antibiotic === 'Clindamycin') {
-            // Check actual clindamycin data for strep
-            if (strep) {
-                const [, org] = strep;
-                return org.susceptibility['Clindamycin'] || 75;
-            }
-            return 75; // Variable
-        }
-
-        return null;
-    } else {
-        // Purulent: Target S. aureus including MRSA
-        const staph = Object.entries(antibiogramData.organisms).find(([name]) =>
-            name.toLowerCase().includes('staphylococcus aureus')
-        );
-
-        if (!staph) return null;
-
-        const [, org] = staph;
-        const mrsaRate = calculateMRSARate() || 20;
-
-        // MRSA-active antibiotics
-        const mrsaActive = ['TMP-SMX', 'Trimethoprim/Sulfamethoxazole', 'Doxycycline', 'Clindamycin', 'Vancomycin', 'Linezolid'];
-
-        let susc = org.susceptibility[antibiotic];
-        if (susc === undefined) return null;
-
-        // If not MRSA-active, reduce by MRSA rate
-        if (!mrsaActive.some(ma => antibiotic.includes(ma))) {
-            susc = Math.round(susc * (1 - mrsaRate / 100));
-        }
-
-        return susc;
+        // TMP-SMX: Strep is intrinsically resistant (~0% coverage)
+        // Doxycycline: Variable but generally poor for strep (~15-30%)
+        return antibiotic === 'TMP-SMX' ? 0 : 20;
     }
+
+    return null;
+}
+
+function calculateStaphCoverage(antibiotic) {
+    const staph = Object.entries(antibiogramData.organisms).find(([name]) =>
+        name.toLowerCase().includes('staphylococcus aureus')
+    );
+
+    if (!staph) return null;
+
+    const [, org] = staph;
+    const mrsaRate = calculateMRSARate() || 20;
+
+    // MRSA-active antibiotics
+    const mrsaActive = ['TMP-SMX', 'Trimethoprim/Sulfamethoxazole', 'Doxycycline', 'Clindamycin', 'Vancomycin', 'Linezolid'];
+
+    let susc = org.susceptibility[antibiotic];
+    if (susc === undefined) return null;
+
+    // If not MRSA-active, reduce by MRSA rate
+    if (!mrsaActive.some(ma => antibiotic.includes(ma))) {
+        susc = Math.round(susc * (1 - mrsaRate / 100));
+    }
+
+    return susc;
 }
 
 function renderCellulitisResults() {
@@ -600,11 +632,26 @@ function renderCellulitisResults() {
         return;
     }
 
-    // Show MRSA alert for purulent
+    // Show MRSA alert for purulent and unknown
     const mrsaRate = calculateMRSARate();
-    if (currentCellulitisType === 'purulent' && mrsaRate !== null) {
+    if ((currentCellulitisType === 'purulent' || currentCellulitisType === 'unknown') && mrsaRate !== null) {
         mrsaAlert.style.display = 'block';
-        mrsaRateEl.textContent = mrsaRate;
+        if (currentCellulitisType === 'unknown') {
+            mrsaAlert.innerHTML = `
+                <strong>⚠️ No Single Agent Covers Both Strep + MRSA Well</strong>
+                <br>Local MRSA Rate: ${mrsaRate}%
+                <br><br>
+                <strong>Options:</strong>
+                <br>• <strong>Combination therapy:</strong> Cephalexin (Strep) + TMP-SMX (MRSA)
+                <br>• <strong>Clindamycin monotherapy:</strong> Covers both but check local resistance
+                <br>• <strong>Re-assess:</strong> Is it more likely Strep (non-purulent) or Staph (purulent)?
+            `;
+        } else {
+            mrsaAlert.innerHTML = `
+                <strong>Local MRSA Rate: ${mrsaRate}%</strong>
+                <br>Empiric MRSA coverage recommended for purulent infections.
+            `;
+        }
     } else {
         mrsaAlert.style.display = 'none';
     }
@@ -613,38 +660,75 @@ function renderCellulitisResults() {
     let antibiotics;
     if (currentCellulitisType === 'non-purulent') {
         antibiotics = [
-            { name: 'Cephalexin' },
-            { name: 'Amoxicillin' },
-            { name: 'Penicillin' },
-            { name: 'Clindamycin', caveat: 'For penicillin allergy - check local strep resistance' }
+            { name: 'Cephalexin', tier: 1 },
+            { name: 'Amoxicillin', tier: 1 },
+            { name: 'Penicillin', tier: 1 },
+            { name: 'Clindamycin', tier: 2, caveat: 'For penicillin allergy - check local strep resistance' }
+        ];
+    } else if (currentCellulitisType === 'purulent') {
+        antibiotics = [
+            { name: 'TMP-SMX', tier: 1, caveat: 'First-line for MRSA' },
+            { name: 'Doxycycline', tier: 1, caveat: 'Avoid in children <8 years' },
+            { name: 'Clindamycin', tier: 2, caveat: 'Check D-test for inducible resistance' },
+            { name: 'Cephalexin', tier: 3, caveat: 'Does NOT cover MRSA' }
         ];
     } else {
+        // Unknown - need coverage for both Strep AND Staph
+        // Show all options with BOTH coverages so clinician can decide
         antibiotics = [
-            { name: 'TMP-SMX', caveat: 'First-line for MRSA' },
-            { name: 'Doxycycline', caveat: 'Avoid in children <8 years' },
-            { name: 'Clindamycin', caveat: 'Check D-test for inducible resistance' },
-            { name: 'Cephalexin', caveat: 'Does NOT cover MRSA' },
-            { name: 'Vancomycin', caveat: 'IV only - severe cases' }
+            { name: 'Clindamycin', tier: 1, showBothCoverages: true },
+            { name: 'Cephalexin', tier: 2, staphGap: true },
+            { name: 'Amoxicillin', tier: 2, staphGap: true },
+            { name: 'TMP-SMX', tier: 2, strepGap: true },
+            { name: 'Doxycycline', tier: 2, strepGap: true }
         ];
     }
 
     const results = [];
 
     antibiotics.forEach(abx => {
-        const success = calculateCellulitisSuccess(abx.name, currentCellulitisType);
+        const coverage = calculateCellulitisSuccess(abx.name, currentCellulitisType);
+        if (!coverage) return;
 
-        if (success !== null) {
+        let percent, strepPercent, staphPercent;
+
+        if (currentCellulitisType === 'non-purulent') {
+            percent = coverage.strep;
+            strepPercent = coverage.strep;
+            staphPercent = null;
+        } else if (currentCellulitisType === 'purulent') {
+            percent = coverage.staph;
+            strepPercent = null;
+            staphPercent = coverage.staph;
+        } else {
+            // Unknown: calculate combined score (minimum of both)
+            strepPercent = coverage.strep;
+            staphPercent = coverage.staph;
+            // Use minimum as the "effective" coverage since you need BOTH
+            percent = Math.min(strepPercent || 0, staphPercent || 0);
+        }
+
+        if (percent !== null) {
             results.push({
                 name: abx.name,
-                percent: success,
-                category: getSuccessCategory(success),
-                caveat: abx.caveat
+                percent: percent,
+                strepPercent: strepPercent,
+                staphPercent: staphPercent,
+                category: getSuccessCategory(percent),
+                caveat: abx.caveat,
+                tier: abx.tier || 2,
+                strepGap: abx.strepGap || false,
+                staphGap: abx.staphGap || false,
+                showBothCoverages: abx.showBothCoverages || false
             });
         }
     });
 
-    // Sort by percent descending
-    results.sort((a, b) => b.percent - a.percent);
+    // Sort by tier first, then by percent descending within tier
+    results.sort((a, b) => {
+        if (a.tier !== b.tier) return a.tier - b.tier;
+        return b.percent - a.percent;
+    });
 
     if (results.length === 0) {
         container.innerHTML = `
@@ -657,21 +741,49 @@ function renderCellulitisResults() {
     }
 
     // Render results
-    container.innerHTML = results.map(r => `
-        <div class="antibiotic-row ${r.category}">
-            <div class="abx-indicator ${r.category}">
-                ${r.category === 'excellent' ? '✓' : r.category === 'good' ? '●' : r.category === 'marginal' ? '!' : '✗'}
+    container.innerHTML = results.map(r => {
+        let coverageDisplay = '';
+        let gapWarning = '';
+
+        if (currentCellulitisType === 'unknown') {
+            // Show both coverages for unknown type
+            const strepCat = getSuccessCategory(r.strepPercent || 0);
+            const staphCat = getSuccessCategory(r.staphPercent || 0);
+            coverageDisplay = `
+                <div style="display: flex; gap: 8px; font-size: 0.8rem; margin-top: 2px;">
+                    <span style="color: ${strepCat === 'excellent' || strepCat === 'good' ? 'var(--success)' : 'var(--danger)'};">
+                        Strep: ${r.strepPercent || 0}%
+                    </span>
+                    <span style="color: ${staphCat === 'excellent' || staphCat === 'good' ? 'var(--success)' : 'var(--danger)'};">
+                        Staph: ${r.staphPercent || 0}%
+                    </span>
+                </div>
+            `;
+
+            if (r.strepGap) {
+                gapWarning = '<span style="background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">NO STREP</span>';
+            } else if (r.staphGap) {
+                gapWarning = '<span style="background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">NO MRSA</span>';
+            }
+        }
+
+        return `
+            <div class="antibiotic-row ${r.category}">
+                <div class="abx-indicator ${r.category}">
+                    ${r.category === 'excellent' ? '✓' : r.category === 'good' ? '●' : r.category === 'marginal' ? '!' : '✗'}
+                </div>
+                <div class="abx-name">
+                    ${r.name}${gapWarning}
+                    ${currentCellulitisType === 'unknown' ? coverageDisplay : ''}
+                    ${r.caveat ? `<span class="caveat">${r.caveat}</span>` : ''}
+                </div>
+                <div class="abx-percent ${r.category}">${r.percent}%</div>
+                <div class="abx-bar">
+                    <div class="abx-bar-fill ${r.category}" style="width: ${r.percent}%"></div>
+                </div>
             </div>
-            <div class="abx-name">
-                ${r.name}
-                ${r.caveat ? `<span class="caveat">${r.caveat}</span>` : ''}
-            </div>
-            <div class="abx-percent ${r.category}">${r.percent}%</div>
-            <div class="abx-bar">
-                <div class="abx-bar-fill ${r.category}" style="width: ${r.percent}%"></div>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     // Generate recommendation
     const excellent = results.filter(r => r.category === 'excellent');
@@ -680,20 +792,67 @@ function renderCellulitisResults() {
     if (excellent.length > 0 || good.length > 0) {
         recBox.style.display = 'block';
 
-        const firstLine = excellent[0] || good[0];
+        // For unknown type, prefer drugs that cover both Strep and Staph
+        let firstLine;
+        let recHTML = '';
 
-        let recHTML = `
-            <div class="rec-item">
-                <div class="rec-label">First Line</div>
-                <div class="rec-value">${firstLine.name} (${firstLine.percent}% coverage)</div>
-            </div>
-        `;
+        if (currentCellulitisType === 'unknown') {
+            // Find drugs that cover both reasonably (no gaps)
+            const coversBoth = results.filter(r => !r.strepGap && !r.staphGap);
+            firstLine = coversBoth.find(r => r.category === 'excellent' || r.category === 'good') ||
+                       coversBoth[0] ||
+                       results[0];
+
+            // Show monotherapy option with both coverages
+            recHTML = `
+                <div class="rec-item">
+                    <div class="rec-label">Monotherapy Option</div>
+                    <div class="rec-value">
+                        ${firstLine.name}
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">
+                            (Strep: ${firstLine.strepPercent || 0}% | Staph: ${firstLine.staphPercent || 0}%)
+                        </span>
+                    </div>
+                </div>
+            `;
+        } else {
+            firstLine = excellent[0] || good[0];
+            const coverageLabel = currentCellulitisType === 'non-purulent' ? 'Strep' : 'Staph';
+            recHTML = `
+                <div class="rec-item">
+                    <div class="rec-label">First Line</div>
+                    <div class="rec-value">${firstLine.name} (${firstLine.percent}% ${coverageLabel} coverage)</div>
+                </div>
+            `;
+        }
 
         if (currentCellulitisType === 'purulent') {
             recHTML += `
                 <div class="rec-item">
                     <div class="rec-label">Important</div>
                     <div class="rec-value" style="color: var(--accent-coral);">I&D is PRIMARY treatment for abscesses</div>
+                </div>
+            `;
+        }
+
+        if (currentCellulitisType === 'unknown') {
+            // Find best Strep and Staph options for combination therapy
+            const bestStrep = results.find(r => r.staphGap && r.strepPercent >= 85);
+            const bestStaph = results.find(r => r.strepGap && r.staphPercent >= 85);
+
+            recHTML += `
+                <div class="rec-item">
+                    <div class="rec-label">Combination Option</div>
+                    <div class="rec-value">
+                        ${bestStrep ? bestStrep.name : 'Cephalexin'} (Strep) + ${bestStaph ? bestStaph.name : 'TMP-SMX'} (MRSA)
+                    </div>
+                </div>
+                <div class="rec-item">
+                    <div class="rec-label">⚠️ Clinical Note</div>
+                    <div class="rec-value" style="color: var(--text-secondary); font-size: 0.9rem;">
+                        % shown = minimum of Strep & Staph coverage (worst-case).<br>
+                        Consider re-assessing: Is it purulent or non-purulent?
+                    </div>
                 </div>
             `;
         }
