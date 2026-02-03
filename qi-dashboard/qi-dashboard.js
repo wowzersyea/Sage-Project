@@ -1042,6 +1042,54 @@ function findInterventionLabel(interventionDate, labels, displayData, period) {
     return formatDate(interventionDate, period);
 }
 
+// Map daily median segments to aggregated display points
+// This ensures median is calculated from daily data but displayed on aggregated charts
+function mapMedianToAggregated(medianSegments, dailyData, displayData, period, dateColumn) {
+    if (period === 'daily') {
+        // For daily, segments map directly to display indices
+        return displayData.map((_, displayIndex) => {
+            for (let segIdx = 0; segIdx < medianSegments.length; segIdx++) {
+                const seg = medianSegments[segIdx];
+                if (displayIndex >= seg.startIndex && displayIndex <= seg.endIndex) {
+                    return { median: seg.median, segmentIndex: segIdx };
+                }
+            }
+            return null;
+        });
+    }
+
+    // For weekly/monthly, map each aggregated point to its corresponding daily segment
+    return displayData.map((aggRow) => {
+        const rawDate = aggRow._rawDate;
+        if (!rawDate) return null;
+
+        // Find which daily data points fall within this aggregated period
+        let periodEnd;
+        if (period === 'weekly') {
+            periodEnd = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate() + 6);
+        } else if (period === 'monthly') {
+            periodEnd = new Date(rawDate.getFullYear(), rawDate.getMonth() + 1, 0);
+        }
+
+        // Find the first daily data point in this period
+        for (let dailyIdx = 0; dailyIdx < dailyData.length; dailyIdx++) {
+            const dailyDate = parseLocalDate(dailyData[dailyIdx][dateColumn]);
+            if (!dailyDate) continue;
+
+            if (dailyDate >= rawDate && dailyDate <= periodEnd) {
+                // Found a daily point in this period - find which segment it belongs to
+                for (let segIdx = 0; segIdx < medianSegments.length; segIdx++) {
+                    const seg = medianSegments[segIdx];
+                    if (dailyIdx >= seg.startIndex && dailyIdx <= seg.endIndex) {
+                        return { median: seg.median, segmentIndex: segIdx };
+                    }
+                }
+            }
+        }
+        return null;
+    });
+}
+
 // ============================================
 // CHART RENDERING
 // ============================================
@@ -1109,13 +1157,20 @@ function renderChart() {
         });
 
         // Add median line if enabled
+        // IMPORTANT: Always calculate median from DAILY data for proper QI shift detection
         if (showMedian) {
-            const medianSegments = calculateDynamicMedian(displayData, variable);
+            const medianSegments = calculateDynamicMedian(currentData, variable);
+
+            // Map daily median segments to aggregated display points
+            const medianDataForDisplay = mapMedianToAggregated(
+                medianSegments, currentData, displayData, aggregation, dateColumn
+            );
 
             medianSegments.forEach((segment, segIndex) => {
-                const medianData = displayData.map((_, i) => {
-                    if (i >= segment.startIndex && i <= segment.endIndex) {
-                        return segment.median;
+                const medianData = medianDataForDisplay.map((val, i) => {
+                    // Show median value if this display point falls within this segment
+                    if (val !== null && val.segmentIndex === segIndex) {
+                        return val.median;
                     }
                     return null;
                 });
@@ -1407,13 +1462,20 @@ function renderMiniChart(project) {
     }];
 
     // Add median line if project has showMedian enabled
+    // IMPORTANT: Calculate median from DAILY data for proper QI shift detection
     const showProjectMedian = project.settings.showMedian !== false;
     if (showProjectMedian) {
-        const medianSegments = calculateDynamicMedian(displayData, variable);
+        const medianSegments = calculateDynamicMedian(project.data, variable);
+
+        // Map daily median segments to aggregated display points
+        const medianDataForDisplay = mapMedianToAggregated(
+            medianSegments, project.data, displayData, projectAggregation, dateColumn
+        );
+
         medianSegments.forEach((segment, segIndex) => {
-            const medianData = displayData.map((_, i) => {
-                if (i >= segment.startIndex && i <= segment.endIndex) {
-                    return segment.median;
+            const medianData = medianDataForDisplay.map((val) => {
+                if (val !== null && val.segmentIndex === segIndex) {
+                    return val.median;
                 }
                 return null;
             });
