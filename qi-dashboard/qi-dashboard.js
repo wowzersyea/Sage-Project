@@ -1120,6 +1120,13 @@ function renderChart() {
     // Apply aggregation
     let displayData = aggregateData(currentData, aggregation);
 
+    // Guard against empty data
+    if (!displayData || displayData.length === 0) {
+        console.warn('No data to display after aggregation');
+        updateStatus('warning', 'No data available to chart');
+        return;
+    }
+
     const dateColumn = Object.keys(displayData[0]).find(key =>
         key.toLowerCase().includes('date')
     ) || Object.keys(displayData[0])[0];

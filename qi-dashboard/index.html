@@ -24,6 +24,28 @@
             padding: 20px;
         }
 
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #567159;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: #435a46;
+        }
+
+        .back-link svg {
+            width: 18px;
+            height: 18px;
+        }
+
         header {
             background: linear-gradient(135deg, #567159 0%, #435a46 100%);
             color: white;
@@ -598,6 +620,12 @@
 </head>
 <body>
     <div class="container">
+        <a href="../index.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Dashboard
+        </a>
         <header>
             <h1>🌿 QI Metric Center</h1>
             <p class="subtitle">Quality Improvement Run Chart Dashboard</p>
