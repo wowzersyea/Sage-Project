@@ -268,7 +268,19 @@ function updateAntibiogramStatus() {
     }
 
     status.classList.remove('empty');
-    title.textContent = antibiogramData.metadata.institution || 'Local Antibiogram';
+    title.innerHTML = `
+        ${antibiogramData.metadata.institution || 'Local Antibiogram'}
+        <button type="button" onclick="clearAllData()" style="
+            margin-left: 1rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            background: var(--sage-100);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        ">Clear Data</button>
+    `;
 
     const totalIsolates = Object.values(antibiogramData.organisms)
         .reduce((sum, org) => sum + (org.isolates || 0), 0);
@@ -603,20 +615,54 @@ function calculateStaphCoverage(antibiotic) {
     if (!staph) return null;
 
     const [, org] = staph;
-    const mrsaRate = calculateMRSARate() || 20;
 
-    // MRSA-active antibiotics
-    const mrsaActive = ['TMP-SMX', 'Trimethoprim/Sulfamethoxazole', 'Doxycycline', 'Clindamycin', 'Vancomycin', 'Linezolid'];
-
+    // Check if we have direct susceptibility data for this antibiotic
     let susc = org.susceptibility[antibiotic];
-    if (susc === undefined) return null;
 
-    // If not MRSA-active, reduce by MRSA rate
-    if (!mrsaActive.some(ma => antibiotic.includes(ma))) {
-        susc = Math.round(susc * (1 - mrsaRate / 100));
+    // For beta-lactams, the antibiogram % already reflects MSSA-only coverage
+    // (labs report MRSA as resistant to beta-lactams, so the % IS the MSSA susceptibility)
+    // Don't reduce further - just use the value directly
+
+    if (susc !== undefined) {
+        return susc;
     }
 
-    return susc;
+    // Beta-lactams that don't cover MRSA - use Oxacillin (MSSA rate) as proxy
+    const betaLactams = ['Cephalexin', 'Cefazolin', 'Ceftriaxone', 'Amoxicillin', 'Ampicillin', 'Penicillin', 'Amox-Clav'];
+    const isBetaLactam = betaLactams.some(bl =>
+        antibiotic.toLowerCase() === bl.toLowerCase() ||
+        antibiotic.toLowerCase().includes(bl.toLowerCase())
+    );
+
+    if (isBetaLactam) {
+        // Beta-lactams effective against MSSA only
+        // Oxacillin susceptibility = MSSA rate = beta-lactam coverage for S. aureus
+
+        // Try to find Oxacillin in the susceptibility data (case-insensitive)
+        const oxaKey = Object.keys(org.susceptibility).find(k =>
+            k.toLowerCase() === 'oxacillin'
+        );
+        if (oxaKey && org.susceptibility[oxaKey] !== undefined) {
+            return org.susceptibility[oxaKey];
+        }
+
+        // Fallback: check if we have any cephalosporin data
+        const cefaKey = Object.keys(org.susceptibility).find(k =>
+            k.toLowerCase() === 'cefazolin'
+        );
+        const ceftKey = Object.keys(org.susceptibility).find(k =>
+            k.toLowerCase() === 'ceftriaxone'
+        );
+
+        if (cefaKey && org.susceptibility[cefaKey] !== undefined) {
+            return org.susceptibility[cefaKey];
+        }
+        if (ceftKey && org.susceptibility[ceftKey] !== undefined) {
+            return org.susceptibility[ceftKey];
+        }
+    }
+
+    return null;
 }
 
 function renderCellulitisResults() {
@@ -818,6 +864,7 @@ function renderCellulitisResults() {
                             (Strep: ${firstLine.strepPercent || 0}% | Staph: ${firstLine.staphPercent || 0}%)
                         </span>
                     </div>
+                    ${getCellulitisDosingHTML(firstLine.name)}
                 </div>
             `;
         } else {
@@ -827,6 +874,7 @@ function renderCellulitisResults() {
                 <div class="rec-item">
                     <div class="rec-label">First Line</div>
                     <div class="rec-value">${firstLine.name} (${firstLine.percent}% ${coverageLabel} coverage)</div>
+                    ${getCellulitisDosingHTML(firstLine.name)}
                 </div>
             `;
         }
@@ -873,6 +921,32 @@ function renderCellulitisResults() {
     } else {
         recBox.style.display = 'none';
     }
+}
+
+function getCellulitisDosingHTML(antibioticName) {
+    // Get dosing from protocols if available
+    const cellulitisType = currentCellulitisType === 'non-purulent' ? 'non_purulent' : 'purulent';
+    const dosing = protocols?.Cellulitis?.[cellulitisType]?.antibiotics?.[antibioticName]?.dosing;
+
+    if (dosing) {
+        return `<div class="rec-dosing">Pediatric: ${dosing.pediatric}</div>`;
+    }
+
+    // Fallback dosing for common antibiotics
+    const fallbackDosing = {
+        'Cephalexin': '25-50 mg/kg/day divided TID-QID (max 4g/day)',
+        'Amoxicillin': '25-50 mg/kg/day divided TID (max 3g/day)',
+        'TMP-SMX': '8-12 mg TMP/kg/day divided BID',
+        'Doxycycline': '2-4 mg/kg/day divided BID (>8 years only, max 200mg/day)',
+        'Clindamycin': '20-30 mg/kg/day divided TID-QID (max 1.8g/day)',
+        'Penicillin': '25-50 mg/kg/day divided QID'
+    };
+
+    if (fallbackDosing[antibioticName]) {
+        return `<div class="rec-dosing">Pediatric: ${fallbackDosing[antibioticName]}</div>`;
+    }
+
+    return '';
 }
 
 // ============================================
