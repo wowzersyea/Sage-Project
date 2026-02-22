@@ -1,0 +1,21 @@
+{
+  "date_range": "February 08 - February 22, 2026",
+  "generated": "2026-02-22T06:35:18.418594",
+  "pdfs": [
+    {
+      "title": "Cost-effectiveness of Text Message System for COVID-19 Testing in K-12 Schools",
+      "url": "https://academic.oup.com/jpids/article-pdf/15/1/piaf111/66533999/piaf111.pdf",
+      "path": "f:/Coding/sage_podcastlm/example_inputs/2026-02-08_to_2026-02-22/Cost-effectiveness_of_Text_Message_System_for_COVID-19_Testing_in_K-12_Schools.pdf"
+    },
+    {
+      "title": "Management of Serious Staphylococcus aureus Infections in Children: Canadian Survey",
+      "url": "https://academic.oup.com/pch/advance-article-pdf/doi/10.1093/pch/pxaf122/66634273/pxaf122.pdf",
+      "path": "f:/Coding/sage_podcastlm/example_inputs/2026-02-08_to_2026-02-22/Management_of_Serious_Staphylococcus_aureus_Infections_in_Children_Canadian_Surv.pdf"
+    },
+    {
+      "title": "Temporal Clustering of Mycoplasma pneumoniae-Associated Encephalitis and Stroke in South Korea",
+      "url": "https://wwwnc.cdc.gov/eid/article/32/2/pdfs/25-1296.pdf",
+      "path": "f:/Coding/sage_podcastlm/example_inputs/2026-02-08_to_2026-02-22/Temporal_Clustering_of_Mycoplasma_pneumoniae-Associated_Encephalitis_and_Stroke.pdf"
+    }
+  ]
+}
