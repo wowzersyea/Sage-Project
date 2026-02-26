@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sage Project Podcast</title>
+    <link>https://sageproject.xyz/</link>
+    <description>Clinical evidence podcast generated from curated article reviews.</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 26 Feb 2026 22:44:10 GMT</lastBuildDate>
+    <itunes:author>Sage Project</itunes:author>
+    <itunes:summary>Clinical evidence podcast generated from curated article reviews.</itunes:summary>
+    <itunes:explicit>false</itunes:explicit>
+    <atom:link href="https://sageproject.xyz/podcast/feed.xml" rel="self" type="application/rss+xml" />
+    <itunes:owner>
+      <itunes:name>Sage Project</itunes:name>
+    </itunes:owner>
+    <item>
+      <title>Sage Digest 2026-03-02</title>
+      <description># JOURNAL CLUB TRANSCRIPT: ALSHANQEETI 2026 – GENERATIVE AI FOR CAUTI SURVEILLANCE Welcome everyone to journal club. Today we're diving into a really timely paper about using artificial intelligence to help identify catheter-associated urinary tract infections, or CAUTIs, in the hospital setting. Before we get rolling, I need to say that this discussion is educational only and not medical advice. We're here to critically appraise the evidence together. So we're looking at one paper today – Alshanqeeti 2026 – which evaluates whether GPT-4o, that large language model from OpenAI, can actually do the work of infection surveillance specialists?</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/digest-full.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:episode:full</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/digest-full.mp3" length="46969670" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>01:05:14</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,15 @@
+[
+  {
+    "guid": "sageproject:2026-03-02:episode:full",
+    "title": "Sage Digest 2026-03-02",
+    "description": "# JOURNAL CLUB TRANSCRIPT: ALSHANQEETI 2026 \u2013 GENERATIVE AI FOR CAUTI SURVEILLANCE Welcome everyone to journal club. Today we're diving into a really timely paper about using artificial intelligence to help identify catheter-associated urinary tract infections, or CAUTIs, in the hospital setting. Before we get rolling, I need to say that this discussion is educational only and not medical advice. We're here to critically appraise the evidence together. So we're looking at one paper today \u2013 Alshanqeeti 2026 \u2013 which evaluates whether GPT-4o, that large language model from OpenAI, can actually do the work of infection surveillance specialists?",
+    "audio_rel_path": "podcast/audio/2026-03-02/digest-full.mp3",
+    "audio_url": "https://sageproject.xyz/podcast/audio/2026-03-02/digest-full.mp3",
+    "audio_bytes": 46969670,
+    "pub_date": "Thu, 26 Feb 2026 15:32:48 GMT",
+    "duration": "01:05:14",
+    "link": "https://sageproject.xyz/podcast/audio/2026-03-02/digest-full.mp3",
+    "author": "Sage Project",
+    "explicit": "false"
+  }
+]
