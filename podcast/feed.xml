@@ -24,5 +24,82 @@
       <itunes:duration>01:05:14</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
     </item>
+    <item>
+      <title>2026-03-02 | CID Alshanqeeti 2026 Comparing Generative Artificial Intelli</title>
+      <description>Welcome everyone to journal club. Today we're diving into a really timely paper about using artificial intelligence to help identify catheter-associated urinary tract infections, or CAUTIs, in the hospital setting. Before we get rolling, I need to say that this discussion is educational only and not medical advice. We're here to critically appraise the evidence together. So we're looking at one paper today – Alshanqeeti 2026 – which evaluates whether GPT-4o, that large language model from OpenAI, can actually do the work of infection surveillance specialists? Exactly. And it's a fascinating question because if GenAI can help us identify these hospital-acquired infections reliably, that could potentially free up a lot of human time and reduce costs. But let's start with the basics. What kin</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/01-cid-alshanqeeti-2026-comparing-generative-artificial-intelli.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:01:cid-alshanqeeti-2026-comparing-generative-artificial-intelli</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/01-cid-alshanqeeti-2026-comparing-generative-artificial-intelli.mp3" length="4437516" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:06:10</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>2026-03-02 | CID Dousa 2026 The Role of β-Lactam Antibiotics in Treating</title>
+      <description>Next paper, 2 of 7. Let us shift to "CID Dousa 2026 The Role of β-Lactam Antibiotics in Treating" and pressure-test what actually matters clinically. So right off the bat, this isn't a randomized trial or a cohort study with actual patient data? Correct. It's explicitly a narrative or expert-synthesis review article published in CID in January 2026. What that means is the authors are pulling together existing evidence and clinical experience rather than conducting original research with enrolled patients. So we need to think about this differently than we would a trial.</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/02-cid-dousa-2026-the-role-of-lactam-antibiotics-in-treating.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:02:cid-dousa-2026-the-role-of-lactam-antibiotics-in-treating</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/02-cid-dousa-2026-the-role-of-lactam-antibiotics-in-treating.mp3" length="8534248" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:11:51</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>2026-03-02 | CID lodise et al 2026 Healthcare resource utilization outcom</title>
+      <description>Alright, onto paper 3 of 7. "CID lodise et al 2026 Healthcare resource utilization outcom" looks interesting. What is the core signal here? Okay, so the basic question is: if someone has fungus in their blood, does it matter how long it stays there even after we start treating them? That's what grabbed me when I saw this was coming up. Exactly. And before we get too excited about the findings, we need to be really clear about what they actually did. This is a retrospective observational cohort study of hospitalized adults with candidemia. They pulled data from clinical notes, culture results, and treatment records to identify patients, then used ICD-10 discharge codes to figure out how sick people were.</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/03-cid-lodise-et-al-2026-healthcare-resource-utilization-outcom.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:03:cid-lodise-et-al-2026-healthcare-resource-utilization-outcom</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/03-cid-lodise-et-al-2026-healthcare-resource-utilization-outcom.mp3" length="8389738" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:11:39</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>2026-03-02 | CID Marzolini Editorial Is TDM of Long Acting Cabotgravir</title>
+      <description>Let us keep moving. For paper 4 of 7, "CID Marzolini Editorial Is TDM of Long Acting Cabotgravir", we will focus on methods first, then practice impact. Excellent question, and you're right to flag that immediately. This isn't a primary research study with its own dataset, enrollment criteria, or original analysis. It's an invited opinion piece that synthesizes existing evidence. Marzolini is essentially commenting on a large multicenter cohort study by Néant and colleagues that appeared in the same issue, plus phase 3 trial data and pharmacokinetic literature. So we're really evaluating her synthesis and argument, not new empirical findings. So it's narrative review masquerading as science, in some ways?</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/04-cid-marzolini-editorial-is-tdm-of-long-acting-cabotgravir.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:04:cid-marzolini-editorial-is-tdm-of-long-acting-cabotgravir</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/04-cid-marzolini-editorial-is-tdm-of-long-acting-cabotgravir.mp3" length="8432684" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:11:43</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>2026-03-02 | CID Neant 2026 Therapeutic Drug Monitoring of Long-Acting Ca</title>
+      <description>New paper, new angle. For "CID Neant 2026 Therapeutic Drug Monitoring of Long-Acting Ca" in slot 5 of 7, where should we be most skeptical? # PAPER 5: THERAPEUTIC DRUG MONITORING OF LONG-ACTING CABOTEGRAVIR AND RILPIVIRINE Welcome back everyone. Today we're diving into a really practical real-world study about therapeutic drug monitoring, or TDM, of two long-acting injectable antiretrovirals: cabotegravir and rilpivirine. This is the kind of work that matters to clinicians actually giving these injections and trying to figure out who might run into trouble.</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/05-cid-neant-2026-therapeutic-drug-monitoring-of-long-acting-ca.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:05:cid-neant-2026-therapeutic-drug-monitoring-of-long-acting-ca</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/05-cid-neant-2026-therapeutic-drug-monitoring-of-long-acting-ca.mp3" length="4531870" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:06:18</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>2026-03-02 | JPIDS Liversedge 2026 Epi of IFD in heart transplants</title>
+      <description>Next paper, 6 of 7. Let us shift to "JPIDS Liversedge 2026 Epi of IFD in heart transplants" and pressure-test what actually matters clinically. # JOURNAL CLUB: LIVERSEDGE 2026 — IFD EPIDEMIOLOGY IN PEDIATRIC HEART TRANSPLANTS Welcome back, everyone. Today we're diving into the Liversedge paper from the Journal of Pediatric Infectious Diseases Society, a 2026 retrospective multicenter study on invasive fungal disease in pediatric heart transplant recipients. This is Paper Six in our series, and it sits at a really important intersection — fungal infections are uncommon in this population but carry substantial mortality. Let's start with the architecture of the study.</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/06-jpids-liversedge-2026-epi-of-ifd-in-heart-transplants.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:06:jpids-liversedge-2026-epi-of-ifd-in-heart-transplants</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/06-jpids-liversedge-2026-epi-of-ifd-in-heart-transplants.mp3" length="4237523" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:05:53</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>2026-03-02 | JPIDS Sharma 2026 Clinical Epi and micro of orbital cellulit</title>
+      <description>Alright, onto paper 7 of 7. "JPIDS Sharma 2026 Clinical Epi and micro of orbital cellulit" looks interesting. What is the core signal here? Alright, so before we get excited, let's set the table. They screened 822 cases and ended up with 355 that met inclusion criteria. That's a 43 percent screen-to-inclusion rate, which is pretty substantial. What were they throwing out and why? Good first question. The paper doesn't give us granular detail on exactly which exclusion criteria were applied, but they do mention using pre-specified diagnostic thresholds in Supplementary Figure 1. So they had clear criteria upfront, which is methodologically sound. The population they landed with was predominantly pediatric, mean age 7.5 years, about 63 percent male, and notably 53 percent Black patients.</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-03-02/07-jpids-sharma-2026-clinical-epi-and-micro-of-orbital-cellulit.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-03-02:article:07:jpids-sharma-2026-clinical-epi-and-micro-of-orbital-cellulit</guid>
+      <pubDate>Thu, 26 Feb 2026 15:32:48 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-03-02/07-jpids-sharma-2026-clinical-epi-and-micro-of-orbital-cellulit.mp3" length="8360586" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:duration>00:11:37</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
   </channel>
 </rss>
