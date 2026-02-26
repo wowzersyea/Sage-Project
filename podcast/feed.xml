@@ -12,6 +12,7 @@
     <atom:link href="https://sageproject.xyz/podcast/feed.xml" rel="self" type="application/rss+xml" />
     <itunes:owner>
       <itunes:name>Sage Project</itunes:name>
+      <itunes:email>mark.murphy86@gmail.com</itunes:email>
     </itunes:owner>
     <item>
       <title>Sage Digest 2026-03-02</title>
