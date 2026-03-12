@@ -179,14 +179,12 @@
         }
 
         .pilot-badge {
-            background: linear-gradient(135deg, var(--accent-coral), #d4695a);
-            color: white;
-            padding: 0.4rem 1rem;
+            display: inline-block;
+            padding: 0.3rem 0.75rem;
             border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 500;
             letter-spacing: 0.02em;
-            box-shadow: var(--shadow-sm);
         }
 
         /* Hero Section */
@@ -623,7 +621,15 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 2rem;
+            gap: 1rem;
+        }
+
+        .footer-bottom {
+            width: 100%;
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .footer-logo {
@@ -661,6 +667,173 @@
 
         .footer-info p {
             margin-bottom: 0.25rem;
+        }
+
+        .ops-link {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.02em;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            opacity: 0.22;
+            transition: opacity 0.2s ease, color 0.2s ease;
+        }
+
+        .ops-link:hover,
+        .ops-link:focus {
+            opacity: 0.9;
+            color: #ffffff;
+            outline: none;
+        }
+
+        /* Operations overlay (Ctrl+Shift+M) */
+        .ops-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            z-index: 1000;
+        }
+
+        .ops-overlay.active {
+            display: flex;
+        }
+
+        .ops-panel {
+            width: min(1600px, 100%);
+            height: min(900px, 100%);
+            background: rgba(26, 35, 27, 0.92);
+            border: 1px solid rgba(199, 208, 199, 0.2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ops-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid rgba(199, 208, 199, 0.18);
+        }
+
+        .ops-title {
+            color: white;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .ops-subtitle {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.85rem;
+            margin-left: 0.75rem;
+        }
+
+        .ops-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.12s ease, background 0.2s ease;
+        }
+
+        .ops-close:hover {
+            background: rgba(255, 255, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .ops-bar {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.1rem;
+            border-bottom: 1px solid rgba(199, 208, 199, 0.14);
+            flex-wrap: wrap;
+        }
+
+        .ops-left,
+        .ops-right {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .ops-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .ops-input {
+            width: min(520px, 70vw);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: white;
+            padding: 0.55rem 0.7rem;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .ops-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .ops-btn,
+        .ops-tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: white;
+            padding: 0.55rem 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease, transform 0.12s ease;
+        }
+
+        .ops-btn:hover,
+        .ops-tab:hover {
+            background: rgba(255, 255, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .ops-tab.active {
+            background: rgba(129, 176, 196, 0.18);
+            border-color: rgba(129, 176, 196, 0.35);
+        }
+
+        .ops-open-page {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-left: 0.25rem;
+            opacity: 0.75;
+        }
+
+        .ops-open-page:hover {
+            opacity: 1;
+            color: white;
+        }
+
+        .ops-frame {
+            flex: 1;
+            width: 100%;
+            border: 0;
+            background: white;
         }
 
         /* Animations */
@@ -795,14 +968,23 @@
                 grid-template-columns: 1fr;
             }
 
-            .quick-actions {
+            .podcast-section {
                 padding: 2rem 1.5rem;
-                margin: 2rem 1rem;
             }
 
-            .step {
+            .podcast-card {
                 flex-direction: column;
-                gap: 1rem;
+                text-align: center;
+            }
+
+            .podcast-artwork {
+                width: 100px;
+                height: 100px;
+                margin: 0 auto;
+            }
+
+            .podcast-links {
+                flex-direction: column;
             }
 
             .footer-content {
@@ -816,7 +998,7 @@
         }
 
         /* Scroll animations */
-        .tool-card, .quick-item, .step {
+        .tool-card {
             opacity: 0;
             transform: translateY(20px);
             animation: fadeInUp 0.5s ease forwards;
@@ -827,16 +1009,77 @@
         .tool-card:nth-child(3) { animation-delay: 0.3s; }
         .tool-card:nth-child(4) { animation-delay: 0.4s; }
         .tool-card:nth-child(5) { animation-delay: 0.5s; }
-        .tool-card:nth-child(6) { animation-delay: 0.6s; }
 
-        .quick-item:nth-child(1) { animation-delay: 0.1s; }
-        .quick-item:nth-child(2) { animation-delay: 0.15s; }
-        .quick-item:nth-child(3) { animation-delay: 0.2s; }
-        .quick-item:nth-child(4) { animation-delay: 0.25s; }
+        /* Podcast Section */
+        .podcast-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem 6rem;
+        }
 
-        .step:nth-child(1) { animation-delay: 0.1s; }
-        .step:nth-child(2) { animation-delay: 0.2s; }
-        .step:nth-child(3) { animation-delay: 0.3s; }
+        .podcast-card {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+            background: white;
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-md);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .podcast-artwork {
+            width: 140px;
+            height: 140px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--sage-500), var(--accent-sky));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .podcast-artwork svg {
+            width: 60px;
+            height: 60px;
+            color: white;
+        }
+
+        .podcast-info h3 {
+            font-size: 1.3rem;
+            color: var(--sage-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .podcast-info p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+        }
+
+        .podcast-links {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .podcast-btn {
+            font-size: 0.9rem;
+            padding: 0.7rem 1.25rem;
+        }
+
+        .footer-bottom .pilot-badge {
+            background: rgba(224, 122, 95, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 0.3rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
     </style>
 </head>
 <body>
@@ -864,9 +1107,7 @@
             </button>
             <nav id="main-nav">
                 <a href="#tools">Tools</a>
-                <a href="#quick-actions">Quick Actions</a>
-                <a href="#how-it-works">How It Works</a>
-                <span class="pilot-badge">🧪 Pilot v1.0</span>
+                <a href="#podcast">Podcast</a>
             </nav>
         </div>
     </header>
@@ -888,8 +1129,8 @@
                 </svg>
                 Pediatric ID & Antimicrobial Stewardship Intelligence
             </div>
-            <h1>Smarter decisions for <span class="highlight">better outcomes</span></h1>
-            <p>Sage is your AI-powered assistant for infectious disease consultation, antimicrobial stewardship, and quality improvement. Built by clinicians, for clinicians.</p>
+            <h1>Clinical decision support for <span class="highlight">infectious disease</span></h1>
+            <p>Literature surveillance, empiric therapy guidance, stewardship analytics, and quality improvement tools for academic ID practice.</p>
             <div class="hero-buttons">
                 <a href="#tools" class="btn btn-primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -900,34 +1141,37 @@
                     </svg>
                     Explore Tools
                 </a>
-                <a href="#quick-actions" class="btn btn-secondary">
+                <a href="#podcast" class="btn btn-secondary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
                     </svg>
-                    Quick Start
+                    Latest Podcast
                 </a>
             </div>
 
             <div class="stats-bar">
                 <div class="stat">
-                    <div class="stat-value">6</div>
-                    <div class="stat-label">Integrated Tools</div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Clinical Tools</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">24/7</div>
-                    <div class="stat-label">Always Available</div>
+                    <div class="stat-value">15+</div>
+                    <div class="stat-label">Journals Monitored</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">100%</div>
-                    <div class="stat-label">Evidence-Based</div>
+                    <div class="stat-value">Bi-Weekly</div>
+                    <div class="stat-label">Literature Digests</div>
                 </div>
             </div>
         </section>
 
         <section class="tools-section" id="tools">
             <div class="section-header">
-                <h2>Your Clinical Toolkit</h2>
-                <p>Purpose-built tools designed for your daily workflow</p>
+                <h2>Clinical Toolkit</h2>
+                <p>Purpose-built tools for ID practice and antimicrobial stewardship</p>
             </div>
 
             <div class="tools-grid">
@@ -941,11 +1185,11 @@
                         </svg>
                     </div>
                     <h3>Literature Monitor</h3>
-                    <p>Weekly digests from PIDJ, CID, Pediatrics & more. Automatic guideline tracking from IDSA, AAP, and CDC.</p>
+                    <p>Bi-weekly digests from 15+ journals including PIDJ, CID, AAC, NEJM, and Lancet ID. PubMed-indexed with counterpoint detection against prior reviews.</p>
                     <div class="tool-features">
-                        <span class="tool-feature">Weekly Digest</span>
+                        <span class="tool-feature">Bi-Weekly Digest</span>
                         <span class="tool-feature">Guideline Alerts</span>
-                        <span class="tool-feature">Journal Summaries</span>
+                        <span class="tool-feature">Counterpoint Detection</span>
                     </div>
                     <div class="tool-action">
                         Get Literature Update
@@ -1072,117 +1316,38 @@
                     </div>
                 </div>
 
-                <div class="tool-card consult" onclick="showComingSoon('Consult Note Assistant')" role="button" tabindex="0">
-                    <div class="tool-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
-                        </svg>
-                    </div>
-                    <h3>Consult Note Assistant</h3>
-                    <p>Generate structured ID consult and follow-up notes from brief clinical inputs. Ready for Epic.</p>
-                    <div class="tool-features">
-                        <span class="tool-feature">Initial Consults</span>
-                        <span class="tool-feature">Follow-ups</span>
-                        <span class="tool-feature">Stewardship Recs</span>
-                    </div>
-                    <div class="tool-action">
-                        Draft a Note
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </div>
-                </div>
             </div>
         </section>
 
-        <section class="quick-actions" id="quick-actions">
-            <div class="quick-actions-header">
-                <div>
-                    <h2>⚡ Quick Actions</h2>
-                    <p class="quick-actions-subtitle">Common tasks, one click away</p>
-                </div>
-            </div>
-            <div class="quick-grid">
-                <a href="literature-monitor/index.html" class="quick-item" style="text-decoration: none; color: inherit;">
-                    <div class="quick-item-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                    </div>
-                    <div class="quick-item-content">
-                        <h4>Bi-Weekly Literature Update</h4>
-                        <p>What's new in pediatric ID?</p>
-                    </div>
-                </a>
-                <a href="asp-advisor/index.html" class="quick-item" style="text-decoration: none; color: inherit;">
-                    <div class="quick-item-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
-                    </div>
-                    <div class="quick-item-content">
-                        <h4>Empiric Therapy</h4>
-                        <p>Get antibiotic recommendations</p>
-                    </div>
-                </a>
-                <a href="qi-dashboard/index.html" class="quick-item" style="text-decoration: none; color: inherit;">
-                    <div class="quick-item-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="20" x2="12" y2="10"/>
-                            <line x1="18" y1="20" x2="18" y2="4"/>
-                            <line x1="6" y1="20" x2="6" y2="16"/>
-                        </svg>
-                    </div>
-                    <div class="quick-item-content">
-                        <h4>Build Control Chart</h4>
-                        <p>Upload data for SPC analysis</p>
-                    </div>
-                </a>
-                <div class="quick-item" onclick="showComingSoon('Consult Note Assistant')">
-                    <div class="quick-item-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                        </svg>
-                    </div>
-                    <div class="quick-item-content">
-                        <h4>Draft Consult Note</h4>
-                        <p>Generate ID consultation note</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="how-it-works" id="how-it-works">
+        <section class="podcast-section" id="podcast">
             <div class="section-header">
-                <h2>How Sage Works</h2>
-                <p>Simple, conversational AI assistance</p>
+                <h2>The Sage Podcast</h2>
+                <p>Deep dives on emerging resistance, stewardship wins, and what the literature actually means for practice</p>
             </div>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Ask naturally</h3>
-                        <p>Type your question or request just like you'd ask a colleague. "What antibiotic for a 4 year old with osteomyelitis?" or "Generate my Q3 stewardship report."</p>
-                    </div>
+            <div class="podcast-card">
+                <div class="podcast-artwork">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
                 </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Get evidence-based answers</h3>
-                        <p>Sage draws on clinical guidelines, your institution's data (when provided), and best practices to provide actionable recommendations.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Review and refine</h3>
-                        <p>You're always in control. Review recommendations, request changes, and make final clinical decisions. Sage supports—never replaces—your expertise.</p>
+                <div class="podcast-info">
+                    <h3>Latest Episodes</h3>
+                    <p>Available on Amazon Music, Apple Podcasts, and Spotify. New episodes accompany each literature digest with audio commentary on key findings.</p>
+                    <div class="podcast-links">
+                        <a href="#" class="btn btn-primary podcast-btn" onclick="showComingSoon('Podcast link — add your Amazon Music URL here'); return false;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18V5l12-2v13"/>
+                                <circle cx="6" cy="18" r="3"/>
+                                <circle cx="18" cy="16" r="3"/>
+                            </svg>
+                            Listen on Amazon Music
+                        </a>
+                        <a href="#" class="btn btn-secondary podcast-btn" onclick="showComingSoon('Podcast link — add your Apple Podcasts URL here'); return false;">
+                            Listen on Apple Podcasts
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1203,10 +1368,45 @@
             </div>
             <div class="footer-info">
                 <p>Pediatric ID & Stewardship Intelligence</p>
-                <p>Pilot Version 1.0 · Built with ♥ for clinicians</p>
+                <p><a href="mission-control/" class="ops-link" aria-label="Operations">Operations</a></p>
+            </div>
+            <div class="footer-bottom">
+                <span class="pilot-badge">Pilot v1.0</span>
             </div>
         </div>
     </footer>
+
+    <!-- Operations Overlay (hidden) -->
+    <div class="ops-overlay" id="ops-overlay" aria-hidden="true">
+        <div class="ops-panel" role="dialog" aria-modal="true" aria-label="Operations" onclick="event.stopPropagation()">
+            <div class="ops-header">
+                <div style="display:flex;align-items:center;gap:0.25rem;">
+                    <div class="ops-title">Operations</div>
+                    <div class="ops-subtitle">Ctrl+Shift+M</div>
+                </div>
+                <button class="ops-close" onclick="toggleOperations(false)" aria-label="Close Operations">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="ops-bar">
+                <div class="ops-left">
+                    <span class="ops-label">Mission Control URL</span>
+                    <input id="ops-url" class="ops-input" type="url" spellcheck="false" placeholder="http://localhost:3000" />
+                    <button class="ops-btn" onclick="applyOpsUrl()">Load</button>
+                </div>
+                <div class="ops-right">
+                    <button class="ops-tab" data-ops-path="/projects" onclick="setOpsPath('/projects')">Projects</button>
+                    <button class="ops-tab" data-ops-path="/tasks" onclick="setOpsPath('/tasks')">Tasks</button>
+                    <button class="ops-tab" data-ops-path="/" onclick="setOpsPath('/')">Home</button>
+                    <a class="ops-open-page" href="mission-control/" target="_blank" rel="noopener noreferrer">Open page</a>
+                </div>
+            </div>
+            <iframe id="ops-frame" class="ops-frame" title="Mission Control"></iframe>
+        </div>
+    </div>
 
     <script>
         // Mobile menu toggle
@@ -1241,6 +1441,11 @@
         // Close modal on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const overlay = document.getElementById('ops-overlay');
+                if (overlay && overlay.classList.contains('active')) {
+                    toggleOperations(false);
+                    return;
+                }
                 closeModal();
             }
         });
@@ -1253,6 +1458,121 @@
                     card.click();
                 }
             });
+        });
+
+        // Operations overlay (Ctrl+Shift+M)
+        const OPS_URL_KEY = 'sage_ops_mission_control_url';
+        const OPS_PATH_KEY = 'sage_ops_mission_control_path';
+
+        function normalizeOpsUrl(url) {
+            if (!url) return '';
+            let u = String(url).trim();
+            u = u.replace(/\\s+/g, '');
+            u = u.replace(/\\/$/, '');
+            if (!/^https?:\\/\\//i.test(u)) {
+                // If user typed "localhost:3000" etc, assume http.
+                if (/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/i.test(u)) {
+                    u = 'http://' + u;
+                } else {
+                    u = 'https://' + u;
+                }
+            }
+            return u.replace(/\\/$/, '');
+        }
+
+        function getOpsUrl() {
+            try {
+                const saved = localStorage.getItem(OPS_URL_KEY);
+                if (saved) return saved;
+            } catch {}
+            return 'http://localhost:3000';
+        }
+
+        function setOpsUrl(url) {
+            const normalized = normalizeOpsUrl(url);
+            if (!normalized) return '';
+            try {
+                localStorage.setItem(OPS_URL_KEY, normalized);
+            } catch {}
+            return normalized;
+        }
+
+        function getOpsPath() {
+            try {
+                const saved = localStorage.getItem(OPS_PATH_KEY);
+                if (saved) return saved;
+            } catch {}
+            return '/projects';
+        }
+
+        function setOpsPath(p) {
+            const nextPath = p || '/projects';
+            try {
+                localStorage.setItem(OPS_PATH_KEY, nextPath);
+            } catch {}
+            const url = getOpsUrl();
+            loadOpsFrame(url, nextPath);
+            setActiveOpsTab(nextPath);
+        }
+
+        function setActiveOpsTab(currentPath) {
+            document.querySelectorAll('.ops-tab').forEach(btn => {
+                const btnPath = btn.getAttribute('data-ops-path');
+                if (btnPath === currentPath) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function loadOpsFrame(baseUrl, opsPath) {
+            const frame = document.getElementById('ops-frame');
+            if (!frame) return;
+            const normalized = normalizeOpsUrl(baseUrl);
+            if (!normalized) return;
+            frame.src = normalized + (opsPath || '');
+        }
+
+        function applyOpsUrl() {
+            const input = document.getElementById('ops-url');
+            const nextUrl = input ? input.value : '';
+            const url = setOpsUrl(nextUrl) || getOpsUrl();
+            const opsPath = getOpsPath();
+            loadOpsFrame(url, opsPath);
+            if (input) input.value = url;
+        }
+
+        function toggleOperations(force) {
+            const overlay = document.getElementById('ops-overlay');
+            if (!overlay) return;
+
+            const shouldOpen = typeof force === 'boolean' ? force : !overlay.classList.contains('active');
+            overlay.classList.toggle('active', shouldOpen);
+            overlay.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+
+            if (shouldOpen) {
+                const url = getOpsUrl();
+                const opsPath = getOpsPath();
+                const input = document.getElementById('ops-url');
+                if (input) input.value = url;
+                setActiveOpsTab(opsPath);
+                loadOpsFrame(url, opsPath);
+            }
+        }
+
+        const opsOverlay = document.getElementById('ops-overlay');
+        if (opsOverlay) {
+            opsOverlay.addEventListener('click', (e) => {
+                if (e.target && e.target.id === 'ops-overlay') {
+                    toggleOperations(false);
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const isM = (e.key || '').toLowerCase() === 'm';
+            if (e.ctrlKey && e.shiftKey && isM) {
+                e.preventDefault();
+                toggleOperations();
+            }
         });
     </script>
 </body>
