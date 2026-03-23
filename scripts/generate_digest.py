@@ -1082,13 +1082,13 @@ def generate_html_page(digest_data):
         status.className = 'suggest-status';
         if (!query || query.length < 3) {{ results.innerHTML = ''; return; }}
         searchTimeout = setTimeout(async () => {{
-            results.innerHTML = '<span style="color:var(--text-muted)">Searching NLM Catalog...</span>';
+            results.innerHTML = '<span style="color:var(--text-muted)">Searching medical journals...</span>';
             try {{
-                const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${{encodeURIComponent(query)}}[Title]+AND+journal[pt]&retmax=8&retmode=json`;
+                const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${{encodeURIComponent(query)}}[Title]+AND+serial[tp]&retmax=10&retmode=json`;
                 const resp = await fetch(searchUrl);
                 const data = await resp.json();
                 const ids = data.esearchresult?.idlist || [];
-                if (!ids.length) {{ results.innerHTML = '<span style="color:var(--text-muted)">No journals found.</span>'; return; }}
+                if (!ids.length) {{ results.innerHTML = '<span style="color:var(--text-muted)">No journals found. Try a shorter name.</span>'; return; }}
                 const sUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nlmcatalog&id=${{ids.join(',')}}&retmode=json`;
                 const sResp = await fetch(sUrl);
                 const sData = await sResp.json();
@@ -1096,9 +1096,10 @@ def generate_html_page(digest_data):
                 for (const id of ids) {{
                     const item = sData.result?.[id];
                     if (!item) continue;
-                    const title = (item.title || '').replace(/\\.$/, '');
+                    const te = (item.titlemainlist || [])[0];
+                    const title = (te?.title || item.medlineta || 'Unknown').replace(/\\.$/, '');
                     const abbr = item.medlineta || '';
-                    html += `<div class="result-item"><span class="journal-name">${{title}}${{abbr ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + abbr + ')</em>' : ''}}</span><button class="add-btn" onclick="suggestJournal(this, '${{title.replace(/'/g, "\\\\'")}}', '${{abbr.replace(/'/g, "\\\\'")}}')">+ Add</button></div>`;
+                    html += `<div class="result-item"><span class="journal-name">${{title}}${{abbr && abbr !== title ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + abbr + ')</em>' : ''}}</span><button class="add-btn" onclick="suggestJournal(this, '${{title.replace(/'/g, "\\\\'")}}', '${{abbr.replace(/'/g, "\\\\'")}}')">+ Add</button></div>`;
                 }}
                 results.innerHTML = html || '<span style="color:var(--text-muted)">No journals found.</span>';
             }} catch (e) {{

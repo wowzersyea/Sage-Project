@@ -664,7 +664,7 @@ No significant guideline updates identified from major pediatric ID organization
         document.getElementById('journalsPanel').classList.toggle('open');
     }
 
-    // NCBI E-Utilities journal search (NLM Catalog)
+    // NCBI E-Utilities journal search (NLM Catalog — serials only)
     let searchTimeout = null;
     function searchJournals(query) {
         clearTimeout(searchTimeout);
@@ -673,13 +673,13 @@ No significant guideline updates identified from major pediatric ID organization
         status.className = 'suggest-status';
         if (!query || query.length < 3) { results.innerHTML = ''; return; }
         searchTimeout = setTimeout(async () => {
-            results.innerHTML = '<span style="color:var(--text-muted)">Searching NLM Catalog...</span>';
+            results.innerHTML = '<span style="color:var(--text-muted)">Searching medical journals...</span>';
             try {
-                const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${encodeURIComponent(query)}[Title]+AND+journal[pt]&retmax=8&retmode=json`;
+                const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${encodeURIComponent(query)}[Title]+AND+serial[tp]&retmax=10&retmode=json`;
                 const searchResp = await fetch(searchUrl);
                 const searchData = await searchResp.json();
                 const ids = searchData.esearchresult?.idlist || [];
-                if (!ids.length) { results.innerHTML = '<span style="color:var(--text-muted)">No journals found.</span>'; return; }
+                if (!ids.length) { results.innerHTML = '<span style="color:var(--text-muted)">No journals found. Try a shorter name.</span>'; return; }
 
                 const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nlmcatalog&id=${ids.join(',')}&retmode=json`;
                 const summaryResp = await fetch(summaryUrl);
@@ -689,11 +689,13 @@ No significant guideline updates identified from major pediatric ID organization
                 for (const id of ids) {
                     const item = summaryData.result?.[id];
                     if (!item) continue;
-                    const title = item.title || 'Unknown';
+                    // Title lives in titlemainlist[0].title, not item.title
+                    const titleEntry = (item.titlemainlist || [])[0];
+                    const rawTitle = (titleEntry?.title || item.medlineta || 'Unknown');
+                    const cleanTitle = rawTitle.replace(/\.$/, '');
                     const medAbbr = item.medlineta || '';
-                    const cleanTitle = title.replace(/\.$/, '');
                     html += `<div class="result-item">
-                        <span class="journal-name">${cleanTitle}${medAbbr ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + medAbbr + ')</em>' : ''}</span>
+                        <span class="journal-name">${cleanTitle}${medAbbr && medAbbr !== cleanTitle ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + medAbbr + ')</em>' : ''}</span>
                         <button class="add-btn" onclick="suggestJournal(this, '${cleanTitle.replace(/'/g, "\\'")}', '${medAbbr.replace(/'/g, "\\'")}')">+ Add</button>
                     </div>`;
                 }
