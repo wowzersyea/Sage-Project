@@ -23,6 +23,7 @@ import json
 import os
 import re
 import requests
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -44,10 +45,24 @@ PDF_OUTPUT_DIR = Path("f:/Coding/sage_podcastlm/example_inputs")
 MEMORY_FILE = "literature-monitor/digests/reviewed_articles.json"
 
 
+def _configure_stdio_utf8():
+    """Best-effort UTF-8 stdio for Windows consoles."""
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream is None:
+            continue
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def load_memory():
     """Load previously reviewed articles from memory file."""
     if Path(MEMORY_FILE).exists():
-        with open(MEMORY_FILE, 'r') as f:
+        with open(MEMORY_FILE, 'r', encoding="utf-8") as f:
             return json.load(f)
     return {"reviewed_dois": [], "reviewed_titles": []}
 
@@ -59,7 +74,7 @@ def save_memory(memory):
     memory["reviewed_dois"] = memory["reviewed_dois"][-max_entries:]
     memory["reviewed_titles"] = memory["reviewed_titles"][-max_entries:]
 
-    with open(MEMORY_FILE, 'w') as f:
+    with open(MEMORY_FILE, 'w', encoding="utf-8") as f:
         json.dump(memory, f, indent=2)
 
 
@@ -171,7 +186,7 @@ def download_all_pdfs(response_text):
     # Save manifest of downloaded PDFs
     if downloaded:
         manifest_path = pdf_folder / 'manifest.json'
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, 'w', encoding="utf-8") as f:
             json.dump({
                 'date_range': date_range,
                 'generated': datetime.now().isoformat(),
@@ -381,7 +396,14 @@ def generate_digest():
         for block in response.content:
             if block.type == "text":
                 digest_content += block.text
-        
+
+        # Strip AI chain-of-thought preamble (search narration before the
+        # actual digest).  The real content starts at the first markdown
+        # heading, e.g. "# 📚 Literature Digest".
+        heading_match = re.search(r'^#\s', digest_content, re.MULTILINE)
+        if heading_match:
+            digest_content = digest_content[heading_match.start():]
+
         print("Digest generated successfully!")
         
         # Update memory with newly reviewed articles
@@ -415,12 +437,12 @@ def save_digest(content):
     }
     
     json_path = f"literature-monitor/digests/{file_date}.json"
-    with open(json_path, "w") as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(digest_data, f, indent=2)
     print(f"Saved JSON digest to {json_path}")
     
     # Also save as latest.json for easy access
-    with open("literature-monitor/digests/latest.json", "w") as f:
+    with open("literature-monitor/digests/latest.json", "w", encoding="utf-8") as f:
         json.dump(digest_data, f, indent=2)
     print("Updated latest.json")
     
@@ -436,7 +458,7 @@ def update_archive_manifest(new_digest):
     manifest_path = "literature-monitor/digests/manifest.json"
     
     if Path(manifest_path).exists():
-        with open(manifest_path, 'r') as f:
+        with open(manifest_path, 'r', encoding="utf-8") as f:
             manifest = json.load(f)
     else:
         manifest = {"digests": []}
@@ -451,7 +473,7 @@ def update_archive_manifest(new_digest):
     # Keep only last 52 weeks
     manifest["digests"] = manifest["digests"][:52]
     
-    with open(manifest_path, 'w') as f:
+    with open(manifest_path, 'w', encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
     print("Updated archive manifest")
 
@@ -529,9 +551,42 @@ def markdown_to_html(text):
     return html
 
 
+def _count_articles(content: str) -> tuple[int, int, int]:
+    """Count total articles, open access, and paywalled from markdown."""
+    # Each article starts with a bold title line
+    titles = re.findall(r'^\*\*[^*]{15,}\*\*$', content, re.MULTILINE)
+    total = len(titles)
+    open_access = len(re.findall(r'OPEN\s*ACCESS', content, re.IGNORECASE))
+    paywalled = len(re.findall(r'PAYWALL', content, re.IGNORECASE))
+    # Some articles may not be tagged either way
+    return total, open_access, paywalled
+
+
+# Journals searched — single source of truth
+JOURNAL_LIST = [
+    ("PIDJ", "Pediatric Infectious Disease Journal"),
+    ("JPIDS", "J. Pediatric Infectious Diseases Society"),
+    ("CID", "Clinical Infectious Diseases"),
+    ("Pediatrics", "Pediatrics (ID-relevant)"),
+    ("JAMA Peds", "JAMA Pediatrics"),
+    ("AAC", "Antimicrobial Agents &amp; Chemotherapy"),
+    ("NEJM", "New England Journal of Medicine"),
+    ("JAMA", "JAMA"),
+    ("Lancet ID", "Lancet Infectious Diseases"),
+    ("MMWR", "CDC Morbidity &amp; Mortality Weekly"),
+]
+
+
 def generate_html_page(digest_data):
     """Generate the HTML page that displays the digest."""
-    
+
+    total, oa, pw = _count_articles(digest_data["content"])
+
+    journal_chips = "\n                ".join(
+        f'<div class="journal-chip"><span class="abbr">{abbr}</span> {name}</div>'
+        for abbr, name in JOURNAL_LIST
+    )
+
     html_content = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -839,6 +894,32 @@ def generate_html_page(digest_data):
             display: inline-block;
         }}
 
+        .scan-summary {{ background: var(--sage-50); border: 1px solid var(--sage-100); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; font-size: 0.9rem; color: var(--text-secondary); }}
+        .scan-summary .stat {{ display: flex; align-items: center; gap: 6px; }}
+        .scan-summary .stat strong {{ color: var(--sage-700); }}
+        .scan-summary svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
+        .scan-summary .journals-toggle {{ color: var(--accent-lavender); cursor: pointer; font-weight: 500; text-decoration: underline dotted; text-underline-offset: 3px; background: none; border: none; font: inherit; padding: 0; }}
+        .scan-summary .journals-toggle:hover {{ color: var(--sage-700); }}
+        .journals-panel {{ max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease; background: white; border: 1px solid var(--sage-100); border-radius: var(--radius-md); margin-bottom: 0; padding: 0 1.5rem; }}
+        .journals-panel.open {{ max-height: 800px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }}
+        .journals-panel h3 {{ font-size: 0.95rem; font-weight: 600; color: var(--sage-700); margin-bottom: 0.75rem; }}
+        .journal-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }}
+        .journal-chip {{ display: flex; align-items: center; gap: 8px; padding: 0.4rem 0.75rem; background: var(--sage-50); border: 1px solid var(--sage-100); border-radius: 6px; font-size: 0.85rem; }}
+        .journal-chip .abbr {{ font-weight: 600; color: var(--accent-lavender); font-size: 0.75rem; min-width: 48px; }}
+        .suggest-box {{ border-top: 1px solid var(--sage-100); padding-top: 1rem; margin-top: 0.5rem; }}
+        .suggest-box label {{ display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }}
+        .suggest-row {{ display: flex; gap: 0.5rem; }}
+        .suggest-row input {{ flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--sage-200); border-radius: 6px; font: inherit; font-size: 0.85rem; outline: none; }}
+        .suggest-row input:focus {{ border-color: var(--accent-lavender); }}
+        .suggest-row button {{ padding: 0.5rem 1rem; background: var(--sage-600); color: white; border: none; border-radius: 6px; font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; white-space: nowrap; }}
+        .suggest-row button:hover {{ background: var(--sage-700); }}
+        .suggest-results {{ margin-top: 0.5rem; font-size: 0.85rem; }}
+        .suggest-results .result-item {{ display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.75rem; background: var(--warm-100); border-radius: 6px; margin-bottom: 0.35rem; }}
+        .suggest-results .result-item .add-btn {{ background: var(--accent-lavender); color: white; border: none; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; }}
+        .suggest-status {{ margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.85rem; display: none; }}
+        .suggest-status.success {{ display: block; background: rgba(46, 125, 50, 0.1); color: #2e7d32; }}
+        .suggest-status.error {{ display: block; background: rgba(196, 30, 58, 0.08); color: #c41e3a; }}
+
         .archive-link {{
             text-align: center;
             margin-top: 2rem;
@@ -919,8 +1000,8 @@ def generate_html_page(digest_data):
                 </svg>
                 Literature Monitor
             </div>
-            <h1>Weekly Literature Digest</h1>
-            <p>Critical analysis for pediatric ID specialists</p>
+            <h1>Bi-Weekly Literature Digest</h1>
+            <p>Pediatric ID &amp; Antimicrobial Stewardship</p>
             <div class="digest-meta">
                 <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -936,8 +1017,43 @@ def generate_html_page(digest_data):
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Updated {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+                    Generated {datetime.now().strftime('%B %d, %Y')}
                 </span>
+            </div>
+        </div>
+
+        <div class="scan-summary">
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <strong>14-day window</strong> {digest_data['date_range']}
+            </span>
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <button class="journals-toggle" onclick="toggleJournals()"><strong>{len(JOURNAL_LIST)} journals</strong> scanned</button>
+            </span>
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <strong>{total} articles</strong> reviewed
+            </span>
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <strong>{oa} open access</strong> &middot; {pw} paywalled
+            </span>
+        </div>
+
+        <div class="journals-panel" id="journalsPanel">
+            <h3>Journals Searched</h3>
+            <div class="journal-grid">
+                {journal_chips}
+            </div>
+            <div class="suggest-box">
+                <label>Suggest a journal to add to the scan list</label>
+                <div class="suggest-row">
+                    <input type="text" id="journalSearch" placeholder="Search PubMed journals..." oninput="searchJournals(this.value)">
+                    <button id="searchBtn" onclick="searchJournals(document.getElementById('journalSearch').value)">Search</button>
+                </div>
+                <div class="suggest-results" id="suggestResults"></div>
+                <div class="suggest-status" id="suggestStatus"></div>
             </div>
         </div>
 
@@ -946,23 +1062,77 @@ def generate_html_page(digest_data):
         </div>
 
         <div class="archive-link">
-            <a href="archive.html">View Past Digests →</a>
+            <a href="archive.html">View Past Digests &rarr;</a>
         </div>
     </main>
 
     <footer>
-        <p>Sage Project · Literature Monitor · Automated weekly with critical analysis for ID specialists</p>
+        <p>Sage Project &middot; Literature Monitor &middot; Bi-weekly digest for pediatric ID specialists</p>
     </footer>
+
+    <script>
+    function toggleJournals() {{
+        document.getElementById('journalsPanel').classList.toggle('open');
+    }}
+    let searchTimeout = null;
+    function searchJournals(query) {{
+        clearTimeout(searchTimeout);
+        const results = document.getElementById('suggestResults');
+        const status = document.getElementById('suggestStatus');
+        status.className = 'suggest-status';
+        if (!query || query.length < 3) {{ results.innerHTML = ''; return; }}
+        searchTimeout = setTimeout(async () => {{
+            results.innerHTML = '<span style="color:var(--text-muted)">Searching NLM Catalog...</span>';
+            try {{
+                const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${{encodeURIComponent(query)}}[Title]+AND+journal[pt]&retmax=8&retmode=json`;
+                const resp = await fetch(searchUrl);
+                const data = await resp.json();
+                const ids = data.esearchresult?.idlist || [];
+                if (!ids.length) {{ results.innerHTML = '<span style="color:var(--text-muted)">No journals found.</span>'; return; }}
+                const sUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nlmcatalog&id=${{ids.join(',')}}&retmode=json`;
+                const sResp = await fetch(sUrl);
+                const sData = await sResp.json();
+                let html = '';
+                for (const id of ids) {{
+                    const item = sData.result?.[id];
+                    if (!item) continue;
+                    const title = (item.title || '').replace(/\\.$/, '');
+                    const abbr = item.medlineta || '';
+                    html += `<div class="result-item"><span class="journal-name">${{title}}${{abbr ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + abbr + ')</em>' : ''}}</span><button class="add-btn" onclick="suggestJournal(this, '${{title.replace(/'/g, "\\\\'")}}', '${{abbr.replace(/'/g, "\\\\'")}}')">+ Add</button></div>`;
+                }}
+                results.innerHTML = html || '<span style="color:var(--text-muted)">No journals found.</span>';
+            }} catch (e) {{
+                results.innerHTML = '<span style="color:#c41e3a">Search failed.</span>';
+            }}
+        }}, 400);
+    }}
+    function suggestJournal(btn, title, abbr) {{
+        const status = document.getElementById('suggestStatus');
+        const suggestions = JSON.parse(localStorage.getItem('sage_journal_suggestions') || '[]');
+        if (suggestions.some(s => s.title === title)) {{
+            status.textContent = `"${{title}}" already suggested.`;
+            status.className = 'suggest-status error';
+            return;
+        }}
+        suggestions.push({{ title, abbr, suggested_at: new Date().toISOString() }});
+        localStorage.setItem('sage_journal_suggestions', JSON.stringify(suggestions));
+        btn.outerHTML = '<span class="added">Added</span>';
+        status.textContent = `"${{title}}" queued — will be included in the next digest run after review.`;
+        status.className = 'suggest-status success';
+    }}
+    </script>
 </body>
 </html>'''
     
     # Save the HTML page
-    with open("literature-monitor/index.html", "w") as f:
+    with open("literature-monitor/index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
     print("Updated literature-monitor/index.html")
 
 
 if __name__ == "__main__":
+    _configure_stdio_utf8()
+
     # Generate the digest
     digest_content = generate_digest()
 

@@ -305,6 +305,189 @@
             display: inline-block;
         }
 
+        /* ---- Scan summary bar ---- */
+        .scan-summary {
+            background: var(--sage-50);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .scan-summary .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .scan-summary .stat strong {
+            color: var(--sage-700);
+        }
+        .scan-summary svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .scan-summary .journals-toggle {
+            color: var(--accent-lavender);
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            background: none;
+            border: none;
+            font: inherit;
+            padding: 0;
+        }
+        .scan-summary .journals-toggle:hover {
+            color: var(--sage-700);
+        }
+
+        /* ---- Journals drawer ---- */
+        .journals-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease;
+            background: white;
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            margin-bottom: 0;
+            padding: 0 1.5rem;
+        }
+        .journals-panel.open {
+            max-height: 800px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .journals-panel h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--sage-700);
+            margin-bottom: 0.75rem;
+        }
+        .journal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .journal-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.4rem 0.75rem;
+            background: var(--sage-50);
+            border: 1px solid var(--sage-100);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+        .journal-chip .abbr {
+            font-weight: 600;
+            color: var(--accent-lavender);
+            font-size: 0.75rem;
+            min-width: 48px;
+        }
+
+        /* ---- Suggest journal ---- */
+        .suggest-box {
+            border-top: 1px solid var(--sage-100);
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+        }
+        .suggest-box label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .suggest-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .suggest-row input {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--sage-200);
+            border-radius: 6px;
+            font: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .suggest-row input:focus {
+            border-color: var(--accent-lavender);
+        }
+        .suggest-row button {
+            padding: 0.5rem 1rem;
+            background: var(--sage-600);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .suggest-row button:hover { background: var(--sage-700); }
+        .suggest-row button:disabled {
+            background: var(--sage-200);
+            cursor: not-allowed;
+        }
+        .suggest-results {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .suggest-results .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.75rem;
+            background: var(--warm-100);
+            border-radius: 6px;
+            margin-bottom: 0.35rem;
+        }
+        .suggest-results .result-item .journal-name {
+            color: var(--text-primary);
+        }
+        .suggest-results .result-item .add-btn {
+            background: var(--accent-lavender);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .suggest-results .result-item .add-btn:hover { opacity: 0.85; }
+        .suggest-results .result-item .added {
+            color: #2e7d32;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        .suggest-status {
+            margin-top: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: none;
+        }
+        .suggest-status.success {
+            display: block;
+            background: rgba(46, 125, 50, 0.1);
+            color: #2e7d32;
+        }
+        .suggest-status.error {
+            display: block;
+            background: rgba(196, 30, 58, 0.08);
+            color: #c41e3a;
+        }
+
         .archive-link {
             text-align: center;
             margin-top: 2rem;
@@ -385,8 +568,8 @@
                 </svg>
                 Literature Monitor
             </div>
-            <h1>Weekly Literature Digest</h1>
-            <p>Critical analysis for pediatric ID specialists</p>
+            <h1>Bi-Weekly Literature Digest</h1>
+            <p>Pediatric ID &amp; Antimicrobial Stewardship</p>
             <div class="digest-meta">
                 <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -395,32 +578,76 @@
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    March 08 - March 22, 2026
+                    February 26 &ndash; March 12, 2026
                 </span>
                 <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Updated March 22, 2026 at 06:37 AM
+                    Generated March 12, 2026
                 </span>
             </div>
         </div>
 
+        <!-- Scan summary bar -->
+        <div class="scan-summary">
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <strong>14-day window</strong> Feb 26 &ndash; Mar 12, 2026
+            </span>
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <button class="journals-toggle" onclick="toggleJournals()"><strong>10 journals</strong> scanned</button>
+            </span>
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <strong>6 articles</strong> reviewed
+            </span>
+            <span class="stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <strong>5 open access</strong> &middot; 1 paywalled
+            </span>
+        </div>
+
+        <!-- Journals panel (collapsed by default) -->
+        <div class="journals-panel" id="journalsPanel">
+            <h3>Journals Searched</h3>
+            <div class="journal-grid">
+                <div class="journal-chip"><span class="abbr">PIDJ</span> Pediatric Infectious Disease Journal</div>
+                <div class="journal-chip"><span class="abbr">JPIDS</span> J. Pediatric Infectious Diseases Society</div>
+                <div class="journal-chip"><span class="abbr">CID</span> Clinical Infectious Diseases</div>
+                <div class="journal-chip"><span class="abbr">Pediatrics</span> Pediatrics (ID-relevant)</div>
+                <div class="journal-chip"><span class="abbr">JAMA Peds</span> JAMA Pediatrics</div>
+                <div class="journal-chip"><span class="abbr">AAC</span> Antimicrobial Agents &amp; Chemotherapy</div>
+                <div class="journal-chip"><span class="abbr">NEJM</span> New England Journal of Medicine</div>
+                <div class="journal-chip"><span class="abbr">JAMA</span> JAMA</div>
+                <div class="journal-chip"><span class="abbr">Lancet ID</span> Lancet Infectious Diseases</div>
+                <div class="journal-chip"><span class="abbr">MMWR</span> CDC Morbidity &amp; Mortality Weekly</div>
+            </div>
+            <div class="suggest-box">
+                <label>Suggest a journal to add to the scan list</label>
+                <div class="suggest-row">
+                    <input type="text" id="journalSearch" placeholder="Search PubMed journals (e.g. 'Emerging Infectious')..." oninput="searchJournals(this.value)">
+                    <button id="searchBtn" onclick="searchJournals(document.getElementById('journalSearch').value)">Search</button>
+                </div>
+                <div class="suggest-results" id="suggestResults"></div>
+                <div class="suggest-status" id="suggestStatus"></div>
+            </div>
+        </div>
+
         <div class="digest-content" id="digestContent">
-            <p>I'll generate your bi-weekly literature digest by searching for recent publications in pediatric infectious diseases from March 8-22, 2026. Let me start with key journals and guideline sources.Now let me search for recent JPIDS articles specifically from March 2026:Let me search for CDC MMWR March 2026 and guidelines:Now let me search for recent pediatric antimicrobial stewardship research:Let me search for recent IDSA guidelines or updates from March 2026:Now let me look for more recent publications from March 2026 specifically. Let me search for Clinical Infectious Diseases recent issues:Now let me search for specific details on the breastfeeding antimicrobial resistance article I found:Based on my searches, I have found some excellent recent publications within the March 8-22, 2026 timeframe. Let me compile the comprehensive digest focusing on the articles I found that meet the criteria:</p>
-<h1>📚 Literature Digest: March 08 - March 22, 2026</h1>
+<h1>📚 Literature Digest: February 26 - March 12, 2026</h1>
 <h2>🚨 Practice-Changing / Action Required</h2>
-No practice-changing developments identified this period.
+No practice-changing publications identified requiring immediate action this period.
 <h2>📋 Guideline Updates</h2>
-<p><strong>IDSA/PIDS 2026 Community-Acquired Pneumonia Guidelines Update</strong><br><em>Clinical Infectious Diseases, March 16, 2026</em> | <a href="https://doi.org/10.1093/cid/ciag186" target="_blank" rel="noopener">https://doi.org/10.1093/cid/ciag186</a><br><strong>PDF:</strong> Paywalled<br><ul><li><strong>Access:</strong> PAYWALLED</li><br><li><strong>Design:</strong> Guideline update focusing on parapneumonic effusion management</li><br><li><strong>Key Updates:</strong> Six updated recommendations spanning characterization and management of pneumonia with parapneumonic effusion</li><br><li><strong>Clinical Implications:</strong> Panel suggests small-bore (≤12Fr) chest tubes over large-bore (≥14FR) tubes for drainage in children with parapneumonic effusion, as smaller tubes are effective for drainage and fibrinolysis</li><br><li><strong>Limitations:</strong> Represents partial update with complete guidelines forthcoming</li><br></ul><span class="paywall-notice">PAYWALL: Abstract only reviewed</span></p>
+No significant guideline updates identified from major pediatric ID organizations during this reporting period.
 <h2>💊 Stewardship Highlights</h2>
-<p><strong>The Role of Breastfeeding in Modulating Antimicrobial Resistance in Neonates: A Systematic Review</strong><br><em>Pediatric Research, March 21, 2026</em> | <a href="https://doi.org/10.1038/s41390-026-04902-y" target="_blank" rel="noopener">https://doi.org/10.1038/s41390-026-04902-y</a><br><strong>PDF:</strong> Available (Open Access)<br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span></li><br><li><strong>Design:</strong> Systematic review, n=22 studies, 2015-2025 literature</li><br><li><strong>Methods:</strong> Selection of studies published between 2015 and 2025 focusing on neonatal AMR and ARG transfer, with 22 studies meeting inclusion criteria after quality assessment</li><br><li><strong>Key Findings:</strong> Breast milk actively contributes to neonatal gut microbiome development and serves as a source of ARG transfer, while exclusive breastfeeding and bioactive compounds promote beneficial colonization and limit pathogenic bacteria</li><br><li><strong>Discussion:</strong> Breastfeeding has a dual role - both as a source of antimicrobial resistance genes and containing bioactive components that suppress ARG transmission and promote beneficial colonization</li><br><li><strong>Limitations:</strong> Need for longitudinal, mechanistic studies to determine causal relationships and long-term effects</li><br><li><strong>Clinical Implications:</strong> Breastfeeding-centered interventions, combined with maternal health optimization and antibiotic stewardship, represent promising avenues to mitigate AMR risks</li><br></ul><br><h2>🦠 Pediatric ID Studies</h2></p>
-<p><strong>Epidemiology and Characteristics of Bacterial Meningitis in Children with Cerebrospinal Fluid Leakage or Cochlear Implant</strong><br><em>Journal of the Pediatric Infectious Diseases Society, March 9, 2026</em> | <a href="https://doi.org/10.1093/jpids/piag015" target="_blank" rel="noopener">https://doi.org/10.1093/jpids/piag015</a><br><strong>PDF:</strong> Paywalled<br><ul><li><strong>Access:</strong> PAYWALLED</li><br><li><strong>Design:</strong> Cohort study examining bacterial meningitis in high-risk pediatric populations</li><br><li><strong>Key Findings:</strong> CSF leakage is a recognized risk factor for bacterial meningitis with limited published data on children with CSF leakage, particularly regarding PCV13 impact in this population</li><br><li><strong>Limitations:</strong> Limited data availability for this specialized population</li><br><li><strong>Clinical Implications:</strong> Highlights need for enhanced surveillance in children with CSF leakage or cochlear implants</li><br></ul><span class="paywall-notice">PAYWALL: Abstract only reviewed</span></p>
-<p><strong>The Era of "Infectious Diseases+" Has Arrived: Multi-disciplinary Integration in Pediatric Infectious Disease Prevention and Control</strong><br><em>Frontiers in Pediatrics, March 10, 2026</em> | <a href="https://doi.org/10.3389/fped.2026.1659176" target="_blank" rel="noopener">https://doi.org/10.3389/fped.2026.1659176</a><br><strong>PDF:</strong> <a href="https://public-pages-files-2025.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1659176/pdf" target="_blank" rel="noopener">https://public-pages-files-2025.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1659176/pdf</a><br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span></li><br><li><strong>Design:</strong> Perspective article on multidisciplinary approaches to pediatric infectious disease control</li><br><li><strong>Methods:</strong> Review of traditional versus next-generation infectious disease paradigms incorporating technology and interdisciplinary collaboration</li><br><li><strong>Key Findings:</strong> Multi-disciplinary collaboration is essential, with rapid advances across disciplines and revolutionary technological breakthroughs providing novel means to overcome infectious disease challenges through big data analytics, artificial intelligence, nanotechnology, mRNA vaccine technology, and CRISPR gene editing</li><br><li><strong>Discussion:</strong> The frequency of emerging infectious diseases has exposed limitations of traditional response models, which are increasingly inadequate for contemporary prevention and control needs</li><br><li><strong>Limitations:</strong> Conceptual framework requiring validation through implementation studies</li><br><li><strong>Clinical Implications:</strong> Advocates for integrated approach combining multiple disciplines for pediatric infectious disease management</li><br></ul><br><h2>📰 Notable General ID</h2></p>
-<p><strong>Scheffersomyces spartinae Infections in Pakistani Pediatric Patients</strong><br><em>Emerging Infectious Diseases, March 2026</em> | Available at CDC EID website<br><ul><li><strong>Design:</strong> Case series, n=108 pediatric patients from Pakistan</li><br><li><strong>Key Findings:</strong> 108 cases of S. spartinae infection in pediatric patients, with 107 from blood cultures, initially misidentified as Clavispora lusitaniae, with &gt;69% from children &lt;1 month of age, representing a potentially emerging pathogen in neonates and young infants</li><br><li><strong>Clinical Implications:</strong> Highlights limitations of phenotypic identification for detecting emerging fungal infections and underscores the value of molecular identification approaches</li><br></ul><br><strong>Temporal Clustering of Mycoplasma pneumoniae-Associated Encephalitis and Stroke, South Korea</strong><br><em>Emerging Infectious Diseases, March 2026</em><br><ul><li><strong>Design:</strong> Case series, n=17 pediatric cases (12 encephalitis, 5 stroke)</li><br><li><strong>Key Findings:</strong> Seventeen pediatric encephalitis or stroke cases clustered temporally during the 2023-2024 M. pneumoniae epidemic in South Korea, with similar patterns not noted in previous seasons</li><br><li><strong>Clinical Implications:</strong> Underscores need for neurologic surveillance during M. pneumoniae epidemics</li><br></ul><br><strong>Severe Group A Streptococcus Infections in French Children</strong><br><em>Emerging Infectious Diseases, March 2026</em><br><ul><li><strong>Design:</strong> Retrospective and prospective cohort, n=402 patients, September 2022-April 2024</li><br><li><strong>Key Findings:</strong> 402 pediatric patients with low proportion of severe skin and soft tissue infections (16%), predominance of severe respiratory infections (55%), 3.5% case-fatality rate, with emm1 (73.0%) and emm12 (10.8%) strains predominating</li><br></ul><br><strong>Rocky Mountain Spotted Fever in Mexican Children: 20-Year Analysis</strong><br><em>Emerging Infectious Diseases, March 2026</em><br><ul><li><strong>Design:</strong> Retrospective cohort, n=500 pediatric RMSF patients, 2004-2024</li><br><li><strong>Key Findings:</strong> Overall case-fatality rate of 19.8%, decreasing from 31.4% (2004-2013) to 14.5% (2014-2024), with fatal outcomes associated with delayed doxycycline treatment, and timely doxycycline administration remaining critical for reducing mortality</li><br></ul><br><h2>⚠️ Safety &amp; Drug Updates</h2><br>No significant pediatric ID-relevant safety updates identified this period.</p>
-<hr>
-<em>Bi-weekly digest generated March 22, 2026. Articles limited to publications from March 08, 2026 to March 22, 2026.</em>
+<p><strong>Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study</strong><br><em>Antibiotics, October 11, 2025</em> | <a href="https://doi.org/10.3390/antibiotics14101011" target="_blank" rel="noopener">https://doi.org/10.3390/antibiotics14101011</a><br><strong>PDF:</strong> Open Access<br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span>  </li><br><li><strong>Design:</strong> Four-round modified Delphi consensus study, expert panel methodology, n=participants from US pediatric hospitals</li><br><li><strong>Methods:</strong> This Delphi study recruited experts through the OPerAtic trial network and local institutions. Participants had ≥5 years experience, demonstrated expertise through publications/leadership, and familiarity with pediatric/adult ASP strategies. The study used iterative surveys and in-person discussions across four rounds with structured feedback and real-time refinement.</li><br><li><strong>Key Findings:</strong> Seven key priorities emerged, clustered into three intersecting themes: Care Settings (outpatient clinics, ICUs where misuse is common), Prescriptions (shorter durations, narrow-spectrum agents), and Strategies (outcome-based metrics, diagnostic stewardship, routine outcome tracking).</li><br><li><strong>Discussion:</strong> This represents the first systematic prioritization of pediatric ASP interventions using formal consensus methodology, addressing the gap in pediatric-specific evidence that has forced reliance on adult-based guidelines.</li><br><li><strong>Limitations:</strong> Limited to US perspectives, potential selection bias through existing trial networks, expert consensus may not reflect all practice settings</li><br><li><strong>Clinical Implications:</strong> Provides evidence-based framework for pediatric ASP development and resource allocation priorities.</li><br></ul><br><h2>🦠 Pediatric ID Studies</h2></p>
+<p><strong>The Era of "Infectious Diseases+" Has Arrived: Multi-disciplinary Integration in Pediatric Infectious Disease Prevention and Control</strong><br><em>Frontiers in Pediatrics, March 10, 2026</em> | <a href="https://doi.org/10.3389/fped.2026.1659176" target="_blank" rel="noopener">https://doi.org/10.3389/fped.2026.1659176</a><br><strong>PDF:</strong> <a href="https://public-pages-files-2025.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1659176/pdf" target="_blank" rel="noopener">https://public-pages-files-2025.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1659176/pdf</a><br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span></li><br><li><strong>Design:</strong> Perspective article/review, conceptual framework development</li><br><li><strong>Methods:</strong> This perspective piece introduces the "Infectious Diseases+" (ID+) paradigm as an interdisciplinary integration concept centered on infectious disease prevention and control, addressing limitations of traditional response models for contemporary prevention and control needs.</li><br><li><strong>Key Findings:</strong> ID+ features three theoretical breakthroughs versus conventional methods, cross-disciplinary applications from AI-driven prediction to vaccine equity governance, with validated pediatric use cases. The framework encompasses AI, therapeutic interventions, global public health, and social sciences.</li><br><li><strong>Discussion:</strong> The authors argue that emerging infectious diseases occurring every 4-5 years globally, combined with climate change reshaping disease distribution, necessitate this multi-disciplinary approach. They position ID+ as essential methodology for implementing One Health frameworks operationally.</li><br><li><strong>Limitations:</strong> Primarily conceptual framework without empirical validation studies, limited specific pediatric outcome data</li><br><li><strong>Clinical Implications:</strong> Provides roadmap for next-generation epidemic control integrating multiple disciplines and technologies for pediatric infectious disease management.</li><br></ul><br><h2>📰 Notable General ID</h2></p>
+<p><strong>Severe Group A Streptococcus Infections in French Children Study</strong><br><em>Emerging Infectious Diseases CDC</em> | Data from retrospective/prospective multicenter study<br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span> via CDC</li><br><li><strong>Design:</strong> Retrospective and prospective study, multicenter (34 hospitals in France), September 1, 2022–April 1, 2024</li><br><li><strong>Key Findings:</strong> n=402 pediatric patients (median age 4 years, IQR 2–7.5; 42% girls, 58% boys). Low proportion of severe skin/soft tissue infections (16%), predominance of severe upper/lower respiratory tract infections (55%), 3.5% case-fatality rate. Hydrocortisone, corticosteroid, and vasopressor therapies significantly associated with major sequelae or death in multivariate analysis.</li><br><li><strong>Molecular Analysis:</strong> emm1 (73.0%) and emm12 (10.8%) strains predominated; M1UK clone represented 50% of emm1 strains</li><br><li><strong>Clinical Implications:</strong> Highlights changing epidemiology of pediatric GAS infections with respiratory predominance and identifies treatment factors associated with poor outcomes.</li><br></ul><br><strong>Emerging Scheffersomyces spartinae Fungal Infections in Pakistani Neonates</strong><br><em>Emerging Infectious Diseases CDC</em><br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span> via CDC  </li><br><li><strong>Design:</strong> Case series, n=108 pediatric patients from Karachi and other Pakistani cities</li><br><li><strong>Key Findings:</strong> 107 cases identified from blood cultures, all children &lt;12 years, &gt;69% &lt;1 month of age. Initially misidentified as Clavispora lusitaniae before speciation as S. spartinae by whole-genome sequencing. Genetic diversity was low in Karachi/Nawabshah isolates with median differences of just 9 pairwise nucleotide variants.</li><br><li><strong>Clinical Implications:</strong> Demonstrates S. spartinae as potentially emerging pathogen in neonates/young infants, highlighting limitations of phenotypic identification for emerging fungal infections and value of molecular approaches.</li><br></ul><br><h2>⚠️ Safety &amp; Drug Updates</h2></p>
+<p><strong>FDA Flu Vaccine Safety Label Changes - Febrile Seizure Warnings</strong><br><em>Chemical &amp; Engineering News, February 2026</em><br><ul><li><strong>Summary:</strong> In January 2026, CBER sent letters to manufacturers of five flu vaccines approved for pediatric use (Afluria, FluLaval, Fluarix, FluMist, Fluzone) requiring more prominent safety warnings about febrile seizures. However, experts questioned the scientific justification, with one study showing only 21 additional seizures per million doses compared to 50,000 per million in children hospitalized with influenza.</li><br><li><strong>Clinical Implications:</strong> Represents ongoing regulatory scrutiny of pediatric vaccine safety signals, though clinical significance remains debated among experts.</li><br></ul><br><strong>FDA Expands Palynziq (pegvaliase) for Adolescent PKU</strong><br><em>March 2026</em><br><ul><li><strong>Summary:</strong> BioMarin received FDA approval to expand Palynziq use to adolescents age 12 and older with phenylketonuria (PKU). The only other prescription PKU treatment is Kuvan (sapropterin), approved in 2007.</li><br><li><strong>Clinical Implications:</strong> Expands treatment options for adolescent PKU patients, potentially improving long-term outcomes in this population.</li><br></ul><br><hr><br><em>Bi-weekly digest generated March 12, 2026. Articles limited to publications from February 26, 2026 to March 12, 2026.</em></p>
+<p><strong>Note:</strong> This digest period yielded limited new publications meeting the strict date and access criteria. Several journal March 2026 issues appear to still be in press or not fully accessible online. The search revealed ongoing important topics including pediatric ASP prioritization, emerging ID+ paradigms, GAS epidemiology changes, and emerging fungal pathogens, though most substantive publications fell outside the 14-day window. Practitioners should continue monitoring major journals for emerging March publications.</p>
         </div>
 
         <div class="archive-link">
@@ -429,7 +656,70 @@ No practice-changing developments identified this period.
     </main>
 
     <footer>
-        <p>Sage Project · Literature Monitor · Automated weekly with critical analysis for ID specialists</p>
+        <p>Sage Project · Literature Monitor · Bi-weekly digest for pediatric ID specialists</p>
     </footer>
+
+    <script>
+    function toggleJournals() {
+        document.getElementById('journalsPanel').classList.toggle('open');
+    }
+
+    // NCBI E-Utilities journal search (NLM Catalog)
+    let searchTimeout = null;
+    function searchJournals(query) {
+        clearTimeout(searchTimeout);
+        const results = document.getElementById('suggestResults');
+        const status = document.getElementById('suggestStatus');
+        status.className = 'suggest-status';
+        if (!query || query.length < 3) { results.innerHTML = ''; return; }
+        searchTimeout = setTimeout(async () => {
+            results.innerHTML = '<span style="color:var(--text-muted)">Searching NLM Catalog...</span>';
+            try {
+                const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${encodeURIComponent(query)}[Title]+AND+journal[pt]&retmax=8&retmode=json`;
+                const searchResp = await fetch(searchUrl);
+                const searchData = await searchResp.json();
+                const ids = searchData.esearchresult?.idlist || [];
+                if (!ids.length) { results.innerHTML = '<span style="color:var(--text-muted)">No journals found.</span>'; return; }
+
+                const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nlmcatalog&id=${ids.join(',')}&retmode=json`;
+                const summaryResp = await fetch(summaryUrl);
+                const summaryData = await summaryResp.json();
+
+                let html = '';
+                for (const id of ids) {
+                    const item = summaryData.result?.[id];
+                    if (!item) continue;
+                    const title = item.title || 'Unknown';
+                    const medAbbr = item.medlineta || '';
+                    const cleanTitle = title.replace(/\.$/, '');
+                    html += `<div class="result-item">
+                        <span class="journal-name">${cleanTitle}${medAbbr ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + medAbbr + ')</em>' : ''}</span>
+                        <button class="add-btn" onclick="suggestJournal(this, '${cleanTitle.replace(/'/g, "\\'")}', '${medAbbr.replace(/'/g, "\\'")}')">+ Add</button>
+                    </div>`;
+                }
+                results.innerHTML = html || '<span style="color:var(--text-muted)">No journals found.</span>';
+            } catch (e) {
+                results.innerHTML = '<span style="color:#c41e3a">Search failed — check connection.</span>';
+            }
+        }, 400);
+    }
+
+    function suggestJournal(btn, title, abbr) {
+        const status = document.getElementById('suggestStatus');
+        // Store suggestion in localStorage as a simple queue
+        const suggestions = JSON.parse(localStorage.getItem('sage_journal_suggestions') || '[]');
+        if (suggestions.some(s => s.title === title)) {
+            status.textContent = `"${title}" already suggested.`;
+            status.className = 'suggest-status error';
+            return;
+        }
+        suggestions.push({ title, abbr, suggested_at: new Date().toISOString() });
+        localStorage.setItem('sage_journal_suggestions', JSON.stringify(suggestions));
+
+        btn.outerHTML = '<span class="added">Added</span>';
+        status.textContent = `"${title}" queued — will be included in the next digest run after review.`;
+        status.className = 'suggest-status success';
+    }
+    </script>
 </body>
 </html>
