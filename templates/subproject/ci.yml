@@ -1,0 +1,13 @@
+name: Subproject CI
+
+on:
+  pull_request:
+    paths:
+      - "SUBPROJECT/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Replace with subproject-specific lint/test commands"

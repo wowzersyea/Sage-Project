@@ -1,0 +1,28 @@
+name: CI Shared Template
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required governance files
+        run: |
+          test -f .github/CODEOWNERS
+          test -f docs/governance/contribution-guide.md
+          test -f docs/governance/rfc-process.md
+          test -f docs/governance/release-procedures.md
+      - name: Run governance validator
+        run: python scripts/validate_repo_governance.py
+      - name: Validate HTML subprojects exist
+        run: |
+          test -d asp-advisor
+          test -d literature-monitor
+          test -d mission-control
+          test -d operations
+          test -d qi-dashboard

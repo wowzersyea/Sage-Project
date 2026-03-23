@@ -1,0 +1,27 @@
+# Credentials & secrets
+Google Cloud/
+*.json.bak
+credentials/
+*.pem
+*.key
+*.p12
+service-account*.json
+
+# Environment
+.env
+.env.*
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

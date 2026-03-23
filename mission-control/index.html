@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Operations | Sage Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage-50: #f6f7f6;
+            --sage-100: #e3e7e3;
+            --sage-200: #c7d0c7;
+            --sage-300: #9fb0a0;
+            --sage-400: #748c76;
+            --sage-500: #567159;
+            --sage-600: #435a46;
+            --sage-700: #374839;
+            --sage-800: #2d3b2f;
+            --sage-900: #1a231b;
+
+            --warm-50: #fefdfb;
+            --warm-100: #fdf9f3;
+
+            --shadow-lg: 0 12px 32px rgba(26, 35, 27, 0.12);
+            --shadow-xl: 0 24px 48px rgba(26, 35, 27, 0.16);
+
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background: var(--warm-50);
+            color: var(--sage-900);
+        }
+
+        .bg {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(157, 140, 184, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(129, 176, 196, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(212, 165, 116, 0.05) 0%, transparent 70%),
+                var(--warm-50);
+            z-index: -1;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 1rem 1.25rem;
+            background: rgba(253, 249, 243, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(199, 208, 199, 0.35);
+        }
+
+        .header-row {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .title {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+        }
+
+        .title p {
+            margin: 0;
+            color: var(--sage-500);
+            font-size: 0.9rem;
+        }
+
+        .back {
+            text-decoration: none;
+            color: var(--sage-700);
+            padding: 0.55rem 0.8rem;
+            border: 1px solid rgba(199, 208, 199, 0.8);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.6);
+            transition: transform 0.12s ease, background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .back:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-1px);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.25rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(199, 208, 199, 0.65);
+            border-radius: var(--radius-lg);
+            padding: 0.9rem 1rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .controls-left,
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .label {
+            color: var(--sage-600);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="url"] {
+            width: min(560px, 70vw);
+            padding: 0.6rem 0.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(199, 208, 199, 0.9);
+            outline: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--sage-900);
+        }
+
+        input[type="url"]:focus {
+            border-color: rgba(86, 113, 89, 0.8);
+            box-shadow: 0 0 0 4px rgba(86, 113, 89, 0.12);
+        }
+
+        .btn {
+            border: 1px solid rgba(199, 208, 199, 0.9);
+            background: white;
+            color: var(--sage-800);
+            padding: 0.6rem 0.8rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.2s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: rgba(246, 247, 246, 0.9);
+            transform: translateY(-1px);
+        }
+
+        .btn.tab.active {
+            background: rgba(86, 113, 89, 0.12);
+            border-color: rgba(86, 113, 89, 0.35);
+        }
+
+        .frame-wrap {
+            margin-top: 1rem;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid rgba(199, 208, 199, 0.55);
+            box-shadow: var(--shadow-xl);
+            background: white;
+            height: calc(100vh - 210px);
+            min-height: 520px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .hint {
+            margin-top: 0.9rem;
+            color: var(--sage-600);
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        code {
+            background: rgba(26, 35, 27, 0.06);
+            padding: 0.15rem 0.35rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+
+    <header>
+        <div class="header-row">
+            <div class="title">
+                <h1>Operations</h1>
+                <p>Mission Control (internal)</p>
+            </div>
+            <a class="back" href="../">Back to Sage</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="controls">
+            <div class="controls-left">
+                <span class="label">Mission Control URL</span>
+                <input id="mc-url" type="url" spellcheck="false" placeholder="http://localhost:3000">
+                <button class="btn" onclick="applyUrl()">Load</button>
+            </div>
+            <div class="controls-right">
+                <button class="btn tab" data-path="/projects" onclick="setPath('/projects')">Projects</button>
+                <button class="btn tab" data-path="/tasks" onclick="setPath('/tasks')">Tasks</button>
+                <button class="btn tab" data-path="/" onclick="setPath('/')">Home</button>
+            </div>
+        </div>
+
+        <div class="frame-wrap">
+            <iframe id="mc-frame" title="Mission Control"></iframe>
+        </div>
+
+        <div class="hint">
+            Tip: set the URL once (stored in your browser). Local dev default is <code>http://localhost:3000</code>.
+        </div>
+    </main>
+
+    <script>
+        const OPS_URL_KEY = 'sage_ops_mission_control_url';
+        const OPS_PATH_KEY = 'sage_ops_mission_control_path';
+
+        function normalizeUrl(url) {
+            if (!url) return '';
+            let u = String(url).trim().replace(/\s+/g, '').replace(/\/$/, '');
+            if (!/^https?:\/\//i.test(u)) {
+                if (/^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(u)) u = 'http://' + u;
+                else u = 'https://' + u;
+            }
+            return u.replace(/\/$/, '');
+        }
+
+        function getSaved(key, fallback) {
+            try {
+                const v = localStorage.getItem(key);
+                if (v) return v;
+            } catch {}
+            return fallback;
+        }
+
+        function setSaved(key, value) {
+            try { localStorage.setItem(key, value); } catch {}
+        }
+
+        function setActiveTab(currentPath) {
+            document.querySelectorAll('.btn.tab').forEach(btn => {
+                const p = btn.getAttribute('data-path');
+                if (p === currentPath) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function loadFrame(baseUrl, p) {
+            const frame = document.getElementById('mc-frame');
+            if (!frame) return;
+            const url = normalizeUrl(baseUrl);
+            if (!url) return;
+            frame.src = url + (p || '');
+        }
+
+        function applyUrl() {
+            const input = document.getElementById('mc-url');
+            const next = input ? input.value : '';
+            const url = normalizeUrl(next) || getSaved(OPS_URL_KEY, 'http://localhost:3000');
+            setSaved(OPS_URL_KEY, url);
+            if (input) input.value = url;
+
+            const p = getSaved(OPS_PATH_KEY, '/projects');
+            loadFrame(url, p);
+            setActiveTab(p);
+        }
+
+        function setPath(p) {
+            const nextPath = p || '/projects';
+            setSaved(OPS_PATH_KEY, nextPath);
+            const url = getSaved(OPS_URL_KEY, 'http://localhost:3000');
+            loadFrame(url, nextPath);
+            setActiveTab(nextPath);
+        }
+
+        // Allow ?url=...&path=/projects
+        const params = new URLSearchParams(window.location.search);
+        const qpUrl = params.get('url');
+        const qpPath = params.get('path');
+        if (qpUrl) setSaved(OPS_URL_KEY, normalizeUrl(qpUrl));
+        if (qpPath) setSaved(OPS_PATH_KEY, qpPath);
+
+        // Initial load
+        const savedUrl = getSaved(OPS_URL_KEY, 'http://localhost:3000');
+        const savedPath = getSaved(OPS_PATH_KEY, '/projects');
+        const input = document.getElementById('mc-url');
+        if (input) input.value = savedUrl;
+        setActiveTab(savedPath);
+        loadFrame(savedUrl, savedPath);
+    </script>
+</body>
+</html>
+

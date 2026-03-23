@@ -1,0 +1,14 @@
+# Global defaults
+* @markm
+
+# Governance + infra
+/.github/ @markm
+/docs/governance/ @markm
+/scripts/ @markm
+
+# Subprojects
+/asp-advisor/ @markm
+/literature-monitor/ @markm
+/mission-control/ @markm
+/operations/ @markm
+/qi-dashboard/ @markm

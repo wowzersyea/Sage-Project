@@ -1,5 +1,9 @@
 # QI Dashboard - Sage Project
 
+> Archived mirror notice:
+> Source-of-truth is `F:\Coding\sage-qi-dashboard`.
+> This folder is deployment mirror only. Do not make primary edits here.
+
 An interactive quality improvement run chart dashboard with auto-updating data, customizable variables, intervention markers, and goal tracking.
 
 ## 🌟 Features
