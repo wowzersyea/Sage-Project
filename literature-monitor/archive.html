@@ -9,26 +9,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --sage-50: #f6f7f6;
-            --sage-100: #e3e7e3;
-            --sage-200: #c7d0c7;
-            --sage-500: #567159;
-            --sage-600: #435a46;
-            --sage-700: #374839;
-            --sage-800: #2d3b2f;
-            
-            --warm-50: #fefdfb;
-            
-            --accent-lavender: #9d8cb8;
-            --accent-lavender-light: rgba(157, 140, 184, 0.15);
-            
-            --text-primary: #1a231b;
-            --text-secondary: #567159;
-            --text-muted: #748c76;
-            
-            --shadow-sm: 0 1px 2px rgba(26, 35, 27, 0.05);
-            --shadow-md: 0 4px 12px rgba(26, 35, 27, 0.08);
-            
+            --sage-50: #1a1f1a;
+            --sage-100: #252b25;
+            --sage-200: #333b33;
+            --sage-300: #4a5a4b;
+            --sage-400: #6a806c;
+            --sage-500: #7fa882;
+            --sage-600: #8fbf92;
+            --sage-700: #a8d4ab;
+            --sage-800: #c5e5c7;
+            --sage-900: #e8f5e9;
+            --warm-50: #111411;
+            --warm-100: #1a1f1a;
+
+            --accent-lavender: #b8a5d4;
+            --accent-lavender-light: rgba(184, 165, 212, 0.15);
+
+            --text-primary: #e0e8e0;
+            --text-secondary: #9bb09d;
+            --text-muted: #6a806c;
+            --surface: #181c18;
+            --surface-raised: #1e231e;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 20px;
@@ -55,13 +61,14 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(ellipse at 20% 20%, rgba(157, 140, 184, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 20%, rgba(184, 165, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(127, 168, 130, 0.04) 0%, transparent 50%),
                 var(--warm-50);
             z-index: -1;
         }
 
         header {
-            background: rgba(254, 253, 251, 0.9);
+            background: rgba(17, 20, 17, 0.9);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--sage-100);
             padding: 1rem 2rem;
@@ -155,7 +162,7 @@
         }
 
         .archive-item {
-            background: white;
+            background: var(--surface-raised);
             border: 1px solid var(--sage-100);
             border-radius: var(--radius-md);
             padding: 1.25rem 1.5rem;

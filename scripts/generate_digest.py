@@ -598,31 +598,34 @@ def generate_html_page(digest_data):
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
     <style>
         :root {{
-            --sage-50: #f6f7f6;
-            --sage-100: #e3e7e3;
-            --sage-200: #c7d0c7;
-            --sage-300: #9fb0a0;
-            --sage-400: #748c76;
-            --sage-500: #567159;
-            --sage-600: #435a46;
-            --sage-700: #374839;
-            --sage-800: #2d3b2f;
-            --sage-900: #1a231b;
-            
-            --warm-50: #fefdfb;
-            --warm-100: #fdf9f3;
-            
-            --accent-lavender: #9d8cb8;
-            --accent-lavender-light: rgba(157, 140, 184, 0.15);
-            
-            --text-primary: #1a231b;
-            --text-secondary: #567159;
-            --text-muted: #748c76;
-            
-            --shadow-sm: 0 1px 2px rgba(26, 35, 27, 0.05);
-            --shadow-md: 0 4px 12px rgba(26, 35, 27, 0.08);
-            --shadow-lg: 0 12px 32px rgba(26, 35, 27, 0.12);
-            
+            --sage-50: #1a1f1a;
+            --sage-100: #252b25;
+            --sage-200: #333b33;
+            --sage-300: #4a5a4b;
+            --sage-400: #6a806c;
+            --sage-500: #7fa882;
+            --sage-600: #8fbf92;
+            --sage-700: #a8d4ab;
+            --sage-800: #c5e5c7;
+            --sage-900: #e8f5e9;
+
+            --warm-50: #111411;
+            --warm-100: #1a1f1a;
+
+            --accent-lavender: #b8a5d4;
+            --accent-lavender-light: rgba(184, 165, 212, 0.15);
+
+            --text-primary: #e0e8e0;
+            --text-secondary: #9bb09d;
+            --text-muted: #6a806c;
+
+            --surface: #181c18;
+            --surface-raised: #1e231e;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 20px;
@@ -648,15 +651,15 @@ def generate_html_page(digest_data):
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(157, 140, 184, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(157, 140, 184, 0.05) 0%, transparent 50%),
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(184, 165, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(127, 168, 130, 0.04) 0%, transparent 50%),
                 var(--warm-50);
             z-index: -1;
         }}
 
         header {{
-            background: rgba(254, 253, 251, 0.9);
+            background: rgba(17, 20, 17, 0.9);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--sage-100);
             padding: 1rem 2rem;
@@ -783,7 +786,7 @@ def generate_html_page(digest_data):
         }}
 
         .digest-content {{
-            background: white;
+            background: var(--surface-raised);
             border: 1px solid var(--sage-100);
             border-radius: var(--radius-lg);
             padding: 2.5rem;
@@ -874,10 +877,10 @@ def generate_html_page(digest_data):
         }}
 
         .paywall-notice {{
-            color: #c41e3a;
+            color: #ef5350;
             font-weight: 600;
             font-size: 0.9rem;
-            background: rgba(196, 30, 58, 0.08);
+            background: rgba(239, 83, 80, 0.12);
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             display: inline-block;
@@ -885,10 +888,10 @@ def generate_html_page(digest_data):
         }}
 
         .open-access-badge {{
-            color: #2e7d32;
+            color: #66bb6a;
             font-weight: 600;
             font-size: 0.85rem;
-            background: rgba(46, 125, 50, 0.1);
+            background: rgba(102, 187, 106, 0.12);
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
             display: inline-block;
@@ -900,7 +903,7 @@ def generate_html_page(digest_data):
         .scan-summary svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
         .scan-summary .journals-toggle {{ color: var(--accent-lavender); cursor: pointer; font-weight: 500; text-decoration: underline dotted; text-underline-offset: 3px; background: none; border: none; font: inherit; padding: 0; }}
         .scan-summary .journals-toggle:hover {{ color: var(--sage-700); }}
-        .journals-panel {{ max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease; background: white; border: 1px solid var(--sage-100); border-radius: var(--radius-md); margin-bottom: 0; padding: 0 1.5rem; }}
+        .journals-panel {{ max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease; background: var(--surface-raised); border: 1px solid var(--sage-100); border-radius: var(--radius-md); margin-bottom: 0; padding: 0 1.5rem; }}
         .journals-panel.open {{ max-height: 800px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }}
         .journals-panel h3 {{ font-size: 0.95rem; font-weight: 600; color: var(--sage-700); margin-bottom: 0.75rem; }}
         .journal-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }}
@@ -909,16 +912,16 @@ def generate_html_page(digest_data):
         .suggest-box {{ border-top: 1px solid var(--sage-100); padding-top: 1rem; margin-top: 0.5rem; }}
         .suggest-box label {{ display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }}
         .suggest-row {{ display: flex; gap: 0.5rem; }}
-        .suggest-row input {{ flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--sage-200); border-radius: 6px; font: inherit; font-size: 0.85rem; outline: none; }}
+        .suggest-row input {{ flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--sage-200); border-radius: 6px; font: inherit; font-size: 0.85rem; outline: none; background: var(--surface); color: var(--text-primary); }}
         .suggest-row input:focus {{ border-color: var(--accent-lavender); }}
         .suggest-row button {{ padding: 0.5rem 1rem; background: var(--sage-600); color: white; border: none; border-radius: 6px; font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; white-space: nowrap; }}
         .suggest-row button:hover {{ background: var(--sage-700); }}
         .suggest-results {{ margin-top: 0.5rem; font-size: 0.85rem; }}
-        .suggest-results .result-item {{ display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.75rem; background: var(--warm-100); border-radius: 6px; margin-bottom: 0.35rem; }}
+        .suggest-results .result-item {{ display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.75rem; background: var(--sage-50); border: 1px solid var(--sage-100); border-radius: 6px; margin-bottom: 0.35rem; }}
         .suggest-results .result-item .add-btn {{ background: var(--accent-lavender); color: white; border: none; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; }}
         .suggest-status {{ margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.85rem; display: none; }}
-        .suggest-status.success {{ display: block; background: rgba(46, 125, 50, 0.1); color: #2e7d32; }}
-        .suggest-status.error {{ display: block; background: rgba(196, 30, 58, 0.08); color: #c41e3a; }}
+        .suggest-status.success {{ display: block; background: rgba(102, 187, 106, 0.12); color: #66bb6a; }}
+        .suggest-status.error {{ display: block; background: rgba(239, 83, 80, 0.12); color: #ef5350; }}
 
         .archive-link {{
             text-align: center;

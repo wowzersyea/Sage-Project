@@ -13,6 +13,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QI Dashboard - Sage Project</title>
     <style>
+        :root {
+            --sage-50: #1a1f1a;
+            --sage-100: #252b25;
+            --sage-200: #333b33;
+            --sage-300: #4a5a4b;
+            --sage-400: #6a806c;
+            --sage-500: #7fa882;
+            --sage-600: #8fbf92;
+            --sage-700: #a8d4ab;
+            --sage-800: #c5e5c7;
+            --sage-900: #e8f5e9;
+
+            --warm-50: #111411;
+            --warm-100: #1a1f1a;
+
+            --accent-lavender: #b8a5d4;
+            --accent-lavender-light: rgba(184, 165, 212, 0.15);
+
+            --text-primary: #e0e8e0;
+            --text-secondary: #9bb09d;
+            --text-muted: #6a806c;
+
+            --surface: #181c18;
+            --surface-raised: #1e231e;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -21,8 +51,8 @@
 
         body {
             font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #fefdfb;
-            color: #2c3e2f;
+            background: var(--warm-50);
+            color: var(--text-primary);
             line-height: 1.6;
         }
 
@@ -36,7 +66,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            color: #567159;
+            color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
             font-size: 0.95rem;
@@ -46,7 +76,7 @@
         }
 
         .back-link:hover {
-            color: #435a46;
+            color: var(--sage-600);
         }
 
         .back-link svg {
@@ -55,7 +85,7 @@
         }
 
         header {
-            background: linear-gradient(135deg, #567159 0%, #435a46 100%);
+            background: linear-gradient(135deg, var(--sage-500) 0%, var(--sage-600) 100%);
             color: white;
             padding: 1.5rem 2rem;
             text-align: center;
@@ -77,7 +107,7 @@
 
         /* Tab Styles */
         .tab-container {
-            background: #435a46;
+            background: var(--sage-600);
             padding: 0 1rem;
             border-radius: 0 0 12px 12px;
             margin-bottom: 1.5rem;
@@ -123,7 +153,7 @@
 
         /* Project Selector */
         .project-bar {
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             padding: 1rem 1.5rem;
             margin-bottom: 1.5rem;
@@ -136,7 +166,7 @@
 
         .project-bar label {
             font-weight: 600;
-            color: #435a46;
+            color: var(--sage-600);
         }
 
         .project-select {
@@ -151,7 +181,7 @@
         }
 
         .controls {
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             padding: 2rem;
             margin-bottom: 2rem;
@@ -168,7 +198,7 @@
 
         .control-label {
             font-weight: 600;
-            color: #435a46;
+            color: var(--sage-600);
             margin-bottom: 0.5rem;
             display: block;
         }
@@ -180,7 +210,7 @@
         }
 
         button {
-            background: #567159;
+            background: var(--sage-500);
             color: white;
             border: none;
             padding: 0.6rem 1.2rem;
@@ -192,7 +222,7 @@
         }
 
         button:hover {
-            background: #435a46;
+            background: var(--sage-600);
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -231,7 +261,7 @@
         input[type="date"],
         select {
             padding: 0.6rem;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--sage-200);
             border-radius: 6px;
             font-size: 0.95rem;
             font-family: inherit;
@@ -242,7 +272,7 @@
         input:focus,
         select:focus {
             outline: none;
-            border-color: #567159;
+            border-color: var(--sage-500);
         }
 
         .checkbox-group {
@@ -264,7 +294,7 @@
         }
 
         .chart-container {
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -281,7 +311,7 @@
         }
 
         .chart-title {
-            color: #435a46;
+            color: var(--sage-600);
             font-size: 1.3rem;
         }
 
@@ -292,7 +322,7 @@
         }
 
         .status-bar {
-            background: #f5f5f5;
+            background: var(--sage-50);
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
@@ -325,7 +355,7 @@
         }
 
         .intervention-list {
-            background: #f9f9f9;
+            background: var(--sage-50);
             border-radius: 8px;
             padding: 1rem;
             margin-top: 1rem;
@@ -336,7 +366,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid var(--sage-200);
         }
 
         .intervention-item:last-child {
@@ -371,7 +401,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             padding: 2rem;
             max-width: 500px;
@@ -383,7 +413,7 @@
         .modal-header {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #435a46;
+            color: var(--sage-600);
             margin-bottom: 1.5rem;
         }
 
@@ -395,7 +425,7 @@
             display: block;
             margin-bottom: 0.3rem;
             font-weight: 500;
-            color: #435a46;
+            color: var(--sage-600);
         }
 
         .modal-buttons {
@@ -409,7 +439,7 @@
         }
 
         .data-upload {
-            border: 2px dashed #567159;
+            border: 2px dashed var(--sage-500);
             border-radius: 8px;
             padding: 2rem;
             text-align: center;
@@ -418,13 +448,13 @@
         }
 
         .data-upload:hover {
-            background: #f5f5f5;
-            border-color: #435a46;
+            background: var(--sage-50);
+            border-color: var(--sage-600);
         }
 
         .data-upload.dragover {
-            background: #e8f5e9;
-            border-color: #4caf50;
+            background: rgba(102, 187, 106, 0.12);
+            border-color: #66bb6a;
         }
 
         #fileInput {
@@ -455,7 +485,7 @@
             gap: 2rem;
             flex-wrap: wrap;
             padding: 1rem;
-            background: #f9f9f9;
+            background: var(--sage-50);
             border-radius: 8px;
             margin-bottom: 1rem;
         }
@@ -468,7 +498,7 @@
 
         .chart-option label {
             font-weight: 500;
-            color: #435a46;
+            color: var(--sage-600);
             white-space: nowrap;
         }
 
@@ -479,7 +509,7 @@
 
         /* Display Tab Styles */
         .display-controls {
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             padding: 1rem 1.5rem;
             margin-bottom: 1.5rem;
@@ -492,7 +522,7 @@
 
         .display-controls label {
             font-weight: 600;
-            color: #435a46;
+            color: var(--sage-600);
         }
 
         .chart-grid {
@@ -502,7 +532,7 @@
         }
 
         .chart-card {
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             padding: 1.5rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -517,14 +547,14 @@
 
         .chart-card-title {
             font-weight: 600;
-            color: #435a46;
+            color: var(--sage-600);
             font-size: 1.1rem;
         }
 
         .chart-card-value {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #567159;
+            color: var(--sage-500);
         }
 
         .trend-indicator {
@@ -538,18 +568,18 @@
         }
 
         .trend-up {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: rgba(102, 187, 106, 0.12);
+            color: #66bb6a;
         }
 
         .trend-down {
-            background: #ffebee;
-            color: #c62828;
+            background: rgba(239, 83, 80, 0.12);
+            color: #ef5350;
         }
 
         .trend-stable {
-            background: #f5f5f5;
-            color: #616161;
+            background: var(--sage-50);
+            color: var(--text-muted);
         }
 
         .chart-card .chart-wrapper {
@@ -559,18 +589,18 @@
         .no-projects {
             text-align: center;
             padding: 4rem 2rem;
-            background: white;
+            background: var(--surface-raised);
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         .no-projects h3 {
-            color: #435a46;
+            color: var(--sage-600);
             margin-bottom: 1rem;
         }
 
         .no-projects p {
-            color: #666;
+            color: var(--text-muted);
             margin-bottom: 1.5rem;
         }
 
@@ -583,8 +613,8 @@
         }
 
         .info-box.success {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
+            background: rgba(102, 187, 106, 0.12);
+            border-left: 4px solid #66bb6a;
         }
 
         .info-box.info {
