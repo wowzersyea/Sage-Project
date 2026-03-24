@@ -64,7 +64,7 @@ def load_memory():
     if Path(MEMORY_FILE).exists():
         with open(MEMORY_FILE, 'r', encoding="utf-8") as f:
             return json.load(f)
-    return {"reviewed_dois": [], "reviewed_titles": []}
+    return {"reviewed_dois": [], "reviewed_titles": [], "articles": []}
 
 
 def save_memory(memory):
@@ -73,9 +73,140 @@ def save_memory(memory):
     max_entries = 500
     memory["reviewed_dois"] = memory["reviewed_dois"][-max_entries:]
     memory["reviewed_titles"] = memory["reviewed_titles"][-max_entries:]
+    # Keep last 200 structured article records (about 2 years of bi-weekly digests)
+    memory["articles"] = memory.get("articles", [])[-200:]
 
     with open(MEMORY_FILE, 'w', encoding="utf-8") as f:
         json.dump(memory, f, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Article topic extraction + retrieval
+# ---------------------------------------------------------------------------
+
+TOPIC_EXTRACTION_PROMPT = """Extract structured metadata from this literature digest. Return a JSON array where each element represents one article reviewed. For each article include:
+
+- "title": article title
+- "doi": DOI or URL (empty string if none)
+- "journal": journal name
+- "date": publication date as mentioned
+- "topics": array of 3-8 specific topic tags (e.g. "group-a-streptococcus", "antimicrobial-stewardship", "otitis-media", "meningococcal-vaccine", "delphi-consensus", "pediatric-icu", "diagnostic-stewardship"). Be specific — "GAS-invasive-disease" is better than "infectious-disease".
+- "key_finding": one-sentence summary of the most important result or recommendation
+- "study_type": one of "rct", "cohort", "case-control", "cross-sectional", "case-series", "systematic-review", "meta-analysis", "narrative-review", "guideline", "consensus", "editorial", "fda-update", "other"
+
+Return ONLY the JSON array, no other text."""
+
+
+def extract_article_records(digest_content: str) -> list[dict]:
+    """Use Claude to extract structured article records from a digest."""
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=4000,
+            messages=[{
+                "role": "user",
+                "content": f"{TOPIC_EXTRACTION_PROMPT}\n\n---\n\n{digest_content}"
+            }]
+        )
+        text = "".join(b.text for b in response.content if b.type == "text")
+        # Extract JSON array from response
+        start = text.find("[")
+        end = text.rfind("]")
+        if start >= 0 and end > start:
+            return json.loads(text[start:end + 1])
+    except Exception as e:
+        print(f"  Warning: article extraction failed: {e}", file=sys.stderr)
+    return []
+
+
+def _build_past_topic_context(articles: list[dict]) -> str:
+    """Build a system-prompt section listing all past articles with topics.
+
+    The LLM uses this to cross-reference when reviewing new articles on
+    similar topics (e.g. 'This builds on [prior GAS study] which found X').
+    """
+    if not articles:
+        return ""
+
+    lines = [
+        "\n\n### PREVIOUSLY REVIEWED ARTICLES WITH TOPIC TAGS",
+        "When reviewing new articles, check if any of these past reviews cover "
+        "similar topics. If so, reference them to provide continuity (e.g. "
+        "'This extends findings from [prior study] which showed X', or "
+        "'Unlike the [prior study] in [journal], this study found Y'). "
+        "Do NOT re-review these — just cite them where they add context.\n",
+    ]
+    for article in articles[-50:]:  # Last 50 to keep prompt manageable
+        topics = ", ".join(article.get("topics", []))
+        lines.append(
+            f"- **{article.get('title', 'Unknown')}** "
+            f"({article.get('journal', '')}, {article.get('date', '')})"
+            f" [{article.get('study_type', '')}]"
+            f"\n  Topics: {topics}"
+            f"\n  Key finding: {article.get('key_finding', 'N/A')}"
+        )
+    return "\n".join(lines)
+
+
+def find_related_articles(new_digest_content: str, memory: dict) -> str:
+    """Find previously reviewed articles related to topics in the new digest.
+
+    Returns a formatted string to inject into the system prompt so the LLM
+    can reference prior reviews when writing about similar topics.
+    """
+    past_articles = memory.get("articles", [])
+    if not past_articles:
+        return ""
+
+    # Build a compact topic index from past articles
+    topic_index: dict[str, list[dict]] = {}
+    for article in past_articles:
+        for topic in article.get("topics", []):
+            topic_index.setdefault(topic.lower(), []).append(article)
+
+    # Extract topics from the new digest to find overlaps
+    new_records = extract_article_records(new_digest_content)
+    if not new_records:
+        return ""
+
+    new_topics = set()
+    new_titles = set()
+    for rec in new_records:
+        new_topics.update(t.lower() for t in rec.get("topics", []))
+        new_titles.add(rec.get("title", "").lower())
+
+    # Find past articles that share topics with new articles
+    related: dict[str, dict] = {}  # keyed by title to dedupe
+    for topic in new_topics:
+        for article in topic_index.get(topic, []):
+            title = article.get("title", "")
+            # Don't include articles that are in the new digest
+            if title.lower() not in new_titles:
+                related[title] = article
+
+    if not related:
+        return ""
+
+    # Format as context for the system prompt (limit to 15 most relevant)
+    items = list(related.values())[:15]
+    lines = [
+        "\n### PREVIOUSLY REVIEWED RELATED ARTICLES",
+        "The following articles from past digests share topics with articles "
+        "in this digest. When writing reviews, reference these where relevant "
+        "(e.g. 'This extends findings from [prior study] which showed X' or "
+        "'Unlike [prior study], this study found Y'). Do NOT re-review these — "
+        "just cite them when they provide useful context.\n",
+    ]
+    for article in items:
+        topics = ", ".join(article.get("topics", []))
+        lines.append(
+            f"- **{article.get('title', 'Unknown')}** ({article.get('journal', '')}, "
+            f"{article.get('date', '')})\n"
+            f"  Type: {article.get('study_type', 'unknown')} | "
+            f"Topics: {topics}\n"
+            f"  Finding: {article.get('key_finding', 'N/A')}"
+        )
+    return "\n".join(lines)
 
 
 def create_pdf_folder():
@@ -393,6 +524,17 @@ def generate_digest():
         today_date=today.strftime('%B %d, %Y'),
         search_month=search_month
     )
+
+    # Inject related past articles for cross-referencing (if any exist)
+    if memory.get("articles"):
+        print("Searching for related past articles...")
+        # We don't have the new digest yet, so we pass the user prompt topics.
+        # The actual cross-referencing happens post-generation for the NEXT run.
+        # For this run, we append the full topic context from past articles.
+        past_context = _build_past_topic_context(memory.get("articles", []))
+        if past_context:
+            system += past_context
+            print(f"  Injected {len(memory['articles'])} past article records for cross-referencing.")
     
     try:
         # Call Claude with web search enabled
@@ -425,11 +567,23 @@ def generate_digest():
             digest_content = digest_content[heading_match.start():]
 
         print("Digest generated successfully!")
-        
+
         # Update memory with newly reviewed articles
         new_articles = extract_articles_from_response(digest_content)
         memory["reviewed_titles"].extend(new_articles)
         memory["last_run"] = today.isoformat()
+
+        # Extract structured article records for topic-linking
+        print("Extracting structured article records for topic memory...")
+        new_records = extract_article_records(digest_content)
+        if new_records:
+            for rec in new_records:
+                rec["digest_date"] = today.strftime("%Y-%m-%d")
+            memory.setdefault("articles", []).extend(new_records)
+            print(f"  Saved {len(new_records)} article records with topic tags.")
+        else:
+            print("  Warning: no structured records extracted.")
+
         save_memory(memory)
         
         return digest_content

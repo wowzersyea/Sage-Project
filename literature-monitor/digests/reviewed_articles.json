@@ -60,5 +60,204 @@
     "FDA Expands Meningococcal Vaccine for Infants",
     "FDA Rare Pediatric Disease Priority Review Vouchers Restored"
   ],
-  "last_run": "2026-03-24T00:21:25.348611"
+  "last_run": "2026-03-24T00:21:25.348611",
+  "articles": [
+    {
+      "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
+      "doi": "https://doi.org/10.3390/antibiotics14101011",
+      "journal": "Antibiotics",
+      "date": "October 11, 2025",
+      "topics": [
+        "antimicrobial-stewardship",
+        "pediatric-antimicrobial-stewardship",
+        "delphi-consensus",
+        "diagnostic-stewardship",
+        "outpatient-stewardship",
+        "icu-stewardship"
+      ],
+      "key_finding": "Seven priority pediatric antimicrobial stewardship interventions were identified through Delphi consensus, clustered into care settings, prescription patterns, and outcome-tracking strategies.",
+      "study_type": "consensus",
+      "digest_date": "2026-03-12"
+    },
+    {
+      "title": "The Era of \"Infectious Diseases+\" Has Arrived: Multi-disciplinary Integration in Pediatric Infectious Disease Prevention and Control",
+      "doi": "https://doi.org/10.3389/fped.2026.1659176",
+      "journal": "Frontiers in Pediatrics",
+      "date": "March 10, 2026",
+      "topics": [
+        "pediatric-infectious-disease",
+        "multidisciplinary-integration",
+        "one-health",
+        "disease-prevention",
+        "ai-prediction",
+        "vaccine-equity"
+      ],
+      "key_finding": "A new \"Infectious Diseases+\" paradigm integrating artificial intelligence, therapeutics, and social sciences is proposed as essential for managing contemporary pediatric infectious disease prevention and control.",
+      "study_type": "narrative-review",
+      "digest_date": "2026-03-12"
+    },
+    {
+      "title": "Severe Group A Streptococcus Infections in French Children Study",
+      "doi": "",
+      "journal": "Emerging Infectious Diseases CDC",
+      "date": "2024",
+      "topics": [
+        "group-a-streptococcus",
+        "GAS-severe-infection",
+        "pediatric-respiratory-infection",
+        "emm1-clone",
+        "case-fatality"
+      ],
+      "key_finding": "Pediatric GAS infections in France show predominance of severe respiratory tract infections (55%) over skin infections (16%), with 3.5% case-fatality rate and M1UK clone representing 50% of emm1 strains.",
+      "study_type": "cohort",
+      "digest_date": "2026-03-12"
+    },
+    {
+      "title": "Emerging Scheffersomyces spartinae Fungal Infections in Pakistani Neonates",
+      "doi": "",
+      "journal": "Emerging Infectious Diseases CDC",
+      "date": "2024",
+      "topics": [
+        "emerging-fungal-infection",
+        "neonatal-infection",
+        "scheffersomyces-spartinae",
+        "whole-genome-sequencing",
+        "fungal-identification"
+      ],
+      "key_finding": "S. spartinae emerged as a novel fungal pathogen in Pakistani neonates and young infants, identified through whole-genome sequencing after misidentification by conventional methods.",
+      "study_type": "case-series",
+      "digest_date": "2026-03-12"
+    },
+    {
+      "title": "FDA Flu Vaccine Safety Label Changes - Febrile Seizure Warnings",
+      "doi": "",
+      "journal": "Chemical & Engineering News",
+      "date": "February 2026",
+      "topics": [
+        "influenza-vaccine",
+        "pediatric-vaccine-safety",
+        "febrile-seizure",
+        "vaccine-adverse-events"
+      ],
+      "key_finding": "FDA required prominent febrile seizure warnings on five pediatric flu vaccines despite disputed clinical significance, with only 21 additional seizures per million doses compared to 50,000 per million in hospitalized influenza cases.",
+      "study_type": "fda-update",
+      "digest_date": "2026-03-12"
+    },
+    {
+      "title": "FDA Expands Palynziq (pegvaliase) for Adolescent PKU",
+      "doi": "",
+      "journal": "",
+      "date": "March 2026",
+      "topics": [
+        "phenylketonuria",
+        "pegvaliase",
+        "adolescent-treatment",
+        "pku-management"
+      ],
+      "key_finding": "FDA approved pegvaliase (Palynziq) for adolescents age 12 and older with phenylketonuria, expanding treatment options beyond sapropterin.",
+      "study_type": "fda-update",
+      "digest_date": "2026-03-12"
+    },
+    {
+      "title": "Pediatric Antimicrobial Stewardship: Current Evidence and Emerging Challenges",
+      "doi": "https://doi.org/10.3390/microorganisms14030004",
+      "journal": "Microorganisms",
+      "date": "March 6, 2026",
+      "topics": [
+        "antimicrobial-stewardship",
+        "pediatric-antimicrobial-resistance",
+        "diagnostic-stewardship",
+        "rapid-molecular-diagnostics",
+        "WHO-AWaRe-classification",
+        "intravenous-to-oral-conversion",
+        "artificial-intelligence-antimicrobial-optimization"
+      ],
+      "key_finding": "Core pediatric antimicrobial stewardship interventions including prospective audit and feedback, preauthorization, guideline implementation, and diagnostic stewardship with rapid molecular diagnostics and biomarkers are essential to combat antimicrobial resistance, though implementation barriers and limited pediatric-specific data remain significant challenges.",
+      "study_type": "narrative-review",
+      "digest_date": "2026-03-24"
+    },
+    {
+      "title": "Beyond Traditional Pathogens: Clinical and Microbiologic Insights Into Atypical Pediatric Otitis Media",
+      "doi": "https://doi.org/10.1097/INF.0000000000005216",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "March 18, 2026",
+      "topics": [
+        "otitis-media",
+        "atypical-otopathogens",
+        "Turicella-otitidis",
+        "chronic-suppurative-otitis-media",
+        "pediatric-microbiology",
+        "culture-positive-infections"
+      ],
+      "key_finding": "Atypical otopathogens, particularly Turicella otitidis, are increasingly identified in pediatric otitis media and are significantly associated with older age compared to typical pathogens.",
+      "study_type": "cross-sectional",
+      "digest_date": "2026-03-24"
+    },
+    {
+      "title": "Antibiotic Exposure and New Diagnosis of Juvenile Idiopathic Arthritis: A Nested Case-Control Study",
+      "doi": "",
+      "journal": "Pediatric Rheumatology Symposium",
+      "date": "March 18-21, 2026",
+      "topics": [
+        "antibiotic-exposure",
+        "juvenile-idiopathic-arthritis",
+        "microbiome-disruption",
+        "pediatric-autoimmunity",
+        "antimicrobial-stewardship",
+        "unintended-consequences-antibiotics"
+      ],
+      "key_finding": "Antibiotic exposure is associated with increased risk of new juvenile idiopathic arthritis diagnosis in children, with dose-response relationships showing stronger associations with repeated exposures and exposures within 0-1 month of diagnosis.",
+      "study_type": "case-control",
+      "digest_date": "2026-03-24"
+    },
+    {
+      "title": "FDA Flu Vaccine Safety Label Changes - Febrile Seizure Warnings",
+      "doi": "",
+      "journal": "Multiple Sources",
+      "date": "February-March 2026",
+      "topics": [
+        "influenza-vaccine",
+        "febrile-seizures",
+        "vaccine-safety",
+        "pediatric-vaccination",
+        "FDA-labeling-changes"
+      ],
+      "key_finding": "FDA labeling changes for pediatric influenza vaccines acknowledge febrile seizure risk of approximately 21 additional seizures per million doses, substantially lower than the 50,000 per million rate observed in children hospitalized with influenza.",
+      "study_type": "fda-update",
+      "digest_date": "2026-03-24"
+    },
+    {
+      "title": "FDA Expands Meningococcal Vaccine for Infants",
+      "doi": "",
+      "journal": "Contagion Live",
+      "date": "March 2026",
+      "topics": [
+        "meningococcal-vaccine",
+        "MenQuadfi",
+        "infant-vaccination",
+        "meningococcal-disease",
+        "pediatric-immunization",
+        "MenACWY-vaccine"
+      ],
+      "key_finding": "FDA approved expanded indication for quadrivalent meningococcal vaccine (MenQuadfi) for infants aged 6 weeks to 23 months, making it the only MenACWY vaccine approved for use from 6 weeks of age with no upper age limit.",
+      "study_type": "fda-update",
+      "digest_date": "2026-03-24"
+    },
+    {
+      "title": "FDA Rare Pediatric Disease Priority Review Vouchers Restored",
+      "doi": "",
+      "journal": "Regulatory/Government Update",
+      "date": "February 2026",
+      "topics": [
+        "rare-pediatric-disease",
+        "priority-review-vouchers",
+        "pediatric-drug-development",
+        "FDA-programs",
+        "regulatory-policy"
+      ],
+      "key_finding": "The Mikaela Naylon Give Kids a Chance Act was reauthorized and the rare pediatric disease priority review voucher program was revived with funding extended through September 2029 to accelerate development of drugs for rare childhood diseases.",
+      "study_type": "fda-update",
+      "digest_date": "2026-03-24"
+    }
+  ]
 }
