@@ -226,11 +226,13 @@ For EVERY article, you MUST determine if it is:
 For PAYWALLED articles, end your review with:
 `[PAYWALL: Abstract only reviewed]`
 
-For OPEN ACCESS articles, you MUST provide enhanced scientific analysis including:
-- Detailed methods critique (study population, inclusion/exclusion, statistical approach)
-- Key results with confidence intervals and p-values where available
-- Discussion of how findings compare to existing literature
-- Specific limitations with potential impact on conclusions
+For OPEN ACCESS articles, you MUST provide a COMPREHENSIVE review equivalent to a journal club presentation. The reader is a specialist — they need enough detail to understand the study WITHOUT reading the full paper. Include:
+- Full methods critique: study population with demographics, inclusion/exclusion criteria, primary and secondary endpoints, statistical methods (regression type, adjustment variables, sensitivity analyses), follow-up duration
+- Key results with ACTUAL NUMBERS: effect sizes with 95% confidence intervals and p-values, absolute risk differences, NNT/NNH where applicable. Do not just summarize — report the data.
+- Subgroup analyses and secondary outcomes that are clinically meaningful
+- Discussion of how findings compare to existing landmark studies in this area
+- Specific limitations ranked by how much they threaten the conclusions (not just boilerplate "small sample size" lists)
+- Clear clinical implications: practice-changing vs practice-informing vs hypothesis-generating
 
 ### 2. SCIENTIFIC RIGOR
 For EVERY article you mention, you MUST include:
@@ -289,21 +291,39 @@ The following articles have been reviewed in previous digests. DO NOT include th
 [New guidelines with links. Include key recommendation changes.]
 
 ## 💊 Stewardship Highlights
-[Focus on outpatient stewardship. Include study design and critical analysis.]
+[Use the same detailed article review format as Pediatric ID Studies below. Stewardship articles deserve equally thorough analysis — include full methods, statistical results, comparison to prior work, and specific implications for ASP program design.]
 
 ## 🦠 Pediatric ID Studies
-For each article:
+For each article, provide a THOROUGH review using this format. Think of this as a journal club presentation — your reader is a specialist who wants to understand the study without reading the full paper:
+
 **[Article Title]**
 *[Journal], [Publication Date]* | [DOI/Link]
 **PDF:** [PDF link if open access, or "Paywalled" if not]
 - **Access:** [OPEN ACCESS or PAYWALLED]
-- **Design:** [Study type, n=X, setting]
-- **Methods:** [For open access: detailed methods critique]
-- **Key Findings:** [Actual results with numbers, CIs, p-values for open access]
-- **Discussion:** [For open access: how findings compare to literature]
-- **Limitations:** [Critical assessment with impact on conclusions]
-- **Clinical Implications:** [1-2 sentences on relevance]
-[For paywalled articles, end with: `[PAYWALL: Abstract only reviewed]`]
+- **Design:** [Study type, sample size with demographics (age range, sex distribution), setting (single-center vs multicenter, country/region), time period of data collection]
+- **Background:** [2-3 sentences: What gap in the literature does this address? Why was this study needed? What was the status quo before this work?]
+- **Methods:** [Detailed: inclusion/exclusion criteria, primary and secondary endpoints, statistical approach (regression type, adjustment variables, sensitivity analyses), follow-up duration. For RCTs: randomization method, blinding, ITT vs per-protocol. For observational: how confounding was handled.]
+- **Key Findings:** [Primary outcome with effect size, 95% CI, and p-value. Secondary outcomes that matter. Subgroup analyses if notable. Absolute numbers, not just relative risks — e.g. "NNT of 12" or "3.5% case-fatality rate (14/402)". Include tables of key results if helpful.]
+- **Discussion:** [How do these findings compare to prior studies? Do they confirm or challenge current practice? What is the proposed mechanism? Did the authors address the most important counterarguments?]
+- **Limitations:** [Be specific: selection bias (how recruited?), generalizability (single center? one country?), confounding (unmeasured variables?), sample size (underpowered for subgroups?), measurement (self-report? administrative codes?). State which limitations genuinely threaten the conclusions vs which are standard boilerplate.]
+- **Clinical Implications:** [What should the reader do differently? Is this practice-confirming, practice-informing, or practice-changing? Who benefits most? Any implementation barriers?]
+
+**SPECIAL FORMAT FOR REVIEWS, GUIDELINES, AND CONSENSUS STATEMENTS:**
+If the article is a systematic review, meta-analysis, clinical practice guideline, Delphi consensus, or any paper that addresses discrete clinical questions with graded recommendations, replace the Methods/Key Findings sections with:
+- **Methods:** [Search strategy, databases, date range, inclusion/exclusion for studies, risk of bias tool used, GRADE or other evidence grading framework, consensus methodology if applicable (e.g. Delphi rounds, voting thresholds)]
+- **PICO Questions & Recommendations:** List EVERY clinical question the paper addresses using this sub-format:
+
+  **Q1:** [PICO question — Population, Intervention, Comparator, Outcome]
+  **Recommendation:** [The actual recommendation statement]
+  **Strength / Quality:** [e.g. Strong recommendation, Moderate-quality evidence (GRADE B); or "Expert consensus, Low-quality evidence"; or the study's own grading if not GRADE]
+  **Supporting data:** [Key numbers — pooled OR/RR with 95% CI, I² heterogeneity, number of studies/patients, or vote count for Delphi]
+
+  **Q2:** [next PICO question]
+  ...repeat for all questions addressed...
+
+Do NOT summarize a 7-recommendation guideline as "Seven key priorities emerged." List every one. The reader needs to know what the recommendations actually say.
+
+[For paywalled articles: provide as much detail as the abstract allows, then end with `[PAYWALL: Abstract only reviewed — full methods/results analysis unavailable]`]
 
 ## 📰 Notable General ID
 [High-impact articles from major journals relevant to pediatrics]
@@ -337,11 +357,11 @@ Search strategy:
 
 For each article:
 - Determine if full text is freely available (open access) or paywalled
-- If open access: read the full paper and provide detailed methods/results/discussion analysis
-- If paywalled: clearly indicate abstract-only review
+- If open access: READ THE FULL PAPER and provide a journal-club-level review. Include actual numbers, effect sizes, CIs, p-values. The reader is an ID physician — they want the data, not just a paragraph summary. Each open-access article review should be 300-500 words minimum.
+- If paywalled: clearly indicate abstract-only review, extract maximum detail from the abstract
 - Include direct PDF links for open access articles
 
-Provide a thorough but focused digest with full critical analysis."""
+Write each review as if you are presenting at journal club to attending physicians. Be thorough — a short, vague review is worse than no review."""
 
 
 def generate_digest():
@@ -379,7 +399,7 @@ def generate_digest():
         # Using lower max_tokens and being explicit about efficiency
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=6000,  # Reduced from 8000
+            max_tokens=16000,
             tools=[{
                 "type": "web_search_20250305",
                 "name": "web_search"

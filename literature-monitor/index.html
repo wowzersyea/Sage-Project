@@ -308,191 +308,31 @@
             display: inline-block;
         }
 
-        /* ---- Scan summary bar ---- */
-        .scan-summary {
-            background: var(--sage-50);
-            border: 1px solid var(--sage-100);
-            border-radius: var(--radius-md);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            align-items: center;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-        .scan-summary .stat {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .scan-summary .stat strong {
-            color: var(--sage-700);
-        }
+        .scan-summary { background: var(--sage-50); border: 1px solid var(--sage-100); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; font-size: 0.9rem; color: var(--text-secondary); }
+        .scan-summary .stat { display: flex; align-items: center; gap: 6px; }
+        .scan-summary .stat strong { color: var(--sage-700); }
         .scan-summary svg { width: 16px; height: 16px; flex-shrink: 0; }
-        .scan-summary .journals-toggle {
-            color: var(--accent-lavender);
-            cursor: pointer;
-            font-weight: 500;
-            text-decoration: underline;
-            text-decoration-style: dotted;
-            text-underline-offset: 3px;
-            background: none;
-            border: none;
-            font: inherit;
-            padding: 0;
-        }
-        .scan-summary .journals-toggle:hover {
-            color: var(--sage-700);
-        }
-
-        /* ---- Journals drawer ---- */
-        .journals-panel {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease;
-            background: var(--surface-raised);
-            border: 1px solid var(--sage-100);
-            border-radius: var(--radius-md);
-            margin-bottom: 0;
-            padding: 0 1.5rem;
-        }
-        .journals-panel.open {
-            max-height: 800px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .journals-panel h3 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--sage-700);
-            margin-bottom: 0.75rem;
-        }
-        .journal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .journal-chip {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0.4rem 0.75rem;
-            background: var(--sage-50);
-            border: 1px solid var(--sage-100);
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: var(--text-primary);
-        }
-        .journal-chip .abbr {
-            font-weight: 600;
-            color: var(--accent-lavender);
-            font-size: 0.75rem;
-            min-width: 48px;
-        }
-
-        /* ---- Suggest journal ---- */
-        .suggest-box {
-            border-top: 1px solid var(--sage-100);
-            padding-top: 1rem;
-            margin-top: 0.5rem;
-        }
-        .suggest-box label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-        .suggest-row {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .suggest-row input {
-            flex: 1;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--sage-200);
-            border-radius: 6px;
-            font: inherit;
-            font-size: 0.85rem;
-            outline: none;
-            transition: border-color 0.2s;
-            background: var(--surface);
-            color: var(--text-primary);
-        }
-        .suggest-row input:focus {
-            border-color: var(--accent-lavender);
-        }
-        .suggest-row button {
-            padding: 0.5rem 1rem;
-            background: var(--sage-600);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font: inherit;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
+        .scan-summary .journals-toggle { color: var(--accent-lavender); cursor: pointer; font-weight: 500; text-decoration: underline dotted; text-underline-offset: 3px; background: none; border: none; font: inherit; padding: 0; }
+        .scan-summary .journals-toggle:hover { color: var(--sage-700); }
+        .journals-panel { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease; background: var(--surface-raised); border: 1px solid var(--sage-100); border-radius: var(--radius-md); margin-bottom: 0; padding: 0 1.5rem; }
+        .journals-panel.open { max-height: 800px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+        .journals-panel h3 { font-size: 0.95rem; font-weight: 600; color: var(--sage-700); margin-bottom: 0.75rem; }
+        .journal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+        .journal-chip { display: flex; align-items: center; gap: 8px; padding: 0.4rem 0.75rem; background: var(--sage-50); border: 1px solid var(--sage-100); border-radius: 6px; font-size: 0.85rem; }
+        .journal-chip .abbr { font-weight: 600; color: var(--accent-lavender); font-size: 0.75rem; min-width: 48px; }
+        .suggest-box { border-top: 1px solid var(--sage-100); padding-top: 1rem; margin-top: 0.5rem; }
+        .suggest-box label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .suggest-row { display: flex; gap: 0.5rem; }
+        .suggest-row input { flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--sage-200); border-radius: 6px; font: inherit; font-size: 0.85rem; outline: none; background: var(--surface); color: var(--text-primary); }
+        .suggest-row input:focus { border-color: var(--accent-lavender); }
+        .suggest-row button { padding: 0.5rem 1rem; background: var(--sage-600); color: white; border: none; border-radius: 6px; font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; white-space: nowrap; }
         .suggest-row button:hover { background: var(--sage-700); }
-        .suggest-row button:disabled {
-            background: var(--sage-200);
-            cursor: not-allowed;
-        }
-        .suggest-results {
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-        }
-        .suggest-results .result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.4rem 0.75rem;
-            background: var(--sage-50);
-            border: 1px solid var(--sage-100);
-            border-radius: 6px;
-            margin-bottom: 0.35rem;
-        }
-        .suggest-results .result-item .journal-name {
-            color: var(--text-primary);
-        }
-        .suggest-results .result-item .add-btn {
-            background: var(--accent-lavender);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .suggest-results .result-item .add-btn:hover { opacity: 0.85; }
-        .suggest-results .result-item .added {
-            color: #66bb6a;
-            font-weight: 500;
-            font-size: 0.8rem;
-        }
-        .suggest-status {
-            margin-top: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            display: none;
-        }
-        .suggest-status.success {
-            display: block;
-            background: rgba(102, 187, 106, 0.12);
-            color: #66bb6a;
-        }
-        .suggest-status.error {
-            display: block;
-            background: rgba(239, 83, 80, 0.12);
-            color: #ef5350;
-        }
+        .suggest-results { margin-top: 0.5rem; font-size: 0.85rem; }
+        .suggest-results .result-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.75rem; background: var(--sage-50); border: 1px solid var(--sage-100); border-radius: 6px; margin-bottom: 0.35rem; }
+        .suggest-results .result-item .add-btn { background: var(--accent-lavender); color: white; border: none; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+        .suggest-status { margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.85rem; display: none; }
+        .suggest-status.success { display: block; background: rgba(102, 187, 106, 0.12); color: #66bb6a; }
+        .suggest-status.error { display: block; background: rgba(239, 83, 80, 0.12); color: #ef5350; }
 
         .archive-link {
             text-align: center;
@@ -584,23 +424,22 @@
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    February 26 &ndash; March 12, 2026
+                    March 10 - March 24, 2026
                 </span>
                 <span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Generated March 12, 2026
+                    Generated March 24, 2026
                 </span>
             </div>
         </div>
 
-        <!-- Scan summary bar -->
         <div class="scan-summary">
             <span class="stat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <strong>14-day window</strong> Feb 26 &ndash; Mar 12, 2026
+                <strong>14-day window</strong> March 10 - March 24, 2026
             </span>
             <span class="stat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -612,11 +451,10 @@
             </span>
             <span class="stat">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <strong>5 open access</strong> &middot; 1 paywalled
+                <strong>1 open access</strong> &middot; 2 paywalled
             </span>
         </div>
 
-        <!-- Journals panel (collapsed by default) -->
         <div class="journals-panel" id="journalsPanel">
             <h3>Journals Searched</h3>
             <div class="journal-grid">
@@ -634,7 +472,7 @@
             <div class="suggest-box">
                 <label>Suggest a journal to add to the scan list</label>
                 <div class="suggest-row">
-                    <input type="text" id="journalSearch" placeholder="Search PubMed journals (e.g. 'Emerging Infectious')..." oninput="searchJournals(this.value)">
+                    <input type="text" id="journalSearch" placeholder="Search PubMed journals..." oninput="searchJournals(this.value)">
                     <button id="searchBtn" onclick="searchJournals(document.getElementById('journalSearch').value)">Search</button>
                 </div>
                 <div class="suggest-results" id="suggestResults"></div>
@@ -643,34 +481,40 @@
         </div>
 
         <div class="digest-content" id="digestContent">
-<h1>📚 Literature Digest: February 26 - March 12, 2026</h1>
+            <h1>📚 Literature Digest: March 10 - March 24, 2026</h1>
 <h2>🚨 Practice-Changing / Action Required</h2>
-No practice-changing publications identified requiring immediate action this period.
+No truly practice-changing publications identified this period.
 <h2>📋 Guideline Updates</h2>
-No significant guideline updates identified from major pediatric ID organizations during this reporting period.
+No new clinical practice guidelines published during this period. The 2026 IDSA/PIDS Community-Acquired Pneumonia Guidelines update (published March 16, 2026) was previously reviewed.
 <h2>💊 Stewardship Highlights</h2>
-<p><strong>Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study</strong><br><em>Antibiotics, October 11, 2025</em> | <a href="https://doi.org/10.3390/antibiotics14101011" target="_blank" rel="noopener">https://doi.org/10.3390/antibiotics14101011</a><br><strong>PDF:</strong> Open Access<br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span>  </li><br><li><strong>Design:</strong> Four-round modified Delphi consensus study, expert panel methodology, n=participants from US pediatric hospitals</li><br><li><strong>Methods:</strong> This Delphi study recruited experts through the OPerAtic trial network and local institutions. Participants had ≥5 years experience, demonstrated expertise through publications/leadership, and familiarity with pediatric/adult ASP strategies. The study used iterative surveys and in-person discussions across four rounds with structured feedback and real-time refinement.</li><br><li><strong>Key Findings:</strong> Seven key priorities emerged, clustered into three intersecting themes: Care Settings (outpatient clinics, ICUs where misuse is common), Prescriptions (shorter durations, narrow-spectrum agents), and Strategies (outcome-based metrics, diagnostic stewardship, routine outcome tracking).</li><br><li><strong>Discussion:</strong> This represents the first systematic prioritization of pediatric ASP interventions using formal consensus methodology, addressing the gap in pediatric-specific evidence that has forced reliance on adult-based guidelines.</li><br><li><strong>Limitations:</strong> Limited to US perspectives, potential selection bias through existing trial networks, expert consensus may not reflect all practice settings</li><br><li><strong>Clinical Implications:</strong> Provides evidence-based framework for pediatric ASP development and resource allocation priorities.</li><br></ul><br><h2>🦠 Pediatric ID Studies</h2></p>
-<p><strong>The Era of "Infectious Diseases+" Has Arrived: Multi-disciplinary Integration in Pediatric Infectious Disease Prevention and Control</strong><br><em>Frontiers in Pediatrics, March 10, 2026</em> | <a href="https://doi.org/10.3389/fped.2026.1659176" target="_blank" rel="noopener">https://doi.org/10.3389/fped.2026.1659176</a><br><strong>PDF:</strong> <a href="https://public-pages-files-2025.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1659176/pdf" target="_blank" rel="noopener">https://public-pages-files-2025.frontiersin.org/journals/pediatrics/articles/10.3389/fped.2026.1659176/pdf</a><br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span></li><br><li><strong>Design:</strong> Perspective article/review, conceptual framework development</li><br><li><strong>Methods:</strong> This perspective piece introduces the "Infectious Diseases+" (ID+) paradigm as an interdisciplinary integration concept centered on infectious disease prevention and control, addressing limitations of traditional response models for contemporary prevention and control needs.</li><br><li><strong>Key Findings:</strong> ID+ features three theoretical breakthroughs versus conventional methods, cross-disciplinary applications from AI-driven prediction to vaccine equity governance, with validated pediatric use cases. The framework encompasses AI, therapeutic interventions, global public health, and social sciences.</li><br><li><strong>Discussion:</strong> The authors argue that emerging infectious diseases occurring every 4-5 years globally, combined with climate change reshaping disease distribution, necessitate this multi-disciplinary approach. They position ID+ as essential methodology for implementing One Health frameworks operationally.</li><br><li><strong>Limitations:</strong> Primarily conceptual framework without empirical validation studies, limited specific pediatric outcome data</li><br><li><strong>Clinical Implications:</strong> Provides roadmap for next-generation epidemic control integrating multiple disciplines and technologies for pediatric infectious disease management.</li><br></ul><br><h2>📰 Notable General ID</h2></p>
-<p><strong>Severe Group A Streptococcus Infections in French Children Study</strong><br><em>Emerging Infectious Diseases CDC</em> | Data from retrospective/prospective multicenter study<br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span> via CDC</li><br><li><strong>Design:</strong> Retrospective and prospective study, multicenter (34 hospitals in France), September 1, 2022–April 1, 2024</li><br><li><strong>Key Findings:</strong> n=402 pediatric patients (median age 4 years, IQR 2–7.5; 42% girls, 58% boys). Low proportion of severe skin/soft tissue infections (16%), predominance of severe upper/lower respiratory tract infections (55%), 3.5% case-fatality rate. Hydrocortisone, corticosteroid, and vasopressor therapies significantly associated with major sequelae or death in multivariate analysis.</li><br><li><strong>Molecular Analysis:</strong> emm1 (73.0%) and emm12 (10.8%) strains predominated; M1UK clone represented 50% of emm1 strains</li><br><li><strong>Clinical Implications:</strong> Highlights changing epidemiology of pediatric GAS infections with respiratory predominance and identifies treatment factors associated with poor outcomes.</li><br></ul><br><strong>Emerging Scheffersomyces spartinae Fungal Infections in Pakistani Neonates</strong><br><em>Emerging Infectious Diseases CDC</em><br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span> via CDC  </li><br><li><strong>Design:</strong> Case series, n=108 pediatric patients from Karachi and other Pakistani cities</li><br><li><strong>Key Findings:</strong> 107 cases identified from blood cultures, all children &lt;12 years, &gt;69% &lt;1 month of age. Initially misidentified as Clavispora lusitaniae before speciation as S. spartinae by whole-genome sequencing. Genetic diversity was low in Karachi/Nawabshah isolates with median differences of just 9 pairwise nucleotide variants.</li><br><li><strong>Clinical Implications:</strong> Demonstrates S. spartinae as potentially emerging pathogen in neonates/young infants, highlighting limitations of phenotypic identification for emerging fungal infections and value of molecular approaches.</li><br></ul><br><h2>⚠️ Safety &amp; Drug Updates</h2></p>
-<p><strong>FDA Flu Vaccine Safety Label Changes - Febrile Seizure Warnings</strong><br><em>Chemical &amp; Engineering News, February 2026</em><br><ul><li><strong>Summary:</strong> In January 2026, CBER sent letters to manufacturers of five flu vaccines approved for pediatric use (Afluria, FluLaval, Fluarix, FluMist, Fluzone) requiring more prominent safety warnings about febrile seizures. However, experts questioned the scientific justification, with one study showing only 21 additional seizures per million doses compared to 50,000 per million in children hospitalized with influenza.</li><br><li><strong>Clinical Implications:</strong> Represents ongoing regulatory scrutiny of pediatric vaccine safety signals, though clinical significance remains debated among experts.</li><br></ul><br><strong>FDA Expands Palynziq (pegvaliase) for Adolescent PKU</strong><br><em>March 2026</em><br><ul><li><strong>Summary:</strong> BioMarin received FDA approval to expand Palynziq use to adolescents age 12 and older with phenylketonuria (PKU). The only other prescription PKU treatment is Kuvan (sapropterin), approved in 2007.</li><br><li><strong>Clinical Implications:</strong> Expands treatment options for adolescent PKU patients, potentially improving long-term outcomes in this population.</li><br></ul><br><hr><br><em>Bi-weekly digest generated March 12, 2026. Articles limited to publications from February 26, 2026 to March 12, 2026.</em></p>
-<p><strong>Note:</strong> This digest period yielded limited new publications meeting the strict date and access criteria. Several journal March 2026 issues appear to still be in press or not fully accessible online. The search revealed ongoing important topics including pediatric ASP prioritization, emerging ID+ paradigms, GAS epidemiology changes, and emerging fungal pathogens, though most substantive publications fell outside the 14-day window. Practitioners should continue monitoring major journals for emerging March publications.</p>
+<p><strong>Pediatric Antimicrobial Stewardship: Current Evidence and Emerging Challenges</strong><br><em>Microorganisms, March 6, 2026</em> | <a href="https://doi.org/10.3390/microorganisms14030004" target="_blank" rel="noopener">https://doi.org/10.3390/microorganisms14030004</a><br><strong>PDF:</strong> <a href="https://www.mdpi.com/3042-9323/1/1/4/pdf" target="_blank" rel="noopener">https://www.mdpi.com/3042-9323/1/1/4/pdf</a><br><ul><li><strong>Access:</strong> <span class="open-access-badge">OPEN ACCESS</span></li><br><li><strong>Design:</strong> Narrative review with structured literature search of PubMed, Scopus, and Embase over 15 years, focusing on pediatric antimicrobial stewardship evidence</li><br><li><strong>Background:</strong> Antimicrobial resistance (AMR) is a growing global health threat with important implications for pediatric populations. Children are frequently exposed to antibiotics in both hospital and community settings, where inappropriate prescribing, suboptimal dosing, and excessive use of broad-spectrum agents remain common. These practices contribute to the emergence of resistant pathogens, increase adverse drug events, and may negatively affect the developing immune system and microbiota.</li><br><li><strong>Methods:</strong> A structured literature search was conducted in PubMed, Scopus, and Embase. The search strategy combined controlled vocabulary (MeSH/Emtree terms) and free-text keywords related to AMS and pediatric infectious diseases. We considered narrative and systematic reviews, observational and interventional studies, surveillance reports, and guidelines issued by recognized health authorities.</li><br><li><strong>Key Findings:</strong> This narrative review summarizes current evidence on pediatric antimicrobial stewardship (AMS), highlighting recent trends in antimicrobial use and key stewardship strategies across inpatient and outpatient care. Core interventions, including prospective audit and feedback, preauthorization, guideline implementation, AWaRe-based prescribing, therapeutic drug monitoring, and early intravenous-to- [oral conversion]. The review also examines the expanding role of diagnostic stewardship, focusing on rapid molecular diagnostics, point-of-care testing, and host-response biomarkers to improve differentiation between bacterial and viral infections and support targeted therapy. The review emphasized the WHO AWaRe classification as an increasingly important framework for assessing pediatric antibiotic appropriateness.</li><br><li><strong>Discussion:</strong> Despite progress, pediatric AMS faces persistent challenges, such as regional variability in prescribing practices, limited pediatric-specific data for new antimicrobials and diagnostics, and organizational and behavioral barriers. Emerging tools, particularly artificial intelligence, may enhance decision-making and optimize antimicrobial use, although further validation in pediatric settings is needed.</li><br><li><strong>Limitations:</strong> As a narrative review, it lacks systematic methodology and quantitative synthesis. The 15-year search timeframe may include outdated practices that don't reflect current standards. Limited critical assessment of study quality within included evidence.</li><br><li><strong>Clinical Implications:</strong> This comprehensive review provides a roadmap for pediatric ASP development and implementation. Strengthening pediatric AMS is essential to improving care quality and mitigating the impact of AMR. The emphasis on diagnostic stewardship and AI integration signals where the field is heading, though implementation barriers remain significant.</li><br></ul><br><h2>🦠 Pediatric ID Studies</h2></p>
+<p><strong>Beyond Traditional Pathogens: Clinical and Microbiologic Insights Into Atypical Pediatric Otitis Media</strong><br><em>The Pediatric Infectious Disease Journal, March 18, 2026</em> | <a href="https://doi.org/10.1097/INF.0000000000005216" target="_blank" rel="noopener">https://doi.org/10.1097/INF.0000000000005216</a><br><ul><li><strong>Access:</strong> PAYWALLED</li><br><li><strong>Design:</strong> Retrospective cross-sectional study of children (0-18 years) with culture-positive monomicrobial otitis media at a secondary care center (2021-2024), n=62 (31 matched pairs)</li><br><li><strong>Background:</strong> Advanced microbiologic diagnostics have expanded the spectrum of bacterial species identified in otitis media (OM). The clinical significance of atypical otopathogens remains unclear. This study compares characteristics and outcomes of pediatric OM caused by atypical versus typical pathogens.</li><br><li><strong>Methods:</strong> Streptococcus pneumoniae, Haemophilus influenzae, Streptococcus pyogenes, Staphylococcus aureus, Moraxella catarrhalis and Pseudomonas aeruginosa from chronic suppurative OM (CSOM) cases to the typical group; other isolates were atypical. Clinical outcomes were compared using 1:1 matched cohorts and propensity scores.</li><br><li><strong>Key Findings:</strong> Thirty-one children were included in both the atypical and typical groups. Six typical cases involving P. aeruginosa from CSOM were included in a supplementary analysis. Turicella otitidis predominated among atypical isolates (n = 13, 42%). Following 1:1 matching, atypical otopathogens were significantly associated with older age (5.41 ± 5.08 vs. [comparison value not provided in abstract]).</li><br></ul><br>[PAYWALL: Abstract only reviewed — full methods/results analysis unavailable]</p>
+<p><strong>Antibiotic Exposure and New Diagnosis of Juvenile Idiopathic Arthritis: A Nested Case-Control Study</strong><br><em>Pediatric Rheumatology Symposium, March 18-21, 2026</em> | Abstract #046<br><ul><li><strong>Access:</strong> Conference abstract only</li><br><li><strong>Design:</strong> Nested case-control study in large US cohorts (publicly insured 2001-2019, privately insured 2006-2023), n=41,781,816 children aged 0-17 years with ≥9 months antibiotic-free time</li><br><li><strong>Background:</strong> Antibiotic exposure among children is associated with higher rates of newly diagnosed juvenile idiopathic arthritis (JIA), with stronger associations observed with repeated and more recent use, according to study results presented at the Pediatric Rheumatology Symposium, held from March 18 to 21, 2026, in Minneapolis, Minnesota.</li><br><li><strong>Methods:</strong> Cases of newly diagnosed JIA were matched with 1 to 10 control individuals without prior JIA or immunosuppressant use by payer, year and quarter of birth and enrollment, sex, and state. Analysis used a 10-month exposure window prior to JIA diagnosis.</li><br><li><strong>Key Findings:</strong> Overall, 5175 JIA cases were matched with 44,309 control individuals, of whom 87% to 88% were publicly insured. Any antibiotic exposure during the 10-month period was associated with new JIA among the new-user cohort (adjusted odds ratio [aOR], 1.24; 95% CI, 1.18-1.31) and the birth inception cohort (aOR, 1.17; 95% CI, 1.11-1.24). Repeated antibiotic exposures showed stronger associations with JIA, with aORs among the new-user cohort ranging from 1.16 (95% CI, 1.10-1.23) for 1 course to 2.48 (95% CI, 2.18-2.83) for 4 or more courses (P for trend &lt;.001). More recent antibiotic courses were also more strongly associated with new JIA, with exposure 0 to 1 month prior yielding the highest odds (aOR, 1.66; 95% CI, 1.51-1.82).</li><br><li><strong>Discussion:</strong> These associations may reflect preceding immune dysfunction or the role of infectious triggers in predisposed children rather than causal effects of antibiotics. However, antibiotic-related microbiome disruption may contribute to JIA development in subgroups, such as those with spondyloarthritis.</li><br><li><strong>Clinical Implications:</strong> This large-scale epidemiologic study provides important evidence of associations between antibiotic exposure and JIA risk, with dose-response and temporal relationships suggesting potential causality. While the absolute risks remain low, this adds to growing evidence about unintended consequences of antibiotic use in children beyond antibiotic resistance.</li><br></ul><br><h2>📰 Notable General ID</h2></p>
+<p>No significant publications identified this period.</p>
+<h2>⚠️ Safety &amp; Drug Updates</h2>
+<p><strong>FDA Flu Vaccine Safety Label Changes - Febrile Seizure Warnings</strong><br><em>Multiple Sources, February-March 2026</em><br>According to Kaitlyn Rivard, a clinical pharmacy specialist in pediatric infectious disease who spoke on behalf of the Society of Infectious Disease Pharmacists, surveillance studies from many past flu seasons have not shown a statistically significant risk of febrile seizure. The published study shows that for every million doses of vaccine given, about 21 additional seizures occurred. By comparison, Rivard notes that about 5% of children hospitalized for influenza will have febrile seizures (a rate of 50,000 for every million) (J Pediatr. 2021, DOI: 10.1016/j.jpeds.2021.06.075).</p>
+<p>Near-identical letters went to the makers of all five vaccines approved for pediatric use in the US: CSL Seqirus, which manufactures Afluria; GlaxoSmithKline (GSK), which makes FluLaval and Fluarix; MedImmune, an AstraZeneca subsidiary, which makes FluMist; and Sanofi, which makes Fluzone. The agency gave the manufacturers until Feb. 8 to respond. The change represents acknowledgment of statistically significant findings from two consecutive surveillance years, though the clinical significance remains debated.</p>
+<p><strong>FDA Expands Meningococcal Vaccine for Infants</strong><br><em>Contagion Live, March 2026</em><br>In a move that links the quadrivalent meningococcal vaccine (MenQuadfi, Sanofi) throughout people's lifetimes, the FDA has approved the expanded indication for the immunization for children aged 6 weeks to 23 months. The vaccine had previously been approved for people aged 2 years and older. MenQuadfi becomes the only MenACWY vaccine that can help protect for individuals 6 weeks of age and older, with no upper age limit.</p>
+<p>We know that over the last couple of years, there has been a significant increase in the amount of meningococcal disease that's being seen here in the United States. Individuals at the highest risk are young infants in addition to individuals like college students, people in military barracks, or teenagers who have other risk factors for disease.</p>
+<p><strong>FDA Rare Pediatric Disease Priority Review Vouchers Restored</strong><br><em>February 2026</em><br>By signing a government funding bill that ended a partial shutdown, President Donald Trump has also reauthorized a beloved program meant to speed the development of new drugs for rare childhood diseases. The Consolidated Appropriations Act of 2026, signed by Trump on Feb. 3, includes a provision reinstating the Mikaela Naylon Give Kids a Chance Act and reviving the rare pediatric disease (RPD) priority review voucher program. The program will now be funded through September 2029.</p>
+<hr>
+<em>Bi-weekly digest generated March 24, 2026. Articles limited to publications from March 10, 2026 to March 24, 2026.</em>
+<p><strong>Note:</strong> This digest includes several publications that were at the boundary of the search period or represent important updates to the pediatric infectious disease community. The search identified limited new high-quality publications during this specific 14-day window, likely reflecting normal publication timing variations. The stewardship review and otitis media study represent the most substantial new research contributions for this period.</p>
         </div>
 
         <div class="archive-link">
-            <a href="archive.html">View Past Digests →</a>
+            <a href="archive.html">View Past Digests &rarr;</a>
         </div>
     </main>
 
     <footer>
-        <p>Sage Project · Literature Monitor · Bi-weekly digest for pediatric ID specialists</p>
+        <p>Sage Project &middot; Literature Monitor &middot; Bi-weekly digest for pediatric ID specialists</p>
     </footer>
 
     <script>
     function toggleJournals() {
         document.getElementById('journalsPanel').classList.toggle('open');
     }
-
-    // NCBI E-Utilities journal search (NLM Catalog — serials only)
     let searchTimeout = null;
     function searchJournals(query) {
         clearTimeout(searchTimeout);
@@ -682,39 +526,30 @@ No significant guideline updates identified from major pediatric ID organization
             results.innerHTML = '<span style="color:var(--text-muted)">Searching medical journals...</span>';
             try {
                 const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nlmcatalog&term=${encodeURIComponent(query)}[Title]+AND+serial[tp]&retmax=10&retmode=json`;
-                const searchResp = await fetch(searchUrl);
-                const searchData = await searchResp.json();
-                const ids = searchData.esearchresult?.idlist || [];
+                const resp = await fetch(searchUrl);
+                const data = await resp.json();
+                const ids = data.esearchresult?.idlist || [];
                 if (!ids.length) { results.innerHTML = '<span style="color:var(--text-muted)">No journals found. Try a shorter name.</span>'; return; }
-
-                const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nlmcatalog&id=${ids.join(',')}&retmode=json`;
-                const summaryResp = await fetch(summaryUrl);
-                const summaryData = await summaryResp.json();
-
+                const sUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nlmcatalog&id=${ids.join(',')}&retmode=json`;
+                const sResp = await fetch(sUrl);
+                const sData = await sResp.json();
                 let html = '';
                 for (const id of ids) {
-                    const item = summaryData.result?.[id];
+                    const item = sData.result?.[id];
                     if (!item) continue;
-                    // Title lives in titlemainlist[0].title, not item.title
-                    const titleEntry = (item.titlemainlist || [])[0];
-                    const rawTitle = (titleEntry?.title || item.medlineta || 'Unknown');
-                    const cleanTitle = rawTitle.replace(/\.$/, '');
-                    const medAbbr = item.medlineta || '';
-                    html += `<div class="result-item">
-                        <span class="journal-name">${cleanTitle}${medAbbr && medAbbr !== cleanTitle ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + medAbbr + ')</em>' : ''}</span>
-                        <button class="add-btn" onclick="suggestJournal(this, '${cleanTitle.replace(/'/g, "\\'")}', '${medAbbr.replace(/'/g, "\\'")}')">+ Add</button>
-                    </div>`;
+                    const te = (item.titlemainlist || [])[0];
+                    const title = (te?.title || item.medlineta || 'Unknown').replace(/\.$/, '');
+                    const abbr = item.medlineta || '';
+                    html += `<div class="result-item"><span class="journal-name">${title}${abbr && abbr !== title ? ' <em style="color:var(--text-muted);font-size:0.8rem">(' + abbr + ')</em>' : ''}</span><button class="add-btn" onclick="suggestJournal(this, '${title.replace(/'/g, "\\'")}', '${abbr.replace(/'/g, "\\'")}')">+ Add</button></div>`;
                 }
                 results.innerHTML = html || '<span style="color:var(--text-muted)">No journals found.</span>';
             } catch (e) {
-                results.innerHTML = '<span style="color:#c41e3a">Search failed — check connection.</span>';
+                results.innerHTML = '<span style="color:#c41e3a">Search failed.</span>';
             }
         }, 400);
     }
-
     function suggestJournal(btn, title, abbr) {
         const status = document.getElementById('suggestStatus');
-        // Store suggestion in localStorage as a simple queue
         const suggestions = JSON.parse(localStorage.getItem('sage_journal_suggestions') || '[]');
         if (suggestions.some(s => s.title === title)) {
             status.textContent = `"${title}" already suggested.`;
@@ -723,7 +558,6 @@ No significant guideline updates identified from major pediatric ID organization
         }
         suggestions.push({ title, abbr, suggested_at: new Date().toISOString() });
         localStorage.setItem('sage_journal_suggestions', JSON.stringify(suggestions));
-
         btn.outerHTML = '<span class="added">Added</span>';
         status.textContent = `"${title}" queued — will be included in the next digest run after review.`;
         status.className = 'suggest-status success';
