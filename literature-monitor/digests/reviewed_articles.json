@@ -58,9 +58,18 @@
     "FDA Flu Vaccine Safety Label Changes - Febrile Seizure Warnings",
     "According to Kaitlyn Rivard, a clinical pharmacy specialist in pediatric infectious disease who spoke on behalf of the Society of Infectious Disease Pharmacists, surveillance studies from many past flu seasons have not shown a statistically significant risk of febrile seizure. The published study shows that for every million doses of vaccine given, about 21 additional seizures occurred. By comparison, Rivard notes that about 5% of children hospitalized for influenza will have febrile seizures (a rate of 50,000 for every million) (J Pediatr. 2021, DOI: 10.1016/j.jpeds.2021.06.075).",
     "FDA Expands Meningococcal Vaccine for Infants",
-    "FDA Rare Pediatric Disease Priority Review Vouchers Restored"
+    "FDA Rare Pediatric Disease Priority Review Vouchers Restored",
+    "IDSA/PIDS 2026 Guidelines for Community-Acquired Pneumonia in Children: Management of Parapneumonic Effusion and Empyema",
+    "*Clinical Infectious Diseases, March 16, 2026* | https://doi.org/10.1093/cid/ciag186",
+    "PICO Questions & Recommendations:",
+    "Impact of Metagenomic Next-Generation Sequencing on Antibiotic Management in Pediatric Patients",
+    "*Medicina (Kaunas), March 4, 2026* | https://doi.org/10.3390/medicina62030482",
+    "Epidemiology and Characteristics of Bacterial Meningitis in Children with Cerebrospinal Fluid Leakage or Cochlear Implant",
+    "*Journal of the Pediatric Infectious Diseases Society, February 2026* | https://doi.org/10.1093/jpids/piag015",
+    "Global Study Estimates Over 250,000 Meningitis Deaths in 2023, With Young Children Bearing Heavy Toll",
+    "FDA Expands Meningococcal Vaccine Indication for Infants"
   ],
-  "last_run": "2026-03-24T00:21:25.348611",
+  "last_run": "2026-04-05T06:53:06.545032",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -258,6 +267,94 @@
       "key_finding": "The Mikaela Naylon Give Kids a Chance Act was reauthorized and the rare pediatric disease priority review voucher program was revived with funding extended through September 2029 to accelerate development of drugs for rare childhood diseases.",
       "study_type": "fda-update",
       "digest_date": "2026-03-24"
+    },
+    {
+      "title": "IDSA/PIDS 2026 Guidelines for Community-Acquired Pneumonia in Children: Management of Parapneumonic Effusion and Empyema",
+      "doi": "https://doi.org/10.1093/cid/ciag186",
+      "journal": "Clinical Infectious Diseases",
+      "date": "March 16, 2026",
+      "topics": [
+        "community-acquired-pneumonia",
+        "parapneumonic-effusion",
+        "empyema",
+        "pleural-drainage",
+        "fibrinolytic-therapy",
+        "pediatric-pneumonia",
+        "chest-ultrasound"
+      ],
+      "key_finding": "In children with pneumonia-associated empyema, chest tube drainage with intrapleural fibrinolytics using small-bore tubes and tPA monotherapy is recommended as first-line therapy over surgical debridement.",
+      "study_type": "guideline",
+      "digest_date": "2026-04-05"
+    },
+    {
+      "title": "Impact of Metagenomic Next-Generation Sequencing on Antibiotic Management in Pediatric Patients",
+      "doi": "https://doi.org/10.3390/medicina62030482",
+      "journal": "Medicina (Kaunas)",
+      "date": "March 4, 2026",
+      "topics": [
+        "metagenomic-next-generation-sequencing",
+        "antimicrobial-stewardship",
+        "diagnostic-stewardship",
+        "immunosuppressed-children",
+        "fungal-infections",
+        "pediatric-infections"
+      ],
+      "key_finding": "mNGS demonstrated positive clinical impact in 39.1% of pediatric patients, particularly immunosuppressed patients (83.3% of those with positive impact), primarily through antimicrobial modifications and new fungal diagnoses.",
+      "study_type": "cohort",
+      "digest_date": "2026-04-05"
+    },
+    {
+      "title": "Epidemiology and Characteristics of Bacterial Meningitis in Children with Cerebrospinal Fluid Leakage or Cochlear Implant",
+      "doi": "https://doi.org/10.1093/jpids/piag015",
+      "journal": "Journal of the Pediatric Infectious Diseases Society",
+      "date": "February 2026",
+      "topics": [
+        "bacterial-meningitis",
+        "cerebrospinal-fluid-leakage",
+        "cochlear-implant",
+        "pneumococcal-meningitis",
+        "PCV13-vaccine",
+        "meningococcal-meningitis",
+        "vaccine-serotypes"
+      ],
+      "key_finding": "Bacterial meningitis in children with CSF leakage is predominantly pneumococcal and increasingly caused by serotypes not covered by PCV13, highlighting the need for broader pneumococcal vaccine coverage in this high-risk population.",
+      "study_type": "cohort",
+      "digest_date": "2026-04-05"
+    },
+    {
+      "title": "Global Study Estimates Over 250,000 Meningitis Deaths in 2023, With Young Children Bearing Heavy Toll",
+      "doi": "",
+      "journal": "The Lancet Neurology",
+      "date": "March 27, 2026",
+      "topics": [
+        "meningitis-epidemiology",
+        "global-burden-of-disease",
+        "meningitis-mortality",
+        "vaccine-preventable-disease",
+        "low-birthweight",
+        "air-pollution"
+      ],
+      "key_finding": "Global meningitis caused 259,000 deaths and 2.5 million infections in 2023, with progress toward WHO targets lagging behind other vaccine-preventable diseases despite significant vaccine-driven improvements since 2000.",
+      "study_type": "meta-analysis",
+      "digest_date": "2026-04-05"
+    },
+    {
+      "title": "FDA Expands Meningococcal Vaccine Indication for Infants",
+      "doi": "",
+      "journal": "Contagion Live",
+      "date": "March 30, 2026",
+      "topics": [
+        "meningococcal-vaccine",
+        "MenQuadfi",
+        "MenACWY",
+        "vaccine-approval",
+        "infants",
+        "meningococcal-serotype-Y",
+        "pediatric-immunization"
+      ],
+      "key_finding": "FDA approval expanded Sanofi's MenQuadfi to infants 6 weeks and older, making it the only MenACWY vaccine approved for this age group and providing coverage against the increasingly prevalent meningococcal serotype Y.",
+      "study_type": "fda-update",
+      "digest_date": "2026-04-05"
     }
   ]
 }
