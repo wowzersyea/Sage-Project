@@ -67,9 +67,19 @@
     "Epidemiology and Characteristics of Bacterial Meningitis in Children with Cerebrospinal Fluid Leakage or Cochlear Implant",
     "*Journal of the Pediatric Infectious Diseases Society, February 2026* | https://doi.org/10.1093/jpids/piag015",
     "Global Study Estimates Over 250,000 Meningitis Deaths in 2023, With Young Children Bearing Heavy Toll",
-    "FDA Expands Meningococcal Vaccine Indication for Infants"
+    "FDA Expands Meningococcal Vaccine Indication for Infants",
+    "Guidelines for Complicated Urinary Tract Infections in Children: A Review by the European Society for Pediatric Infectious Diseases",
+    "2026 IDSA/PIDS Guidelines for Community-Acquired Pneumonia in Infants and Children: Management of Parapneumonic Effusion and Empyema",
+    "*Clinical Infectious Diseases, March 16, 2026* | https://doi.org/10.1093/cid/ciag186",
+    "Invasive Pneumococcal Disease at Eight Children's Hospitals in the United States, 2018\u20132023",
+    "Impact of Maternal Immunization Against Respiratory Syncytial Virus on Hospitalizations Due to Lower Respiratory Tract Infections in Infants: A Multicenter Study in Argentina",
+    "*The Pediatric Infectious Disease Journal, April 2026* | https://doi.org/10.1097/INF.0000000000005045 | https://pubmed.ncbi.nlm.nih.gov/41803094/",
+    "Risk factors for pediatric invasive pneumococcal disease complicated by purulent meningitis",
+    "*Frontiers in Pediatrics, April 10, 2026* | https://doi.org/10.3389/fped.2026.1714634",
+    "Tetanus in Four Children \u2014 Idaho, Minnesota, Missouri, and Wisconsin, 2024",
+    "Clusters of Invasive Haemophilus influenzae Type b Disease Among Adults Using Substances or Experiencing Homelessness or Housing Instability \u2014 Alaska, Oregon, and Washington, 2023\u25002025"
   ],
-  "last_run": "2026-04-05T06:53:06.545032",
+  "last_run": "2026-04-19T07:04:52.620511",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -355,6 +365,121 @@
       "key_finding": "FDA approval expanded Sanofi's MenQuadfi to infants 6 weeks and older, making it the only MenACWY vaccine approved for this age group and providing coverage against the increasingly prevalent meningococcal serotype Y.",
       "study_type": "fda-update",
       "digest_date": "2026-04-05"
+    },
+    {
+      "title": "Guidelines for Complicated Urinary Tract Infections in Children: A Review by the European Society for Pediatric Infectious Diseases",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "April 2026",
+      "topics": [
+        "complicated-urinary-tract-infections",
+        "pediatric-UTI",
+        "treatment-recommendations",
+        "diagnostic-workup",
+        "follow-up-management"
+      ],
+      "key_finding": "The guideline addresses five distinct categories of complicated UTIs in children under 18 years with evidence-based recommendations to reduce unnecessary variation in care.",
+      "study_type": "guideline",
+      "digest_date": "2026-04-19"
+    },
+    {
+      "title": "2026 IDSA/PIDS Guidelines for Community-Acquired Pneumonia in Infants and Children: Management of Parapneumonic Effusion and Empyema",
+      "doi": "https://doi.org/10.1093/cid/ciag186",
+      "journal": "Clinical Infectious Disease",
+      "date": "March 16, 2026",
+      "topics": [
+        "community-acquired-pneumonia",
+        "parapneumonic-effusion",
+        "empyema",
+        "pediatric-CAP",
+        "intrapleural-fibrinolytics",
+        "chest-tube-drainage"
+      ],
+      "key_finding": "For pneumonia-associated empyema requiring drainage, the panel recommends chest tube drainage combined with intrapleural fibrinolytics rather than immediate surgical debridement, and suggests observation over invasive drainage for small uncomplicated parapneumonic effusions in clinically stable children.",
+      "study_type": "guideline",
+      "digest_date": "2026-04-19"
+    },
+    {
+      "title": "Invasive Pneumococcal Disease at Eight Children's Hospitals in the United States, 2018\u20132023",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "April 2026",
+      "topics": [
+        "invasive-pneumococcal-disease",
+        "PCV13",
+        "PCV20",
+        "serotype-distribution",
+        "pediatric-IPD",
+        "antibiotic-susceptibility"
+      ],
+      "key_finding": "PCV13 serotypes accounted for 32% of IPD in children under 5 years and the 7 new PCV20 serotypes accounted for 25% of IPD in this age group during 2018-2023.",
+      "study_type": "cohort",
+      "digest_date": "2026-04-19"
+    },
+    {
+      "title": "Impact of Maternal Immunization Against Respiratory Syncytial Virus on Hospitalizations Due to Lower Respiratory Tract Infections in Infants: A Multicenter Study in Argentina",
+      "doi": "https://doi.org/10.1097/INF.0000000000005045",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "April 2026",
+      "topics": [
+        "RSV-vaccine",
+        "maternal-immunization",
+        "lower-respiratory-tract-infections",
+        "infant-hospitalization",
+        "RSV-preF-vaccine"
+      ],
+      "key_finding": "Maternal RSV immunization implemented in Argentina in 2024 was associated with substantial reductions in LRTI and RSV-related hospitalizations among infants under 6 months of age.",
+      "study_type": "case-control",
+      "digest_date": "2026-04-19"
+    },
+    {
+      "title": "Risk factors for pediatric invasive pneumococcal disease complicated by purulent meningitis",
+      "doi": "https://doi.org/10.3389/fped.2026.1714634",
+      "journal": "Frontiers in Pediatrics",
+      "date": "April 10, 2026",
+      "topics": [
+        "invasive-pneumococcal-disease",
+        "meningitis",
+        "risk-stratification",
+        "neutrophil-to-lymphocyte-ratio",
+        "procalcitonin",
+        "predictive-models",
+        "PCV13-vaccine"
+      ],
+      "key_finding": "Neutrophil-to-lymphocyte ratio and procalcitonin levels can be used to develop predictive models for identifying children with invasive pneumococcal disease at highest risk for meningitis complications.",
+      "study_type": "cohort",
+      "digest_date": "2026-04-19"
+    },
+    {
+      "title": "Tetanus in Four Children \u2014 Idaho, Minnesota, Missouri, and Wisconsin, 2024",
+      "doi": "https://www.cdc.gov/mmwr/index2026.html",
+      "journal": "MMWR",
+      "date": "April 16, 2026",
+      "topics": [
+        "tetanus",
+        "vaccine-preventable-disease",
+        "pediatric-tetanus",
+        "immunization-gaps"
+      ],
+      "key_finding": "Four cases of tetanus were identified in children across multiple U.S. states in 2024, representing a concerning resurgence of this preventable disease.",
+      "study_type": "case-series",
+      "digest_date": "2026-04-19"
+    },
+    {
+      "title": "Clusters of Invasive Haemophilus influenzae Type b Disease Among Adults Using Substances or Experiencing Homelessness or Housing Instability \u2014 Alaska, Oregon, and Washington, 2023\u25002025",
+      "doi": "https://www.cdc.gov/mmwr/index2026.html",
+      "journal": "MMWR",
+      "date": "April 16, 2026",
+      "topics": [
+        "haemophilus-influenzae-type-b",
+        "invasive-Hib-disease",
+        "vulnerable-populations",
+        "household-transmission",
+        "epidemiological-clusters"
+      ],
+      "key_finding": "Clusters of invasive Haemophilus influenzae type b disease were identified among adults with substance use and housing instability in the Pacific Northwest, with potential implications for household transmission risk to pediatric contacts.",
+      "study_type": "case-series",
+      "digest_date": "2026-04-19"
     }
   ]
 }
