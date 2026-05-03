@@ -77,9 +77,14 @@
     "Risk factors for pediatric invasive pneumococcal disease complicated by purulent meningitis",
     "*Frontiers in Pediatrics, April 10, 2026* | https://doi.org/10.3389/fped.2026.1714634",
     "Tetanus in Four Children \u2014 Idaho, Minnesota, Missouri, and Wisconsin, 2024",
-    "Clusters of Invasive Haemophilus influenzae Type b Disease Among Adults Using Substances or Experiencing Homelessness or Housing Instability \u2014 Alaska, Oregon, and Washington, 2023\u25002025"
+    "Clusters of Invasive Haemophilus influenzae Type b Disease Among Adults Using Substances or Experiencing Homelessness or Housing Instability \u2014 Alaska, Oregon, and Washington, 2023\u25002025",
+    "Pediatric Antimicrobial Stewardship: Current Evidence and Emerging Challenges",
+    "*Microorganisms, March 6, 2026* | https://doi.org/10.3390/microorganisms14030004",
+    "Snowshoe Hare Virus Pediatric Meningoencephalitis Cluster",
+    "Coxsackievirus A9 Cardiomyopathy Case",
+    "FDA Expands Meningococcal Vaccine Indication for Infants"
   ],
-  "last_run": "2026-04-19T07:04:52.620511",
+  "last_run": "2026-05-03T07:44:23.509618",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -480,6 +485,71 @@
       "key_finding": "Clusters of invasive Haemophilus influenzae type b disease were identified among adults with substance use and housing instability in the Pacific Northwest, with potential implications for household transmission risk to pediatric contacts.",
       "study_type": "case-series",
       "digest_date": "2026-04-19"
+    },
+    {
+      "title": "Pediatric Antimicrobial Stewardship: Current Evidence and Emerging Challenges",
+      "doi": "https://doi.org/10.3390/microorganisms14030004",
+      "journal": "Microorganisms",
+      "date": "March 6, 2026",
+      "topics": [
+        "antimicrobial-stewardship",
+        "pediatric-antimicrobial-resistance",
+        "diagnostic-stewardship",
+        "multiplex-molecular-diagnostics",
+        "de-escalation",
+        "pediatric-infectious-disease"
+      ],
+      "key_finding": "Multiplex molecular diagnostics have potential to modify therapy in 80% of cases but actual antimicrobial changes occur in only 46%, with escalation more frequent than de-escalation, highlighting implementation gaps in pediatric stewardship.",
+      "study_type": "narrative-review",
+      "digest_date": "2026-05-03"
+    },
+    {
+      "title": "Snowshoe Hare Virus Pediatric Meningoencephalitis Cluster",
+      "doi": "https://wwwnc.cdc.gov/eid/current",
+      "journal": "Emerging Infectious Diseases",
+      "date": "April 2026",
+      "topics": [
+        "snowshoe-hare-virus",
+        "arboviral-meningoencephalitis",
+        "pediatric-neuroinvasive-disease",
+        "california-serogroup",
+        "viral-surveillance"
+      ],
+      "key_finding": "A cluster of three confirmed and probable SSHV meningoencephalitis cases in Whistler, British Columbia represents one of the largest pediatric clusters of SSHV neuroinvasive disease reported in recent years.",
+      "study_type": "case-series",
+      "digest_date": "2026-05-03"
+    },
+    {
+      "title": "Coxsackievirus A9 Cardiomyopathy Case",
+      "doi": "https://wwwnc.cdc.gov/eid/current",
+      "journal": "Emerging Infectious Diseases",
+      "date": "April 2026",
+      "topics": [
+        "coxsackievirus-A9",
+        "enterovirus-cardiomyopathy",
+        "pediatric-myocarditis",
+        "whole-genome-sequencing",
+        "recombinant-enterovirus"
+      ],
+      "key_finding": "Whole-genome sequencing identified a recombinant mosaic coxsackievirus A9 strain causing severe inflammatory cardiomyopathy in a previously healthy child, expanding the recognized spectrum of enterovirus-associated cardiac disease beyond coxsackievirus B serotypes.",
+      "study_type": "case-report",
+      "digest_date": "2026-05-03"
+    },
+    {
+      "title": "FDA Expands Meningococcal Vaccine Indication for Infants",
+      "doi": "https://www.contagionlive.com/view/fda-approves-an-expanded-indication-for-meningococcal-vaccine-for-youngest-pediatric-population",
+      "journal": "FDA Approval",
+      "date": "April 30, 2026",
+      "topics": [
+        "meningococcal-vaccine",
+        "MenACWY",
+        "infant-vaccination",
+        "meningococcal-disease-prevention",
+        "pediatric-immunization"
+      ],
+      "key_finding": "FDA approved MenQuadfi (meningococcal quadrivalent vaccine) for infants as young as 6 weeks of age, providing the first MenACWY vaccine option for the highest-risk pediatric population.",
+      "study_type": "fda-update",
+      "digest_date": "2026-05-03"
     }
   ]
 }
