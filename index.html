@@ -396,6 +396,7 @@
         .tool-card.dashboard { --card-accent: var(--accent-gold); --card-accent-end: #c49562; }
         .tool-card.outpatient { --card-accent: var(--sage-400); --card-accent-end: var(--sage-500); }
         .tool-card.consult { --card-accent: #7eb8a8; --card-accent-end: #5fa090; }
+        .tool-card.assessment { --card-accent: var(--sage-500); --card-accent-end: var(--sage-600); }
 
         .tool-icon {
             width: 56px;
@@ -418,6 +419,7 @@
         .tool-card.dashboard .tool-icon { background: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(212, 165, 116, 0.25)); color: var(--accent-gold); }
         .tool-card.outpatient .tool-icon { background: linear-gradient(135deg, rgba(116, 140, 118, 0.15), rgba(116, 140, 118, 0.25)); color: var(--sage-500); }
         .tool-card.consult .tool-icon { background: linear-gradient(135deg, rgba(126, 184, 168, 0.15), rgba(126, 184, 168, 0.25)); color: #5fa090; }
+        .tool-card.assessment .tool-icon { background: linear-gradient(135deg, rgba(127, 168, 130, 0.15), rgba(127, 168, 130, 0.25)); color: var(--sage-500); }
 
         .tool-card h3 {
             font-size: 1.25rem;
@@ -1020,6 +1022,8 @@
         .tool-card:nth-child(3) { animation-delay: 0.3s; }
         .tool-card:nth-child(4) { animation-delay: 0.4s; }
         .tool-card:nth-child(5) { animation-delay: 0.5s; }
+        .tool-card:nth-child(6) { animation-delay: 0.6s; }
+        .tool-card:nth-child(7) { animation-delay: 0.7s; }
 
         /* Podcast Section */
         .podcast-section {
@@ -1165,7 +1169,7 @@
 
             <div class="stats-bar">
                 <div class="stat">
-                    <div class="stat-value">5</div>
+                    <div class="stat-value">6</div>
                     <div class="stat-label">Clinical Tools</div>
                 </div>
                 <div class="stat">
@@ -1259,6 +1263,28 @@
                     </div>
                 </a>
 
+                <a href="https://test.sageproject.xyz" class="tool-card assessment" style="text-decoration: none;">
+                    <div class="tool-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                    </div>
+                    <h3>Resident Assessment</h3>
+                    <p>Case-based pre-rotation assessment for PL-3 residents starting Pediatric ID. Auto-graded with a faculty report emailed on submission.</p>
+                    <div class="tool-features">
+                        <span class="tool-feature">38 Questions</span>
+                        <span class="tool-feature">Domain Scoring</span>
+                        <span class="tool-feature">Faculty Report</span>
+                    </div>
+                    <div class="tool-action">
+                        Start Assessment
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </a>
+
                 <div class="tool-card bugdrug" onclick="showComingSoon('Bug-Drug Reference')" role="button" tabindex="0">
                     <div class="tool-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1305,7 +1331,7 @@
                     </div>
                 </div>
 
-                <div class="tool-card outpatient" onclick="showComingSoon('Outpatient Stewardship')" role="button" tabindex="0">
+                <div class="tool-card outpatient" onclick="showComingSoon('Outpatient Stewardship')" role="button" tabindex="0" style="display: none;">
                     <div class="tool-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
