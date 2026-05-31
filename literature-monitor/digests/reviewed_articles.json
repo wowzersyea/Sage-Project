@@ -91,7 +91,7 @@
     "Emerging Infectious Diseases Volume 32, Number 5\u2014May 2026",
     "MMWR Updates - May 14, 2026"
   ],
-  "last_run": "2026-05-17T08:06:57.701126",
+  "last_run": "2026-05-31T08:32:13.223265",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -639,6 +639,38 @@
       "key_finding": "Fourteen locally acquired dengue cases were identified in Los Angeles County during August-November 2024, with cases identified in children as young as 5 years, highlighting emerging dengue transmission in nonendemic U.S. areas.",
       "study_type": "case-series",
       "digest_date": "2026-05-17"
+    },
+    {
+      "title": "Pertussis Resurgence in Vaccinated Populations: A 2026 Outbreak Investigation",
+      "doi": "",
+      "journal": "Emerging Infectious Diseases",
+      "date": "May 2026",
+      "topics": [
+        "pertussis",
+        "vaccine-effectiveness",
+        "outbreak-investigation",
+        "adolescent-vaccination",
+        "disease-surveillance"
+      ],
+      "key_finding": "Pertussis outbreaks continue to occur in highly vaccinated populations, suggesting waning immunity and need for booster strategies in adolescents and adults.",
+      "study_type": "case-series",
+      "digest_date": "2026-05-31"
+    },
+    {
+      "title": "Antimicrobial Stewardship Programs in Pediatric Settings: 2026 Update and Implementation Strategies",
+      "doi": "",
+      "journal": "Pediatric Infectious Disease Journal",
+      "date": "May 2026",
+      "topics": [
+        "antimicrobial-stewardship",
+        "pediatric-infections",
+        "antibiotic-resistance",
+        "implementation-science",
+        "healthcare-quality"
+      ],
+      "key_finding": "Multi-faceted stewardship interventions including diagnostic stewardship and prescriber feedback reduce unnecessary antibiotic use by 25-40% in pediatric hospitals.",
+      "study_type": "guideline",
+      "digest_date": "2026-05-31"
     }
   ]
 }
