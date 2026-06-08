@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Med Student Rotation Primer | Sage Project</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-3KEGTRRS0Z');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage-50: #1a1f1a;
+            --sage-100: #252b25;
+            --sage-200: #333b33;
+            --sage-300: #4a5a4b;
+            --sage-400: #6a806c;
+            --sage-500: #7fa882;
+            --sage-600: #8fbf92;
+            --sage-700: #a8d4ab;
+            --sage-800: #c5e5c7;
+            --sage-900: #e8f5e9;
+            --warm-50: #111411;
+            --accent-coral: #e07a5f;
+            --accent-gold: #d4a574;
+            --accent-sky: #81b0c4;
+            --accent-lavender: #b8a5d4;
+            --text-primary: #e0e8e0;
+            --text-secondary: #9bb09d;
+            --text-muted: #6a806c;
+            --surface: #181c18;
+            --surface-raised: #1e231e;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.4);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--warm-50);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .bg-gradient {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(184,165,212,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(127,168,130,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(212,165,116,0.05) 0%, transparent 70%),
+                var(--warm-50);
+            z-index: -1;
+        }
+
+        /* Header */
+        .site-header {
+            padding: 1rem 2rem;
+            background: rgba(17,20,17,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(199,208,199,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .site-header a { text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-icon svg { width: 20px; height: 20px; color: white; }
+        .logo-text { font-size: 1.1rem; font-weight: 600; color: var(--sage-700); }
+        .header-sep { color: var(--text-muted); margin: 0 4px; }
+        .header-title { font-size: 1rem; color: var(--text-secondary); font-weight: 400; }
+
+        /* Screens */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ─── INTAKE SCREEN ─── */
+        .intake-wrap {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+        }
+        .intake-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--sage-100); padding: 0.4rem 1rem;
+            border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+            color: var(--sage-600); margin-bottom: 1.5rem;
+        }
+        .intake-wrap h1 {
+            font-family: 'Source Serif 4', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 600; color: var(--sage-800);
+            line-height: 1.2; margin-bottom: 0.75rem;
+        }
+        .intake-wrap .subtitle {
+            color: var(--text-secondary); font-size: 1rem;
+            margin-bottom: 2rem; line-height: 1.6;
+        }
+        .domains-preview {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .domains-preview h4 {
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.08em; margin-bottom: 0.75rem;
+        }
+        .domain-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+        }
+        .domain-tag {
+            background: var(--sage-50); padding: 0.3rem 0.65rem;
+            border-radius: 100px; font-size: 0.78rem;
+            color: var(--sage-600); font-weight: 500;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label {
+            display: block; font-size: 0.88rem; font-weight: 500;
+            color: var(--text-secondary); margin-bottom: 0.4rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.8rem 1rem;
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif; font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: var(--sage-500);
+        }
+        .form-group select option { background: #1e231e; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .adaptive-info {
+            background: linear-gradient(135deg, rgba(127,168,130,0.08), rgba(129,176,196,0.06));
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.75rem;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+        .adaptive-info strong { color: var(--sage-600); }
+        .btn-start {
+            width: 100%; padding: 1rem;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            color: white; font-family: 'Outfit', sans-serif;
+            font-size: 1rem; font-weight: 600;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* ─── QUESTION SCREEN ─── */
+        .question-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+        .progress-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem; gap: 1rem;
+        }
+        .domain-label {
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .domain-name { font-size: 1rem; font-weight: 600; color: var(--sage-700); margin-top: 2px; }
+        .tier-indicator {
+            display: flex; gap: 6px; align-items: center;
+        }
+        .tier-pip {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--sage-200);
+            transition: background 0.3s ease;
+        }
+        .tier-pip.active { background: var(--sage-500); }
+        .tier-pip.done { background: var(--sage-400); }
+        .tier-label {
+            font-size: 0.78rem; font-weight: 500;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+        }
+        .tier-label.t1 { background: rgba(127,168,130,0.15); color: var(--sage-500); }
+        .tier-label.t2 { background: rgba(212,165,116,0.15); color: var(--accent-gold); }
+        .tier-label.t3 { background: rgba(224,122,95,0.15); color: var(--accent-coral); }
+
+        .domain-progress-bar {
+            height: 4px; background: var(--sage-100);
+            border-radius: 2px; margin-bottom: 2rem; overflow: hidden;
+        }
+        .domain-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--sage-500), var(--sage-600));
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .question-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-number {
+            font-size: 0.8rem; font-weight: 500;
+            color: var(--text-muted); margin-bottom: 0.75rem;
+        }
+        .question-text {
+            font-size: 1.05rem; color: var(--sage-800);
+            line-height: 1.65; font-weight: 400;
+        }
+        .options-list { list-style: none; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.65rem; }
+        .option-btn {
+            width: 100%; text-align: left;
+            padding: 0.9rem 1.1rem;
+            background: var(--sage-50);
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif; font-size: 0.95rem;
+            cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--sage-500);
+            background: rgba(127,168,130,0.08);
+        }
+        .option-letter {
+            font-weight: 600; color: var(--sage-500);
+            min-width: 20px; flex-shrink: 0; margin-top: 1px;
+        }
+        .option-btn.correct {
+            border-color: var(--sage-500);
+            background: rgba(127,168,130,0.15);
+        }
+        .option-btn.correct .option-letter { color: var(--sage-600); }
+        .option-btn.incorrect {
+            border-color: var(--accent-coral);
+            background: rgba(224,122,95,0.12);
+        }
+        .option-btn.incorrect .option-letter { color: var(--accent-coral); }
+        .option-btn:disabled { cursor: not-allowed; }
+
+        .feedback-card {
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1.25rem;
+            margin-top: 1rem;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            display: none;
+        }
+        .feedback-card.show { display: block; }
+        .feedback-card.correct-fb {
+            background: rgba(127,168,130,0.12);
+            border: 1px solid rgba(127,168,130,0.3);
+        }
+        .feedback-card.incorrect-fb {
+            background: rgba(224,122,95,0.1);
+            border: 1px solid rgba(224,122,95,0.25);
+        }
+        .feedback-header {
+            font-weight: 600; margin-bottom: 0.4rem;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .feedback-header.correct-h { color: var(--sage-600); }
+        .feedback-header.incorrect-h { color: var(--accent-coral); }
+        .feedback-body { color: var(--text-secondary); }
+
+        .next-btn {
+            margin-top: 1.25rem; padding: 0.85rem 2rem;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            color: white; font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem; font-weight: 600;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: none; align-items: center; gap: 8px;
+        }
+        .next-btn.show { display: inline-flex; }
+        .next-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+
+        /* ─── RESULTS SCREEN ─── */
+        .results-wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 5rem;
+        }
+        .results-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .score-ring {
+            width: 120px; height: 120px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        .score-ring svg { transform: rotate(-90deg); }
+        .score-ring-bg { fill: none; stroke: var(--sage-100); stroke-width: 8; }
+        .score-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+        .score-ring-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-pct { font-size: 1.6rem; font-weight: 700; color: var(--sage-700); line-height: 1; }
+        .score-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+        .results-hero h2 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.8rem; color: var(--sage-800); margin-bottom: 0.5rem;
+        }
+        .results-hero p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .domain-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+        .domain-result-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+        }
+        .domain-result-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .domain-result-name { font-weight: 600; color: var(--sage-700); font-size: 0.95rem; }
+        .domain-score-badge {
+            font-size: 0.8rem; font-weight: 600;
+            padding: 0.2rem 0.6rem; border-radius: 100px;
+        }
+        .score-high { background: rgba(127,168,130,0.2); color: var(--sage-600); }
+        .score-mid { background: rgba(212,165,116,0.2); color: var(--accent-gold); }
+        .score-low { background: rgba(224,122,95,0.2); color: var(--accent-coral); }
+        .domain-tier-bar {
+            display: flex; gap: 4px; margin-bottom: 0.5rem;
+        }
+        .tier-seg {
+            height: 6px; flex: 1; border-radius: 3px;
+            background: var(--sage-100);
+        }
+        .tier-seg.reached-correct { background: var(--sage-500); }
+        .tier-seg.reached-incorrect { background: var(--accent-coral); }
+        .tier-seg.not-reached { background: var(--sage-100); opacity: 0.4; }
+        .domain-result-detail { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem; }
+
+        /* Answer Sheet */
+        .answer-sheet-section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.4rem; color: var(--sage-800);
+            margin-bottom: 1.5rem; padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--sage-200);
+        }
+        .answer-item {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .answer-item-header {
+            display: flex; align-items: flex-start;
+            justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;
+        }
+        .answer-domain-tier {
+            display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+        }
+        .answer-q-text { font-size: 0.95rem; color: var(--sage-800); line-height: 1.55; }
+        .answer-choices { margin: 0.75rem 0; display: flex; flex-direction: column; gap: 0.35rem; }
+        .answer-choice {
+            font-size: 0.88rem; padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm); color: var(--text-muted);
+            display: flex; gap: 8px;
+        }
+        .answer-choice.is-correct { background: rgba(127,168,130,0.12); color: var(--sage-600); font-weight: 500; }
+        .answer-choice.is-selected-wrong { background: rgba(224,122,95,0.1); color: var(--accent-coral); }
+        .answer-choice.not-answered { opacity: 0.5; }
+        .rationale-box {
+            background: var(--sage-50);
+            border-left: 3px solid var(--sage-400);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 0.8rem 1rem;
+            margin-top: 0.75rem;
+        }
+        .rationale-label {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--sage-500); margin-bottom: 0.3rem;
+        }
+        .rationale-text { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+
+        /* Email report */
+        .report-section {
+            background: linear-gradient(135deg, rgba(127,168,130,0.08), rgba(129,176,196,0.06));
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .report-section h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--sage-700); margin-bottom: 0.5rem;
+        }
+        .report-section p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; }
+        .report-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            color: white; font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 600;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+            text-decoration: none;
+        }
+        .report-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .retake-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--surface-raised);
+            color: var(--sage-600);
+            border: 1px solid var(--sage-200);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-left: 0.75rem;
+        }
+        .retake-btn:hover { border-color: var(--sage-400); }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .question-card { padding: 1.25rem; }
+            .domain-results { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+
+<header class="site-header">
+    <a href="/">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <span class="logo-text">Sage Project</span>
+    </a>
+    <span class="header-sep">›</span>
+    <span class="header-title">Med Student Rotation Primer</span>
+</header>
+
+<!-- ─── SCREEN 1: INTAKE ─── -->
+<div id="screen-intake" class="screen active">
+    <div class="intake-wrap">
+        <div class="intake-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Pediatric ID · MS3/MS4 Rotation Primer
+        </div>
+        <h1>How ready are you for Peds ID?</h1>
+        <p class="subtitle">Adaptive assessment covering the 10 core domains a 3rd-year student needs to know for their Pediatrics shelf and Peds ID rotation. Questions escalate in difficulty based on your answers.</p>
+
+        <div class="domains-preview">
+            <h4>10 Domains Covered</h4>
+            <div class="domain-tags">
+                <span class="domain-tag">Fever & Sepsis</span>
+                <span class="domain-tag">Meningitis & CNS</span>
+                <span class="domain-tag">Respiratory</span>
+                <span class="domain-tag">Skin & Soft Tissue</span>
+                <span class="domain-tag">Bone & Joint</span>
+                <span class="domain-tag">UTI & Renal</span>
+                <span class="domain-tag">Congenital & Perinatal</span>
+                <span class="domain-tag">Vaccines & Prevention</span>
+                <span class="domain-tag">Antimicrobial Principles</span>
+                <span class="domain-tag">Immunocompromised Host</span>
+            </div>
+        </div>
+
+        <div class="adaptive-info">
+            <strong>How it works:</strong> Each domain starts with a recognition-level question. Answer correctly and the difficulty increases. Each domain has up to 3 tiers. Your score reflects both breadth and depth across all domains.
+        </div>
+
+        <form id="intake-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="f-name">Full Name</label>
+                    <input type="text" id="f-name" placeholder="Jane Smith" required>
+                </div>
+                <div class="form-group">
+                    <label for="f-year">Year</label>
+                    <select id="f-year" required>
+                        <option value="">Select...</option>
+                        <option value="MS3">MS3</option>
+                        <option value="MS4">MS4</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="f-school">Medical School</label>
+                <input type="text" id="f-school" placeholder="University of..." required>
+            </div>
+            <div class="form-group">
+                <label for="f-email">Your Email (for your copy of results)</label>
+                <input type="email" id="f-email" placeholder="you@medschool.edu" required>
+            </div>
+            <button type="submit" class="btn-start">
+                Begin Assessment
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ─── SCREEN 2: QUESTION ─── -->
+<div id="screen-question" class="screen">
+    <div class="question-wrap">
+        <div class="progress-header">
+            <div>
+                <div class="domain-label" id="q-domain-label">Domain</div>
+                <div class="domain-name" id="q-domain-name">Loading...</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                <span class="tier-label t1" id="q-tier-label">Tier 1</span>
+                <div class="tier-indicator" id="q-tier-pips"></div>
+            </div>
+        </div>
+        <div class="domain-progress-bar">
+            <div class="domain-progress-fill" id="q-progress-fill" style="width:0%"></div>
+        </div>
+        <div class="question-card">
+            <div class="question-number" id="q-number">Question 1 of 10</div>
+            <div class="question-text" id="q-text"></div>
+            <ul class="options-list" id="q-options"></ul>
+        </div>
+        <div class="feedback-card" id="q-feedback">
+            <div class="feedback-header" id="q-feedback-header"></div>
+            <div class="feedback-body" id="q-feedback-body"></div>
+        </div>
+        <button class="next-btn" id="q-next-btn">
+            <span id="q-next-label">Next Domain</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- ─── SCREEN 3: RESULTS ─── -->
+<div id="screen-results" class="screen">
+    <div class="results-wrap">
+        <div class="results-hero">
+            <div class="score-ring" id="score-ring-wrap">
+                <svg viewBox="0 0 120 120" width="120" height="120">
+                    <circle class="score-ring-bg" cx="60" cy="60" r="52"/>
+                    <circle class="score-ring-fill" id="score-ring-fill" cx="60" cy="60" r="52"
+                        stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                </svg>
+                <div class="score-ring-text">
+                    <div class="score-pct" id="score-pct-text">—</div>
+                    <div class="score-label">Overall</div>
+                </div>
+            </div>
+            <h2 id="results-headline">Assessment Complete</h2>
+            <p id="results-subline"></p>
+        </div>
+
+        <div class="domain-results" id="domain-results-grid"></div>
+
+        <div class="report-section">
+            <h3>Send Faculty Report</h3>
+            <p>Email a summary of your performance — domain scores, tier reached, and overall result — to your attending or clerkship director.</p>
+            <button class="report-btn" id="send-report-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                Send Faculty Report
+            </button>
+            <button class="retake-btn" onclick="retake()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.18"/></svg>
+                Retake
+            </button>
+        </div>
+
+        <div class="answer-sheet-section">
+            <div class="section-title">Answer Sheet &amp; Rationale</div>
+            <div id="answer-sheet"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
+
+// ─── QUESTION BANK ───────────────────────────────────────────────────────────
+const DOMAINS = [
+    {
+        id: 'fever',
+        name: 'Fever & Sepsis',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 3-week-old previously healthy infant presents with a rectal temperature of 38.3°C. Parents report decreased feeding. He appears non-toxic. What is the most appropriate next step?',
+                options: [
+                    'Reassure parents and follow up in 24 hours',
+                    'Full sepsis evaluation (CBC, blood culture, UA/UC, LP) and empiric IV antibiotics',
+                    'Blood culture only; observe in the ED for 4 hours',
+                    'Urinalysis and urine culture only; treat if positive'
+                ],
+                correct: 1,
+                rationale: 'Infants ≤28 days with fever require a full sepsis evaluation including LP, CBC, and blood/urine cultures due to significant risk of serious bacterial infection (SBI) — including meningitis. Empiric antibiotics (ampicillin + gentamicin ± acyclovir for HSV risk) are started pending results. A non-toxic appearance does not exclude SBI in this age group.'
+            },
+            {
+                tier: 2,
+                text: 'A 6-week-old with fever undergoes workup: WBC 14.5k, bands 12% (band:total PMN ratio 0.25), UA negative, CSF: WBC 3, protein 52, glucose 48 (serum 95). Using the Rochester Criteria, what factor classifies this infant as HIGH risk?',
+                options: [
+                    'WBC of 14,500',
+                    'Band:total PMN ratio of 0.25 (>0.2)',
+                    'CSF protein of 52 mg/dL',
+                    'CSF:serum glucose ratio of 0.51'
+                ],
+                correct: 1,
+                rationale: 'Rochester criteria define low-risk as band:total PMN ratio ≤0.2. A ratio >0.2 classifies as high-risk for SBI. The WBC 14,500 is borderline (original Rochester low-risk threshold: <15,000). The CSF values here are normal. Rochester criteria apply to infants 28–60 days and help stratify who can be managed without empiric antibiotics — but clinical judgment always applies.'
+            },
+            {
+                tier: 3,
+                text: 'A 10-day-old presents with fever. His mother was GBS-positive and received IV ampicillin 5 hours before delivery. The neonate appeared healthy at birth and was discharged at 48 hours. Which statement about this clinical scenario is MOST accurate?',
+                options: [
+                    'Adequate IAP (≥4h) eliminates risk of early-onset GBS; this fever is unlikely to be GBS',
+                    'This is late-onset GBS disease (days 7–89); IAP provides no protection against late-onset disease',
+                    'At 10 days, GBS disease is not possible; evaluation should focus on HSV',
+                    'IAP efficacy is unrelated to timing; the full dose of ampicillin was protective'
+                ],
+                correct: 1,
+                rationale: 'GBS disease is classified as early-onset (0–6 days) or late-onset (7–89 days). Intrapartum antibiotic prophylaxis (IAP) reduces early-onset GBS by ~80% but provides NO protection against late-onset GBS, which is acquired postnatally (community/nosocomial). At 10 days this is late-onset disease. Full sepsis workup is still indicated. HSV should also be considered (risk factors: maternal lesions, prolonged rupture, ill-appearing infant).'
+            }
+        ]
+    },
+    {
+        id: 'meningitis',
+        name: 'Meningitis & CNS',
+        questions: [
+            {
+                tier: 1,
+                text: 'Which organism is the most common cause of bacterial meningitis in a previously healthy 8-month-old?',
+                options: [
+                    'Listeria monocytogenes',
+                    'Group B Streptococcus',
+                    'Streptococcus pneumoniae',
+                    'Neisseria meningitidis'
+                ],
+                correct: 2,
+                rationale: 'After the neonatal period (>1 month), S. pneumoniae is the leading cause of bacterial meningitis in children. GBS and Listeria predominate in neonates (<1 month). N. meningitidis peaks in older children and adolescents (college students). Haemophilus influenzae type b was previously a major cause but is now rare due to conjugate vaccination.'
+            },
+            {
+                tier: 2,
+                text: 'A 2-year-old with fever, neck stiffness, and altered mental status has CSF: WBC 1,800 (92% PMN), protein 210, glucose 22 (serum 108). Empiric ceftriaxone + vancomycin are started. Which adjunctive therapy reduces hearing loss in pediatric bacterial meningitis?',
+                options: [
+                    'IV immunoglobulin (IVIG)',
+                    'Dexamethasone (0.15 mg/kg q6h × 4 days)',
+                    'Mannitol infusion',
+                    'Phenobarbital prophylaxis'
+                ],
+                correct: 1,
+                rationale: 'Dexamethasone given before or with the first dose of antibiotics reduces hearing loss and neurological sequelae in H. influenzae type b and S. pneumoniae meningitis. It is most beneficial for H. influenzae meningitis. Ideally started 15–30 minutes before antibiotics; if not possible, give with first antibiotic dose. Do not initiate if antibiotics have already been given >1 hour prior, as benefit is lost.'
+            },
+            {
+                tier: 3,
+                text: 'A 5-year-old has 3 days of fever, progressive headache, and a focal seizure. MRI shows a ring-enhancing lesion in the right temporal lobe with surrounding edema. CSF: WBC 55 (65% lymphocytes), protein 90, glucose 50 (serum 95). Gram stain is negative. What is the MOST likely diagnosis and first-line treatment?',
+                options: [
+                    'Bacterial brain abscess; neurosurgical drainage + IV ceftriaxone + metronidazole',
+                    'HSV encephalitis; IV acyclovir 20 mg/kg q8h',
+                    'Tuberculous meningitis; 4-drug anti-TB therapy',
+                    'Autoimmune encephalitis; high-dose IV methylprednisolone'
+                ],
+                correct: 1,
+                rationale: 'HSV encephalitis classically involves temporal lobes, presenting with fever, behavioral change, focal seizures, and aphasia. CSF shows lymphocytic pleocytosis, elevated protein, and normal glucose. MRI shows temporal/insular signal change ± ring enhancement. IV acyclovir (20 mg/kg q8h, max 10 mg/kg) should be started empirically while awaiting HSV PCR — delays increase morbidity/mortality. Bacterial abscess has more neutrophilic CSF. TB meningitis has a more subacute course.'
+            }
+        ]
+    },
+    {
+        id: 'respiratory',
+        name: 'Respiratory Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 7-month-old presents in January with 3 days of URI symptoms, now with audible wheezing and SpO2 94% on room air. This is his first wheezing episode. What is the most likely causative pathogen?',
+                options: [
+                    'Streptococcus pneumoniae',
+                    'Respiratory syncytial virus (RSV)',
+                    'Influenza A',
+                    'Mycoplasma pneumoniae'
+                ],
+                correct: 1,
+                rationale: 'RSV is the leading cause of bronchiolitis in infants <2 years, peaking November–March. Bronchiolitis is a clinical diagnosis: URI followed by lower respiratory involvement (wheeze/crackles), first episode in an infant. Management is supportive (nasal suctioning, oxygen). Mycoplasma causes "atypical pneumonia" in school-age children. Bronchodilators and corticosteroids are NOT recommended for routine bronchiolitis.'
+            },
+            {
+                tier: 2,
+                text: 'An unvaccinated 4-year-old develops paroxysmal coughing spells with a post-tussive inspiratory whoop and vomiting for 2 weeks. WBC is 22k with 78% lymphocytes. What is the preferred treatment and primary goal at this stage?',
+                options: [
+                    'Amoxicillin × 10 days to eliminate the organism and shorten illness duration',
+                    'Azithromycin × 5 days primarily to reduce transmission to contacts',
+                    'TMP-SMX × 14 days as first-line for Bordetella pertussis',
+                    'Supportive care only; antibiotics do not benefit the paroxysmal stage'
+                ],
+                correct: 1,
+                rationale: 'Pertussis (Bordetella pertussis) during the paroxysmal phase: antibiotics (azithromycin preferred in children; erythromycin is an alternative) eradicate nasopharyngeal carriage and reduce transmission. They do NOT significantly shorten illness once the paroxysmal stage is established. Azithromycin × 5 days is preferred (fewer GI side effects; erythromycin linked to infantile hypertrophic pyloric stenosis in neonates). Lymphocytosis is a hallmark. Infants <6 months have highest mortality risk.'
+            },
+            {
+                tier: 3,
+                text: 'A 3-year-old is admitted with pneumonia and a large pleural effusion. Thoracentesis: pH 7.08, LDH 2,100 U/L, glucose 32 mg/dL, turbid appearance. IV antibiotics are started. What is the next most appropriate management step?',
+                options: [
+                    'Continue antibiotics alone; repeat imaging at 48 hours',
+                    'Add antifungal coverage for possible fungal empyema',
+                    'Chest tube drainage or surgical decortication (VATS)',
+                    'Bronchoscopy to identify the anatomic source'
+                ],
+                correct: 2,
+                rationale: "This is a complicated parapneumonic effusion / empyema (pH <7.2, markedly elevated LDH, low glucose, turbid = exudate meeting Light's criteria). These require drainage. Options include thoracostomy tube with or without intrapleural fibrinolytics (tPA + DNase), or VATS decortication for loculated/organized empyema. Antibiotics alone are insufficient for frank empyema. S. pneumoniae and S. aureus (including MRSA) are common pediatric pathogens. Delayed drainage is associated with longer hospitalization."
+            }
+        ]
+    },
+    {
+        id: 'ssti',
+        name: 'Skin & Soft Tissue',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 6-year-old presents with golden-crusted lesions on the face around the nose and mouth. He is afebrile with no systemic symptoms and no induration or fluctuance. What is the most likely diagnosis?',
+                options: [
+                    'Herpes simplex labialis',
+                    'Non-bullous impetigo',
+                    'Contact dermatitis',
+                    'Eczema herpeticum'
+                ],
+                correct: 1,
+                rationale: 'Non-bullous impetigo (S. aureus ± S. pyogenes) is the most common bacterial skin infection in children, presenting with honey-golden crusts on the face. Treatment: topical mupirocin for limited localized disease; oral antibiotics (dicloxacillin or cephalexin; TMP-SMX/clindamycin if MRSA suspected) for extensive disease. Herpes simplex has vesicular morphology. Eczema herpeticum (HSV superinfection on eczema) has punched-out erosions on eczematous skin.'
+            },
+            {
+                tier: 2,
+                text: 'A 10-year-old presents with a 3 cm fluctuant, erythematous abscess on the thigh. He is afebrile with no surrounding cellulitis and no systemic signs. After incision and drainage, what additional management is most supported by current evidence?',
+                options: [
+                    'No antibiotics; I&D alone is sufficient for uncomplicated abscesses',
+                    'Oral TMP-SMX for 5–7 days to reduce treatment failure and recurrence',
+                    'IV vancomycin for 48 hours then oral step-down',
+                    'Oral clindamycin for 14 days'
+                ],
+                correct: 1,
+                rationale: 'The NEJM NEJM/Talan 2017 trial demonstrated that TMP-SMX (vs. placebo) after I&D significantly reduces treatment failure and recurrence for uncomplicated skin abscesses. TMP-SMX provides MRSA coverage and twice-daily dosing. Course is 5–7 days. I&D remains the cornerstone of treatment — antibiotics are adjunctive. IV vancomycin is reserved for systemic infection, immunocompromised hosts, or failure of oral therapy.'
+            },
+            {
+                tier: 3,
+                text: 'An 8-year-old develops rapidly spreading leg erythema after a minor scrape. Over 12 hours: severe pain disproportionate to visible findings, fever 39.8°C, skin discoloration/bullae, WBC 23k, CRP 185, lactate 3.4. What is the most critical immediate intervention?',
+                options: [
+                    'Start IV vancomycin + pip-tazo and admit for 48-hour IV course',
+                    'MRI of the leg to define tissue plane involvement before deciding on surgery',
+                    'Emergent surgical consultation for exploration and aggressive debridement',
+                    'Emergent fasciotomy to decompress compartment syndrome'
+                ],
+                correct: 2,
+                rationale: 'This is necrotizing fasciitis — a surgical emergency. Hallmarks: pain out of proportion to examination, rapid spread, systemic toxicity, skin changes (bullae, dusky discoloration), and markedly elevated inflammatory markers. LRINEC score ≥6 supports the diagnosis but clinical suspicion should not wait for lab confirmation. Emergent surgical debridement is the cornerstone of treatment. Antibiotics (broad-spectrum including MRSA coverage) are adjunctive. Every hour of delay increases mortality. Do not wait for MRI if clinical suspicion is high.'
+            }
+        ]
+    },
+    {
+        id: 'bonejoint',
+        name: 'Bone & Joint',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 4-year-old presents with 2 days of fever and refusal to bear weight on the right leg. He holds his right hip flexed, abducted, and externally rotated. ESR 48, CRP 44, WBC 13.2k. What is the most likely diagnosis?',
+                options: [
+                    'Transient synovitis (toxic synovitis)',
+                    'Legg-Calvé-Perthes disease',
+                    'Septic arthritis of the hip',
+                    'Osteomyelitis of the proximal femur'
+                ],
+                correct: 2,
+                rationale: 'Septic arthritis of the hip presents with fever, refusal to bear weight, and the hip held in the position of maximum capsular volume (flexed, abducted, externally rotated). The Kocher criteria (fever, ESR >40, WBC >12k, refusal to weight-bear; CRP >2 added by Caird) stratify risk vs. transient synovitis. This child meets 4 criteria → very high probability of septic arthritis. Requires emergent joint aspiration and surgical irrigation. Transient synovitis is afebrile with lower inflammatory markers.'
+            },
+            {
+                tier: 2,
+                text: 'A 2-year-old presents with fever and exquisite point tenderness over the distal femur. X-ray is normal. MRI confirms metaphyseal bone marrow edema without drainable abscess. What is the most likely causative organism?',
+                options: [
+                    'Staphylococcus aureus',
+                    'Group A Streptococcus',
+                    'Streptococcus pneumoniae',
+                    'Kingella kingae'
+                ],
+                correct: 0,
+                rationale: 'S. aureus is the most common cause of osteomyelitis and septic arthritis across all pediatric age groups beyond the neonatal period, accounting for ~50–60% of cases. MRSA rates vary by region. Empiric treatment should cover S. aureus: oxacillin/nafcillin for MSSA, vancomycin/clindamycin if MRSA is prevalent. Blood cultures are positive in 30–40% of cases and should be drawn before antibiotics. Duration is typically 4–6 weeks total (IV then oral transition).'
+            },
+            {
+                tier: 3,
+                text: 'A 14-month-old has knee swelling, fever, and fussiness. ESR 30, CRP 20, WBC 11k. Synovial fluid WBC: 38,000. Gram stain and standard cultures are negative at 72 hours. What organism should be strongly suspected and how is it best detected?',
+                options: [
+                    'Kingella kingae; inoculate synovial fluid into BACTEC blood culture bottles',
+                    'Borrelia burgdorferi; Lyme serology (ELISA + confirmatory Western blot)',
+                    'Mycobacterium tuberculosis; synovial biopsy with AFB stain and culture',
+                    'Neisseria gonorrhoeae; NAAT of joint fluid and urogenital sites'
+                ],
+                correct: 0,
+                rationale: 'Kingella kingae is a fastidious gram-negative coccobacillus and a major cause of osteoarticular infections in children 6 months–4 years. It causes lower inflammatory markers than S. aureus (often misclassified as "culture-negative"). Standard agar plates miss it; inoculating joint fluid into BACTEC aerobic blood culture bottles dramatically improves yield. PCR is available at referral labs. K. kingae is part of the HACEK group, typically penicillin-susceptible. Always consider it in this age group with culture-negative joint infection.'
+            }
+        ]
+    },
+    {
+        id: 'uti',
+        name: 'UTI & Renal',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 2-year-old girl has 2 days of fever to 39°C, irritability, and vomiting. UA: leukocyte esterase 3+, nitrites positive, >50 WBC/hpf. No prior UTIs. What is the most likely causative organism?',
+                options: [
+                    'Klebsiella pneumoniae',
+                    'Escherichia coli',
+                    'Enterococcus faecalis',
+                    'Pseudomonas aeruginosa'
+                ],
+                correct: 1,
+                rationale: 'E. coli accounts for 80–85% of pediatric UTIs. Klebsiella and Proteus are less common gram-negatives. Enterococcus is rare in healthy children. Pseudomonas is uncommon without structural abnormalities or prior instrumentation. A positive nitrite test indicates gram-negative bacteruria (gram-positive organisms do not reduce nitrate to nitrite). Treatment: oral amoxicillin-clavulanate, TMP-SMX, or cephalosporin based on local susceptibilities.'
+            },
+            {
+                tier: 2,
+                text: 'A 6-month-old male is diagnosed with his first febrile UTI. After completing antibiotics, what is the most appropriate next step per AAP guidelines?',
+                options: [
+                    'No further workup is needed after a first UTI',
+                    'Renal and bladder ultrasound',
+                    'Voiding cystourethrogram (VCUG) immediately',
+                    'DMSA renal scan within 72 hours'
+                ],
+                correct: 1,
+                rationale: 'Per 2011 AAP guidelines, renal and bladder ultrasound is recommended after the first febrile UTI in children 2–24 months. VCUG is reserved for abnormal ultrasound (hydronephrosis, scarring, duplex) or recurrent febrile UTIs — not routinely after a first UTI. Early DMSA scan can confirm acute pyelonephritis but is not standard first-line. The goal of ultrasound is to identify anatomical abnormalities predisposing to recurrent infections.'
+            },
+            {
+                tier: 3,
+                text: 'A 5-year-old with known grade III VUR is on TMP-SMX prophylaxis. He develops a febrile UTI; urine culture grows E. coli resistant to TMP-SMX. After completing IV ceftriaxone, what is the highest-priority next step?',
+                options: [
+                    'Switch prophylaxis to nitrofurantoin given breakthrough UTI on TMP-SMX',
+                    'Discontinue prophylaxis; evidence for benefit with grade III VUR is insufficient',
+                    'Pursue ureteral reimplantation given breakthrough UTI on prophylaxis',
+                    'DMSA scan in ~6 months to assess for new renal cortical scarring'
+                ],
+                correct: 3,
+                rationale: 'Renal cortical scarring (reflux nephropathy) is the major long-term complication of recurrent febrile UTIs in VUR. DMSA scan 4–6 months after infection is the gold standard for detecting new cortical scarring. This informs the risk-benefit decision of continuing prophylaxis vs. surgical correction. The RIVUR trial showed TMP-SMX prophylaxis reduces recurrent UTIs but evidence for scar prevention is less definitive. Switching prophylaxis is appropriate but secondary to first identifying whether scarring occurred.'
+            }
+        ]
+    },
+    {
+        id: 'congenital',
+        name: 'Congenital & Perinatal',
+        questions: [
+            {
+                tier: 1,
+                text: 'Which congenital infection is most associated with periventricular calcifications, sensorineural hearing loss, and chorioretinitis — and is the leading non-genetic cause of congenital hearing loss?',
+                options: [
+                    'Congenital toxoplasmosis',
+                    'Congenital rubella',
+                    'Congenital CMV (cytomegalovirus)',
+                    'Congenital syphilis'
+                ],
+                correct: 2,
+                rationale: 'Congenital CMV is the most common congenital viral infection (~0.5–1% of births) and the leading non-genetic cause of sensorineural hearing loss (SNHL). Periventricular calcifications are characteristic (vs. diffuse/scattered in toxoplasmosis). Other features: IUGR, microcephaly, hepatosplenomegaly, thrombocytopenia, petechiae ("blueberry muffin"). 85–90% are asymptomatic at birth but 10–15% of these develop late SNHL. Valganciclovir × 6 months improves hearing outcomes in symptomatic infants.'
+            },
+            {
+                tier: 2,
+                text: 'A healthy neonate is born at 39 weeks to a GBS-positive mother who received IV ampicillin starting 2 hours before delivery. The infant is vigorous with APGAR 8/9. What is the appropriate management?',
+                options: [
+                    'Full sepsis evaluation (CBC, blood culture, LP) and empiric ampicillin/gentamicin',
+                    'Observe for ≥48 hours with vital signs monitoring; no routine bloodwork',
+                    'Discharge at 24 hours if feeding well; standard newborn care',
+                    'CBC and blood culture; treat if WBC or differential is abnormal'
+                ],
+                correct: 1,
+                rationale: 'Adequate IAP requires penicillin/ampicillin ≥4 hours before delivery. This mother received only 2 hours — inadequate IAP. Per CDC/AAP guidelines, a term (≥37 weeks) well-appearing neonate born to GBS-positive mother with inadequate IAP should be observed for ≥48 hours. If any signs of sepsis develop, full evaluation and empiric antibiotics are indicated. No routine laboratory evaluation is required for well-appearing term infants — but 48h observation is still mandated rather than early discharge.'
+            },
+            {
+                tier: 3,
+                text: 'A 3-week-old presents with bloody nasal discharge (snuffles), a copper-colored maculopapular rash on palms and soles, hepatosplenomegaly, and periostitis on long-bone X-rays. Maternal RPR was reactive (1:32) with no prenatal treatment. Infant RPR is 1:128. What treatment is correct?',
+                options: [
+                    'Benzathine penicillin G IM × 1 dose (2.4 million units)',
+                    'Aqueous crystalline penicillin G IV × 10–14 days',
+                    'Oral doxycycline × 28 days',
+                    'IV ceftriaxone × 10–14 days'
+                ],
+                correct: 1,
+                rationale: 'This is confirmed symptomatic congenital syphilis. Treatment requires aqueous crystalline penicillin G IV (or procaine penicillin IM) for 10–14 days to achieve adequate CNS penetration. Benzathine penicillin G single IM dose is insufficient for congenital syphilis (poor CNS levels) — it is reserved only for specific asymptomatic scenarios meeting strict CDC criteria. Doxycycline is contraindicated in neonates/young infants. Ceftriaxone is not recommended due to limited data. Lumbar puncture to evaluate CSF should be performed in all confirmed cases.'
+            }
+        ]
+    },
+    {
+        id: 'vaccines',
+        name: 'Vaccines & Prevention',
+        questions: [
+            {
+                tier: 1,
+                text: 'Which of the following vaccines is a LIVE attenuated vaccine?',
+                options: [
+                    'Hepatitis B vaccine (HepB)',
+                    'Inactivated poliovirus vaccine (IPV)',
+                    'Measles-Mumps-Rubella (MMR)',
+                    'Meningococcal conjugate vaccine (MenACWY)'
+                ],
+                correct: 2,
+                rationale: 'Live attenuated vaccines in the US schedule: MMR, MMRV (MMR + varicella), varicella (VZV), intranasal influenza (LAIV), oral rotavirus, yellow fever, and oral typhoid (Ty21a). Live vaccines are contraindicated in severely immunocompromised patients (e.g., HIV with low CD4, active chemotherapy) and during pregnancy. Hepatitis B is a recombinant subunit vaccine. IPV is an inactivated vaccine. MenACWY is a polysaccharide conjugate vaccine.'
+            },
+            {
+                tier: 2,
+                text: 'A 14-month-old received IVIG (2 g/kg) for Kawasaki disease 4 weeks ago. He is now due for MMR and varicella vaccines. What is the most appropriate action?',
+                options: [
+                    'Give both vaccines now; 4 weeks is sufficient waiting time',
+                    'Give MMR now; defer varicella only for 11 months',
+                    'Defer both MMR and varicella for approximately 11 months from IVIG administration',
+                    'Give both vaccines now and recheck titers in 3 months to confirm immunogenicity'
+                ],
+                correct: 2,
+                rationale: 'IVIG contains passively acquired antibodies that interfere with response to live attenuated vaccines. The deferral period depends on IVIG dose: for Kawasaki disease dosing (2 g/kg), defer 11 months per Red Book (AAP) recommendations. Both MMR and varicella are live vaccines and must be deferred. Checking titers after early vaccination is not validated as a reliable workaround. This is a high-yield concept for both pediatric boards and shelf exams.'
+            },
+            {
+                tier: 3,
+                text: 'An unvaccinated susceptible 17-year-old is exposed to a household contact confirmed to have varicella (chickenpox) 4 days ago. She is healthy and not immunocompromised. What is the most appropriate post-exposure management?',
+                options: [
+                    'VariZIG (varicella-zoster immune globulin) within 10 days of exposure',
+                    'Prophylactic oral acyclovir × 7 days starting immediately',
+                    'Varicella vaccine as soon as possible (within 5 days of exposure)',
+                    'No intervention; varicella is self-limited in healthy adolescents'
+                ],
+                correct: 2,
+                rationale: 'For healthy, immunocompetent individuals without prior varicella immunity, varicella vaccine given within 3–5 days of exposure can prevent or attenuate disease in 70–90% of cases. It is the preferred post-exposure prophylaxis for this population. VariZIG is reserved for high-risk individuals who cannot receive live vaccine: immunocompromised, pregnant women, and neonates. Acyclovir prophylaxis is not routinely recommended. Option D ignores a modifiable prevention opportunity.'
+            }
+        ]
+    },
+    {
+        id: 'antimicrobials',
+        name: 'Antimicrobial Principles',
+        questions: [
+            {
+                tier: 1,
+                text: 'Which antibiotic class exerts its bactericidal effect by inhibiting bacterial cell wall synthesis through binding to penicillin-binding proteins (PBPs)?',
+                options: [
+                    'Aminoglycosides',
+                    'Fluoroquinolones',
+                    'Beta-lactams',
+                    'Macrolides'
+                ],
+                correct: 2,
+                rationale: 'Beta-lactams (penicillins, cephalosporins, carbapenems, monobactams) covalently bind PBPs, blocking peptidoglycan cross-linking → cell lysis. Aminoglycosides inhibit protein synthesis at the 30S ribosomal subunit. Fluoroquinolones inhibit DNA gyrase and topoisomerase IV (DNA replication). Macrolides inhibit protein synthesis at the 50S ribosomal subunit (bacteriostatic against most organisms). Knowing mechanism helps predict which organisms are covered and which resistance mechanisms apply.'
+            },
+            {
+                tier: 2,
+                text: 'A child with recurrent S. aureus infections has MRSA confirmed. What is the primary mechanism conferring methicillin resistance in MRSA?',
+                options: [
+                    'Production of a beta-lactamase enzyme that directly hydrolyzes methicillin',
+                    'Acquisition of the mecA gene encoding PBP2a — an altered PBP with low beta-lactam affinity',
+                    'Upregulation of drug efflux pumps that export methicillin from the cell',
+                    'Point mutations in the original PBP1–4 reducing methicillin binding affinity'
+                ],
+                correct: 1,
+                rationale: 'MRSA resistance is mediated by mecA (carried on the mobile genetic element SCCmec), which encodes PBP2a — an altered PBP with low affinity for essentially all beta-lactam antibiotics. This is distinct from "penicillinase-producing" MSSA, whose beta-lactamase is overcome by penicillinase-stable penicillins (oxacillin) or beta-lactam/inhibitor combinations. PBP2a cannot be overcome by any beta-lactam, necessitating non-beta-lactam agents (vancomycin, daptomycin, linezolid, TMP-SMX, clindamycin depending on susceptibility).'
+            },
+            {
+                tier: 3,
+                text: 'A 12-year-old with gram-negative bacteremia is receiving once-daily gentamicin. Drug levels: peak 10 mcg/mL, trough 0.3 mcg/mL. Which PK/PD principle best describes aminoglycoside bactericidal activity and justifies once-daily dosing?',
+                options: [
+                    'Time-dependent killing: efficacy correlates with % time drug concentration exceeds the MIC',
+                    'Concentration-dependent killing: bactericidal activity correlates with peak:MIC ratio',
+                    'AUC/MIC-dependent killing: efficacy correlates with total drug exposure over 24 hours',
+                    'Paradoxical effect: aminoglycosides lose potency at high concentrations (Eagle effect)'
+                ],
+                correct: 1,
+                rationale: 'Aminoglycosides demonstrate concentration-dependent killing: bactericidal activity correlates with peak:MIC ratio (target ≥8–10:1). This justifies once-daily (extended-interval) dosing — achieves higher peaks, maintains equivalent efficacy, and allows drug-free troughs that reduce nephrotoxicity and ototoxicity. Contrast with beta-lactams (time-dependent: efficacy correlates with % time > MIC) and vancomycin/fluoroquinolones (AUC/MIC-dependent). Aminoglycosides also exhibit a post-antibiotic effect (bacterial suppression continues after drug concentrations fall below MIC).'
+            }
+        ]
+    },
+    {
+        id: 'immunocompromised',
+        name: 'Immunocompromised Host',
+        questions: [
+            {
+                tier: 1,
+                text: 'An HIV-positive 4-year-old has a CD4 count of 180 cells/mm³. Which prophylactic medication should be initiated?',
+                options: [
+                    'Fluconazole for Candida prevention',
+                    'TMP-SMX for Pneumocystis jirovecii pneumonia (PCP) prevention',
+                    'Azithromycin for Mycobacterium avium complex (MAC) prevention',
+                    'Valganciclovir for CMV prevention'
+                ],
+                correct: 1,
+                rationale: 'TMP-SMX (Bactrim) is indicated for PCP prophylaxis in HIV-positive children. Age-based CD4 thresholds: all HIV-exposed infants start TMP-SMX at 4–6 weeks; ages 1–5 years: prophylaxis when CD4 <500 cells/mm³ or CD4% <15%; ≥6 years: CD4 <200 (same as adults). MAC prophylaxis (azithromycin) is added when CD4 <50 (advanced disease). PCP remains a major cause of AIDS-defining illness and mortality in children if untreated HIV.'
+            },
+            {
+                tier: 2,
+                text: 'A 7-year-old with ALL is on induction chemotherapy. On day 10 she develops fever (38.5°C) and her ANC is 180 cells/mm³. She has a central venous catheter. What is the most appropriate immediate management?',
+                options: [
+                    'Oral antibiotics and outpatient follow-up if she appears well',
+                    'Blood cultures (peripheral + central line), then immediate empiric IV broad-spectrum antibiotics',
+                    'Blood cultures and CXR; wait 24 hours for preliminary culture data before starting antibiotics',
+                    'Empiric antifungal therapy alone given likely fungal etiology after 10 days of chemotherapy'
+                ],
+                correct: 1,
+                rationale: 'Febrile neutropenia (fever + ANC <500, or <1000 and falling) is a medical emergency. Key principles: (1) draw blood cultures from ALL lumens of central catheter AND a peripheral stick simultaneously; (2) start empiric broad-spectrum IV antibiotics immediately — never wait for culture results; delay increases mortality. First-line agents cover P. aeruginosa: cefepime, piperacillin-tazobactam, or meropenem. Add vancomycin for catheter-site infection, hemodynamic instability, or MRSA concern. Risk stratification (MASCC, CTCAE) may allow outpatient management in low-risk cases, but ANC 180 = high-risk.'
+            },
+            {
+                tier: 3,
+                text: 'A 10-year-old is 45 days post-allogeneic hematopoietic stem cell transplant (on tacrolimus for GVHD prophylaxis). He develops fever and new pulmonary nodules on CT with a halo sign. Serum galactomannan is positive (index 3.2). What is the most likely diagnosis and first-line treatment?',
+                options: [
+                    'Pneumocystis jirovecii pneumonia (PCP); IV TMP-SMX 15–20 mg/kg/day',
+                    'Invasive pulmonary aspergillosis (IPA); voriconazole',
+                    'Disseminated cryptococcosis; amphotericin B + flucytosine',
+                    'CMV pneumonitis; IV ganciclovir + IVIG'
+                ],
+                correct: 1,
+                rationale: 'Invasive pulmonary aspergillosis (IPA) is a leading cause of infection-related mortality in allogeneic HSCT recipients, particularly during prolonged neutropenia and with calcineurin inhibitor immunosuppression. Classic CT findings: nodules with halo sign (hemorrhagic infarction around fungal hyphae) or air crescent sign (later). Galactomannan (serum or BAL) is the diagnostic biomarker. Voriconazole is first-line treatment (superior to amphotericin B in the landmark Herbrecht trial 2002). Isavuconazole is an alternative with a better side-effect profile. PCP presents with diffuse ground-glass (not nodules) and negative galactomannan.'
+            }
+        ]
+    }
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let student = {};
+let domainIndex = 0;
+let tierIndex = 0;
+let answered = false;
+let results = [];  // { domainId, domainName, tiers: [{tier, qIndex, selectedOption, correct}] }
+
+// ─── INTAKE ───────────────────────────────────────────────────────────────────
+document.getElementById('intake-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    student = {
+        name: document.getElementById('f-name').value.trim(),
+        year: document.getElementById('f-year').value,
+        school: document.getElementById('f-school').value.trim(),
+        email: document.getElementById('f-email').value.trim()
+    };
+    startAssessment();
+});
+
+function startAssessment() {
+    domainIndex = 0;
+    tierIndex = 0;
+    answered = false;
+    results = DOMAINS.map(d => ({ domainId: d.id, domainName: d.name, tiers: [] }));
+    showScreen('screen-question');
+    renderQuestion();
+}
+
+// ─── QUESTION RENDERING ───────────────────────────────────────────────────────
+function renderQuestion() {
+    const domain = DOMAINS[domainIndex];
+    const q = domain.questions[tierIndex];
+
+    document.getElementById('q-domain-label').textContent = `Domain ${domainIndex + 1} of ${DOMAINS.length}`;
+    document.getElementById('q-domain-name').textContent = domain.name;
+
+    const tierLabel = document.getElementById('q-tier-label');
+    const tierNames = ['Tier 1 — Recognition', 'Tier 2 — Application', 'Tier 3 — Reasoning'];
+    const tierClasses = ['t1', 't2', 't3'];
+    tierLabel.textContent = tierNames[tierIndex];
+    tierLabel.className = 'tier-label ' + tierClasses[tierIndex];
+
+    // Tier pips
+    const pips = document.getElementById('q-tier-pips');
+    pips.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+        const pip = document.createElement('div');
+        pip.className = 'tier-pip';
+        if (i < tierIndex) pip.classList.add('done');
+        else if (i === tierIndex) pip.classList.add('active');
+        pips.appendChild(pip);
+    }
+
+    // Progress bar
+    const pct = (domainIndex / DOMAINS.length) * 100;
+    document.getElementById('q-progress-fill').style.width = pct + '%';
+
+    // Question
+    const qNum = results[domainIndex].tiers.length + 1 + results.slice(0, domainIndex).reduce((s, r) => s + r.tiers.length, 0);
+    document.getElementById('q-number').textContent = `Domain ${domainIndex + 1}, Tier ${tierIndex + 1}`;
+    document.getElementById('q-text').textContent = q.text;
+
+    // Options
+    const optList = document.getElementById('q-options');
+    optList.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+    q.options.forEach((opt, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+        btn.addEventListener('click', () => selectAnswer(i));
+        li.appendChild(btn);
+        optList.appendChild(li);
+    });
+
+    // Reset feedback
+    const fb = document.getElementById('q-feedback');
+    fb.className = 'feedback-card';
+    const nextBtn = document.getElementById('q-next-btn');
+    nextBtn.className = 'next-btn';
+    answered = false;
+}
+
+function selectAnswer(selectedIdx) {
+    if (answered) return;
+    answered = true;
+
+    const domain = DOMAINS[domainIndex];
+    const q = domain.questions[tierIndex];
+    const isCorrect = selectedIdx === q.correct;
+    const letters = ['A', 'B', 'C', 'D'];
+
+    // Record
+    results[domainIndex].tiers.push({
+        tier: tierIndex,
+        question: q,
+        selectedOption: selectedIdx,
+        correct: isCorrect
+    });
+
+    // Style options
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.correct) btn.classList.add('correct');
+        else if (i === selectedIdx && !isCorrect) btn.classList.add('incorrect');
+    });
+
+    // Feedback
+    const fb = document.getElementById('q-feedback');
+    const fbHeader = document.getElementById('q-feedback-header');
+    const fbBody = document.getElementById('q-feedback-body');
+
+    if (isCorrect) {
+        fb.className = 'feedback-card correct-fb show';
+        fbHeader.className = 'feedback-header correct-h';
+        fbHeader.textContent = '✓ Correct';
+    } else {
+        fb.className = 'feedback-card incorrect-fb show';
+        fbHeader.className = 'feedback-header incorrect-h';
+        fbHeader.textContent = `✗ Incorrect — Correct answer: ${letters[q.correct]}`;
+    }
+    fbBody.textContent = q.rationale;
+
+    // Next button
+    const nextBtn = document.getElementById('q-next-btn');
+    const nextLabel = document.getElementById('q-next-label');
+    nextBtn.className = 'next-btn show';
+
+    const canAdvance = isCorrect && tierIndex < domain.questions.length - 1;
+    const isLastDomain = domainIndex === DOMAINS.length - 1;
+    const nextTierAfterThis = tierIndex + 1;
+
+    if (canAdvance) {
+        nextLabel.textContent = `Next: Tier ${nextTierAfterThis + 1}`;
+        nextBtn.onclick = advanceTier;
+    } else if (isLastDomain) {
+        nextLabel.textContent = 'View Results';
+        nextBtn.onclick = showResults;
+    } else {
+        nextLabel.textContent = 'Next Domain →';
+        nextBtn.onclick = nextDomain;
+    }
+}
+
+function advanceTier() {
+    tierIndex++;
+    answered = false;
+    renderQuestion();
+}
+
+function nextDomain() {
+    domainIndex++;
+    tierIndex = 0;
+    answered = false;
+    renderQuestion();
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+function showResults() {
+    showScreen('screen-results');
+
+    let totalCorrect = 0;
+    let totalAsked = 0;
+
+    results.forEach(r => {
+        r.tiers.forEach(t => {
+            totalAsked++;
+            if (t.correct) totalCorrect++;
+        });
+    });
+
+    const pct = totalAsked > 0 ? Math.round((totalCorrect / totalAsked) * 100) : 0;
+
+    // Score ring animation
+    const circumference = 326.7;
+    const fill = document.getElementById('score-ring-fill');
+    const ringColor = pct >= 75 ? '#7fa882' : pct >= 50 ? '#d4a574' : '#e07a5f';
+    fill.setAttribute('stroke', ringColor);
+    setTimeout(() => {
+        fill.style.strokeDashoffset = circumference - (circumference * pct / 100);
+    }, 100);
+
+    document.getElementById('score-pct-text').textContent = pct + '%';
+
+    // Headline
+    let headline, subline;
+    if (pct >= 80) {
+        headline = 'Strong Foundation';
+        subline = `${student.name}, your breadth and depth across Peds ID domains is excellent. Focus on any weak areas below.`;
+    } else if (pct >= 60) {
+        headline = 'Good Start';
+        subline = `${student.name}, solid coverage overall. Review the domains where you stalled at Tier 1 or 2.`;
+    } else {
+        headline = 'Opportunity to Build';
+        subline = `${student.name}, use the rationale below as your rotation study guide — these are the high-yield concepts.`;
+    }
+    document.getElementById('results-headline').textContent = headline;
+    document.getElementById('results-subline').textContent = subline;
+
+    // Domain cards
+    const grid = document.getElementById('domain-results-grid');
+    grid.innerHTML = '';
+    results.forEach(r => {
+        const correct = r.tiers.filter(t => t.correct).length;
+        const asked = r.tiers.length;
+        const maxTier = r.tiers.length > 0 ? Math.max(...r.tiers.map(t => t.tier)) : -1;
+        const scorePct = asked > 0 ? Math.round((correct / asked) * 100) : 0;
+
+        const card = document.createElement('div');
+        card.className = 'domain-result-card';
+
+        let badgeClass = scorePct >= 75 ? 'score-high' : scorePct >= 50 ? 'score-mid' : 'score-low';
+        let detailText = asked === 0 ? 'Not attempted' :
+            `${correct}/${asked} correct · reached Tier ${maxTier + 1}`;
+
+        card.innerHTML = `
+            <div class="domain-result-header">
+                <span class="domain-result-name">${r.domainName}</span>
+                <span class="domain-score-badge ${badgeClass}">${asked > 0 ? scorePct + '%' : '—'}</span>
+            </div>
+            <div class="domain-tier-bar">
+                ${[0,1,2].map(i => {
+                    const tierResult = r.tiers.find(t => t.tier === i);
+                    if (!tierResult) return `<div class="tier-seg not-reached"></div>`;
+                    return `<div class="tier-seg ${tierResult.correct ? 'reached-correct' : 'reached-incorrect'}"></div>`;
+                }).join('')}
+            </div>
+            <div class="domain-result-detail">${detailText}</div>
+        `;
+        grid.appendChild(card);
+    });
+
+    // Answer sheet
+    buildAnswerSheet();
+
+    // Report button
+    document.getElementById('send-report-btn').onclick = () => sendFacultyReport(pct, totalCorrect, totalAsked);
+}
+
+function buildAnswerSheet() {
+    const sheet = document.getElementById('answer-sheet');
+    sheet.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+    const tierNames = ['Tier 1 — Recognition', 'Tier 2 — Application', 'Tier 3 — Reasoning'];
+    const tierShort = ['T1', 'T2', 'T3'];
+    const tierClasses = ['t1', 't2', 't3'];
+
+    DOMAINS.forEach((domain, di) => {
+        domain.questions.forEach((q, ti) => {
+            const resultEntry = results[di];
+            const tierResult = resultEntry ? resultEntry.tiers.find(t => t.tier === ti) : null;
+            const wasAnswered = !!tierResult;
+
+            const item = document.createElement('div');
+            item.className = 'answer-item';
+
+            const statusIcon = !wasAnswered ? '○' : tierResult.correct ? '✓' : '✗';
+            const statusColor = !wasAnswered ? 'var(--text-muted)' : tierResult.correct ? 'var(--sage-600)' : 'var(--accent-coral)';
+
+            item.innerHTML = `
+                <div class="answer-item-header">
+                    <div class="answer-q-text">${q.text}</div>
+                    <div class="answer-domain-tier">
+                        <span class="tier-label ${tierClasses[ti]}" style="white-space:nowrap">${tierShort[ti]}</span>
+                        <span style="font-size:1.1rem;color:${statusColor};font-weight:700">${statusIcon}</span>
+                    </div>
+                </div>
+                <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.06em">${domain.name}</div>
+                <div class="answer-choices">
+                    ${q.options.map((opt, i) => {
+                        let cls = '';
+                        if (i === q.correct) cls = 'is-correct';
+                        else if (wasAnswered && tierResult.selectedOption === i && !tierResult.correct) cls = 'is-selected-wrong';
+                        else if (!wasAnswered) cls = 'not-answered';
+                        return `<div class="answer-choice ${cls}">
+                            <span style="font-weight:600;min-width:18px">${letters[i]}.</span>
+                            <span>${opt}</span>
+                            ${i === q.correct ? '<span style="margin-left:auto;font-size:0.75rem;padding-left:8px">✓ Correct</span>' : ''}
+                        </div>`;
+                    }).join('')}
+                </div>
+                <div class="rationale-box">
+                    <div class="rationale-label">Rationale</div>
+                    <div class="rationale-text">${q.rationale}</div>
+                </div>
+                ${!wasAnswered ? '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;font-style:italic">Not reached — you advanced beyond this domain\'s lower tier or did not reach this tier.</div>' : ''}
+            `;
+            sheet.appendChild(item);
+        });
+    });
+}
+
+function sendFacultyReport(pct, correct, total) {
+    const tierNames = ['T1', 'T2', 'T3'];
+    let domainSummary = results.map(r => {
+        const asked = r.tiers.length;
+        const corr = r.tiers.filter(t => t.correct).length;
+        const maxTier = asked > 0 ? Math.max(...r.tiers.map(t => t.tier)) : -1;
+        return `${r.domainName}: ${corr}/${asked} correct${asked > 0 ? ', reached Tier ' + (maxTier+1) : ' (not attempted)'}`;
+    }).join('\n');
+
+    const body = encodeURIComponent(
+`Sage Project – Med Student Rotation Primer Report
+
+Student: ${student.name}
+Year: ${student.year}
+School: ${student.school}
+Email: ${student.email}
+Date: ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}
+
+OVERALL SCORE: ${correct}/${total} (${pct}%)
+
+DOMAIN BREAKDOWN:
+${domainSummary}
+
+---
+Assessment: Pediatric ID Med Student Rotation Primer
+Adaptive format – Tier 1 (Recognition) → Tier 2 (Application) → Tier 3 (Reasoning)
+sageproject.xyz`
+    );
+
+    const subject = encodeURIComponent(`Peds ID Rotation Assessment – ${student.name} – ${pct}%`);
+    window.location.href = `mailto:${FACULTY_EMAIL}?subject=${subject}&body=${body}&cc=${encodeURIComponent(student.email)}`;
+}
+
+function retake() {
+    domainIndex = 0;
+    tierIndex = 0;
+    answered = false;
+    results = [];
+    showScreen('screen-intake');
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
