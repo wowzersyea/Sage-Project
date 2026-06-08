@@ -397,6 +397,7 @@
         .tool-card.outpatient { --card-accent: var(--sage-400); --card-accent-end: var(--sage-500); }
         .tool-card.consult { --card-accent: #7eb8a8; --card-accent-end: #5fa090; }
         .tool-card.assessment { --card-accent: var(--sage-500); --card-accent-end: var(--sage-600); }
+        .tool-card.medstudent { --card-accent: var(--accent-sky); --card-accent-end: #6a9eb3; }
 
         .tool-icon {
             width: 56px;
@@ -420,6 +421,7 @@
         .tool-card.outpatient .tool-icon { background: linear-gradient(135deg, rgba(116, 140, 118, 0.15), rgba(116, 140, 118, 0.25)); color: var(--sage-500); }
         .tool-card.consult .tool-icon { background: linear-gradient(135deg, rgba(126, 184, 168, 0.15), rgba(126, 184, 168, 0.25)); color: #5fa090; }
         .tool-card.assessment .tool-icon { background: linear-gradient(135deg, rgba(127, 168, 130, 0.15), rgba(127, 168, 130, 0.25)); color: var(--sage-500); }
+        .tool-card.medstudent .tool-icon { background: linear-gradient(135deg, rgba(129, 176, 196, 0.15), rgba(129, 176, 196, 0.25)); color: var(--accent-sky); }
 
         .tool-card h3 {
             font-size: 1.25rem;
@@ -1279,6 +1281,30 @@
                     </div>
                     <div class="tool-action">
                         Start Assessment
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="med-student-assessment/" class="tool-card medstudent" style="text-decoration: none;">
+                    <div class="tool-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3>Med Student Rotation Primer</h3>
+                    <p>Adaptive Pediatric ID assessment for MS3/MS4 students on rotation. GRE-style difficulty progression per domain. Faculty report emailed on completion.</p>
+                    <div class="tool-features">
+                        <span class="tool-feature">10 Domains</span>
+                        <span class="tool-feature">Adaptive Difficulty</span>
+                        <span class="tool-feature">Answer Rationale</span>
+                        <span class="tool-feature">Faculty Report</span>
+                    </div>
+                    <div class="tool-action">
+                        Start Primer
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
