@@ -398,6 +398,7 @@
         .tool-card.consult { --card-accent: #7eb8a8; --card-accent-end: #5fa090; }
         .tool-card.assessment { --card-accent: var(--sage-500); --card-accent-end: var(--sage-600); }
         .tool-card.medstudent { --card-accent: var(--accent-sky); --card-accent-end: #6a9eb3; }
+        .tool-card.antimicrobial { --card-accent: var(--accent-coral); --card-accent-end: #c96a52; }
 
         .tool-icon {
             width: 56px;
@@ -422,6 +423,7 @@
         .tool-card.consult .tool-icon { background: linear-gradient(135deg, rgba(126, 184, 168, 0.15), rgba(126, 184, 168, 0.25)); color: #5fa090; }
         .tool-card.assessment .tool-icon { background: linear-gradient(135deg, rgba(127, 168, 130, 0.15), rgba(127, 168, 130, 0.25)); color: var(--sage-500); }
         .tool-card.medstudent .tool-icon { background: linear-gradient(135deg, rgba(129, 176, 196, 0.15), rgba(129, 176, 196, 0.25)); color: var(--accent-sky); }
+        .tool-card.antimicrobial .tool-icon { background: linear-gradient(135deg, rgba(224, 122, 95, 0.15), rgba(224, 122, 95, 0.25)); color: var(--accent-coral); }
 
         .tool-card h3 {
             font-size: 1.25rem;
@@ -1124,6 +1126,9 @@
             </button>
             <nav id="main-nav">
                 <a href="#tools">Tools</a>
+                <a href="https://test.sageproject.xyz">Resident Assessment</a>
+                <a href="med-student-assessment/">Med Student</a>
+                <a href="antimicrobial-selection/">Antimicrobial Selection</a>
                 <a href="#podcast">Podcast</a>
             </nav>
         </div>
@@ -1305,6 +1310,30 @@
                     </div>
                     <div class="tool-action">
                         Start Primer
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="antimicrobial-selection/" class="tool-card antimicrobial" style="text-decoration: none;">
+                    <div class="tool-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <h3>Antimicrobial Selection</h3>
+                    <p>Case-based assessment of antibiotic reasoning — spectrum, why a drug is chosen, and the alternatives that fit. Free-text reasoning on Pseudomonas, MRSA &amp; anaerobe coverage. Faculty-reviewed.</p>
+                    <div class="tool-features">
+                        <span class="tool-feature">9 Domains</span>
+                        <span class="tool-feature">Coverage Buckets</span>
+                        <span class="tool-feature">Written Reasoning</span>
+                        <span class="tool-feature">Faculty Review</span>
+                    </div>
+                    <div class="tool-action">
+                        Start Assessment
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>

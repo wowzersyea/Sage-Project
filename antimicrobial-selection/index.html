@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antimicrobial Selection Assessment | Sage Project</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-3KEGTRRS0Z');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage-50:#1a1f1a; --sage-100:#252b25; --sage-200:#333b33; --sage-300:#4a5a4b;
+            --sage-400:#6a806c; --sage-500:#7fa882; --sage-600:#8fbf92; --sage-700:#a8d4ab;
+            --sage-800:#c5e5c7; --sage-900:#e8f5e9;
+            --warm-50:#111411;
+            --accent-coral:#e07a5f; --accent-gold:#d4a574; --accent-sky:#81b0c4; --accent-lavender:#b8a5d4;
+            --text-primary:#e0e8e0; --text-secondary:#9bb09d; --text-muted:#6a806c;
+            --surface:#181c18; --surface-raised:#1e231e;
+            --shadow-sm:0 1px 2px rgba(0,0,0,0.2); --shadow-md:0 4px 12px rgba(0,0,0,0.3); --shadow-lg:0 12px 32px rgba(0,0,0,0.4);
+            --radius-sm:8px; --radius-md:12px; --radius-lg:20px; --radius-xl:28px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Outfit',sans-serif; background:var(--warm-50); color:var(--text-primary); line-height:1.6; min-height:100vh; }
+        .bg-gradient {
+            position:fixed; inset:0; z-index:-1;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(224,122,95,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(127,168,130,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(212,165,116,0.05) 0%, transparent 70%),
+                var(--warm-50);
+        }
+        .site-header {
+            padding:1rem 2rem; background:rgba(17,20,17,0.9); backdrop-filter:blur(20px);
+            border-bottom:1px solid rgba(199,208,199,0.15); display:flex; align-items:center; gap:12px;
+        }
+        .site-header a { text-decoration:none; display:flex; align-items:center; gap:12px; }
+        .logo-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--accent-coral),#c96a52);
+            border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; }
+        .logo-icon svg { width:20px; height:20px; color:white; }
+        .logo-text { font-size:1.1rem; font-weight:600; color:var(--sage-700); }
+        .header-sep { color:var(--text-muted); margin:0 4px; }
+        .header-title { font-size:1rem; color:var(--text-secondary); font-weight:400; }
+
+        .screen { display:none; }
+        .screen.active { display:block; }
+
+        /* INTAKE */
+        .intake-wrap { max-width:580px; margin:0 auto; padding:4rem 1.5rem; }
+        .intake-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(224,122,95,0.12);
+            padding:0.4rem 1rem; border-radius:100px; font-size:0.8rem; font-weight:500; color:var(--accent-coral); margin-bottom:1.5rem; }
+        .intake-wrap h1 { font-family:'Source Serif 4',serif; font-size:clamp(1.8rem,4vw,2.5rem); font-weight:600;
+            color:var(--sage-800); line-height:1.2; margin-bottom:0.75rem; }
+        .intake-wrap .subtitle { color:var(--text-secondary); font-size:1rem; margin-bottom:2rem; }
+        .info-card { background:var(--surface-raised); border:1px solid var(--sage-200); border-radius:var(--radius-md);
+            padding:1.25rem 1.5rem; margin-bottom:1.5rem; }
+        .info-card h4 { font-size:0.8rem; font-weight:600; color:var(--text-muted); text-transform:uppercase;
+            letter-spacing:0.08em; margin-bottom:0.75rem; }
+        .domain-tags { display:flex; flex-wrap:wrap; gap:0.4rem; }
+        .domain-tag { background:var(--sage-50); padding:0.3rem 0.65rem; border-radius:100px; font-size:0.78rem;
+            color:var(--sage-600); font-weight:500; }
+        .domain-tag.bucket { background:rgba(224,122,95,0.12); color:var(--accent-coral); }
+        .form-group { margin-bottom:1.25rem; }
+        .form-group label { display:block; font-size:0.88rem; font-weight:500; color:var(--text-secondary); margin-bottom:0.4rem; }
+        .form-group input, .form-group select { width:100%; padding:0.8rem 1rem; background:var(--surface-raised);
+            border:1px solid var(--sage-200); border-radius:var(--radius-sm); color:var(--text-primary);
+            font-family:'Outfit',sans-serif; font-size:0.95rem; transition:border-color 0.2s ease; }
+        .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--accent-coral); }
+        .form-group select option { background:#1e231e; }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+        .privacy-note { background:linear-gradient(135deg,rgba(224,122,95,0.08),rgba(212,165,116,0.06));
+            border:1px solid var(--sage-200); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-bottom:1.75rem;
+            font-size:0.85rem; color:var(--text-secondary); }
+        .privacy-note strong { color:var(--accent-coral); }
+        .btn-start { width:100%; padding:1rem; background:linear-gradient(135deg,var(--accent-coral),#c96a52); color:white;
+            font-family:'Outfit',sans-serif; font-size:1rem; font-weight:600; border:none; border-radius:var(--radius-md);
+            cursor:pointer; transition:all 0.3s ease; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .btn-start:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+
+        /* QUESTION */
+        .question-wrap { max-width:760px; margin:0 auto; padding:2.5rem 1.5rem 4rem; }
+        .progress-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; gap:1rem; }
+        .domain-label { font-size:0.8rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
+        .domain-name { font-size:1rem; font-weight:600; color:var(--sage-700); margin-top:2px; }
+        .tier-label { font-size:0.78rem; font-weight:500; padding:0.2rem 0.6rem; border-radius:100px; white-space:nowrap; }
+        .tier-label.t1 { background:rgba(127,168,130,0.15); color:var(--sage-500); }
+        .tier-label.t2 { background:rgba(212,165,116,0.15); color:var(--accent-gold); }
+        .tier-label.t3 { background:rgba(224,122,95,0.15); color:var(--accent-coral); }
+        .type-tag { font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+        .progress-bar { height:4px; background:var(--sage-100); border-radius:2px; margin-bottom:2rem; overflow:hidden; }
+        .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent-coral),var(--accent-gold)); border-radius:2px; transition:width 0.4s ease; }
+        .question-card { background:var(--surface-raised); border:1px solid var(--sage-100); border-radius:var(--radius-lg); padding:2rem; margin-bottom:1.5rem; }
+        .question-number { font-size:0.8rem; font-weight:500; color:var(--text-muted); margin-bottom:0.75rem; }
+        .question-text { font-size:1.05rem; color:var(--sage-800); line-height:1.65; }
+        .question-hint { font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem; font-style:italic; }
+
+        .options-list { list-style:none; margin-top:1.5rem; display:flex; flex-direction:column; gap:0.65rem; }
+        .option-btn { width:100%; text-align:left; padding:0.9rem 1.1rem; background:var(--sage-50); border:1px solid var(--sage-200);
+            border-radius:var(--radius-sm); color:var(--text-primary); font-family:'Outfit',sans-serif; font-size:0.95rem;
+            cursor:pointer; transition:all 0.2s ease; display:flex; align-items:flex-start; gap:10px; }
+        .option-btn:hover { border-color:var(--accent-coral); background:rgba(224,122,95,0.06); }
+        .option-btn.selected { border-color:var(--accent-coral); background:rgba(224,122,95,0.12); }
+        .option-letter { font-weight:600; color:var(--accent-coral); min-width:20px; flex-shrink:0; margin-top:1px; }
+        .checkbox-box { width:20px; height:20px; border:2px solid var(--sage-300); border-radius:4px; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center; margin-top:1px; transition:all 0.2s ease; }
+        .option-btn.selected .checkbox-box { background:var(--accent-coral); border-color:var(--accent-coral); }
+        .checkbox-box svg { width:14px; height:14px; color:white; opacity:0; }
+        .option-btn.selected .checkbox-box svg { opacity:1; }
+
+        .freetext-area { width:100%; margin-top:1.5rem; padding:1rem; min-height:150px; background:var(--sage-50);
+            border:1px solid var(--sage-200); border-radius:var(--radius-sm); color:var(--text-primary);
+            font-family:'Outfit',sans-serif; font-size:0.95rem; line-height:1.6; resize:vertical; }
+        .freetext-area:focus { outline:none; border-color:var(--accent-coral); }
+
+        .nav-buttons { display:flex; justify-content:space-between; gap:1rem; margin-top:0.5rem; }
+        .next-btn { padding:0.85rem 2rem; background:linear-gradient(135deg,var(--accent-coral),#c96a52); color:white;
+            font-family:'Outfit',sans-serif; font-size:0.95rem; font-weight:600; border:none; border-radius:var(--radius-md);
+            cursor:pointer; transition:all 0.3s ease; display:inline-flex; align-items:center; gap:8px; }
+        .next-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-sm); }
+        .next-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+        .back-btn { padding:0.85rem 1.5rem; background:var(--surface-raised); color:var(--text-secondary);
+            border:1px solid var(--sage-200); font-family:'Outfit',sans-serif; font-size:0.95rem; font-weight:600;
+            border-radius:var(--radius-md); cursor:pointer; transition:all 0.3s ease; }
+        .back-btn:hover { border-color:var(--sage-400); }
+        .back-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+        /* CONFIRMATION */
+        .confirm-wrap { max-width:620px; margin:0 auto; padding:5rem 1.5rem; text-align:center; }
+        .confirm-icon { width:88px; height:88px; margin:0 auto 1.5rem; border-radius:50%;
+            background:linear-gradient(135deg,rgba(127,168,130,0.2),rgba(127,168,130,0.1));
+            display:flex; align-items:center; justify-content:center; }
+        .confirm-icon svg { width:44px; height:44px; color:var(--sage-500); }
+        .confirm-wrap h2 { font-family:'Source Serif 4',serif; font-size:1.9rem; color:var(--sage-800); margin-bottom:0.75rem; }
+        .confirm-wrap p { color:var(--text-secondary); font-size:1rem; margin-bottom:0.5rem; }
+        .confirm-actions { margin-top:2.5rem; display:flex; flex-direction:column; gap:0.75rem; align-items:center; }
+        .confirm-btn { padding:0.85rem 1.75rem; border-radius:var(--radius-md); font-family:'Outfit',sans-serif;
+            font-size:0.95rem; font-weight:600; cursor:pointer; transition:all 0.3s ease; border:none;
+            display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+        .confirm-btn.primary { background:linear-gradient(135deg,var(--accent-coral),#c96a52); color:white; }
+        .confirm-btn.secondary { background:var(--surface-raised); color:var(--sage-600); border:1px solid var(--sage-200); }
+        .confirm-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-sm); }
+
+        /* ADMIN ANSWER KEY */
+        .admin-wrap { max-width:860px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+        .admin-banner { background:rgba(224,122,95,0.1); border:1px solid rgba(224,122,95,0.3); border-radius:var(--radius-md);
+            padding:1rem 1.25rem; margin-bottom:2rem; font-size:0.9rem; color:var(--accent-coral); font-weight:500; }
+        .section-title { font-family:'Source Serif 4',serif; font-size:1.4rem; color:var(--sage-800); margin:2rem 0 1rem;
+            padding-bottom:0.75rem; border-bottom:1px solid var(--sage-200); }
+        .key-item { background:var(--surface-raised); border:1px solid var(--sage-100); border-radius:var(--radius-md);
+            padding:1.5rem; margin-bottom:1rem; }
+        .key-q { font-size:0.95rem; color:var(--sage-800); line-height:1.55; margin-bottom:0.75rem; }
+        .key-meta { display:flex; gap:6px; align-items:center; margin-bottom:0.75rem; }
+        .key-choice { font-size:0.88rem; padding:0.4rem 0.75rem; border-radius:var(--radius-sm); color:var(--text-muted);
+            display:flex; gap:8px; margin-bottom:0.3rem; }
+        .key-choice.correct { background:rgba(127,168,130,0.12); color:var(--sage-600); font-weight:500; }
+        .rationale-box { background:var(--sage-50); border-left:3px solid var(--accent-coral); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+            padding:0.8rem 1rem; margin-top:0.75rem; }
+        .rationale-label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-coral); margin-bottom:0.3rem; }
+        .rationale-text { font-size:0.88rem; color:var(--text-secondary); line-height:1.6; }
+        .model-answer { background:rgba(127,168,130,0.08); border-radius:var(--radius-sm); padding:0.8rem 1rem; margin-top:0.75rem; }
+        .concept-chip { display:inline-block; background:var(--sage-100); padding:0.2rem 0.6rem; border-radius:100px;
+            font-size:0.78rem; color:var(--sage-600); margin:0.2rem 0.2rem 0 0; }
+
+        @media (max-width:600px) { .form-row { grid-template-columns:1fr; } .question-card { padding:1.25rem; } }
+    </style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+
+<header class="site-header">
+    <a href="/">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <span class="logo-text">Sage Project</span>
+    </a>
+    <span class="header-sep">›</span>
+    <span class="header-title">Antimicrobial Selection Assessment</span>
+</header>
+
+<!-- SCREEN 1: INTAKE -->
+<div id="screen-intake" class="screen active">
+    <div class="intake-wrap">
+        <div class="intake-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Antimicrobial Reasoning · MS3 → Resident
+        </div>
+        <h1>Why this antibiotic, and not that one?</h1>
+        <p class="subtitle">A case-based assessment of antimicrobial selection — spectrum, the reasoning behind a choice, and the alternatives that fit the same scenario. Includes free-text reasoning on the three coverage buckets that trip up every learner: Pseudomonas, MRSA, and anaerobes.</p>
+
+        <div class="info-card">
+            <h4>9 Domains</h4>
+            <div class="domain-tags">
+                <span class="domain-tag">Cervical Lymphadenitis</span>
+                <span class="domain-tag">Cellulitis & Abscess</span>
+                <span class="domain-tag">Intra-abdominal</span>
+                <span class="domain-tag">Febrile Neutropenia</span>
+                <span class="domain-tag">Aspiration & Lung Abscess</span>
+                <span class="domain-tag">Osteomyelitis</span>
+                <span class="domain-tag bucket">Pseudomonas Bucket</span>
+                <span class="domain-tag bucket">MRSA Bucket</span>
+                <span class="domain-tag bucket">Anaerobe Bucket</span>
+            </div>
+        </div>
+
+        <div class="privacy-note">
+            <strong>Note:</strong> This is an assessment, not a quiz — you won't see correct answers or scores. Your responses (including written reasoning) are sent to faculty for review and an individualized learning plan. Answer in your own words; there's no penalty for thinking out loud.
+        </div>
+
+        <form id="intake-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="f-name">Full Name</label>
+                    <input type="text" id="f-name" placeholder="Jane Smith" required>
+                </div>
+                <div class="form-group">
+                    <label for="f-level">Training Level</label>
+                    <select id="f-level" required>
+                        <option value="">Select...</option>
+                        <option value="MS3">MS3</option>
+                        <option value="MS4">MS4</option>
+                        <option value="Intern (PL-1)">Intern (PL-1)</option>
+                        <option value="Resident (PL-2)">Resident (PL-2)</option>
+                        <option value="Resident (PL-3)">Resident (PL-3)</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="f-program">Medical School / Residency Program</label>
+                <input type="text" id="f-program" placeholder="University of..." required>
+            </div>
+            <div class="form-group">
+                <label for="f-email">Your Email</label>
+                <input type="email" id="f-email" placeholder="you@institution.edu" required>
+            </div>
+            <button type="submit" class="btn-start">
+                Begin Assessment
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- SCREEN 2: QUESTION -->
+<div id="screen-question" class="screen">
+    <div class="question-wrap">
+        <div class="progress-header">
+            <div>
+                <div class="domain-label" id="q-domain-label">Domain</div>
+                <div class="domain-name" id="q-domain-name">Loading...</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <span class="tier-label t1" id="q-tier-label">Tier 1</span>
+                <span class="type-tag" id="q-type-tag"></span>
+            </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="q-progress-fill" style="width:0%"></div></div>
+        <div class="question-card">
+            <div class="question-number" id="q-number"></div>
+            <div class="question-text" id="q-text"></div>
+            <div class="question-hint" id="q-hint"></div>
+            <div id="q-input"></div>
+        </div>
+        <div class="nav-buttons">
+            <button class="back-btn" id="q-back-btn">← Back</button>
+            <button class="next-btn" id="q-next-btn">
+                <span id="q-next-label">Next</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 3: CONFIRMATION -->
+<div id="screen-confirm" class="screen">
+    <div class="confirm-wrap">
+        <div class="confirm-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h2 id="confirm-headline">Assessment Submitted</h2>
+        <p id="confirm-sub"></p>
+        <p style="font-size:0.88rem;color:var(--text-muted);margin-top:1rem;">Your responses have been packaged for faculty review. Use the buttons below to deliver them.</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn primary" id="email-report-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                Email Faculty Report
+            </button>
+            <button class="confirm-btn secondary" id="download-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Results (JSON)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 4: ADMIN ANSWER KEY -->
+<div id="screen-admin" class="screen">
+    <div class="admin-wrap">
+        <div class="admin-banner">🔑 Admin Answer Key — full questions, correct answers, rationale, and free-text grading rubrics. Faculty view only.</div>
+        <div id="admin-key"></div>
+    </div>
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────────────────────────
+const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
+// AI grading endpoint — set this to your local server when ready, e.g. 'http://localhost:8787/grade'
+// Leave blank to use the manual email/download flow only.
+const AI_GRADER_ENDPOINT = '';
+// Lightweight admin gate. Open the answer key with  ...#admin  (faculty only; not real security).
+const ADMIN_HASH = 'admin';
+
+// ─── QUESTION BANK ──────────────────────────────────────────────────────────
+// Question types:
+//   'grid'     – multi-select. correct = array of correct option indices.
+//   'mcq'      – single best answer. correct = index.
+//   'freetext' – written reasoning. concepts = rubric for auto/AI scoring; modelAnswer = expert response.
+const DOMAINS = [
+  {
+    id:'lymphadenitis', name:'Cervical Lymphadenitis',
+    questions:[
+      { type:'grid', tier:1,
+        text:'Acute bacterial cervical lymphadenitis in a child is most often caused by S. aureus and S. pyogenes. Which agents provide reliable empiric coverage for BOTH of these pathogens (including MRSA where relevant)?',
+        hint:'Select all that apply.',
+        options:['Cephalexin','Clindamycin','TMP-SMX','Amoxicillin-clavulanate','Metronidazole','Linezolid'],
+        correct:[1,3,5],
+        rationale:'Clindamycin covers MSSA, most CA-MRSA, S. pyogenes, and oral anaerobes — a strong single agent here. Amox-clav covers MSSA and Strep (plus oral anaerobes) but NOT MRSA. Linezolid covers MRSA and Strep. Cephalexin covers MSSA and Strep but not MRSA. TMP-SMX covers MRSA/MSSA but has unreliable group A Strep coverage — a classic trap, so it is a poor single agent for possible streptococcal disease. Metronidazole has no aerobic gram-positive activity.' },
+      { type:'mcq', tier:2,
+        text:'A 4-year-old has acute unilateral cervical lymphadenitis, is well-appearing and afebrile, with no fluctuance and no MRSA risk factors. Local CA-MRSA prevalence is low. What is the most appropriate first-line ORAL empiric therapy?',
+        options:['Cephalexin','TMP-SMX','Metronidazole','Vancomycin IV'],
+        correct:0,
+        rationale:'For non-purulent acute lymphadenitis in a well child with low MRSA risk, cephalexin reliably covers MSSA and S. pyogenes — the most likely pathogens. TMP-SMX is avoided as monotherapy because of unreliable group A Strep coverage. Metronidazole lacks aerobic gram-positive activity. IV vancomycin is unwarranted in a well, afebrile outpatient.' },
+      { type:'freetext', tier:3,
+        text:'You are choosing between ampicillin-sulbactam and clindamycin for a child being admitted with cervical lymphadenitis. Both are reasonable. Walk through how you would decide between them — address spectrum (MSSA/MRSA/Strep/anaerobes), the likely source, and any resistance considerations.',
+        hint:'A few sentences. There is no single right answer — show your reasoning.',
+        concepts:[
+          {label:'Amp-sulbactam covers MSSA/Strep + oral anaerobes but NOT MRSA', keywords:['sulbactam','mrsa','anaerob','oral','msSA','methicillin']},
+          {label:'Clindamycin covers MSSA, most CA-MRSA, Strep, and anaerobes', keywords:['clinda','mrsa','anaerob','ca-mrsa','community']},
+          {label:'Choose clindamycin if MRSA is a concern', keywords:['mrsa','risk','concern','colon','prevalence']},
+          {label:'Amp-sulbactam favored for odontogenic/anaerobic source, low MRSA risk', keywords:['odontogenic','dental','anaerob','source','tooth']},
+          {label:'Clindamycin: inducible resistance (D-test) & local resistance rates', keywords:['inducible','d-test','dtest','resistance','antibiogram']}
+        ],
+        modelAnswer:'Both cover MSSA, S. pyogenes, and oral/dental anaerobes, so the deciding factors are MRSA risk and source. Ampicillin-sulbactam does NOT cover MRSA; clindamycin covers most community-acquired MRSA. If the child has MRSA risk factors (prior MRSA, high local prevalence, purulent/abscess) I choose clindamycin. If the picture is an odontogenic/anaerobic source with low MRSA risk, amp-sulbactam is an excellent narrow choice. Before relying on clindamycin for MRSA I check local clindamycin resistance and confirm a negative D-test (inducible clindamycin resistance) on the isolate.' }
+    ]
+  },
+  {
+    id:'cellulitis', name:'Cellulitis & Abscess',
+    questions:[
+      { type:'grid', tier:1,
+        text:'Which of the following agents provide reliable activity against MRSA?',
+        hint:'Select all that apply.',
+        options:['Vancomycin','Cefazolin','TMP-SMX','Ceftriaxone','Linezolid','Daptomycin','Doxycycline','Clindamycin'],
+        correct:[0,2,4,5,6,7],
+        rationale:'MRSA-active agents here: vancomycin, TMP-SMX, linezolid, daptomycin, doxycycline, and clindamycin (CA-MRSA, pending D-test). Cefazolin and ceftriaxone are beta-lactams with NO MRSA activity — MRSA is resistant to essentially all standard beta-lactams via mecA/PBP2a (ceftaroline is the exception, but it is not listed). This grid is the core "MRSA bucket" check.' },
+      { type:'mcq', tier:2,
+        text:'A healthy adolescent has NON-purulent cellulitis of the lower leg — diffuse erythema, warmth, no abscess or drainage, no systemic toxicity. What is the best empiric oral therapy?',
+        options:['Cephalexin','TMP-SMX','Metronidazole','Ciprofloxacin'],
+        correct:0,
+        rationale:'Non-purulent cellulitis is predominantly caused by beta-hemolytic streptococci, so a beta-lactam (cephalexin) is first-line — routine MRSA coverage is NOT required. TMP-SMX is reserved for purulent infections/abscess (MRSA), and has unreliable Strep coverage. The purulent vs. non-purulent distinction is the key decision point that drives whether you add MRSA coverage.' },
+      { type:'freetext', tier:3,
+        text:'A blood culture grows methicillin-susceptible S. aureus (MSSA). A colleague wants to "just keep the patient on vancomycin since it covers it." Explain why an anti-staphylococcal beta-lactam (e.g., cefazolin or nafcillin) is preferred over vancomycin for MSSA.',
+        hint:'Focus on the why, not just "it is preferred."',
+        concepts:[
+          {label:'Vancomycin is inferior to beta-lactams for MSSA', keywords:['inferior','worse','suboptimal','less effective','outcome']},
+          {label:'Beta-lactams are more rapidly bactericidal', keywords:['bactericidal','rapid','faster','kill']},
+          {label:'Higher mortality / treatment failure / persistent bacteremia with vanc for MSSA', keywords:['mortality','failure','persistent','relapse','bacteremia']},
+          {label:'Cefazolin/nafcillin are the definitive agents once MSSA confirmed', keywords:['cefazolin','nafcillin','oxacillin','definitive','de-escalat','narrow']}
+        ],
+        modelAnswer:'Although vancomycin is technically active against MSSA, it is inferior to anti-staphylococcal beta-lactams. Cefazolin and nafcillin/oxacillin are more rapidly bactericidal, and multiple studies show vancomycin for MSSA bacteremia is associated with higher rates of treatment failure, persistent bacteremia, and mortality. Once susceptibility confirms MSSA, the correct move is to de-escalate to cefazolin or nafcillin rather than continue vancomycin.' }
+    ]
+  },
+  {
+    id:'intraabdominal', name:'Intra-abdominal Infection',
+    questions:[
+      { type:'grid', tier:1,
+        text:'Which agents provide reliable activity against Bacteroides fragilis and other gut anaerobes?',
+        hint:'Select all that apply.',
+        options:['Metronidazole','Piperacillin-tazobactam','Ampicillin-sulbactam','Ceftriaxone','Meropenem','Ertapenem','Cefepime','Aztreonam'],
+        correct:[0,1,2,4,5],
+        rationale:'Reliable anaerobic (incl. B. fragilis) coverage: metronidazole, beta-lactam/beta-lactamase-inhibitor combos (pip-tazo, amp-sulbactam), and carbapenems (meropenem AND ertapenem). NO meaningful anaerobic coverage: ceftriaxone, cefepime, and aztreonam (these are why you must ADD metronidazole when using ceftriaxone/cefepime for an intra-abdominal source).' },
+      { type:'mcq', tier:2,
+        text:'A child with perforated appendicitis is started on ceftriaxone. What must be added to complete appropriate empiric coverage, and why?',
+        options:['Metronidazole — ceftriaxone lacks anaerobic (B. fragilis) coverage','Vancomycin — to cover MRSA','Azithromycin — to cover atypicals','Nothing — ceftriaxone monotherapy is sufficient'],
+        correct:0,
+        rationale:'Intra-abdominal infections are polymicrobial (enteric gram-negatives + anaerobes). Ceftriaxone covers the gram-negatives but has no reliable B. fragilis/anaerobic activity, so metronidazole is added. Alternatively, a single agent with built-in anaerobic coverage (pip-tazo, or a carbapenem) can be used. MRSA and atypicals are not the relevant gap here.' },
+      { type:'freetext', tier:3,
+        text:'For a perforated appendicitis, piperacillin-tazobactam monotherapy and ceftriaxone + metronidazole both provide appropriate coverage. How would you decide between them? Consider spectrum overlap, Pseudomonas, and stewardship.',
+        hint:'Show the trade-offs.',
+        concepts:[
+          {label:'Both cover enteric GN + anaerobes', keywords:['gram-negative','gram negative','anaerob','enteric','both cover','equivalent']},
+          {label:'Pip-tazo adds Pseudomonas/Enterococcus coverage', keywords:['pseudomonas','enterococc','broader','antipseudomonal']},
+          {label:'Ceftriaxone+metro is narrower / better stewardship for community cases', keywords:['narrow','stewardship','spectrum','de-escalat','community']},
+          {label:'Reserve pip-tazo for healthcare-associated / sicker / Pseudomonas risk', keywords:['healthcare','hospital','sick','severe','risk','resistant']}
+        ],
+        modelAnswer:'Both regimens cover enteric gram-negatives and anaerobes, so they are therapeutically comparable for routine community-acquired perforated appendicitis. Pip-tazo additionally covers Pseudomonas and Enterococcus and is broader. From a stewardship standpoint, ceftriaxone + metronidazole is the narrower choice and is preferred for community-acquired disease where Pseudomonas is unlikely. I reserve pip-tazo for healthcare-associated infection, critically ill patients, or those with Pseudomonas risk factors.' }
+    ]
+  },
+  {
+    id:'febrileneutropenia', name:'Febrile Neutropenia',
+    questions:[
+      { type:'grid', tier:1,
+        text:'Empiric therapy for febrile neutropenia must cover Pseudomonas aeruginosa. Which of the following are reliably anti-pseudomonal?',
+        hint:'Select all that apply.',
+        options:['Cefepime','Ceftriaxone','Piperacillin-tazobactam','Meropenem','Ertapenem','Ceftazidime','Ciprofloxacin','Ampicillin-sulbactam'],
+        correct:[0,2,3,5,6],
+        rationale:'Anti-pseudomonal: cefepime, pip-tazo, meropenem, ceftazidime, and ciprofloxacin. NOT anti-pseudomonal: ceftriaxone, ertapenem (the one carbapenem with no Pseudomonas coverage — high-yield trap), and amp-sulbactam. This is the "Pseudomonas bucket" check.' },
+      { type:'mcq', tier:2,
+        text:'A patient with febrile neutropenia is hemodynamically stable with no localizing signs, no mucositis, no catheter-site infection, and no known MRSA. After starting cefepime monotherapy, when is it appropriate to ADD vancomycin?',
+        options:['Only for specific indications: hemodynamic instability, suspected catheter-related infection, skin/soft-tissue infection, severe mucositis, MRSA colonization, or pneumonia','Always — all febrile neutropenia requires empiric vancomycin','Never — vancomycin has no role in febrile neutropenia','Only if blood cultures are already positive for gram-positives'],
+        correct:0,
+        rationale:'Routine empiric vancomycin is NOT recommended in febrile neutropenia and does not improve outcomes; it is reserved for specific indications: hemodynamic instability/septic shock, suspected catheter-related infection, skin/soft-tissue infection, severe mucositis, known MRSA colonization, or pneumonia. Adding it reflexively drives resistance and toxicity.' },
+      { type:'freetext', tier:3,
+        text:'A trainee selects ertapenem for empiric febrile neutropenia coverage, reasoning that "carbapenems are broad." Explain the error.',
+        hint:'One key concept.',
+        concepts:[
+          {label:'Ertapenem does NOT cover Pseudomonas', keywords:['pseudomonas','no pseudomonal','lacks pseudomonas','not antipseudomonal']},
+          {label:'Febrile neutropenia mandates anti-pseudomonal coverage', keywords:['febrile neutropenia','must cover','antipseudomonal','empiric','pseudomonas']},
+          {label:'Use meropenem/imipenem, cefepime, ceftazidime, or pip-tazo instead', keywords:['meropenem','imipenem','cefepime','ceftazidime','pip-tazo','piperacillin']}
+        ],
+        modelAnswer:'Ertapenem is the one carbapenem that does NOT cover Pseudomonas aeruginosa. Febrile neutropenia requires reliable anti-pseudomonal coverage, so ertapenem is inappropriate as empiric monotherapy here. The correct anti-pseudomonal carbapenems are meropenem or imipenem; alternatives include cefepime, ceftazidime, or piperacillin-tazobactam.' }
+    ]
+  },
+  {
+    id:'aspiration', name:'Aspiration & Lung Abscess',
+    questions:[
+      { type:'mcq', tier:1,
+        text:'A patient develops a community-acquired aspiration pneumonia with a developing lung abscess. Which single agent provides appropriate coverage for the oral flora and anaerobes involved?',
+        options:['Ampicillin-sulbactam','Ceftriaxone','Aztreonam','Ciprofloxacin'],
+        correct:0,
+        rationale:'Aspiration pneumonia/lung abscess involves oral streptococci and anaerobes. Ampicillin-sulbactam (or clindamycin) covers this well. Ceftriaxone lacks reliable anaerobic coverage, aztreonam covers only aerobic gram-negatives, and ciprofloxacin has poor anaerobic and unreliable streptococcal coverage.' },
+      { type:'freetext', tier:3,
+        text:'Why would aztreonam be a poor choice for a patient with aspiration pneumonia? Be specific about what aztreonam does and does not cover.',
+        hint:'Name the gaps.',
+        concepts:[
+          {label:'Aztreonam covers only aerobic gram-negatives (incl. Pseudomonas)', keywords:['gram-negative','gram negative','aerobic','pseudomonas','monobactam']},
+          {label:'No gram-positive coverage', keywords:['gram-positive','gram positive','strep','staph','no gram positive']},
+          {label:'No anaerobic coverage', keywords:['anaerob','no anaerob']},
+          {label:'Aspiration needs gram-positive + anaerobe coverage', keywords:['aspiration','oral','anaerob','strep','flora']}
+        ],
+        modelAnswer:'Aztreonam is a monobactam that covers only aerobic gram-negative organisms (including Pseudomonas). It has NO gram-positive and NO anaerobic activity. Aspiration pneumonia is driven by oral streptococci and anaerobes — precisely the organisms aztreonam misses — so it would leave the relevant pathogens untreated. Appropriate choices are amp-sulbactam or clindamycin.' }
+    ]
+  },
+  {
+    id:'osteomyelitis', name:'Osteomyelitis',
+    questions:[
+      { type:'mcq', tier:1,
+        text:'Acute hematogenous osteomyelitis in children is most commonly caused by which organism?',
+        options:['Staphylococcus aureus','Pseudomonas aeruginosa','Escherichia coli','Bacteroides fragilis'],
+        correct:0,
+        rationale:'S. aureus is by far the most common cause of pediatric osteomyelitis. Empiric therapy is therefore directed at S. aureus, with MRSA coverage added based on local prevalence and severity.' },
+      { type:'mcq', tier:2,
+        text:'A child with osteomyelitis is improving and ready for oral step-down. The isolate is susceptible. Which oral agent offers excellent bioavailability and bone penetration for S. aureus?',
+        options:['Clindamycin','Penicillin V','Nitrofurantoin','Azithromycin'],
+        correct:0,
+        rationale:'Clindamycin has excellent oral bioavailability and bone penetration and is a workhorse for oral step-down of susceptible staphylococcal osteomyelitis (confirm D-test for MRSA). Linezolid and fluoroquinolones are alternatives. Nitrofurantoin only achieves therapeutic levels in urine; azithromycin is not appropriate for staph osteo.' },
+      { type:'freetext', tier:3,
+        text:'For confirmed MSSA osteomyelitis, why is cefazolin or nafcillin preferred over vancomycin — and what makes clindamycin or linezolid attractive for the oral phase?',
+        hint:'Two parts: IV definitive choice + oral step-down properties.',
+        concepts:[
+          {label:'Beta-lactams more bactericidal / better outcomes for MSSA', keywords:['bactericidal','superior','better','outcome','rapid']},
+          {label:'Vancomycin inferior for MSSA', keywords:['inferior','worse','suboptimal','vanc']},
+          {label:'Clindamycin/linezolid: excellent oral bioavailability & bone penetration', keywords:['bioavailab','bone','penetration','oral']},
+          {label:'Confirm susceptibility / D-test before clindamycin', keywords:['d-test','dtest','suscept','inducible']}
+        ],
+        modelAnswer:'For MSSA, anti-staphylococcal beta-lactams (cefazolin, nafcillin) are more rapidly bactericidal and produce better outcomes than vancomycin, which is inferior for MSSA. For the oral phase, clindamycin and linezolid both have excellent oral bioavailability and good bone penetration, making them strong step-down options once the patient is improving — with clindamycin requiring a negative D-test to exclude inducible resistance.' }
+    ]
+  },
+  // ─── CROSS-CUTTING BUCKETS ──────────────────────────────────────────────
+  {
+    id:'bucket-pseudomonas', name:'Pseudomonas Bucket', bucket:true,
+    questions:[
+      { type:'grid', tier:2,
+        text:'Select ALL agents from this list that have reliable anti-pseudomonal activity.',
+        hint:'Select all that apply. This is the core Pseudomonas bucket.',
+        options:['Piperacillin-tazobactam','Cefepime','Ceftazidime','Ceftriaxone','Meropenem','Ertapenem','Ciprofloxacin','Aztreonam','Tobramycin/gentamicin','Ampicillin-sulbactam'],
+        correct:[0,1,2,4,6,7,8],
+        rationale:'Anti-pseudomonal: pip-tazo, cefepime, ceftazidime, meropenem, ciprofloxacin, aztreonam, and aminoglycosides (tobramycin/gentamicin/amikacin). NOT anti-pseudomonal: ceftriaxone (3rd-gen but no Pseudomonas), ertapenem (the non-pseudomonal carbapenem), and amp-sulbactam. Memorizing this list is foundational.' },
+      { type:'freetext', tier:3,
+        text:'Without looking anything up, list the antibiotic classes/agents you would reach for to cover Pseudomonas aeruginosa, and name the two common "false friends" — drugs that look like they should cover Pseudomonas but do not.',
+        hint:'Organize by class if you can.',
+        concepts:[
+          {label:'Anti-pseudomonal penicillin: piperacillin-tazobactam', keywords:['pip-tazo','piperacillin','tazobactam','zosyn']},
+          {label:'Anti-pseudomonal cephalosporins: cefepime, ceftazidime', keywords:['cefepime','ceftazidime']},
+          {label:'Carbapenems: meropenem/imipenem (NOT ertapenem)', keywords:['meropenem','imipenem','doripenem']},
+          {label:'Fluoroquinolones: ciprofloxacin / levofloxacin', keywords:['cipro','ciprofloxacin','levofloxacin','quinolone']},
+          {label:'Aminoglycosides + aztreonam', keywords:['aminoglycoside','tobramycin','gentamicin','amikacin','aztreonam']},
+          {label:'False friends: ceftriaxone and ertapenem', keywords:['ceftriaxone','ertapenem']}
+        ],
+        modelAnswer:'Anti-pseudomonal agents by class: (1) anti-pseudomonal penicillin — piperacillin-tazobactam; (2) cephalosporins — cefepime and ceftazidime; (3) carbapenems — meropenem and imipenem (but NOT ertapenem); (4) fluoroquinolones — ciprofloxacin and levofloxacin; (5) aminoglycosides — tobramycin, gentamicin, amikacin; and (6) the monobactam aztreonam. The two classic "false friends" are ceftriaxone (a 3rd-gen cephalosporin that does NOT cover Pseudomonas) and ertapenem (the one carbapenem with no Pseudomonas activity).' }
+    ]
+  },
+  {
+    id:'bucket-mrsa', name:'MRSA Bucket', bucket:true,
+    questions:[
+      { type:'grid', tier:2,
+        text:'Select ALL agents with reliable anti-MRSA activity.',
+        hint:'Select all that apply.',
+        options:['Vancomycin','Linezolid','Daptomycin','TMP-SMX','Doxycycline','Clindamycin','Ceftaroline','Cefepime','Piperacillin-tazobactam'],
+        correct:[0,1,2,3,4,5,6],
+        rationale:'Anti-MRSA: vancomycin, linezolid, daptomycin, TMP-SMX, doxycycline, clindamycin (CA-MRSA, D-test), and ceftaroline (the "5th-gen" cephalosporin with MRSA activity — the key exception among beta-lactams). NOT anti-MRSA: cefepime and pip-tazo, like nearly all standard beta-lactams.' },
+      { type:'freetext', tier:3,
+        text:'A patient has MRSA pneumonia. A trainee suggests daptomycin. Explain why daptomycin is the wrong choice for pneumonia, and name two agents that ARE appropriate for MRSA pneumonia.',
+        hint:'There is a specific mechanistic reason.',
+        concepts:[
+          {label:'Daptomycin is inactivated by pulmonary surfactant', keywords:['surfactant','inactivat','lung','bind','sequester']},
+          {label:'Therefore not used for pneumonia', keywords:['pneumonia','not used','ineffective','fails','respiratory']},
+          {label:'Appropriate: vancomycin', keywords:['vancomycin','vanc']},
+          {label:'Appropriate: linezolid (or ceftaroline)', keywords:['linezolid','ceftaroline']}
+        ],
+        modelAnswer:'Daptomycin is inactivated by pulmonary surfactant, so it never achieves effective concentrations in the alveoli and must NOT be used to treat pneumonia, regardless of susceptibility. For MRSA pneumonia the appropriate agents are vancomycin or linezolid (ceftaroline is another option). Daptomycin remains excellent for MRSA bacteremia, endocarditis, and skin/soft-tissue infection — just not the lung.' }
+    ]
+  },
+  {
+    id:'bucket-anaerobes', name:'Anaerobe Bucket', bucket:true,
+    questions:[
+      { type:'grid', tier:2,
+        text:'Select ALL agents with reliable anaerobic coverage (including B. fragilis).',
+        hint:'Select all that apply.',
+        options:['Metronidazole','Clindamycin','Piperacillin-tazobactam','Amoxicillin-clavulanate','Meropenem','Ceftriaxone','Cefepime','Aztreonam','Ciprofloxacin','Aminoglycosides'],
+        correct:[0,1,2,3,4],
+        rationale:'Anaerobic coverage: metronidazole, clindamycin, beta-lactam/inhibitor combos (pip-tazo, amox-clav, amp-sulbactam), and carbapenems. NO meaningful anaerobic coverage: ceftriaxone, cefepime, aztreonam, fluoroquinolones (cipro), and aminoglycosides — which is why these need a metronidazole add-on for anaerobic sources. (Note: metronidazole covers B. fragilis/below-diaphragm anaerobes but not actinomyces/oral microaerophilic strep; clindamycin is better for above-diaphragm oral anaerobes.)' },
+      { type:'freetext', tier:3,
+        text:'Explain the "above vs. below the diaphragm" framework for anaerobic coverage, and why clindamycin and metronidazole are not interchangeable.',
+        hint:'Tie each drug to the anatomic site.',
+        concepts:[
+          {label:'Metronidazole: best for below-diaphragm / B. fragilis / gut anaerobes', keywords:['below','b. fragilis','fragilis','gut','abdominal','intra-abdominal']},
+          {label:'Clindamycin: better for above-diaphragm / oral anaerobes', keywords:['above','oral','mouth','head','neck','lung','aspiration']},
+          {label:'Metronidazole has gaps for oral/aerotolerant anaerobes & microaerophilic strep', keywords:['oral','microaerophilic','actinomyces','strep','gaps','poor']},
+          {label:'Match the agent to the anatomic source', keywords:['source','anatomic','site','location','diaphragm']}
+        ],
+        modelAnswer:'A useful heuristic: metronidazole is the best agent for "below the diaphragm" anaerobes — B. fragilis and gut/intra-abdominal anaerobes — but it has gaps for many "above the diaphragm" oral anaerobes and microaerophilic streptococci. Clindamycin covers "above the diaphragm" oral/respiratory anaerobes well (head, neck, lung abscess, aspiration). They are NOT interchangeable: metronidazole would be a poor sole choice for an oral/dental source, while clindamycin is less reliable than metronidazole for B. fragilis given rising resistance. Match the agent to the anatomic source of infection.' }
+    ]
+  }
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let student = {};
+let flat = [];        // flattened list of {domainId, domainName, bucket, q, qIndex}
+let cursor = 0;
+let answers = {};     // key: domainId|qIndex -> { type, selected (idx|[idx]), text }
+
+// Build flattened question list
+function buildFlat() {
+  flat = [];
+  DOMAINS.forEach(d => {
+    d.questions.forEach((q, qi) => {
+      flat.push({ domainId:d.id, domainName:d.name, bucket:!!d.bucket, q, qIndex:qi });
+    });
+  });
+}
+
+// ─── INTAKE ───────────────────────────────────────────────────────────────
+document.getElementById('intake-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  student = {
+    name: document.getElementById('f-name').value.trim(),
+    level: document.getElementById('f-level').value,
+    program: document.getElementById('f-program').value.trim(),
+    email: document.getElementById('f-email').value.trim()
+  };
+  buildFlat();
+  cursor = 0; answers = {};
+  showScreen('screen-question');
+  renderQuestion();
+});
+
+// ─── QUESTION RENDERING ─────────────────────────────────────────────────────
+function keyFor(item){ return item.domainId + '|' + item.qIndex; }
+
+function renderQuestion() {
+  const item = flat[cursor];
+  const q = item.q;
+  const k = keyFor(item);
+  const saved = answers[k] || {};
+
+  document.getElementById('q-domain-label').textContent = `Domain ${DOMAINS.findIndex(d=>d.id===item.domainId)+1} of ${DOMAINS.length}` + (item.bucket ? ' · Coverage Bucket' : '');
+  document.getElementById('q-domain-name').textContent = item.domainName;
+
+  const tl = document.getElementById('q-tier-label');
+  tl.textContent = 'Tier ' + q.tier;
+  tl.className = 'tier-label t' + q.tier;
+
+  const typeNames = { grid:'Select all that apply', mcq:'Single best answer', freetext:'Written reasoning' };
+  document.getElementById('q-type-tag').textContent = typeNames[q.type] || '';
+
+  document.getElementById('q-progress-fill').style.width = ((cursor)/flat.length*100) + '%';
+  document.getElementById('q-number').textContent = `Question ${cursor+1} of ${flat.length}`;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-hint').textContent = q.hint || '';
+
+  const input = document.getElementById('q-input');
+  input.innerHTML = '';
+  const letters = ['A','B','C','D','E','F','G','H','I','J'];
+
+  if (q.type === 'mcq') {
+    const ul = document.createElement('ul'); ul.className = 'options-list';
+    q.options.forEach((opt,i) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button'); btn.type='button'; btn.className='option-btn';
+      if (saved.selected === i) btn.classList.add('selected');
+      btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+      btn.onclick = () => {
+        answers[k] = { type:'mcq', selected:i };
+        renderQuestion();
+      };
+      li.appendChild(btn); ul.appendChild(li);
+    });
+    input.appendChild(ul);
+  } else if (q.type === 'grid') {
+    const ul = document.createElement('ul'); ul.className = 'options-list';
+    const sel = Array.isArray(saved.selected) ? saved.selected.slice() : [];
+    q.options.forEach((opt,i) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button'); btn.type='button'; btn.className='option-btn';
+      if (sel.includes(i)) btn.classList.add('selected');
+      btn.innerHTML = `<span class="checkbox-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span><span>${opt}</span>`;
+      btn.onclick = () => {
+        const cur = Array.isArray((answers[k]||{}).selected) ? answers[k].selected.slice() : [];
+        const idx = cur.indexOf(i);
+        if (idx>=0) cur.splice(idx,1); else cur.push(i);
+        answers[k] = { type:'grid', selected:cur };
+        renderQuestion();
+      };
+      li.appendChild(btn); ul.appendChild(li);
+    });
+    input.appendChild(ul);
+  } else if (q.type === 'freetext') {
+    const ta = document.createElement('textarea'); ta.className='freetext-area';
+    ta.placeholder = 'Type your reasoning here...';
+    ta.value = saved.text || '';
+    ta.oninput = () => { answers[k] = { type:'freetext', text: ta.value }; updateNextState(); };
+    input.appendChild(ta);
+  }
+
+  // Back button
+  const backBtn = document.getElementById('q-back-btn');
+  backBtn.disabled = cursor === 0;
+  backBtn.onclick = () => { if (cursor>0){ cursor--; renderQuestion(); } };
+
+  // Next button
+  const nextBtn = document.getElementById('q-next-btn');
+  document.getElementById('q-next-label').textContent = (cursor === flat.length-1) ? 'Submit Assessment' : 'Next';
+  nextBtn.onclick = () => {
+    if (cursor === flat.length-1) { submitAssessment(); }
+    else { cursor++; renderQuestion(); }
+  };
+  updateNextState();
+  window.scrollTo(0,0);
+}
+
+function updateNextState() {
+  const item = flat[cursor];
+  const k = keyFor(item);
+  const a = answers[k];
+  const nextBtn = document.getElementById('q-next-btn');
+  let answered = false;
+  if (a) {
+    if (a.type==='mcq') answered = a.selected != null;
+    else if (a.type==='grid') answered = Array.isArray(a.selected) && a.selected.length>0;
+    else if (a.type==='freetext') answered = (a.text||'').trim().length > 10;
+  }
+  nextBtn.disabled = !answered;
+}
+
+// ─── SCORING ────────────────────────────────────────────────────────────────
+function scoreSubmission() {
+  const out = { perQuestion:[], perDomain:{}, overall:{ points:0, max:0 } };
+  DOMAINS.forEach(d => {
+    let dPts=0, dMax=0;
+    d.questions.forEach((q, qi) => {
+      const k = d.id + '|' + qi;
+      const a = answers[k] || {};
+      let score=0, max=1, detail={};
+      if (q.type==='mcq') {
+        score = (a.selected===q.correct) ? 1 : 0;
+        detail = { selected:a.selected, correct:q.correct };
+      } else if (q.type==='grid') {
+        const sel = Array.isArray(a.selected)? a.selected : [];
+        const correctSet = new Set(q.correct);
+        let good=0, bad=0;
+        sel.forEach(i => correctSet.has(i)? good++ : bad++);
+        const raw = (good - bad) / q.correct.length;
+        score = Math.max(0, Math.min(1, raw));
+        detail = { selected:sel, correct:q.correct, good, bad };
+      } else if (q.type==='freetext') {
+        const text = (a.text||'').toLowerCase();
+        const hits = q.concepts.map(c => ({
+          label:c.label,
+          hit: c.keywords.some(kw => text.includes(kw.toLowerCase()))
+        }));
+        const nHit = hits.filter(h=>h.hit).length;
+        score = q.concepts.length ? nHit/q.concepts.length : 0;
+        detail = { text:a.text||'', conceptsHit:hits, nHit, nConcepts:q.concepts.length };
+      }
+      dPts += score; dMax += max;
+      out.perQuestion.push({ domainId:d.id, domainName:d.name, qIndex:qi, type:q.type, tier:q.tier,
+        question:q.text, score:+score.toFixed(2), detail });
+    });
+    out.perDomain[d.id] = { name:d.name, points:+dPts.toFixed(2), max:dMax, pct:Math.round(dPts/dMax*100) };
+    out.overall.points += dPts; out.overall.max += dMax;
+  });
+  out.overall.pct = Math.round(out.overall.points/out.overall.max*100);
+  return out;
+}
+
+function buildPayload() {
+  return {
+    assessment: 'Antimicrobial Selection Assessment',
+    version: '1.0',
+    submittedAt: new Date().toISOString(),
+    student,
+    rawAnswers: answers,
+    scored: scoreSubmission()
+  };
+}
+
+// ─── SUBMIT ─────────────────────────────────────────────────────────────────
+let lastPayload = null;
+async function submitAssessment() {
+  lastPayload = buildPayload();
+  document.getElementById('confirm-sub').textContent =
+    `Thank you, ${student.name}. You answered ${flat.length} questions across ${DOMAINS.length} domains.`;
+  showScreen('screen-confirm');
+
+  // Attempt AI grading if an endpoint is configured (e.g., your local server)
+  if (AI_GRADER_ENDPOINT) {
+    try {
+      const res = await fetch(AI_GRADER_ENDPOINT, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(lastPayload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('confirm-headline').textContent = 'Assessment Submitted & Graded';
+        const p = document.createElement('p');
+        p.style.cssText = 'margin-top:1rem;color:var(--text-secondary);font-size:0.9rem;';
+        p.textContent = 'An AI-assisted analysis and learning plan have been generated and sent to faculty.';
+        document.getElementById('confirm-sub').after(p);
+      }
+    } catch(err) {
+      console.warn('AI grader unreachable; falling back to manual delivery.', err);
+    }
+  }
+
+  document.getElementById('email-report-btn').onclick = emailReport;
+  document.getElementById('download-btn').onclick = downloadJSON;
+}
+
+function emailReport() {
+  const s = lastPayload.scored;
+  let lines = [];
+  lines.push('Sage Project — Antimicrobial Selection Assessment');
+  lines.push('');
+  lines.push(`Student: ${student.name}`);
+  lines.push(`Level: ${student.level}`);
+  lines.push(`Program: ${student.program}`);
+  lines.push(`Email: ${student.email}`);
+  lines.push(`Submitted: ${new Date(lastPayload.submittedAt).toLocaleString()}`);
+  lines.push('');
+  lines.push(`OVERALL (auto-estimate): ${Math.round(s.overall.points)}/${s.overall.max} (${s.overall.pct}%)`);
+  lines.push('');
+  lines.push('DOMAIN BREAKDOWN (auto-estimate):');
+  Object.values(s.perDomain).forEach(d => lines.push(`  ${d.name}: ${d.pct}%`));
+  lines.push('');
+  lines.push('FREE-TEXT RESPONSES (for faculty / AI review):');
+  s.perQuestion.filter(q=>q.type==='freetext').forEach(q => {
+    lines.push('');
+    lines.push(`[${q.domainName} · Tier ${q.tier}] ${q.question}`);
+    lines.push(`Response: ${q.detail.text || '(blank)'}`);
+    lines.push(`Concepts hit: ${q.detail.nHit}/${q.detail.nConcepts}`);
+  });
+  lines.push('');
+  lines.push('— Full structured JSON available via the Download button on the submission screen.');
+  lines.push('sageproject.xyz/antimicrobial-selection');
+
+  const subject = encodeURIComponent(`Antimicrobial Assessment — ${student.name} (${student.level})`);
+  const body = encodeURIComponent(lines.join('\n'));
+  window.location.href = `mailto:${FACULTY_EMAIL}?subject=${subject}&body=${body}&cc=${encodeURIComponent(student.email)}`;
+}
+
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify(lastPayload, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safe = student.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+  a.href = url; a.download = `antimicrobial-assessment-${safe}-${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─── ADMIN ANSWER KEY ─────────────────────────────────────────────────────
+function renderAdminKey() {
+  const wrap = document.getElementById('admin-key');
+  wrap.innerHTML = '';
+  const letters = ['A','B','C','D','E','F','G','H','I','J'];
+  DOMAINS.forEach((d, di) => {
+    const title = document.createElement('div'); title.className='section-title';
+    title.textContent = `${di+1}. ${d.name}` + (d.bucket ? '  (coverage bucket)' : '');
+    wrap.appendChild(title);
+    d.questions.forEach((q, qi) => {
+      const item = document.createElement('div'); item.className='key-item';
+      let html = `<div class="key-meta"><span class="tier-label t${q.tier}">Tier ${q.tier}</span>
+        <span class="type-tag">${q.type}</span></div>`;
+      html += `<div class="key-q">${q.text}</div>`;
+      if (q.type==='mcq' || q.type==='grid') {
+        const correct = q.type==='mcq' ? [q.correct] : q.correct;
+        html += q.options.map((opt,i) =>
+          `<div class="key-choice ${correct.includes(i)?'correct':''}">
+            <span style="font-weight:600;min-width:18px">${letters[i]}.</span><span>${opt}</span>
+            ${correct.includes(i)?'<span style="margin-left:auto;font-size:0.75rem">✓</span>':''}
+          </div>`).join('');
+      }
+      if (q.type==='freetext') {
+        html += `<div style="margin-top:0.75rem"><div class="rationale-label">Concept rubric</div>`;
+        html += q.concepts.map(c => `<span class="concept-chip">${c.label}</span>`).join('');
+        html += `</div><div class="model-answer"><div class="rationale-label">Model answer</div>
+          <div class="rationale-text">${q.modelAnswer}</div></div>`;
+      }
+      if (q.rationale) {
+        html += `<div class="rationale-box"><div class="rationale-label">Rationale</div>
+          <div class="rationale-text">${q.rationale}</div></div>`;
+      }
+      item.innerHTML = html;
+      wrap.appendChild(item);
+    });
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Admin gate via URL hash (#admin) — faculty answer-key view. Not real security.
+function checkAdmin() {
+  if ((location.hash || '').replace('#','') === ADMIN_HASH) {
+    renderAdminKey();
+    showScreen('screen-admin');
+  }
+}
+window.addEventListener('hashchange', checkAdmin);
+checkAdmin();
+</script>
+</body>
+</html>
