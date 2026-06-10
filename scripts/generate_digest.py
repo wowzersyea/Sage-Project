@@ -538,10 +538,9 @@ def generate_digest():
     
     try:
         # Call Claude with web search enabled
-        # Using lower max_tokens and being explicit about efficiency
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=16000,
+            max_tokens=32000,
             tools=[{
                 "type": "web_search_20250305",
                 "name": "web_search"
@@ -552,7 +551,15 @@ def generate_digest():
                 "content": user
             }]
         )
-        
+
+        # Fail fast if Claude ran out of tokens before finishing
+        if response.stop_reason == "max_tokens":
+            raise RuntimeError(
+                "Claude hit max_tokens before completing the digest. "
+                "The response was truncated — no partial output saved. "
+                "Consider increasing max_tokens or tightening the prompt."
+            )
+
         # Extract the text content from the response
         digest_content = ""
         for block in response.content:
@@ -565,6 +572,13 @@ def generate_digest():
         heading_match = re.search(r'^#\s', digest_content, re.MULTILINE)
         if heading_match:
             digest_content = digest_content[heading_match.start():]
+        else:
+            raise RuntimeError(
+                "Claude returned a response but it contained no markdown heading — "
+                "the digest body was never written. stop_reason was "
+                f"'{response.stop_reason}'. Raw output (first 500 chars):\n"
+                + digest_content[:500]
+            )
 
         print("Digest generated successfully!")
 
