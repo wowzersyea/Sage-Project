@@ -565,19 +565,12 @@ def generate_digest():
     try:
         # Call Claude with web search enabled.
         #
-        # Two things to handle here:
-        #
         # 1. Streaming is required: with max_tokens=32000 the SDK refuses a
-        #    non-streaming request because the call may exceed the 10-minute
-        #    non-streaming timeout.
+        #    non-streaming request (>10-min timeout).
         #
-        # 2. Server-side web search runs its own agentic loop. When it hits
-        #    the server-side iteration limit before finishing, the response
-        #    comes back with stop_reason == "pause_turn". We must append the
-        #    assistant turn and re-send so Claude resumes where it left off,
-        #    looping until it finishes (end_turn) or runs out of tokens.
-        #    Without this, the run ends mid-search with only the narration
-        #    text and no formatted digest.
+        # 2. Server-side web_search uses pause_turn to signal mid-loop pauses.
+        #    We must re-send the assistant turn so Claude resumes, looping
+        #    until end_turn.
         messages = [{"role": "user", "content": user}]
         digest_content = ""
         max_continuations = 10
@@ -602,9 +595,6 @@ def generate_digest():
                     digest_content += block.text
 
             if response.stop_reason == "pause_turn":
-                # Resume the paused turn: append the assistant response
-                # (including the trailing server_tool_use block, which the
-                # API uses to know it should continue) and call again.
                 messages.append({"role": "assistant", "content": response.content})
                 continue
             break
