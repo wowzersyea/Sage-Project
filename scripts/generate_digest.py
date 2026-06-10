@@ -564,24 +564,45 @@ def generate_digest():
     
     try:
         # Call Claude with web search enabled.
-        # Streaming is required: with max_tokens=32000 the SDK refuses a
-        # non-streaming request because the call may exceed the 10-minute
-        # non-streaming timeout. We stream and then collect the final
-        # accumulated message so the rest of the logic is unchanged.
-        with client.messages.stream(
-            model="claude-sonnet-4-20250514",
-            max_tokens=32000,
-            tools=[{
-                "type": "web_search_20250305",
-                "name": "web_search"
-            }],
-            system=system,
-            messages=[{
-                "role": "user",
-                "content": user
-            }]
-        ) as stream:
-            response = stream.get_final_message()
+        #
+        # 1. Streaming is required: with max_tokens=32000 the SDK refuses a
+        #    non-streaming request (>10-min timeout).
+        #
+        # 2. Server-side web_search uses pause_turn to signal mid-loop pauses.
+        #    We must re-send the assistant turn so Claude resumes, looping
+        #    until end_turn.
+        messages = [{"role": "user", "content": user}]
+        digest_content = ""
+        max_continuations = 10
+        response = None
+
+        for _ in range(max_continuations):
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=32000,
+                tools=[{
+                    "type": "web_search_20250305",
+                    "name": "web_search"
+                }],
+                system=system,
+                messages=messages
+            ) as stream:
+                response = stream.get_final_message()
+
+            # Accumulate any text emitted in this segment
+            for block in response.content:
+                if block.type == "text":
+                    digest_content += block.text
+
+            if response.stop_reason == "pause_turn":
+                messages.append({"role": "assistant", "content": response.content})
+                continue
+            break
+        else:
+            raise RuntimeError(
+                f"Claude did not finish after {max_continuations} continuations "
+                "(still pausing for web search). The digest may be incomplete."
+            )
 
         # Fail fast if Claude ran out of tokens before finishing
         if response.stop_reason == "max_tokens":
@@ -590,12 +611,6 @@ def generate_digest():
                 "The response was truncated — no partial output saved. "
                 "Consider increasing max_tokens or tightening the prompt."
             )
-
-        # Extract the text content from the response
-        digest_content = ""
-        for block in response.content:
-            if block.type == "text":
-                digest_content += block.text
 
         # Strip AI chain-of-thought preamble (search narration before the
         # actual digest).  The real content starts at the first markdown
