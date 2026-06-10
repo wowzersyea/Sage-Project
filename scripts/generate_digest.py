@@ -563,8 +563,12 @@ def generate_digest():
             print(f"  Injected {len(memory['articles'])} past article records for cross-referencing.")
     
     try:
-        # Call Claude with web search enabled
-        response = client.messages.create(
+        # Call Claude with web search enabled.
+        # Streaming is required: with max_tokens=32000 the SDK refuses a
+        # non-streaming request because the call may exceed the 10-minute
+        # non-streaming timeout. We stream and then collect the final
+        # accumulated message so the rest of the logic is unchanged.
+        with client.messages.stream(
             model="claude-sonnet-4-20250514",
             max_tokens=32000,
             tools=[{
@@ -576,7 +580,8 @@ def generate_digest():
                 "role": "user",
                 "content": user
             }]
-        )
+        ) as stream:
+            response = stream.get_final_message()
 
         # Fail fast if Claude ran out of tokens before finishing
         if response.stop_reason == "max_tokens":
