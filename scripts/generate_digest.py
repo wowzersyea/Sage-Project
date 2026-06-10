@@ -400,16 +400,36 @@ The following articles have been reviewed in previous digests. DO NOT include th
 - Do not include articles you're uncertain about
 
 ## JOURNALS TO SEARCH (prioritize these):
+
+### Pediatric ID (search every run):
 - Pediatric Infectious Disease Journal (PIDJ)
 - Journal of the Pediatric Infectious Diseases Society (JPIDS)
 - Clinical Infectious Diseases (CID)
 - Pediatrics (ID-relevant)
 - JAMA Pediatrics (ID-relevant)
-- Antimicrobial Agents and Chemotherapy
-- NEJM, JAMA, Lancet ID (major findings only)
+
+### Antimicrobial Pharmacology & Resistance:
+- Antimicrobial Agents and Chemotherapy (AAC)
+- Journal of Antimicrobial Chemotherapy (JAC)
+- JAC-Antimicrobial Resistance
+- International Journal of Antimicrobial Agents (IJAA)
+- Clinical Microbiology and Infection (CMI)
+
+### Precision Dosing / PK/PD:
+- Clinical Pharmacokinetics
+- Therapeutic Drug Monitoring
+- Pharmacotherapy
+- Pediatric Drugs
+
+### ASP / Outcomes:
+- Antimicrobial Stewardship and Healthcare Epidemiology (ASHE)
+- Open Forum Infectious Diseases (OFID)
+
+### High-impact (major findings only):
+- NEJM, JAMA, Lancet Infectious Diseases
 
 ## GUIDELINE SOURCES:
-- IDSA, PIDS, AAP Red Book, CDC/MMWR
+- IDSA, PIDS, AAP Red Book, CDC/MMWR, ESCMID
 
 ## OUTPUT FORMAT:
 
@@ -456,11 +476,14 @@ Do NOT summarize a 7-recommendation guideline as "Seven key priorities emerged."
 
 [For paywalled articles: provide as much detail as the abstract allows, then end with `[PAYWALL: Abstract only reviewed — full methods/results analysis unavailable]`]
 
+## 💉 PK/PD & Precision Dosing
+[Articles on pharmacokinetics, pharmacodynamics, TDM, population PK models, Monte Carlo simulations, AUC-guided dosing, and dosing optimization for antimicrobials — especially in pediatric, neonatal, or renally/hepatically impaired populations. Use the same thorough review format as Pediatric ID Studies. For PK modeling papers, include: population studied, software/model used, key PK parameters (Vd, CL, t½), target attainment rates, and practical dosing implications.]
+
 ## 📰 Notable General ID
 [High-impact articles from major journals relevant to pediatrics]
 
 ## ⚠️ Safety & Drug Updates
-[FDA communications, drug shortages - only if relevant to peds ID]
+[FDA communications, drug shortages, new resistance alerts - only if relevant to peds ID/ASP]
 
 ---
 *Bi-weekly digest generated {today_date}. Articles limited to publications from {start_date} to {today_date}.*
@@ -480,11 +503,14 @@ IMPORTANT REMINDERS:
 8. Limit your web searches to be efficient - focus on the most important sources
 
 Search strategy:
-1. Search for "[Journal name] {search_month} 2026" or "[Journal name] latest issue 2026" for each key journal
-2. Search "IDSA guidelines 2026" and "CDC MMWR {search_month} 2026" for guidelines
-3. Search "pediatric antimicrobial stewardship 2026" for stewardship content
-4. Check PMC (PubMed Central) for open access versions
-5. Be selective - quality over quantity
+1. Pediatric ID journals: search "PIDJ {search_month} 2026", "JPIDS {search_month} 2026", "Clinical Infectious Diseases {search_month} 2026", "Pediatrics infectious disease {search_month} 2026", "JAMA Pediatrics infectious disease {search_month} 2026"
+2. Antimicrobial pharmacology: search "Journal of Antimicrobial Chemotherapy {search_month} 2026", "JAC-Antimicrobial Resistance {search_month} 2026", "Antimicrobial Agents and Chemotherapy {search_month} 2026", "International Journal of Antimicrobial Agents {search_month} 2026", "Clinical Microbiology and Infection {search_month} 2026"
+3. Precision dosing / PK: search "Clinical Pharmacokinetics antibiotic {search_month} 2026", "Therapeutic Drug Monitoring antibiotic {search_month} 2026", "Pharmacotherapy infectious disease {search_month} 2026", "Pediatric Drugs antimicrobial {search_month} 2026"
+4. ASP outcomes: search "Antimicrobial Stewardship Healthcare Epidemiology {search_month} 2026", "Open Forum Infectious Diseases {search_month} 2026"
+5. Guidelines: search "IDSA guidelines 2026", "ESCMID guidelines 2026", "CDC MMWR {search_month} 2026"
+6. Stewardship: search "pediatric antimicrobial stewardship 2026"
+7. Check PMC (PubMed Central) for open access versions of any article
+8. Be selective — quality over quantity; prefer articles with direct pediatric relevance or clear ASP/PK applicability
 
 For each article:
 - Determine if full text is freely available (open access) or paywalled
@@ -538,10 +564,9 @@ def generate_digest():
     
     try:
         # Call Claude with web search enabled
-        # Using lower max_tokens and being explicit about efficiency
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=16000,
+            max_tokens=32000,
             tools=[{
                 "type": "web_search_20250305",
                 "name": "web_search"
@@ -552,7 +577,15 @@ def generate_digest():
                 "content": user
             }]
         )
-        
+
+        # Fail fast if Claude ran out of tokens before finishing
+        if response.stop_reason == "max_tokens":
+            raise RuntimeError(
+                "Claude hit max_tokens before completing the digest. "
+                "The response was truncated — no partial output saved. "
+                "Consider increasing max_tokens or tightening the prompt."
+            )
+
         # Extract the text content from the response
         digest_content = ""
         for block in response.content:
@@ -565,6 +598,13 @@ def generate_digest():
         heading_match = re.search(r'^#\s', digest_content, re.MULTILINE)
         if heading_match:
             digest_content = digest_content[heading_match.start():]
+        else:
+            raise RuntimeError(
+                "Claude returned a response but it contained no markdown heading — "
+                "the digest body was never written. stop_reason was "
+                f"'{response.stop_reason}'. Raw output (first 500 chars):\n"
+                + digest_content[:500]
+            )
 
         print("Digest generated successfully!")
 
