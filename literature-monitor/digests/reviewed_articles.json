@@ -89,9 +89,25 @@
     "A decade-long real-world cohort (2016\u20132025): development of an individualized risk-stratification nomogram and evaluation of clinical utility for recurrent respiratory tract infections in children",
     "*Frontiers in Pediatrics, Published within our review period* | https://doi.org/10.3389/fped.2026.1806366",
     "Emerging Infectious Diseases Volume 32, Number 5\u2014May 2026",
-    "MMWR Updates - May 14, 2026"
+    "MMWR Updates - May 14, 2026",
+    "No unambiguously practice-changing articles identified this period.",
+    "2026 Updated Good Practice Recommendations for Outpatient Parenteral Antimicrobial Therapy (OPAT) in Adults and Children in the UK",
+    "*JAC-Antimicrobial Resistance, Published April 22, 2026* | https://doi.org/10.1093/jacamr/dlag044",
+    "Group A Streptococcus Disease Outbreak Associated with a Large Congregate Shelter, Chicago, Illinois, USA, October 2023\u2013January 2024",
+    "*Emerging Infectious Diseases (CDC), Volume 32, Number 6 \u2014 June 2026* | https://doi.org/10.3201/eid3206.250726",
+    "Outbreak of Wickerhamomyces anomalus (formerly Candida pelliculosa) Bloodstream Infections, Venezuela, 2022\u20132023",
+    "*Emerging Infectious Diseases (CDC), Volume 32, Number 6 \u2014 June 2026* | https://doi.org/10.3201/eid3206.251978",
+    "Companion Article \u2014 Same EID Issue:",
+    "Wickerhamomyces anomalus Fungemia during Healthcare-Associated Outbreak, Pereira, Colombia, 2025",
+    "*Emerging Infectious Diseases (CDC), Volume 32, Number 6 \u2014 June 2026* | https://doi.org/10.3201/eid3206.251980",
+    "Combined Assessment of Both W. anomalus Outbreak Reports:",
+    "Identification of Novel Recombinant Human Adenovirus Genotype B117 from Pediatric Cases, China",
+    "*Emerging Infectious Diseases (CDC), Volume 32, Number 6 \u2014 June 2026* | https://doi.org/10.3201/eid3206.250940",
+    "PIDJ Volume 45, Issue 6 (June 2026) \u2014 Table of Contents Note",
+    "MMWR Status Note (June 2026)",
+    "Journals searched this period:"
   ],
-  "last_run": "2026-05-31T08:32:13.223265",
+  "last_run": "2026-06-10T04:24:10.175923",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -671,6 +687,96 @@
       "key_finding": "Multi-faceted stewardship interventions including diagnostic stewardship and prescriber feedback reduce unnecessary antibiotic use by 25-40% in pediatric hospitals.",
       "study_type": "guideline",
       "digest_date": "2026-05-31"
+    },
+    {
+      "title": "2026 Updated Good Practice Recommendations for Outpatient Parenteral Antimicrobial Therapy (OPAT) in Adults and Children in the UK",
+      "doi": "https://doi.org/10.1093/jacamr/dlag044",
+      "journal": "JAC-Antimicrobial Resistance",
+      "date": "April 22, 2026",
+      "topics": [
+        "outpatient-parenteral-antimicrobial-therapy",
+        "OPAT",
+        "pediatric-IV-antimicrobials",
+        "home-based-antimicrobial-therapy",
+        "carer-administration",
+        "antimicrobial-stewardship",
+        "clinical-governance"
+      ],
+      "key_finding": "Updated BSAC recommendations support formal OPAT service delivery models with structured governance, demonstrating carer-administration as cost-effective and patient-preferred for selected children with defined safety protocols.",
+      "study_type": "guideline",
+      "digest_date": "2026-06-10"
+    },
+    {
+      "title": "Group A Streptococcus Disease Outbreak Associated with a Large Congregate Shelter, Chicago, Illinois, USA, October 2023\u2013January 2024",
+      "doi": "https://doi.org/10.3201/eid3206.250726",
+      "journal": "Emerging Infectious Diseases",
+      "date": "June 2026",
+      "topics": [
+        "group-A-streptococcus",
+        "GAS-invasive-disease",
+        "GAS-pharyngitis",
+        "outbreak-investigation",
+        "congregate-shelter",
+        "pediatric-disease",
+        "rapid-antigen-detection-testing"
+      ],
+      "key_finding": "Attack rate of 38.8% in a large congregate family shelter with one pediatric death from invasive GAS, highlighting the critical need for retesting in symptomatic children with initial negative RADT results during ongoing GAS outbreaks.",
+      "study_type": "case-series",
+      "digest_date": "2026-06-10"
+    },
+    {
+      "title": "Outbreak of Wickerhamomyces anomalus (formerly Candida pelliculosa) Bloodstream Infections, Venezuela, 2022\u20132023",
+      "doi": "https://doi.org/10.3201/eid3206.251978",
+      "journal": "Emerging Infectious Diseases",
+      "date": "June 2026",
+      "topics": [
+        "Wickerhamomyces-anomalus",
+        "fungal-bloodstream-infection",
+        "NICU-outbreak",
+        "PICU-outbreak",
+        "nosocomial-yeast-infection",
+        "resource-limited-settings",
+        "antifungal-susceptibility"
+      ],
+      "key_finding": "A multi-institutional outbreak of 110 W. anomalus bloodstream infections across 8 Venezuelan hospitals, predominantly affecting neonates in NICUs, demonstrates the emerging threat of underrecognized non-Candida yeasts in resource-limited settings with preserved antifungal susceptibility.",
+      "study_type": "case-series",
+      "digest_date": "2026-06-10"
+    },
+    {
+      "title": "Wickerhamomyces anomalus Fungemia during Healthcare-Associated Outbreak, Pereira, Colombia, 2025",
+      "doi": "https://doi.org/10.3201/eid3206.251980",
+      "journal": "Emerging Infectious Diseases",
+      "date": "June 2026",
+      "topics": [
+        "Wickerhamomyces-anomalus",
+        "fungal-bloodstream-infection",
+        "NICU-outbreak",
+        "neonatal-infection",
+        "nosocomial-transmission",
+        "echinocandin-susceptibility",
+        "resource-limited-settings"
+      ],
+      "key_finding": "Single-center outbreak of 10 W. anomalus cases in Pereira, Colombia, affecting predominantly neonates and one young child, with successful echinocandin-based treatment and preserved antifungal susceptibility patterns.",
+      "study_type": "case-series",
+      "digest_date": "2026-06-10"
+    },
+    {
+      "title": "Identification of Novel Recombinant Human Adenovirus Genotype B117 from Pediatric Cases, China",
+      "doi": "https://doi.org/10.3201/eid3206.250940",
+      "journal": "Emerging Infectious Diseases",
+      "date": "June 2026",
+      "topics": [
+        "human-adenovirus",
+        "HAdV-B117",
+        "viral-recombination",
+        "pediatric-pneumonia",
+        "severe-respiratory-infection",
+        "genomic-surveillance",
+        "novel-pathogen"
+      ],
+      "key_finding": "Identification of a novel recombinant human adenovirus (HAdV-B117) with capsid protein substitutions and similar in vitro replication kinetics to HAdV-B3/B7, emphasizing the need for continuous genomic surveillance to detect emerging recombinants.",
+      "study_type": "case-series",
+      "digest_date": "2026-06-10"
     }
   ]
 }
