@@ -9,7 +9,7 @@ on:
       force_run:
         description: 'Force run even if not a digest week'
         required: false
-        default: false
+        default: true
         type: boolean
 
 jobs:
@@ -27,8 +27,8 @@ jobs:
           FIRST_DIGEST_WEEK=$(($(date -d "2026-02-09" +%s) / 604800))
           WEEKS_SINCE=$((EPOCH_WEEK - FIRST_DIGEST_WEEK))
 
-          if [ "${{ github.event.inputs.force_run }}" == "true" ]; then
-            echo "Force run enabled"
+          if [ "${{ github.event.inputs.force_run }}" == "true" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Force run enabled (manual dispatch or force_run=true)"
             echo "should_run=true" >> $GITHUB_OUTPUT
           elif [ $((WEEKS_SINCE % 2)) -eq 0 ]; then
             echo "This is a digest week (week $WEEKS_SINCE since first digest)"
