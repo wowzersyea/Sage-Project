@@ -322,10 +322,26 @@
         @keyframes capsuleFloat{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
         .capsule-nav:not(.open) .pill{ animation:capsuleFloat 4s ease-in-out infinite; }
         .hero-buttons-fallback{ display:none; }
-        /* On smaller screens, drop the capsule and show the simple buttons */
+        .capsule-hint .hint-touch{ display:none; }
+        /* On phones/tablets the capsule shrinks and beads stack in a tighter grid (positions set in JS) */
         @media (max-width: 880px){
-            .capsule-nav{ display:none; }
-            .hero-buttons-fallback{ display:flex; }
+            .capsule-hint .hint-desktop{ display:none; }
+            .capsule-hint .hint-touch{ display:inline; }
+            .capsule-nav{ width:100%; height:620px; margin-top:1rem; }
+            .pill{ width:248px; height:88px; }
+            .pill-half{ width:128px; height:88px; }
+            .pill-left{ border-radius:44px 12px 12px 44px; }
+            .pill-right{ border-radius:12px 44px 44px 12px; }
+            .ghost-beads{ gap:9px; padding-left:18px; }
+            .ghost-beads span{ width:17px; height:17px; }
+            .capsule-nav.open .pill-left{ transform:translateX(-44px) rotate(-9deg); }
+            .capsule-nav.open .pill-right{ transform:translateX(44px) rotate(9deg); }
+            .beads{ top:92px; }
+            .capsule-hint{ top:108px; }
+            .bead{ width:112px; }
+            .bead-sphere{ width:58px; height:58px; }
+            .bead-sphere svg{ width:24px; height:24px; }
+            .bead-label{ font-size:0.78rem; padding:0.22rem 0.6rem; }
         }
 
         .btn {
@@ -1237,11 +1253,15 @@
                     <div class="pill-seam"></div>
                 </div>
                 <div class="beads" id="capsuleBeads"></div>
-                <div class="capsule-hint">↓ hover to open · click to pin</div>
+                <div class="capsule-hint">
+                    <span class="hint-desktop">↓ hover to open · click to pin</span>
+                    <span class="hint-touch">tap the capsule to open</span>
+                </div>
             </div>
 
-            <!-- Mobile/no-JS fallback -->
-            <div class="hero-buttons hero-buttons-fallback">
+            <!-- No-JS fallback: the capsule needs JS, so show buttons when it's unavailable -->
+            <noscript>
+            <div class="hero-buttons hero-buttons-fallback" style="display:flex;">
                 <a href="#tools" class="btn btn-primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"/>
@@ -1261,6 +1281,7 @@
                     Latest Podcast
                 </a>
             </div>
+            </noscript>
 
             <div class="stats-bar">
                 <div class="stat">
@@ -1545,34 +1566,63 @@
                 { label:'Podcast', href:'#podcast', color:'#9d8cb8',
                   icon:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>' },
             ];
-            const colGap = 140, rowDrop = 90, baseDrop = 70;
             const n = TABS.length, mid = (n-1)/2;
-            TABS.forEach((t,i)=>{
-                const tx = (i - mid) * colGap;
-                const ty = baseDrop + (i % 2 === 1 ? rowDrop : 0);
+            const beadEls = TABS.map(function(t,i){
                 const a = document.createElement('a');
                 a.className = 'bead'; a.href = t.href;
-                a.style.setProperty('--tx', tx.toFixed(1)+'px');
-                a.style.setProperty('--ty', ty.toFixed(1)+'px');
                 a.style.transitionDelay = (i*55 + 120)+'ms';
                 a.innerHTML =
                     '<div class="bead-sphere" style="--bead:'+t.color+'">'
                     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+t.icon+'</svg>'
                     + '</div><div class="bead-label">'+t.label+'</div>';
                 beadsEl.appendChild(a);
+                return a;
             });
 
+            // Position the beads responsively: a wide staggered fan on desktop,
+            // a compact 2-column grid on phones. Re-run on resize/orientation change.
+            function layoutBeads(){
+                const narrow = window.matchMedia('(max-width: 880px)').matches;
+                beadEls.forEach(function(a,i){
+                    let tx, ty;
+                    if (narrow){
+                        const col = (i % 2 === 0) ? -1 : 1;   // left / right column
+                        const row = Math.floor(i/2);
+                        tx = col * 84;
+                        ty = 60 + row * 118;
+                    } else {
+                        tx = (i - mid) * 140;
+                        ty = 70 + (i % 2 === 1 ? 90 : 0);     // stagger odd beads downward
+                    }
+                    a.style.setProperty('--tx', tx.toFixed(1)+'px');
+                    a.style.setProperty('--ty', ty.toFixed(1)+'px');
+                });
+            }
+            layoutBeads();
+            let resizeT;
+            window.addEventListener('resize', function(){ clearTimeout(resizeT); resizeT = setTimeout(layoutBeads, 150); });
+
+            const isTouch = window.matchMedia('(hover: none)').matches;
             let closeTimer;
             function openNav(){ clearTimeout(closeTimer); nav.classList.add('open'); pill.setAttribute('aria-expanded','true'); }
             function closeNav(){ nav.classList.remove('open','pinned'); pill.setAttribute('aria-expanded','false'); }
-            nav.addEventListener('mouseenter', openNav);
-            nav.addEventListener('mouseleave', function(){
-                if (nav.classList.contains('pinned')) return;
-                clearTimeout(closeTimer);
-                closeTimer = setTimeout(closeNav, 260);
+            // Hover-to-open only where hover exists (desktop). Touch devices use tap.
+            if (!isTouch){
+                nav.addEventListener('mouseenter', openNav);
+                nav.addEventListener('mouseleave', function(){
+                    if (nav.classList.contains('pinned')) return;
+                    clearTimeout(closeTimer);
+                    closeTimer = setTimeout(closeNav, 260);
+                });
+            }
+            // Tap/click the capsule to toggle open (works on touch and desktop).
+            pill.addEventListener('click', function(e){
+                e.stopPropagation();
+                const willOpen = !nav.classList.contains('open');
+                nav.classList.toggle('pinned', willOpen);
+                if (willOpen) openNav(); else closeNav();
             });
-            pill.addEventListener('click', function(e){ e.stopPropagation(); nav.classList.toggle('pinned'); openNav(); });
-            pill.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nav.classList.toggle('pinned'); openNav(); }});
+            pill.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pill.click(); }});
             document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeNav(); });
             document.addEventListener('click', function(e){ if(!nav.contains(e.target)) closeNav(); });
         })();
