@@ -261,6 +261,73 @@
             opacity: 0;
         }
 
+        /* ─── Capsule navigation ─────────────────────────────── */
+        .capsule-nav{
+            position:relative; width:1040px; max-width:96vw; height:430px;
+            margin:1.5rem auto 0; display:flex; align-items:flex-start; justify-content:center;
+            animation: fadeInUp 0.6s ease 0.3s forwards; opacity:0;
+        }
+        .capsule-hint{ position:absolute; top:138px; left:50%; transform:translateX(-50%);
+            font-size:0.82rem; color:var(--text-muted); letter-spacing:0.02em; white-space:nowrap;
+            transition:opacity .3s ease; }
+        .capsule-nav.open .capsule-hint{ opacity:0; }
+        .pill{ position:relative; width:340px; height:118px; cursor:pointer; z-index:5; margin-top:6px;
+            filter:drop-shadow(0 20px 38px rgba(0,0,0,0.5));
+            transition:transform .6s cubic-bezier(.34,1.45,.6,1); }
+        .capsule-nav.open .pill{ transform:translateY(-8px); }
+        .pill-half{ position:absolute; top:0; height:118px; width:174px;
+            transition:transform .85s cubic-bezier(.22,1,.36,1); transition-delay:.16s; }
+        .pill-left{ left:0; border-radius:59px 14px 14px 59px;
+            background:
+                linear-gradient(160deg, rgba(255,255,255,0.30), rgba(255,255,255,0) 42%),
+                linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            box-shadow:inset 0 3px 9px rgba(255,255,255,0.28), inset 0 -11px 20px rgba(0,0,0,0.18); }
+        .pill-right{ right:0; border-radius:14px 59px 59px 14px;
+            background:
+                linear-gradient(160deg, rgba(255,255,255,0.24), rgba(255,255,255,0) 45%),
+                linear-gradient(135deg, rgba(200,229,199,0.32), rgba(127,168,130,0.18));
+            backdrop-filter:blur(2px);
+            box-shadow:inset 0 3px 9px rgba(255,255,255,0.20), inset 0 -11px 20px rgba(0,0,0,0.14);
+            overflow:hidden; }
+        .ghost-beads{ position:absolute; inset:0; display:flex; align-items:center; gap:12px;
+            padding-left:24px; opacity:0.5; transition:opacity .3s ease; }
+        .capsule-nav.open .ghost-beads{ opacity:0; }
+        .ghost-beads span{ width:21px; height:21px; border-radius:50%;
+            box-shadow:inset -3px -3px 4px rgba(0,0,0,0.2), inset 3px 3px 4px rgba(255,255,255,0.4); }
+        .pill-seam{ position:absolute; left:50%; top:14px; bottom:14px; width:2px; transform:translateX(-50%);
+            background:linear-gradient(180deg, transparent, rgba(255,255,255,0.4), transparent);
+            z-index:6; transition:opacity .3s ease; }
+        .capsule-nav.open .pill-seam{ opacity:0; }
+        .capsule-nav.open .pill-left{ transform:translateX(-52px) rotate(-9deg); }
+        .capsule-nav.open .pill-right{ transform:translateX(52px) rotate(9deg); }
+        .beads{ position:absolute; left:50%; top:114px; width:0; height:0; z-index:4; }
+        .bead{ position:absolute; left:0; top:0;
+            transform:translate(-50%,-50%) scale(.16); opacity:0; pointer-events:none;
+            transition:transform .7s cubic-bezier(.34,1.5,.6,1), opacity .45s ease;
+            text-decoration:none; text-align:center; width:128px; }
+        .capsule-nav.open .bead{ opacity:1; pointer-events:auto;
+            transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); }
+        .bead-sphere{ width:70px; height:70px; border-radius:50%; margin:0 auto 9px;
+            display:flex; align-items:center; justify-content:center;
+            background:radial-gradient(circle at 32% 28%, rgba(255,255,255,0.7), rgba(255,255,255,0) 46%), var(--bead);
+            box-shadow:0 10px 22px rgba(0,0,0,0.42), inset 0 -7px 14px rgba(0,0,0,0.22), inset 0 4px 7px rgba(255,255,255,0.45);
+            transition:transform .25s ease, box-shadow .25s ease; }
+        .bead-sphere svg{ width:29px; height:29px; color:#11140f; opacity:0.8; }
+        .bead:hover .bead-sphere{ transform:scale(1.15) translateY(-3px);
+            box-shadow:0 16px 30px rgba(0,0,0,0.5), inset 0 -7px 14px rgba(0,0,0,0.22), inset 0 4px 7px rgba(255,255,255,0.6); }
+        .bead-label{ display:inline-block; font-size:0.82rem; font-weight:600; color:var(--text-primary);
+            background:rgba(30,35,30,0.9); padding:0.26rem 0.7rem; border-radius:100px;
+            border:1px solid rgba(199,208,199,0.16); white-space:nowrap; line-height:1.3;
+            box-shadow:0 4px 12px rgba(0,0,0,0.34); }
+        @keyframes capsuleFloat{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+        .capsule-nav:not(.open) .pill{ animation:capsuleFloat 4s ease-in-out infinite; }
+        .hero-buttons-fallback{ display:none; }
+        /* On smaller screens, drop the capsule and show the simple buttons */
+        @media (max-width: 880px){
+            .capsule-nav{ display:none; }
+            .hero-buttons-fallback{ display:flex; }
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -1125,7 +1192,7 @@
                 </svg>
             </button>
             <nav id="main-nav">
-                <a href="#tools">Tools</a>
+                <a href="#tools">Learning Tools</a>
                 <a href="https://test.sageproject.xyz">Resident Assessment</a>
                 <a href="med-student-assessment/">Med Student</a>
                 <a href="antimicrobial-selection/">Antimicrobial Selection</a>
@@ -1149,11 +1216,32 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                 </svg>
-                Pediatric ID & Antimicrobial Stewardship Intelligence
+                Pediatric ID Education & Stewardship Training
             </div>
-            <h1>Clinical decision support for <span class="highlight">infectious disease</span></h1>
-            <p>Literature surveillance, empiric therapy guidance, stewardship analytics, and quality improvement tools for academic ID practice.</p>
-            <div class="hero-buttons">
+            <h1>Learn pediatric ID, <span class="highlight">one capsule at a time</span></h1>
+            <p>Literature, stewardship, and quality improvement that double as teaching tools — plus assessments built for students and residents.</p>
+
+            <!-- Capsule navigation: hover to open, click to pin. Mobile falls back to the buttons below. -->
+            <div class="capsule-nav" id="capsuleNav">
+                <div class="pill" id="capsulePill" role="button" tabindex="0" aria-label="Open navigation capsule" aria-expanded="false">
+                    <div class="pill-half pill-left"></div>
+                    <div class="pill-half pill-right">
+                        <div class="ghost-beads">
+                            <span style="background:var(--accent-lavender)"></span>
+                            <span style="background:#7eb8a8"></span>
+                            <span style="background:var(--accent-gold)"></span>
+                            <span style="background:var(--accent-sky)"></span>
+                            <span style="background:var(--accent-coral)"></span>
+                        </div>
+                    </div>
+                    <div class="pill-seam"></div>
+                </div>
+                <div class="beads" id="capsuleBeads"></div>
+                <div class="capsule-hint">↓ hover to open · click to pin</div>
+            </div>
+
+            <!-- Mobile/no-JS fallback -->
+            <div class="hero-buttons hero-buttons-fallback">
                 <a href="#tools" class="btn btn-primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"/>
@@ -1161,7 +1249,7 @@
                         <rect x="14" y="14" width="7" height="7"/>
                         <rect x="3" y="14" width="7" height="7"/>
                     </svg>
-                    Explore Tools
+                    Explore Learning Tools
                 </a>
                 <a href="#podcast" class="btn btn-secondary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1176,15 +1264,19 @@
 
             <div class="stats-bar">
                 <div class="stat">
-                    <div class="stat-value">4</div>
-                    <div class="stat-label">Clinical Tools</div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Assessments</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">15+</div>
-                    <div class="stat-label">Journals Monitored</div>
+                    <div class="stat-value">19</div>
+                    <div class="stat-label">Learning Domains</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">Bi-Weekly</div>
+                    <div class="stat-value">90+</div>
+                    <div class="stat-label">Practice Questions</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">9</div>
                     <div class="stat-label">Literature Digests</div>
                 </div>
             </div>
@@ -1192,8 +1284,8 @@
 
         <section class="tools-section" id="tools">
             <div class="section-header">
-                <h2>Clinical Toolkit</h2>
-                <p>Purpose-built tools for ID practice and antimicrobial stewardship</p>
+                <h2>Learning Tools</h2>
+                <p>Clinical instruments that double as teaching tools for ID training and stewardship</p>
             </div>
 
             <div class="tools-grid">
@@ -1430,6 +1522,61 @@
     </div>
 
     <script>
+        // ─── Capsule navigation ───────────────────────────────
+        (function(){
+            const nav = document.getElementById('capsuleNav');
+            const pill = document.getElementById('capsulePill');
+            const beadsEl = document.getElementById('capsuleBeads');
+            if(!nav || !pill || !beadsEl) return;
+
+            const TABS = [
+                { label:'Literature Digest', href:'literature-monitor/', color:'var(--accent-lavender)',
+                  icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
+                { label:'Empiric Therapy', href:'asp-advisor/', color:'#7eb8a8',
+                  icon:'<path d="M10.5 20.5 3 13a5 5 0 0 1 7-7l1.5 1.5"/><path d="m13.5 3.5 7.5 7.5a5 5 0 0 1-7 7"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/>' },
+                { label:'QI Dashboard', href:'qi-dashboard/', color:'var(--accent-gold)',
+                  icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
+                { label:'Resident Assessment', href:'https://test.sageproject.xyz', color:'var(--sage-600)',
+                  icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
+                { label:'Med Student', href:'med-student-assessment/', color:'var(--accent-sky)',
+                  icon:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>' },
+                { label:'Antimicrobial Selection', href:'antimicrobial-selection/', color:'var(--accent-coral)',
+                  icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
+                { label:'Podcast', href:'#podcast', color:'#9d8cb8',
+                  icon:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>' },
+            ];
+            const colGap = 140, rowDrop = 90, baseDrop = 70;
+            const n = TABS.length, mid = (n-1)/2;
+            TABS.forEach((t,i)=>{
+                const tx = (i - mid) * colGap;
+                const ty = baseDrop + (i % 2 === 1 ? rowDrop : 0);
+                const a = document.createElement('a');
+                a.className = 'bead'; a.href = t.href;
+                a.style.setProperty('--tx', tx.toFixed(1)+'px');
+                a.style.setProperty('--ty', ty.toFixed(1)+'px');
+                a.style.transitionDelay = (i*55 + 120)+'ms';
+                a.innerHTML =
+                    '<div class="bead-sphere" style="--bead:'+t.color+'">'
+                    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+t.icon+'</svg>'
+                    + '</div><div class="bead-label">'+t.label+'</div>';
+                beadsEl.appendChild(a);
+            });
+
+            let closeTimer;
+            function openNav(){ clearTimeout(closeTimer); nav.classList.add('open'); pill.setAttribute('aria-expanded','true'); }
+            function closeNav(){ nav.classList.remove('open','pinned'); pill.setAttribute('aria-expanded','false'); }
+            nav.addEventListener('mouseenter', openNav);
+            nav.addEventListener('mouseleave', function(){
+                if (nav.classList.contains('pinned')) return;
+                clearTimeout(closeTimer);
+                closeTimer = setTimeout(closeNav, 260);
+            });
+            pill.addEventListener('click', function(e){ e.stopPropagation(); nav.classList.toggle('pinned'); openNav(); });
+            pill.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nav.classList.toggle('pinned'); openNav(); }});
+            document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeNav(); });
+            document.addEventListener('click', function(e){ if(!nav.contains(e.target)) closeNav(); });
+        })();
+
         // Mobile menu toggle
         function toggleMobileMenu() {
             const nav = document.getElementById('main-nav');
@@ -1488,17 +1635,17 @@
         function normalizeOpsUrl(url) {
             if (!url) return '';
             let u = String(url).trim();
-            u = u.replace(/\\s+/g, '');
-            u = u.replace(/\\/$/, '');
-            if (!/^https?:\\/\\//i.test(u)) {
+            u = u.replace(/\s+/g, '');
+            u = u.replace(/\/$/, '');
+            if (!/^https?:\/\//i.test(u)) {
                 // If user typed "localhost:3000" etc, assume http.
-                if (/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/i.test(u)) {
+                if (/^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(u)) {
                     u = 'http://' + u;
                 } else {
                     u = 'https://' + u;
                 }
             }
-            return u.replace(/\\/$/, '');
+            return u.replace(/\/$/, '');
         }
 
         function getOpsUrl() {
