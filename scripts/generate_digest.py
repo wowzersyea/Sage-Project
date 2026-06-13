@@ -738,12 +738,27 @@ def _count_articles(content: str) -> tuple[int, int, int]:
 
 # Journals searched — single source of truth
 JOURNAL_LIST = [
+    # Pediatric ID
     ("PIDJ", "Pediatric Infectious Disease Journal"),
     ("JPIDS", "J. Pediatric Infectious Diseases Society"),
     ("CID", "Clinical Infectious Diseases"),
     ("Pediatrics", "Pediatrics (ID-relevant)"),
     ("JAMA Peds", "JAMA Pediatrics"),
+    # Antimicrobial Pharmacology & Resistance
     ("AAC", "Antimicrobial Agents &amp; Chemotherapy"),
+    ("JAC", "Journal of Antimicrobial Chemotherapy"),
+    ("JAC-AMR", "JAC-Antimicrobial Resistance"),
+    ("IJAA", "International Journal of Antimicrobial Agents"),
+    ("CMI", "Clinical Microbiology and Infection"),
+    # Precision Dosing / PK/PD
+    ("Clin PK", "Clinical Pharmacokinetics"),
+    ("TDM", "Therapeutic Drug Monitoring"),
+    ("Pharmacotherapy", "Pharmacotherapy"),
+    ("Pediatric Drugs", "Pediatric Drugs"),
+    # ASP / Outcomes
+    ("ASHE", "Antimicrobial Stewardship &amp; Healthcare Epidemiology"),
+    ("OFID", "Open Forum Infectious Diseases"),
+    # High-impact
     ("NEJM", "New England Journal of Medicine"),
     ("JAMA", "JAMA"),
     ("Lancet ID", "Lancet Infectious Diseases"),
