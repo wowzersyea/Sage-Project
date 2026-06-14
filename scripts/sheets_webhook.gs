@@ -2,7 +2,12 @@
 // Deploy as Google Apps Script Web App:
 //   Extensions → Apps Script → paste this → Deploy → New deployment
 //   Type: Web App | Execute as: Me | Who has access: Anyone
-//   Copy the Web App URL → paste into SHEETS_ENDPOINT in med-student-assessment/index.html
+//   Copy the Web App URL → paste into SHEETS_ENDPOINT in:
+//     - med-student-assessment/index.html
+//     - antimicrobial-selection/index.html
+//     - components/AssessmentForm.tsx  (resident, Next.js app on home server)
+//
+// Each assessment routes to its own tab in the Sheet.
 
 // Each assessment type gets its own tab. Falls back to 'Responses' if no type sent.
 function tabNameFor(assessmentType) {
@@ -51,16 +56,17 @@ function doPost(e) {
             headerRange.setFontWeight('bold');
         }
 
-        // Build row
+        // Build row — handle both domain-scored (med student/antimicrobial) and
+        // raw-answers (resident Next.js app which scores server-side)
         const row = [
             data.timestamp,
             data.name,
-            data.year,
-            data.school,
+            data.year || data.email,  // resident sends email not year
+            data.school || (data.goals ? 'Resident' : '—'),
             data.email,
-            data.overallScore,
-            data.correct,
-            data.total
+            data.overallScore || '—',
+            data.correct || (data.answers ? data.answers.length : '—'),
+            data.total || data.totalQuestions || '—'
         ];
 
         // Domain columns (up to 10 domains)
