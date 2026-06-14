@@ -614,6 +614,7 @@
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
+const SHEETS_ENDPOINT = ''; // paste your Google Apps Script Web App URL here
 
 // ─── QUESTION BANK ───────────────────────────────────────────────────────────
 const DOMAINS = [
@@ -1276,6 +1277,9 @@ function showResults() {
     // Answer sheet
     buildAnswerSheet();
 
+    // Auto-save to Google Sheets (silent, no student action needed)
+    saveResultsToSheet(pct, totalCorrect, totalAsked);
+
     // Report button
     document.getElementById('send-report-btn').onclick = () => sendFacultyReport(pct, totalCorrect, totalAsked);
 }
@@ -1331,6 +1335,54 @@ function buildAnswerSheet() {
             sheet.appendChild(item);
         });
     });
+}
+
+async function saveResultsToSheet(pct, correct, total) {
+    if (!SHEETS_ENDPOINT) return; // not configured yet
+
+    const domainBreakdown = results.map(r => {
+        const asked = r.tiers.length;
+        const corr = r.tiers.filter(t => t.correct).length;
+        const maxTier = asked > 0 ? Math.max(...r.tiers.map(t => t.tier)) : -1;
+        return {
+            domain: r.domainName,
+            correct: corr,
+            asked: asked,
+            maxTier: maxTier + 1,
+            answers: r.tiers.map(t => ({
+                tier: t.tier + 1,
+                question: t.question.text,
+                selected: t.question.options[t.selectedOption],
+                correct: t.correct,
+                correctAnswer: t.question.options[t.question.correct]
+            }))
+        };
+    });
+
+    const payload = {
+        timestamp: new Date().toISOString(),
+        name: student.name,
+        year: student.year,
+        school: student.school,
+        email: student.email,
+        overallScore: pct,
+        correct: correct,
+        total: total,
+        domains: domainBreakdown
+    };
+
+    try {
+        await fetch(SHEETS_ENDPOINT, {
+            method: 'POST',
+            mode: 'no-cors', // required for Apps Script
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        console.log('Results saved to Sheets');
+    } catch (e) {
+        console.warn('Could not save to Sheets:', e);
+        // Fail silently — student experience unaffected
+    }
 }
 
 function sendFacultyReport(pct, correct, total) {
