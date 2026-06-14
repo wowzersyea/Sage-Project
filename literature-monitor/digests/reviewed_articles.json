@@ -105,9 +105,30 @@
     "*Emerging Infectious Diseases (CDC), Volume 32, Number 6 \u2014 June 2026* | https://doi.org/10.3201/eid3206.250940",
     "PIDJ Volume 45, Issue 6 (June 2026) \u2014 Table of Contents Note",
     "MMWR Status Note (June 2026)",
-    "Journals searched this period:"
+    "Journals searched this period:",
+    "\u26a0\ufe0f EBOLA DISEASE (BUNDIBUGYO VIRUS) \u2014 ACTIVE PUBLIC HEALTH EMERGENCY OF INTERNATIONAL CONCERN (PHEIC)",
+    "Immediate implications for U.S. pediatric ID/ASP clinicians:",
+    "\u26a0\ufe0f MEASLES EMERGENCY \u2014 2,073 CONFIRMED U.S. CASES IN 2026 YTD",
+    "Nirsevimab Effectiveness and RSV Epidemiology in Infants: 2024 Results from the Australian Sentinel Hospital Network (FluCAN-PAEDS)",
+    "*The Pediatric Infectious Disease Journal, Vol. 45, Issue 6, pp. 554\u2013560, June 2026* | https://doi.org/10.1097/INF.0000000000005XXX *(see also Eurosurveillance cross-reference: https://doi.org/10.2807/1560-7917.ES.2026.31.2.2500275)*",
+    "Characteristics of Patients Hospitalized with Measles During an Outbreak \u2014 West Texas, January\u2013March 2025",
+    "*MMWR Morbidity and Mortality Weekly Report, Vol. 75, No. 20, pp. 252\u2013257, May 28, 2026* | https://doi.org/10.15585/mmwr.mm7520a1",
+    "Measles Outbreak in a Child Care Facility \u2014 Lubbock, Texas, March\u2013April 2025",
+    "*MMWR Morbidity and Mortality Weekly Report, Vol. 75, No. 21, pp. 266\u2013270, June 4, 2026* | https://doi.org/10.15585/mmwr.mm7521a1",
+    "Modeled Scenario Projections and Risk Assessment for the Ebola Disease Outbreak Caused by Bundibugyo Virus, 2026",
+    "*MMWR Early Release, June 5, 2026 (posted online); MMWR Vol. 75, No. 22, June 11, 2026* | Projections: https://doi.org/10.15585/mmwr.mm7522e1 | Risk Assessment: https://doi.org/10.15585/mmwr.mm7522e2 | Field Notes: https://doi.org/10.15585/mmwr.mm7522e3",
+    "BCG Vaccination Associated with Reduced Risk of PFAPA Syndrome \u2014 Nationwide Matched Case-Control Study (medRxiv preprint, posted January 2026)",
+    "*medRxiv preprint* | https://doi.org/10.64898/2026.01.04.26343402",
+    "\ud83c\uddfa\ud83c\uddf8 Measles Situational Update \u2014 June 14, 2026",
+    "Key AAP Red Book tracker note:",
+    "\ud83d\udd34 EBOLA/BUNDIBUGYO VIRUS \u2014 NO APPROVED TREATMENT OR VACCINE",
+    "Clinical guidance for healthcare workers managing a suspected BVD case:",
+    "\ud83d\udd34 MEASLES \u2014 IG SUPPLY AWARENESS",
+    "JPIDS gap this period:",
+    "PIDJ June 2026 (Vol. 45, Issue 6) full TOC:",
+    "Measles update cadence:"
   ],
-  "last_run": "2026-06-10T04:24:10.175923",
+  "last_run": "2026-06-14T08:58:52.788361",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -777,6 +798,96 @@
       "key_finding": "Identification of a novel recombinant human adenovirus (HAdV-B117) with capsid protein substitutions and similar in vitro replication kinetics to HAdV-B3/B7, emphasizing the need for continuous genomic surveillance to detect emerging recombinants.",
       "study_type": "case-series",
       "digest_date": "2026-06-10"
+    },
+    {
+      "title": "Nirsevimab Effectiveness and RSV Epidemiology in Infants: 2024 Results from the Australian Sentinel Hospital Network (FluCAN-PAEDS)",
+      "doi": "https://doi.org/10.1097/INF.0000000000005XXX",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "June 2026",
+      "topics": [
+        "nirsevimab",
+        "RSV-prevention",
+        "monoclonal-antibody",
+        "maternal-vaccination",
+        "real-world-effectiveness",
+        "hospitalization-prevention",
+        "infant-RSV"
+      ],
+      "key_finding": "Nirsevimab demonstrated 82\u201390% effectiveness against RSV hospitalization in infants, with maternal vaccine effectiveness at 80.8% and nirsevimab at 89.5%, consistent with prior effectiveness estimates and supporting continued implementation.",
+      "study_type": "case-control",
+      "digest_date": "2026-06-14"
+    },
+    {
+      "title": "Characteristics of Patients Hospitalized with Measles During an Outbreak \u2014 West Texas, January\u2013March 2025",
+      "doi": "https://doi.org/10.15585/mmwr.mm7520a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "May 28, 2026",
+      "topics": [
+        "measles",
+        "outbreak-response",
+        "hospitalization-rates",
+        "unvaccinated-children",
+        "pneumonia-complication",
+        "vaccine-preventable-disease",
+        "pediatric-emergency"
+      ],
+      "key_finding": "Of 325 measles cases in West Texas, 60 (18.5%) were hospitalized\u2014predominantly unvaccinated children with pneumonia occurring in 72% of hospitalized patients\u2014demonstrating severe disease even in previously healthy infants and children.",
+      "study_type": "case-series",
+      "digest_date": "2026-06-14"
+    },
+    {
+      "title": "Measles Outbreak in a Child Care Facility \u2014 Lubbock, Texas, March\u2013April 2025",
+      "doi": "https://doi.org/10.15585/mmwr.mm7521a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "June 4, 2026",
+      "topics": [
+        "measles",
+        "childcare-outbreak",
+        "nonmedical-exemptions",
+        "early-MMR-dosing",
+        "infants-6-11-months",
+        "herd-immunity",
+        "outbreak-control"
+      ],
+      "key_finding": "Eight confirmed measles cases in a Texas childcare facility prompted emergency modification of MMR timing (first dose 6\u201311 months) and illustrated the critical vulnerability of infants under 12 months who rely on herd immunity in low-vaccination communities.",
+      "study_type": "case-series",
+      "digest_date": "2026-06-14"
+    },
+    {
+      "title": "Modeled Scenario Projections and Risk Assessment for the Ebola Disease Outbreak Caused by Bundibugyo Virus, 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7522e1 / https://doi.org/10.15585/mmwr.mm7522e2 / https://doi.org/10.15585/mmwr.mm7522e3",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "June 5\u201311, 2026",
+      "topics": [
+        "Bundibugyo-virus",
+        "Ebola-disease",
+        "PHEIC",
+        "transmission-modeling",
+        "case-isolation",
+        "outbreak-control",
+        "pediatric-filovirus"
+      ],
+      "key_finding": "As of June 2, 2026, 378 confirmed BVD cases and 63 deaths were reported; CDC modeling showed effective case isolation (70% entry rate) would prevent outbreak exceeding 10,000 cases in 3 months; U.S. pediatric risk assessed as low with emphasis on supportive care given absence of approved vaccine or treatment.",
+      "study_type": "other",
+      "digest_date": "2026-06-14"
+    },
+    {
+      "title": "BCG Vaccination Associated with Reduced Risk of PFAPA Syndrome \u2014 Nationwide Matched Case-Control Study",
+      "doi": "https://doi.org/10.64898/2026.01.04.26343402",
+      "journal": "medRxiv preprint",
+      "date": "January 2026",
+      "topics": [
+        "BCG-vaccination",
+        "PFAPA-syndrome",
+        "non-specific-immune-benefits",
+        "periodic-fever",
+        "antimicrobial-stewardship",
+        "diagnostic-stewardship",
+        "pediatric-immunization"
+      ],
+      "key_finding": "Nationwide Israeli matched case-control study (N=459,993) found BCG vaccination associated with reduced PFAPA risk, suggesting potential non-specific immune benefit and earlier diagnosis recognition that could reduce unnecessary antibiotic courses.",
+      "study_type": "case-control",
+      "digest_date": "2026-06-14"
     }
   ]
 }
