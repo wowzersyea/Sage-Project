@@ -9,6 +9,17 @@
 //
 // Each assessment routes to its own tab in the Sheet.
 
+// The spreadsheet that results are written to. Taken from the sheet URL:
+//   docs.google.com/spreadsheets/d/<THIS_ID>/edit
+// Using openById() instead of getActiveSpreadsheet() means the script works
+// even when it's a standalone project (not bound to the sheet).
+const SPREADSHEET_ID = '1vtv38Ld3utmwq957a5voIAgiz8W6ySkTo7YE7dPNNKw';
+
+function getSpreadsheet() {
+    if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
+    return SpreadsheetApp.getActiveSpreadsheet();
+}
+
 // Each assessment type gets its own tab. Falls back to 'Responses' if no type sent.
 function tabNameFor(assessmentType) {
     switch (assessmentType) {
@@ -23,7 +34,7 @@ function tabNameFor(assessmentType) {
 function doPost(e) {
     try {
         const data = JSON.parse(e.postData.contents);
-        const ss = SpreadsheetApp.getActiveSpreadsheet();
+        const ss = getSpreadsheet();
         const SHEET_NAME = tabNameFor(data.assessmentType);
         let sheet = ss.getSheetByName(SHEET_NAME);
 
