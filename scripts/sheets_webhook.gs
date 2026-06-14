@@ -69,9 +69,11 @@ function doPost(e) {
             data.total || data.totalQuestions || '—'
         ];
 
-        // Domain columns (up to 10 domains)
+        // Domain columns (up to 10 domains). Resident submissions have no
+        // domains array (they score server-side), so default to empty.
+        const domains = data.domains || [];
         for (let i = 0; i < 10; i++) {
-            const d = data.domains[i];
+            const d = domains[i];
             if (d && d.asked > 0) {
                 row.push(Math.round((d.correct / d.asked) * 100) + '%');
                 row.push('Tier ' + d.maxTier);
@@ -106,6 +108,47 @@ function sendFacultyNotification(data) {
     const date = new Date(data.timestamp).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
+
+    // ── Resident-style payload (no domains; has goals + raw answers) ───────────
+    if (!data.domains) {
+        let goalsBlock = '';
+        if (data.goals) {
+            goalsBlock =
+`\nPRE-ROTATION GOALS
+  Discomfort:   ${data.goals.discomfort || '—'}
+  Antibiotics:  ${data.goals.antibiotics || '—'}
+  Past case:    ${data.goals.pastCase || '—'}
+  Rotation goal: ${data.goals.rotationGoal || '—'}\n`;
+        }
+
+        let answersBlock = '';
+        (data.answers || []).forEach(a => {
+            answersBlock += `  ${a.questionId}: ${a.answer}\n`;
+        });
+
+        const rSubject = `[Sage${data.assessmentType ? ' · ' + data.assessmentType : ''}] ${data.name} — ${(data.answers || []).length}/${data.totalQuestions || '?'} answered`;
+        const rBody =
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SAGE PROJECT — RESIDENT ASSESSMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Name:  ${data.name}
+Email: ${data.email}
+Date:  ${date}
+${goalsBlock}
+ANSWERS (${(data.answers || []).length}/${data.totalQuestions || '?'})
+${answersBlock}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Full results and raw data saved in the Sage Project Google Sheet.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+        try {
+            MailApp.sendEmail({ to: FACULTY_EMAIL, cc: data.email, subject: rSubject, body: rBody });
+        } catch (e) {
+            console.warn('Email notification failed:', e);
+        }
+        return;
+    }
 
     // ── Domain breakdown with missed questions ────────────────────────────────
     let domainSections = '';
