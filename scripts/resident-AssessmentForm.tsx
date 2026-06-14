@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 // ─── Sage Project — Google Sheets save ───────────────────────────────────────
 // Paste your Google Apps Script Web App URL here (same URL as the other
 // assessments). Leave blank to disable saving.
-const SHEETS_ENDPOINT = "";
+const SHEETS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzVGqv0Ot-L9BtUzcWhq8XTpmOEZSGqVFwD0kPLSRfKBFVvTlRLMdzmtWXZuaPf6adz/exec";
 
 type Stage = "loading" | "intake" | "questions" | "submitting" | "error";
 
