@@ -10,6 +10,7 @@ function tabNameFor(assessmentType) {
         case 'Med Student':   return 'Med Student';
         case 'Resident':      return 'Resident';
         case 'Antimicrobial': return 'Antimicrobial';
+        case 'Antimicrobial Selection': return 'Antimicrobial Selection';
         default:              return 'Responses';
     }
 }
