@@ -103,7 +103,7 @@ function doPost(e) {
 }
 
 function sendFacultyNotification(data) {
-    const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // update to real email
+    const FACULTY_EMAIL = 'maemurph@utmb.edu'; // update to real email
 
     const date = new Date(data.timestamp).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
