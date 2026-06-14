@@ -615,6 +615,7 @@
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
 const SHEETS_ENDPOINT = ''; // paste your Google Apps Script Web App URL here
+const ASSESSMENT_TYPE = 'Antimicrobial'; // identifies this assessment in the shared Sheet
 
 // ─── QUESTION BANK ───────────────────────────────────────────────────────────
 const DOMAINS = [
@@ -1361,6 +1362,7 @@ async function saveResultsToSheet(pct, correct, total) {
     });
 
     const payload = {
+        assessmentType: ASSESSMENT_TYPE,
         timestamp: new Date().toISOString(),
         name: student.name,
         year: student.year,

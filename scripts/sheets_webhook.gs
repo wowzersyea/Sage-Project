@@ -4,12 +4,21 @@
 //   Type: Web App | Execute as: Me | Who has access: Anyone
 //   Copy the Web App URL → paste into SHEETS_ENDPOINT in med-student-assessment/index.html
 
-const SHEET_NAME = 'Responses';
+// Each assessment type gets its own tab. Falls back to 'Responses' if no type sent.
+function tabNameFor(assessmentType) {
+    switch (assessmentType) {
+        case 'Med Student':   return 'Med Student';
+        case 'Resident':      return 'Resident';
+        case 'Antimicrobial': return 'Antimicrobial';
+        default:              return 'Responses';
+    }
+}
 
 function doPost(e) {
     try {
         const data = JSON.parse(e.postData.contents);
         const ss = SpreadsheetApp.getActiveSpreadsheet();
+        const SHEET_NAME = tabNameFor(data.assessmentType);
         let sheet = ss.getSheetByName(SHEET_NAME);
 
         // Create sheet with headers on first run
@@ -128,7 +137,7 @@ function sendFacultyNotification(data) {
         missedSummary = `${totalMissed} question${totalMissed > 1 ? 's' : ''} missed (see breakdown below).`;
     }
 
-    const subject = `[Sage] ${data.name} — ${data.overallScore}% — ${totalMissed} missed`;
+    const subject = `[Sage${data.assessmentType ? ' · ' + data.assessmentType : ''}] ${data.name} — ${data.overallScore}% — ${totalMissed} missed`;
     const body =
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SAGE PROJECT — ASSESSMENT REPORT
