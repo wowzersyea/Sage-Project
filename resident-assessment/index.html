@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pediatric ID Resident Assessment | Sage Project</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-3KEGTRRS0Z');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage-50: #1a1f1a;
+            --sage-100: #252b25;
+            --sage-200: #333b33;
+            --sage-300: #4a5a4b;
+            --sage-400: #6a806c;
+            --sage-500: #7fa882;
+            --sage-600: #8fbf92;
+            --sage-700: #a8d4ab;
+            --sage-800: #c5e5c7;
+            --sage-900: #e8f5e9;
+            --warm-50: #111411;
+            --accent-coral: #e07a5f;
+            --accent-gold: #d4a574;
+            --accent-sky: #81b0c4;
+            --accent-lavender: #b8a5d4;
+            --text-primary: #e0e8e0;
+            --text-secondary: #9bb09d;
+            --text-muted: #6a806c;
+            --surface: #181c18;
+            --surface-raised: #1e231e;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.4);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--warm-50);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .bg-gradient {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(184,165,212,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(127,168,130,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(212,165,116,0.05) 0%, transparent 70%),
+                var(--warm-50);
+            z-index: -1;
+        }
+
+        /* Header */
+        .site-header {
+            padding: 1rem 2rem;
+            background: rgba(17,20,17,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(199,208,199,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .site-header a { text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-icon svg { width: 20px; height: 20px; color: white; }
+        .logo-text { font-size: 1.1rem; font-weight: 600; color: var(--sage-700); }
+        .header-sep { color: var(--text-muted); margin: 0 4px; }
+        .header-title { font-size: 1rem; color: var(--text-secondary); font-weight: 400; }
+
+        /* Screens */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ─── INTAKE SCREEN ─── */
+        .intake-wrap {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+        }
+        .intake-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--sage-100); padding: 0.4rem 1rem;
+            border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+            color: var(--sage-600); margin-bottom: 1.5rem;
+        }
+        .intake-wrap h1 {
+            font-family: 'Source Serif 4', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 600; color: var(--sage-800);
+            line-height: 1.2; margin-bottom: 0.75rem;
+        }
+        .intake-wrap .subtitle {
+            color: var(--text-secondary); font-size: 1rem;
+            margin-bottom: 2rem; line-height: 1.6;
+        }
+        .domains-preview {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .domains-preview h4 {
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.08em; margin-bottom: 0.75rem;
+        }
+        .domain-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+        }
+        .domain-tag {
+            background: var(--sage-50); padding: 0.3rem 0.65rem;
+            border-radius: 100px; font-size: 0.78rem;
+            color: var(--sage-600); font-weight: 500;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label {
+            display: block; font-size: 0.88rem; font-weight: 500;
+            color: var(--text-secondary); margin-bottom: 0.4rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.8rem 1rem;
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif; font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: var(--sage-500);
+        }
+        .form-group select option { background: #1e231e; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .adaptive-info {
+            background: linear-gradient(135deg, rgba(127,168,130,0.08), rgba(129,176,196,0.06));
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.75rem;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+        .adaptive-info strong { color: var(--sage-600); }
+        .btn-start {
+            width: 100%; padding: 1rem;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            color: white; font-family: 'Outfit', sans-serif;
+            font-size: 1rem; font-weight: 600;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* ─── QUESTION SCREEN ─── */
+        .question-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+        .progress-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem; gap: 1rem;
+        }
+        .domain-label {
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .domain-name { font-size: 1rem; font-weight: 600; color: var(--sage-700); margin-top: 2px; }
+        .tier-indicator {
+            display: flex; gap: 6px; align-items: center;
+        }
+        .tier-pip {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--sage-200);
+            transition: background 0.3s ease;
+        }
+        .tier-pip.active { background: var(--sage-500); }
+        .tier-pip.done { background: var(--sage-400); }
+        .tier-label {
+            font-size: 0.78rem; font-weight: 500;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+        }
+        .tier-label.t1 { background: rgba(127,168,130,0.15); color: var(--sage-500); }
+        .tier-label.t2 { background: rgba(212,165,116,0.15); color: var(--accent-gold); }
+        .tier-label.t3 { background: rgba(224,122,95,0.15); color: var(--accent-coral); }
+
+        .domain-progress-bar {
+            height: 4px; background: var(--sage-100);
+            border-radius: 2px; margin-bottom: 2rem; overflow: hidden;
+        }
+        .domain-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--sage-500), var(--sage-600));
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .question-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-number {
+            font-size: 0.8rem; font-weight: 500;
+            color: var(--text-muted); margin-bottom: 0.75rem;
+        }
+        .question-text {
+            font-size: 1.05rem; color: var(--sage-800);
+            line-height: 1.65; font-weight: 400;
+        }
+        .options-list { list-style: none; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.65rem; }
+        .option-btn {
+            width: 100%; text-align: left;
+            padding: 0.9rem 1.1rem;
+            background: var(--sage-50);
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif; font-size: 0.95rem;
+            cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--sage-500);
+            background: rgba(127,168,130,0.08);
+        }
+        .option-letter {
+            font-weight: 600; color: var(--sage-500);
+            min-width: 20px; flex-shrink: 0; margin-top: 1px;
+        }
+        .option-btn.correct {
+            border-color: var(--sage-500);
+            background: rgba(127,168,130,0.15);
+        }
+        .option-btn.correct .option-letter { color: var(--sage-600); }
+        .option-btn.incorrect {
+            border-color: var(--accent-coral);
+            background: rgba(224,122,95,0.12);
+        }
+        .option-btn.incorrect .option-letter { color: var(--accent-coral); }
+        .option-btn:disabled { cursor: not-allowed; }
+
+        .feedback-card {
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1.25rem;
+            margin-top: 1rem;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            display: none;
+        }
+        .feedback-card.show { display: block; }
+        .feedback-card.correct-fb {
+            background: rgba(127,168,130,0.12);
+            border: 1px solid rgba(127,168,130,0.3);
+        }
+        .feedback-card.incorrect-fb {
+            background: rgba(224,122,95,0.1);
+            border: 1px solid rgba(224,122,95,0.25);
+        }
+        .feedback-header {
+            font-weight: 600; margin-bottom: 0.4rem;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .feedback-header.correct-h { color: var(--sage-600); }
+        .feedback-header.incorrect-h { color: var(--accent-coral); }
+        .feedback-body { color: var(--text-secondary); }
+
+        .next-btn {
+            margin-top: 1.25rem; padding: 0.85rem 2rem;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            color: white; font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem; font-weight: 600;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: none; align-items: center; gap: 8px;
+        }
+        .next-btn.show { display: inline-flex; }
+        .next-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+
+        /* ─── RESULTS SCREEN ─── */
+        .results-wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 5rem;
+        }
+        .results-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .score-ring {
+            width: 120px; height: 120px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        .score-ring svg { transform: rotate(-90deg); }
+        .score-ring-bg { fill: none; stroke: var(--sage-100); stroke-width: 8; }
+        .score-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+        .score-ring-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-pct { font-size: 1.6rem; font-weight: 700; color: var(--sage-700); line-height: 1; }
+        .score-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+        .results-hero h2 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.8rem; color: var(--sage-800); margin-bottom: 0.5rem;
+        }
+        .results-hero p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .domain-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+        .domain-result-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+        }
+        .domain-result-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .domain-result-name { font-weight: 600; color: var(--sage-700); font-size: 0.95rem; }
+        .domain-score-badge {
+            font-size: 0.8rem; font-weight: 600;
+            padding: 0.2rem 0.6rem; border-radius: 100px;
+        }
+        .score-high { background: rgba(127,168,130,0.2); color: var(--sage-600); }
+        .score-mid { background: rgba(212,165,116,0.2); color: var(--accent-gold); }
+        .score-low { background: rgba(224,122,95,0.2); color: var(--accent-coral); }
+        .domain-tier-bar {
+            display: flex; gap: 4px; margin-bottom: 0.5rem;
+        }
+        .tier-seg {
+            height: 6px; flex: 1; border-radius: 3px;
+            background: var(--sage-100);
+        }
+        .tier-seg.reached-correct { background: var(--sage-500); }
+        .tier-seg.reached-incorrect { background: var(--accent-coral); }
+        .tier-seg.not-reached { background: var(--sage-100); opacity: 0.4; }
+        .domain-result-detail { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem; }
+
+        /* Answer Sheet */
+        .answer-sheet-section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.4rem; color: var(--sage-800);
+            margin-bottom: 1.5rem; padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--sage-200);
+        }
+        .answer-item {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .answer-item-header {
+            display: flex; align-items: flex-start;
+            justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;
+        }
+        .answer-domain-tier {
+            display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+        }
+        .answer-q-text { font-size: 0.95rem; color: var(--sage-800); line-height: 1.55; }
+        .answer-choices { margin: 0.75rem 0; display: flex; flex-direction: column; gap: 0.35rem; }
+        .answer-choice {
+            font-size: 0.88rem; padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm); color: var(--text-muted);
+            display: flex; gap: 8px;
+        }
+        .answer-choice.is-correct { background: rgba(127,168,130,0.12); color: var(--sage-600); font-weight: 500; }
+        .answer-choice.is-selected-wrong { background: rgba(224,122,95,0.1); color: var(--accent-coral); }
+        .answer-choice.not-answered { opacity: 0.5; }
+        .rationale-box {
+            background: var(--sage-50);
+            border-left: 3px solid var(--sage-400);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 0.8rem 1rem;
+            margin-top: 0.75rem;
+        }
+        .rationale-label {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--sage-500); margin-bottom: 0.3rem;
+        }
+        .rationale-text { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+
+        /* Email report */
+        .report-section {
+            background: linear-gradient(135deg, rgba(127,168,130,0.08), rgba(129,176,196,0.06));
+            border: 1px solid var(--sage-200);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .report-section h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--sage-700); margin-bottom: 0.5rem;
+        }
+        .report-section p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; }
+        .report-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            color: white; font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 600;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+            text-decoration: none;
+        }
+        .report-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .retake-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--surface-raised);
+            color: var(--sage-600);
+            border: 1px solid var(--sage-200);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-left: 0.75rem;
+        }
+        .retake-btn:hover { border-color: var(--sage-400); }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .question-card { padding: 1.25rem; }
+            .domain-results { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+
+<header class="site-header">
+    <a href="/">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <span class="logo-text">Sage Project</span>
+    </a>
+    <span class="header-sep">›</span>
+    <span class="header-title">Pediatric ID Resident Assessment</span>
+</header>
+
+<!-- ─── SCREEN 1: INTAKE ─── -->
+<div id="screen-intake" class="screen active">
+    <div class="intake-wrap">
+        <div class="intake-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Pediatric ID · PL-3 Resident Assessment
+        </div>
+        <h1>Pediatric ID Resident Assessment</h1>
+        <p class="subtitle">An advanced adaptive assessment for PL-3 (PGY-3) pediatric residents covering the 10 core domains of inpatient pediatric infectious disease. Questions escalate in difficulty based on your answers, probing recognition, management, and nuanced clinical reasoning.</p>
+
+        <div class="domains-preview">
+            <h4>10 Domains Covered</h4>
+            <div class="domain-tags">
+                <span class="domain-tag">Sepsis & Septic Shock</span>
+                <span class="domain-tag">Antibiotic Stewardship</span>
+                <span class="domain-tag">Meningitis & CNS</span>
+                <span class="domain-tag">Bone & Joint</span>
+                <span class="domain-tag">Skin & Soft Tissue</span>
+                <span class="domain-tag">Respiratory</span>
+                <span class="domain-tag">UTI & Renal</span>
+                <span class="domain-tag">Immunocompromised Host</span>
+                <span class="domain-tag">PK/PD & Dosing</span>
+                <span class="domain-tag">Emerging Pathogens & IC</span>
+            </div>
+        </div>
+
+        <div class="adaptive-info">
+            <strong>How it works:</strong> Each domain starts with a recognition-level question. Answer correctly and the difficulty increases. Each domain has up to 3 tiers. Your score reflects both breadth and depth across all domains.
+        </div>
+
+        <form id="intake-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="f-name">Full Name</label>
+                    <input type="text" id="f-name" placeholder="Jane Smith" required>
+                </div>
+                <div class="form-group">
+                    <label for="f-year">PGY Year</label>
+                    <select id="f-year" required>
+                        <option value="">Select...</option>
+                        <option value="PGY-3">PGY-3</option>
+                        <option value="PGY-4">PGY-4</option>
+                        <option value="PGY-5">PGY-5</option>
+                        <option value="Fellow">Fellow</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="f-school">Residency Program</label>
+                <input type="text" id="f-school" placeholder="Children's Hospital of..." required>
+            </div>
+            <div class="form-group">
+                <label for="f-email">Your Email (for your copy of results)</label>
+                <input type="email" id="f-email" placeholder="you@hospital.edu" required>
+            </div>
+            <button type="submit" class="btn-start">
+                Begin Assessment
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ─── SCREEN 2: QUESTION ─── -->
+<div id="screen-question" class="screen">
+    <div class="question-wrap">
+        <div class="progress-header">
+            <div>
+                <div class="domain-label" id="q-domain-label">Domain</div>
+                <div class="domain-name" id="q-domain-name">Loading...</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                <span class="tier-label t1" id="q-tier-label">Tier 1</span>
+                <div class="tier-indicator" id="q-tier-pips"></div>
+            </div>
+        </div>
+        <div class="domain-progress-bar">
+            <div class="domain-progress-fill" id="q-progress-fill" style="width:0%"></div>
+        </div>
+        <div class="question-card">
+            <div class="question-number" id="q-number">Question 1 of 10</div>
+            <div class="question-text" id="q-text"></div>
+            <ul class="options-list" id="q-options"></ul>
+        </div>
+        <div class="feedback-card" id="q-feedback">
+            <div class="feedback-header" id="q-feedback-header"></div>
+            <div class="feedback-body" id="q-feedback-body"></div>
+        </div>
+        <button class="next-btn" id="q-next-btn">
+            <span id="q-next-label">Next Domain</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- ─── SCREEN 3: RESULTS ─── -->
+<div id="screen-results" class="screen">
+    <div class="results-wrap">
+        <div class="results-hero">
+            <div class="score-ring" id="score-ring-wrap">
+                <svg viewBox="0 0 120 120" width="120" height="120">
+                    <circle class="score-ring-bg" cx="60" cy="60" r="52"/>
+                    <circle class="score-ring-fill" id="score-ring-fill" cx="60" cy="60" r="52"
+                        stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                </svg>
+                <div class="score-ring-text">
+                    <div class="score-pct" id="score-pct-text">—</div>
+                    <div class="score-label">Overall</div>
+                </div>
+            </div>
+            <h2 id="results-headline">Assessment Complete</h2>
+            <p id="results-subline"></p>
+        </div>
+
+        <div class="domain-results" id="domain-results-grid"></div>
+
+        <div class="report-section">
+            <h3>Send Faculty Report</h3>
+            <p>Email a summary of your performance — domain scores, tier reached, and overall result — to your program director or ID attending.</p>
+            <button class="report-btn" id="send-report-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                Send Faculty Report
+            </button>
+            <button class="retake-btn" onclick="retake()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.18"/></svg>
+                Retake
+            </button>
+        </div>
+
+        <div class="answer-sheet-section">
+            <div class="section-title">Answer Sheet &amp; Rationale</div>
+            <div id="answer-sheet"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
+const SHEETS_ENDPOINT = ''; // paste your Google Apps Script Web App URL here
+
+// ─── QUESTION BANK ───────────────────────────────────────────────────────────
+const DOMAINS = [
+    {
+        id: 'sepsis',
+        name: 'Sepsis & Septic Shock Management',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 4-year-old presents with fever, tachycardia, prolonged capillary refill (4 seconds), and altered mental status. Per the Surviving Sepsis Campaign pediatric guidelines, what is the recommended initial fluid resuscitation approach in a setting with critical care available?',
+                options: [
+                    'A single 20 mL/kg bolus then reassess only if blood pressure remains low',
+                    'Up to 40–60 mL/kg in 10–20 mL/kg boluses over the first hour, reassessing after each for signs of fluid overload',
+                    'Maintenance fluids only, avoiding boluses to prevent pulmonary edema',
+                    'A 60 mL/kg bolus given rapidly over 5 minutes without reassessment'
+                ],
+                correct: 1,
+                rationale: 'The 2020 Surviving Sepsis Campaign pediatric guidelines recommend, in systems with intensive care available, administering fluid in 10–20 mL/kg boluses up to 40–60 mL/kg in the first hour titrated to clinical markers of cardiac output, reassessing after EACH bolus for signs of fluid overload (hepatomegaly, rales, worsening work of breathing). Boluses should be stopped if overload develops. The FEAST trial showed harm from aggressive bolus therapy in resource-limited settings without ventilatory support, which is why the recommendation is setting-dependent.'
+            },
+            {
+                tier: 2,
+                text: 'A 6-year-old with septic shock remains hypotensive with cold extremities and poor perfusion despite 60 mL/kg of fluid. Which vasoactive agent is the most appropriate first-line choice for cold (vasoconstricted, low cardiac output) shock?',
+                options: [
+                    'Norepinephrine',
+                    'Epinephrine',
+                    'Dopamine',
+                    'Phenylephrine'
+                ],
+                correct: 1,
+                rationale: 'In fluid-refractory pediatric septic shock, epinephrine is preferred for "cold shock" (vasoconstricted, low cardiac output — narrow pulse pressure, cool extremities, delayed capillary refill) because of its inotropic and chronotropic effects. Norepinephrine is preferred for "warm shock" (vasodilated, bounding pulses, flash capillary refill). The 2020 SSC guidelines recommend epinephrine or norepinephrine over dopamine, as dopamine was associated with higher mortality and arrhythmia in pediatric trials. Phenylephrine (pure alpha agonist) is not first-line.'
+            },
+            {
+                tier: 3,
+                text: 'An 8-year-old in refractory septic shock is on high-dose epinephrine and norepinephrine. A random cortisol returns at 9 mcg/dL. He has a history of recent prolonged high-dose corticosteroid use for asthma. What is the most appropriate next intervention?',
+                options: [
+                    'Withhold steroids; cortisol of 9 mcg/dL excludes adrenal insufficiency',
+                    'Administer stress-dose hydrocortisone (e.g., 50 mg/m²/day or 1–2 mg/kg) for catecholamine-resistant shock with risk of adrenal insufficiency',
+                    'Perform a high-dose ACTH stimulation test and withhold all steroids until results return',
+                    'Switch vasopressors to dopamine before considering any steroid therapy'
+                ],
+                correct: 1,
+                rationale: 'In catecholamine-resistant septic shock with suspected absolute or relative adrenal insufficiency — particularly with risk factors such as recent chronic corticosteroid exposure (HPA axis suppression), purpura fulminans, or known adrenal/pituitary disease — stress-dose hydrocortisone is recommended. A random cortisol of 9 mcg/dL during critical illness is inappropriately low and supports treatment. Therapy should not be delayed to await an ACTH stimulation test in an unstable patient. The 2020 SSC pediatric guidelines suggest hydrocortisone for fluid- and catecholamine-refractory shock.'
+            }
+        ]
+    },
+    {
+        id: 'stewardship',
+        name: 'Antibiotic Stewardship Principles',
+        questions: [
+            {
+                tier: 1,
+                text: 'Which of the following is the single most effective antimicrobial stewardship intervention for reducing unnecessary broad-spectrum antibiotic use once culture data return?',
+                options: [
+                    'Restricting all antibiotic orders to infectious disease approval',
+                    'De-escalation (streamlining) to the narrowest effective agent based on susceptibilities',
+                    'Routinely extending durations to ensure complete eradication',
+                    'Using combination therapy for all gram-negative infections'
+                ],
+                correct: 1,
+                rationale: 'De-escalation — narrowing empiric broad-spectrum therapy to the most targeted agent once organism identification and susceptibilities are available — is a core, evidence-based stewardship strategy. It reduces selective pressure for resistance, C. difficile risk, cost, and toxicity without compromising outcomes. Prospective audit and feedback plus formulary restriction are the two CDC/IDSA "core" interventions, but de-escalation is the practical mechanism most directly tied to reducing broad-spectrum exposure after cultures return.'
+            },
+            {
+                tier: 2,
+                text: 'A 3-year-old with community-acquired pneumonia improves on IV ampicillin. He is afebrile for 24 hours, tolerating oral intake, and hemodynamically stable. The team asks about IV-to-PO conversion. Which statement is most accurate?',
+                options: [
+                    'IV therapy must be completed for the full course because oral absorption is unreliable in children',
+                    'Early IV-to-PO switch (e.g., to high-dose amoxicillin) is appropriate once the child is clinically improving and tolerating oral intake, and shortens length of stay without worse outcomes',
+                    'Oral step-down should only occur after a minimum of 7 days of IV therapy',
+                    'A PICC line should be placed to complete a 14-day IV course at home'
+                ],
+                correct: 1,
+                rationale: 'For uncomplicated pediatric CAP, IV-to-PO conversion is appropriate once the child is clinically improving, afebrile or defervescing, and tolerating oral intake. High-dose amoxicillin achieves excellent serum levels and is recommended first-line for typical bacterial CAP (S. pneumoniae). Early switch reduces line complications, length of stay, and cost with equivalent outcomes — a key stewardship and value-based care principle. Prolonged IV therapy and unnecessary PICC placement expose children to avoidable harm.'
+            },
+            {
+                tier: 3,
+                text: 'A hospitalized adolescent reports a "penicillin allergy" described as a childhood rash without urticaria, angioedema, or anaphylaxis. He now needs treatment for a serious gram-positive infection best treated with a beta-lactam. What is the most appropriate stewardship-aligned action?',
+                options: [
+                    'Avoid all beta-lactams permanently and use vancomycin for any future infection',
+                    'Risk-stratify the allergy; for a low-risk, non-IgE-mediated history, proceed with a cephalosporin or pursue direct oral amoxicillin challenge / delabeling',
+                    'Administer the beta-lactam only after a full inpatient desensitization protocol regardless of severity',
+                    'Order penicillin-specific IgE serology and withhold all antibiotics until results return'
+                ],
+                correct: 1,
+                rationale: 'Roughly 90–95% of patients labeled penicillin-allergic are not truly allergic, and the label drives use of broader, more toxic agents (e.g., vancomycin, fluoroquinolones) with worse outcomes and more C. difficile. Penicillin allergy delabeling is now a recognized stewardship priority. Low-risk histories (benign childhood rash, remote, non-IgE features, no anaphylaxis/SJS/DRESS) can proceed with a cephalosporin (cross-reactivity is very low with dissimilar side chains) or undergo a direct oral amoxicillin challenge. Formal desensitization is reserved for true IgE-mediated allergy when the drug is essential.'
+            }
+        ]
+    },
+    {
+        id: 'meningitis',
+        name: 'Meningitis & CNS Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A previously healthy 3-year-old presents with fever, photophobia, and nuchal rigidity. Empiric therapy for bacterial meningitis beyond the neonatal period should include which combination to cover the most likely pathogens including resistant pneumococcus?',
+                options: [
+                    'Ceftriaxone plus vancomycin',
+                    'Ampicillin plus gentamicin',
+                    'Ceftriaxone alone',
+                    'Meropenem plus metronidazole'
+                ],
+                correct: 0,
+                rationale: 'Empiric therapy for bacterial meningitis in children beyond the neonatal period is vancomycin PLUS a third-generation cephalosporin (ceftriaxone or cefotaxime). Vancomycin is added to cover penicillin- and cephalosporin-resistant Streptococcus pneumoniae until susceptibilities are known. The cephalosporin covers S. pneumoniae, N. meningitidis, and H. influenzae. Ampicillin/gentamicin is the neonatal regimen (covering GBS, Listeria, E. coli). Ampicillin is added when Listeria is a concern (neonates, immunocompromised, age >50 in adults).'
+            },
+            {
+                tier: 2,
+                text: 'In pediatric bacterial meningitis, adjunctive dexamethasone has the best-established benefit for reducing sensorineural hearing loss with which organism, and what is the critical timing requirement?',
+                options: [
+                    'Neisseria meningitidis; give 24 hours after antibiotics',
+                    'Haemophilus influenzae type b; give before or with the first antibiotic dose',
+                    'Streptococcus pneumoniae; give only after 48 hours of antibiotics',
+                    'Group B Streptococcus; give at any point during the course'
+                ],
+                correct: 1,
+                rationale: 'Adjunctive dexamethasone (0.15 mg/kg q6h × 2–4 days) has its strongest evidence for reducing hearing loss in Haemophilus influenzae type b meningitis. The critical principle is timing: it must be given BEFORE or WITH the first dose of antibiotics (ideally 10–20 minutes prior) to blunt the inflammatory cytokine surge triggered by bacterial lysis. If antibiotics have already been administered, starting dexamethasone provides little benefit. Benefit for pneumococcal meningitis in children is less clearly established, and it is not recommended for neonatal meningitis.'
+            },
+            {
+                tier: 3,
+                text: 'A 7-year-old with a recently placed ventriculoperitoneal (VP) shunt develops fever, headache, and abdominal pain. CSF from the shunt shows pleocytosis; cultures grow coagulase-negative staphylococci. Which management strategy is most consistent with IDSA guidance for CSF shunt infection?',
+                options: [
+                    'IV antibiotics alone with the hardware left in place, as removal is rarely necessary',
+                    'Removal of the infected shunt, external ventricular drainage with intraventricular/IV antibiotics, then reimplantation after CSF sterilization',
+                    'A single dose of intrathecal vancomycin without hardware removal',
+                    'Oral antibiotics and outpatient follow-up given the low virulence of the organism'
+                ],
+                correct: 1,
+                rationale: 'Coagulase-negative staphylococci are the most common cause of CSF shunt infections, forming biofilm on hardware that antibiotics alone cannot reliably eradicate. IDSA guidelines recommend removal of the infected shunt with temporary external ventricular drainage, IV antibiotics (often vancomycin, given MRSE/methicillin resistance; rifampin may be added for biofilm activity) ± intraventricular antibiotics if response is slow, and reimplantation of a new shunt only after documented CSF sterilization. Leaving infected hardware in place leads to relapse.'
+            }
+        ]
+    },
+    {
+        id: 'bonejoint',
+        name: 'Bone & Joint Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 9-year-old presents with fever and acute focal pain and tenderness over the distal tibial metaphysis with refusal to bear weight. Plain films are normal. What is the most likely diagnosis and the most common causative organism?',
+                options: [
+                    'Acute hematogenous osteomyelitis; Staphylococcus aureus',
+                    'Ewing sarcoma; not infectious',
+                    'Septic arthritis; Neisseria gonorrhoeae',
+                    'Transient synovitis; no organism'
+                ],
+                correct: 0,
+                rationale: 'Acute hematogenous osteomyelitis classically affects the metaphysis of long bones in children due to the sluggish, looping vasculature there. Plain radiographs are often normal in the first 10–14 days (lytic changes lag); MRI is the most sensitive early imaging. S. aureus (MSSA and MRSA) is the most common pathogen across all age groups beyond the neonatal period. Empiric therapy must cover S. aureus, with MRSA coverage guided by local prevalence.'
+            },
+            {
+                tier: 2,
+                text: 'A 12-year-old with culture-confirmed MSSA acute hematogenous osteomyelitis has responded well to IV cefazolin, is afebrile, and has a falling CRP after 5 days. Which approach to completing therapy is best supported by current evidence?',
+                options: [
+                    'Mandatory 6 weeks of IV therapy via PICC line for all pediatric osteomyelitis',
+                    'Transition to oral therapy (e.g., high-dose cephalexin) once clinically improving with declining CRP, completing a total course of approximately 3–4 weeks',
+                    'Stop all antibiotics after 7 days because the CRP is falling',
+                    'Switch to oral therapy but continue for a minimum of 12 weeks regardless of response'
+                ],
+                correct: 1,
+                rationale: 'Multiple trials and the 2021 PIDS/IDSA acute hematogenous osteomyelitis guideline support early IV-to-oral transition once the child is clinically improving, afebrile, and has a downtrending CRP — typically after a few days of IV therapy with good source control. Total duration of roughly 3–4 weeks is adequate for uncomplicated AHO. Prolonged IV therapy via PICC offers no outcome benefit and carries significant catheter-associated complications. CRP trend is a useful marker for monitoring response and guiding duration.'
+            },
+            {
+                tier: 3,
+                text: 'A 14-year-old with severe MRSA osteomyelitis develops persistent fevers, multifocal bony involvement, and a new pulmonary infiltrate with cavitation. Which complication and pathogen virulence factor is most relevant, and how should management be adjusted?',
+                options: [
+                    'Septic pulmonary emboli from PVL-producing MRSA; obtain imaging for venous thrombosis and consider source control plus an agent reducing toxin production (e.g., adding clindamycin or linezolid)',
+                    'Pulmonary tuberculosis reactivation; start 4-drug anti-TB therapy',
+                    'Fungal dissemination; switch to amphotericin B',
+                    'Drug fever; discontinue all antibiotics'
+                ],
+                correct: 0,
+                rationale: 'Panton-Valentine leukocidin (PVL)-producing MRSA is associated with severe, multifocal osteomyelitis, large subperiosteal/myositis abscesses, and septic pulmonary emboli — often via associated deep venous thrombosis (Lemierre-like or extremity DVT). This constellation warrants vascular imaging for thrombus, aggressive source control/drainage, and consideration of adding a protein-synthesis-inhibiting agent (clindamycin or linezolid) that suppresses toxin production, alongside vancomycin. Recognizing the cavitary pulmonary lesions as septic emboli rather than primary pneumonia is key.'
+            }
+        ]
+    },
+    {
+        id: 'ssti',
+        name: 'Skin & Soft Tissue Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 5-year-old presents with a 2.5 cm fluctuant, purulent abscess on the buttock without surrounding cellulitis and no systemic symptoms. What is the cornerstone of management?',
+                options: [
+                    'Oral antibiotics alone without drainage',
+                    'Incision and drainage',
+                    'Topical mupirocin only',
+                    'IV vancomycin for 48 hours'
+                ],
+                correct: 1,
+                rationale: 'Incision and drainage (I&D) is the cornerstone of management for a drainable skin abscess and is often curative for small, uncomplicated lesions. For purulent SSTIs, the most common pathogen is S. aureus (frequently MRSA). Adjunctive oral antibiotics (e.g., TMP-SMX or clindamycin) after I&D reduce treatment failure and recurrence, especially for larger abscesses, but drainage itself is the primary intervention. IV therapy is reserved for systemic illness or immunocompromise.'
+            },
+            {
+                tier: 2,
+                text: 'A 6-year-old has rapidly spreading non-purulent cellulitis with fever after a minor abrasion. There is no abscess or purulence. Which empiric oral regimen best targets the most likely pathogen for non-purulent cellulitis?',
+                options: [
+                    'TMP-SMX, targeting MRSA as the primary cause',
+                    'Cephalexin, targeting beta-hemolytic streptococci (and MSSA)',
+                    'Metronidazole, targeting anaerobes',
+                    'Azithromycin, targeting atypical organisms'
+                ],
+                correct: 1,
+                rationale: 'Non-purulent cellulitis is caused predominantly by beta-hemolytic streptococci (especially Streptococcus pyogenes), with MSSA less common. First-line empiric therapy is a beta-lactam with streptococcal and MSSA activity such as cephalexin (or dicloxacillin). Routine MRSA coverage (TMP-SMX) is NOT required for non-purulent cellulitis because TMP-SMX has unreliable streptococcal coverage. MRSA-directed therapy is reserved for purulent infections, abscesses, systemic toxicity, or failure of beta-lactam therapy.'
+            },
+            {
+                tier: 3,
+                text: 'A 10-year-old develops fever, diffuse macular erythroderma, hypotension, vomiting, and desquamation of the palms days later, after a recent superinfected wound. There is no necrotic fascia. Which diagnosis and adjunctive therapy are most appropriate?',
+                options: [
+                    'Necrotizing fasciitis; emergent debridement only',
+                    'Staphylococcal toxic shock syndrome; source control, antistaphylococcal therapy PLUS a protein-synthesis inhibitor (clindamycin) and consideration of IVIG',
+                    'Scarlet fever; supportive care alone',
+                    'Stevens-Johnson syndrome; stop antibiotics and give supportive care'
+                ],
+                correct: 1,
+                rationale: 'This is toxic shock syndrome (TSS) — a toxin-mediated illness (TSST-1 or superantigens) presenting with fever, diffuse macular erythroderma, hypotension, multiorgan involvement, and later desquamation of palms/soles. Management includes aggressive fluid resuscitation, source control (drain/debride the focus, remove foreign material), and antibiotics combining an antistaphylococcal/antistreptococcal agent WITH clindamycin (or linezolid) to suppress toxin production via ribosomal inhibition (the "Eagle effect" rationale). IVIG is considered for severe/refractory streptococcal TSS to neutralize circulating superantigens.'
+            }
+        ]
+    },
+    {
+        id: 'respiratory',
+        name: 'Respiratory Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A previously healthy 4-year-old has uncomplicated community-acquired pneumonia with fever and focal crackles, fully immunized including PCV. According to PIDS/IDSA guidelines, what is the recommended first-line outpatient therapy?',
+                options: [
+                    'Azithromycin',
+                    'High-dose amoxicillin',
+                    'Ceftriaxone IM',
+                    'Levofloxacin'
+                ],
+                correct: 1,
+                rationale: 'For a fully immunized, previously healthy child with uncomplicated CAP, the most likely bacterial pathogen is Streptococcus pneumoniae, and PIDS/IDSA guidelines recommend high-dose amoxicillin (80–90 mg/kg/day) as first-line outpatient therapy. High-dose amoxicillin overcomes intermediate penicillin resistance. Macrolides like azithromycin are reserved when atypical pathogens (Mycoplasma) are strongly suspected, but pneumococcal macrolide resistance is high. Fluoroquinolones are not first-line in children.'
+            },
+            {
+                tier: 2,
+                text: 'A 5-year-old with pneumonia develops a moderate parapneumonic effusion. Thoracentesis fluid shows pH 7.10, glucose 35 mg/dL, and is loculated on ultrasound. What management is most appropriate?',
+                options: [
+                    'Continue antibiotics alone; never drain pediatric effusions',
+                    'Chest tube drainage, with intrapleural fibrinolytics (e.g., tPA ± DNase) for loculated empyema, or VATS as an alternative',
+                    'Repeat thoracentesis daily until resolved',
+                    'Add antifungal therapy empirically'
+                ],
+                correct: 1,
+                rationale: 'A complicated parapneumonic effusion/empyema (pH <7.2, low glucose, loculations, or frank pus) requires drainage rather than antibiotics alone. For loculated empyema, chest tube placement with intrapleural fibrinolytics (tPA, sometimes with DNase) is effective and comparable to primary VATS in pediatric studies, often with shorter recovery. VATS decortication is an alternative, particularly for organized/failed fibrinolysis. The most common pathogens are S. pneumoniae and S. aureus (including MRSA), so empiric coverage should reflect this.'
+            },
+            {
+                tier: 3,
+                text: 'A 2-month-old, born at term, presents with paroxysmal cough, post-tussive emesis, apnea, and a striking lymphocytosis (WBC 35,000, 80% lymphocytes). Pertussis is confirmed. Beyond azithromycin, which feature carries the gravest prognostic significance and should escalate care?',
+                options: [
+                    'The post-tussive emesis, which mandates antiemetics',
+                    'Extreme leukocytosis/hyperlymphocytosis, which correlates with pulmonary hypertension and mortality and may warrant ICU care and consideration of leukoreduction/exchange transfusion',
+                    'The presence of a whoop, which is reassuring',
+                    'The patient age, which makes pertussis unlikely'
+                ],
+                correct: 1,
+                rationale: 'In young infants with pertussis, marked leukocytosis with hyperlymphocytosis (WBC often >50,000) is strongly associated with malignant pertussis — pulmonary hypertension from leukocyte aggregates in the pulmonary vasculature — and high mortality. These infants warrant ICU monitoring; refractory cases may be considered for leukoreduction via exchange transfusion before the development of refractory pulmonary hypertension. Azithromycin eradicates the organism and limits transmission but does not reverse established paroxysmal disease. Apnea is also a key indication for admission in infants.'
+            }
+        ]
+    },
+    {
+        id: 'uti',
+        name: 'Urinary Tract & Renal Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 2-year-old girl has a first febrile UTI. Per AAP guidance, what imaging is recommended after the acute infection in a child 2–24 months with a first febrile UTI?',
+                options: [
+                    'Renal and bladder ultrasound',
+                    'Voiding cystourethrogram (VCUG) for all first UTIs',
+                    'DMSA scan during the acute illness',
+                    'CT urogram with contrast'
+                ],
+                correct: 0,
+                rationale: 'The 2011 AAP guideline (children 2–24 months) recommends renal and bladder ultrasound after a first febrile UTI to evaluate for anatomic abnormalities and hydronephrosis. VCUG is NOT recommended routinely after the first febrile UTI; it is reserved for abnormal ultrasound findings, recurrent febrile UTIs, or atypical features. Early DMSA is not routine. This represents a deliberate shift away from reflexive VCUG to reduce invasive testing and radiation.'
+            },
+            {
+                tier: 2,
+                text: 'A 7-year-old has acute pyelonephritis with fever, flank pain, and vomiting but is hemodynamically stable and able to take oral intake after initial assessment. What does the evidence support regarding route of therapy?',
+                options: [
+                    'IV antibiotics are mandatory for the full 14-day course for all pyelonephritis',
+                    'Oral antibiotics (e.g., a third-generation cephalosporin) are as effective as IV therapy for uncomplicated pyelonephritis in children who can tolerate oral intake',
+                    'Pyelonephritis should be treated with a single oral dose',
+                    'Only fluoroquinolones can treat pediatric pyelonephritis'
+                ],
+                correct: 1,
+                rationale: 'Randomized trials and the AAP guideline support that oral antibiotics are equivalent to initial IV therapy for uncomplicated acute pyelonephritis in children who are not toxic-appearing and can tolerate oral intake. A third-generation oral cephalosporin (e.g., cefixime) or another agent guided by local susceptibilities is appropriate. IV therapy is reserved for those who are toxic, vomiting/unable to tolerate oral meds, very young, or have complicating features. Total duration is typically 7–14 days.'
+            },
+            {
+                tier: 3,
+                text: 'A 6-year-old with recurrent febrile UTIs and grade IV vesicoureteral reflux is on continuous antibiotic prophylaxis. He develops a breakthrough febrile UTI with an E. coli resistant to his prophylactic agent, and DMSA shows new renal scarring. Which statement best reflects the evidence and next step?',
+                options: [
+                    'Prophylaxis is uniformly effective and should simply be continued unchanged',
+                    'Continuous prophylaxis (per RIVUR) modestly reduces recurrences but not renal scarring; with breakthrough infection and new scarring in high-grade reflux, surgical correction (ureteral reimplantation) should be considered',
+                    'All prophylaxis should be stopped and no further intervention is needed',
+                    'A nephrectomy is the standard of care for high-grade reflux'
+                ],
+                correct: 1,
+                rationale: 'The RIVUR trial showed that TMP-SMX prophylaxis reduced recurrent febrile/symptomatic UTIs by about half but did NOT significantly reduce renal scarring, and breakthrough infections were more often with resistant organisms. In a child with high-grade (IV) reflux, breakthrough febrile UTI on prophylaxis, and demonstrated new scarring, surgical correction (open or endoscopic ureteral reimplantation) becomes a reasonable next step to reduce recurrent pyelonephritis and protect renal function. Management is individualized, balancing reflux grade, breakthrough infections, scarring, and resistance.'
+            }
+        ]
+    },
+    {
+        id: 'immunocompromised',
+        name: 'Immunocompromised Host Infections',
+        questions: [
+            {
+                tier: 1,
+                text: 'A 6-year-old with acute lymphoblastic leukemia on chemotherapy develops fever to 38.6°C with an absolute neutrophil count of 250. What is the most important immediate management step?',
+                options: [
+                    'Obtain blood cultures and start empiric broad-spectrum IV antibiotics promptly',
+                    'Observe off antibiotics and recheck the temperature in 4 hours',
+                    'Start oral amoxicillin as an outpatient',
+                    'Give antipyretics and discharge home'
+                ],
+                correct: 0,
+                rationale: 'Febrile neutropenia (fever plus ANC <500, or <1000 and falling) is an oncologic emergency. The standard of care is to draw blood cultures (from all central line lumens and ideally peripherally) and start empiric broad-spectrum IV antibiotics with antipseudomonal coverage (e.g., cefepime or piperacillin-tazobactam) without delay — ideally within 60 minutes. Mortality rises with delayed antibiotics. Risk stratification can later guide step-down, but immediate empiric therapy is essential.'
+            },
+            {
+                tier: 2,
+                text: 'A 10-year-old, 60 days post allogeneic hematopoietic stem cell transplant, develops fever, rising serum CMV PCR, and transaminitis. What is the most appropriate antiviral therapy for CMV disease in this setting?',
+                options: [
+                    'Acyclovir',
+                    'Ganciclovir (or valganciclovir) as first-line, with foscarnet for ganciclovir-resistant or marrow-suppressed cases',
+                    'Oseltamivir',
+                    'Amphotericin B'
+                ],
+                correct: 1,
+                rationale: 'CMV reactivation/disease is a major complication after allogeneic HSCT. First-line treatment is IV ganciclovir or oral valganciclovir. Foscarnet is used when ganciclovir resistance is suspected (e.g., UL97/UL54 mutations) or when myelosuppression from ganciclovir is problematic post-transplant. Letermovir is used for prophylaxis. Acyclovir lacks reliable activity against CMV disease. Monitoring CMV viral load (PCR) guides preemptive therapy and response.'
+            },
+            {
+                tier: 3,
+                text: 'A 9-year-old with prolonged neutropenia after induction chemotherapy develops fever, pleuritic chest pain, and a chest CT showing nodules with a surrounding ground-glass "halo sign." Serum galactomannan is elevated. What is the diagnosis and first-line therapy?',
+                options: [
+                    'Pneumocystis jirovecii pneumonia; high-dose TMP-SMX',
+                    'Invasive pulmonary aspergillosis; voriconazole (or isavuconazole) as first-line',
+                    'Bacterial pneumonia; ceftriaxone alone',
+                    'Pulmonary embolism; anticoagulation only'
+                ],
+                correct: 1,
+                rationale: 'Invasive pulmonary aspergillosis is a leading mold infection in prolonged neutropenia. The halo sign (nodule with surrounding ground-glass hemorrhage) early, and later the air-crescent sign, are characteristic CT findings; an elevated serum (or BAL) galactomannan supports the diagnosis. Voriconazole is first-line therapy (superior to amphotericin B in the landmark Herbrecht trial), with isavuconazole as an alternative with fewer drug interactions and better tolerability. Therapeutic drug monitoring of voriconazole is important due to variable metabolism. PCP causes diffuse ground-glass without nodules/halo and has a negative galactomannan.'
+            }
+        ]
+    },
+    {
+        id: 'pkpd',
+        name: 'PK/PD & Antimicrobial Dosing',
+        questions: [
+            {
+                tier: 1,
+                text: 'Beta-lactam antibiotics exhibit which pharmacodynamic pattern of bacterial killing, and what does this imply for dosing?',
+                options: [
+                    'Concentration-dependent killing; maximize the peak concentration with large infrequent doses',
+                    'Time-dependent killing; efficacy correlates with the percentage of the dosing interval that free drug remains above the MIC (%fT>MIC), favoring more frequent dosing or extended infusions',
+                    'AUC/MIC-dependent killing; once-daily dosing is optimal',
+                    'They have no relationship between exposure and effect'
+                ],
+                correct: 1,
+                rationale: 'Beta-lactams display time-dependent killing: bacterial eradication correlates with the percentage of the dosing interval during which free drug concentration exceeds the MIC (%fT>MIC). This favors more frequent dosing, larger total daily doses, or prolonged/continuous infusions to optimize time above MIC — especially for serious infections or organisms with higher MICs. They do not exhibit significant concentration-dependent killing or a prominent post-antibiotic effect against gram-negatives, distinguishing them from aminoglycosides and fluoroquinolones.'
+            },
+            {
+                tier: 2,
+                text: 'Which pharmacodynamic target best predicts efficacy of vancomycin against MRSA, and how has guidance evolved?',
+                options: [
+                    'Trough concentration of 5–10 mg/L is the modern target',
+                    'AUC0-24/MIC ratio (target approximately 400–600) is the preferred target, now recommended over trough-only monitoring',
+                    'Peak/MIC ratio of 10 is the target',
+                    'Time above MIC of 100%'
+                ],
+                correct: 1,
+                rationale: 'Vancomycin efficacy against MRSA is best predicted by the AUC0-24/MIC ratio, with a target of approximately 400–600 (assuming MIC 1 mg/L). The 2020 ASHP/IDSA/PIDS consensus guideline now recommends AUC-guided dosing (via Bayesian estimation or two-level kinetics) over the older trough-only target of 15–20 mg/L, because high troughs were associated with nephrotoxicity without added efficacy. This is an important shift in pediatric and adult vancomycin therapeutic drug monitoring.'
+            },
+            {
+                tier: 3,
+                text: 'A critically ill child with augmented renal clearance (e.g., from sepsis with hyperdynamic circulation) is failing to respond to standard intermittent dosing of cefepime for a gram-negative infection with an elevated MIC. Which dosing strategy best addresses the underlying PK/PD problem?',
+                options: [
+                    'Switch to once-daily bolus dosing to maximize peak concentration',
+                    'Use extended or continuous infusion (and/or increased dose/frequency) to raise %fT>MIC, since augmented renal clearance shortens drug exposure',
+                    'Reduce the dose to avoid toxicity',
+                    'Add a second beta-lactam with the same mechanism'
+                ],
+                correct: 1,
+                rationale: 'Augmented renal clearance (common in young patients with sepsis, hyperdynamic states, or burns) accelerates elimination of renally cleared, hydrophilic antibiotics like beta-lactams, reducing %fT>MIC and risking subtherapeutic exposure. Because cefepime kills via time-dependent pharmacodynamics, the correct response is to extend the infusion duration (extended or continuous infusion) and/or increase dose/frequency to maintain free concentrations above the MIC for a greater fraction of the interval. Bolus once-daily dosing would worsen the problem, and lowering the dose would guarantee failure.'
+            }
+        ]
+    },
+    {
+        id: 'emerging',
+        name: 'Emerging Pathogens & Infection Control',
+        questions: [
+            {
+                tier: 1,
+                text: 'A child is admitted with suspected measles (fever, cough, coryza, conjunctivitis, and a spreading maculopapular rash). What isolation precautions are required?',
+                options: [
+                    'Standard precautions only',
+                    'Airborne precautions (negative-pressure room, N95 respirator)',
+                    'Contact precautions only',
+                    'Droplet precautions only'
+                ],
+                correct: 1,
+                rationale: 'Measles (rubeola) is transmitted via airborne route and requires airborne precautions: a negative-pressure (airborne infection isolation) room and N95 respirator for entering staff. The virus remains suspended and infectious in air for up to 2 hours. Other airborne-precaution pathogens include varicella (also contact) and tuberculosis. Droplet precautions (e.g., for pertussis, influenza, N. meningitidis) and contact precautions (e.g., for MRSA, C. difficile) are insufficient to prevent measles transmission.'
+            },
+            {
+                tier: 2,
+                text: 'A hospitalized child develops Clostridioides difficile-associated diarrhea. Which infection prevention measure is most important and distinguishes C. difficile from many other pathogens?',
+                options: [
+                    'Alcohol-based hand rub is fully sufficient for hand hygiene',
+                    'Contact precautions PLUS hand hygiene with soap and water (alcohol does not kill spores) and sporicidal environmental cleaning',
+                    'Airborne precautions',
+                    'No precautions are needed once antibiotics are stopped'
+                ],
+                correct: 1,
+                rationale: 'C. difficile forms environmentally resistant spores that are NOT killed by alcohol-based hand sanitizer. Prevention requires contact precautions, hand hygiene with soap and water (mechanical removal of spores), dedicated/single-use equipment, and sporicidal agents (e.g., bleach-based disinfectants) for environmental cleaning. Antimicrobial stewardship is also central, since antibiotic exposure is the dominant modifiable risk factor. This contrasts with most pathogens where alcohol-based hand rub is preferred.'
+            },
+            {
+                tier: 3,
+                text: 'During a hospital outbreak, several immunocompromised children develop invasive infections with a carbapenem-resistant Enterobacterales (CRE) producing a KPC carbapenemase. Which combination of stewardship/infection control and therapeutic measures is most appropriate?',
+                options: [
+                    'Continue standard precautions and treat with a carbapenem at higher dose',
+                    'Implement contact precautions with cohorting and active surveillance screening, reinforce hand hygiene/environmental cleaning, and treat with a newer beta-lactam/beta-lactamase inhibitor such as ceftazidime-avibactam or meropenem-vaborbactam',
+                    'Use colistin monotherapy for all cases and take no isolation measures',
+                    'Rely solely on airborne precautions'
+                ],
+                correct: 1,
+                rationale: 'KPC-producing CRE outbreaks demand aggressive infection control: contact precautions, patient cohorting, active surveillance (rectal) screening to identify silent carriers, hand hygiene, dedicated equipment, and enhanced environmental cleaning, often with a multidisciplinary outbreak response. For KPC-producing organisms, newer agents such as ceftazidime-avibactam or meropenem-vaborbactam are preferred over older salvage regimens (polymyxins/colistin, which carry higher toxicity and worse outcomes). Therapy should be guided by molecular resistance mechanism and susceptibility testing. CRE spreads by contact, not airborne route.'
+            }
+        ]
+    }
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let student = {};
+let domainIndex = 0;
+let tierIndex = 0;
+let answered = false;
+let results = [];  // { domainId, domainName, tiers: [{tier, qIndex, selectedOption, correct}] }
+
+// ─── INTAKE ───────────────────────────────────────────────────────────────────
+document.getElementById('intake-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    student = {
+        name: document.getElementById('f-name').value.trim(),
+        year: document.getElementById('f-year').value,
+        school: document.getElementById('f-school').value.trim(),
+        email: document.getElementById('f-email').value.trim()
+    };
+    startAssessment();
+});
+
+function startAssessment() {
+    domainIndex = 0;
+    tierIndex = 0;
+    answered = false;
+    results = DOMAINS.map(d => ({ domainId: d.id, domainName: d.name, tiers: [] }));
+    showScreen('screen-question');
+    renderQuestion();
+}
+
+// ─── QUESTION RENDERING ───────────────────────────────────────────────────────
+function renderQuestion() {
+    const domain = DOMAINS[domainIndex];
+    const q = domain.questions[tierIndex];
+
+    document.getElementById('q-domain-label').textContent = `Domain ${domainIndex + 1} of ${DOMAINS.length}`;
+    document.getElementById('q-domain-name').textContent = domain.name;
+
+    const tierLabel = document.getElementById('q-tier-label');
+    const tierNames = ['Tier 1 — Recognition', 'Tier 2 — Application', 'Tier 3 — Reasoning'];
+    const tierClasses = ['t1', 't2', 't3'];
+    tierLabel.textContent = tierNames[tierIndex];
+    tierLabel.className = 'tier-label ' + tierClasses[tierIndex];
+
+    // Tier pips
+    const pips = document.getElementById('q-tier-pips');
+    pips.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+        const pip = document.createElement('div');
+        pip.className = 'tier-pip';
+        if (i < tierIndex) pip.classList.add('done');
+        else if (i === tierIndex) pip.classList.add('active');
+        pips.appendChild(pip);
+    }
+
+    // Progress bar
+    const pct = (domainIndex / DOMAINS.length) * 100;
+    document.getElementById('q-progress-fill').style.width = pct + '%';
+
+    // Question
+    const qNum = results[domainIndex].tiers.length + 1 + results.slice(0, domainIndex).reduce((s, r) => s + r.tiers.length, 0);
+    document.getElementById('q-number').textContent = `Domain ${domainIndex + 1}, Tier ${tierIndex + 1}`;
+    document.getElementById('q-text').textContent = q.text;
+
+    // Options
+    const optList = document.getElementById('q-options');
+    optList.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+    q.options.forEach((opt, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+        btn.addEventListener('click', () => selectAnswer(i));
+        li.appendChild(btn);
+        optList.appendChild(li);
+    });
+
+    // Reset feedback
+    const fb = document.getElementById('q-feedback');
+    fb.className = 'feedback-card';
+    const nextBtn = document.getElementById('q-next-btn');
+    nextBtn.className = 'next-btn';
+    answered = false;
+}
+
+function selectAnswer(selectedIdx) {
+    if (answered) return;
+    answered = true;
+
+    const domain = DOMAINS[domainIndex];
+    const q = domain.questions[tierIndex];
+    const isCorrect = selectedIdx === q.correct;
+    const letters = ['A', 'B', 'C', 'D'];
+
+    // Record
+    results[domainIndex].tiers.push({
+        tier: tierIndex,
+        question: q,
+        selectedOption: selectedIdx,
+        correct: isCorrect
+    });
+
+    // Style options
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.correct) btn.classList.add('correct');
+        else if (i === selectedIdx && !isCorrect) btn.classList.add('incorrect');
+    });
+
+    // Feedback
+    const fb = document.getElementById('q-feedback');
+    const fbHeader = document.getElementById('q-feedback-header');
+    const fbBody = document.getElementById('q-feedback-body');
+
+    if (isCorrect) {
+        fb.className = 'feedback-card correct-fb show';
+        fbHeader.className = 'feedback-header correct-h';
+        fbHeader.textContent = '✓ Correct';
+    } else {
+        fb.className = 'feedback-card incorrect-fb show';
+        fbHeader.className = 'feedback-header incorrect-h';
+        fbHeader.textContent = `✗ Incorrect — Correct answer: ${letters[q.correct]}`;
+    }
+    fbBody.textContent = q.rationale;
+
+    // Next button
+    const nextBtn = document.getElementById('q-next-btn');
+    const nextLabel = document.getElementById('q-next-label');
+    nextBtn.className = 'next-btn show';
+
+    const canAdvance = isCorrect && tierIndex < domain.questions.length - 1;
+    const isLastDomain = domainIndex === DOMAINS.length - 1;
+    const nextTierAfterThis = tierIndex + 1;
+
+    if (canAdvance) {
+        nextLabel.textContent = `Next: Tier ${nextTierAfterThis + 1}`;
+        nextBtn.onclick = advanceTier;
+    } else if (isLastDomain) {
+        nextLabel.textContent = 'View Results';
+        nextBtn.onclick = showResults;
+    } else {
+        nextLabel.textContent = 'Next Domain →';
+        nextBtn.onclick = nextDomain;
+    }
+}
+
+function advanceTier() {
+    tierIndex++;
+    answered = false;
+    renderQuestion();
+}
+
+function nextDomain() {
+    domainIndex++;
+    tierIndex = 0;
+    answered = false;
+    renderQuestion();
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+function showResults() {
+    showScreen('screen-results');
+
+    let totalCorrect = 0;
+    let totalAsked = 0;
+
+    results.forEach(r => {
+        r.tiers.forEach(t => {
+            totalAsked++;
+            if (t.correct) totalCorrect++;
+        });
+    });
+
+    const pct = totalAsked > 0 ? Math.round((totalCorrect / totalAsked) * 100) : 0;
+
+    // Score ring animation
+    const circumference = 326.7;
+    const fill = document.getElementById('score-ring-fill');
+    const ringColor = pct >= 75 ? '#7fa882' : pct >= 50 ? '#d4a574' : '#e07a5f';
+    fill.setAttribute('stroke', ringColor);
+    setTimeout(() => {
+        fill.style.strokeDashoffset = circumference - (circumference * pct / 100);
+    }, 100);
+
+    document.getElementById('score-pct-text').textContent = pct + '%';
+
+    // Headline
+    let headline, subline;
+    if (pct >= 80) {
+        headline = 'Strong Foundation';
+        subline = `${student.name}, your breadth and depth across Peds ID domains is excellent. Focus on any weak areas below.`;
+    } else if (pct >= 60) {
+        headline = 'Good Start';
+        subline = `${student.name}, solid coverage overall. Review the domains where you stalled at Tier 1 or 2.`;
+    } else {
+        headline = 'Opportunity to Build';
+        subline = `${student.name}, use the rationale below as your study guide — these are the high-yield concepts.`;
+    }
+    document.getElementById('results-headline').textContent = headline;
+    document.getElementById('results-subline').textContent = subline;
+
+    // Domain cards
+    const grid = document.getElementById('domain-results-grid');
+    grid.innerHTML = '';
+    results.forEach(r => {
+        const correct = r.tiers.filter(t => t.correct).length;
+        const asked = r.tiers.length;
+        const maxTier = r.tiers.length > 0 ? Math.max(...r.tiers.map(t => t.tier)) : -1;
+        const scorePct = asked > 0 ? Math.round((correct / asked) * 100) : 0;
+
+        const card = document.createElement('div');
+        card.className = 'domain-result-card';
+
+        let badgeClass = scorePct >= 75 ? 'score-high' : scorePct >= 50 ? 'score-mid' : 'score-low';
+        let detailText = asked === 0 ? 'Not attempted' :
+            `${correct}/${asked} correct · reached Tier ${maxTier + 1}`;
+
+        card.innerHTML = `
+            <div class="domain-result-header">
+                <span class="domain-result-name">${r.domainName}</span>
+                <span class="domain-score-badge ${badgeClass}">${asked > 0 ? scorePct + '%' : '—'}</span>
+            </div>
+            <div class="domain-tier-bar">
+                ${[0,1,2].map(i => {
+                    const tierResult = r.tiers.find(t => t.tier === i);
+                    if (!tierResult) return `<div class="tier-seg not-reached"></div>`;
+                    return `<div class="tier-seg ${tierResult.correct ? 'reached-correct' : 'reached-incorrect'}"></div>`;
+                }).join('')}
+            </div>
+            <div class="domain-result-detail">${detailText}</div>
+        `;
+        grid.appendChild(card);
+    });
+
+    // Answer sheet
+    buildAnswerSheet();
+
+    // Auto-save to Google Sheets (silent, no student action needed)
+    saveResultsToSheet(pct, totalCorrect, totalAsked);
+
+    // Report button
+    document.getElementById('send-report-btn').onclick = () => sendFacultyReport(pct, totalCorrect, totalAsked);
+}
+
+function buildAnswerSheet() {
+    const sheet = document.getElementById('answer-sheet');
+    sheet.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+    const tierNames = ['Tier 1 — Recognition', 'Tier 2 — Application', 'Tier 3 — Reasoning'];
+    const tierShort = ['T1', 'T2', 'T3'];
+    const tierClasses = ['t1', 't2', 't3'];
+
+    DOMAINS.forEach((domain, di) => {
+        domain.questions.forEach((q, ti) => {
+            const resultEntry = results[di];
+            const tierResult = resultEntry ? resultEntry.tiers.find(t => t.tier === ti) : null;
+            const wasAnswered = !!tierResult;
+
+            const item = document.createElement('div');
+            item.className = 'answer-item';
+
+            const statusIcon = !wasAnswered ? '○' : tierResult.correct ? '✓' : '✗';
+            const statusColor = !wasAnswered ? 'var(--text-muted)' : tierResult.correct ? 'var(--sage-600)' : 'var(--accent-coral)';
+
+            item.innerHTML = `
+                <div class="answer-item-header">
+                    <div class="answer-q-text">${q.text}</div>
+                    <div class="answer-domain-tier">
+                        <span class="tier-label ${tierClasses[ti]}" style="white-space:nowrap">${tierShort[ti]}</span>
+                        <span style="font-size:1.1rem;color:${statusColor};font-weight:700">${statusIcon}</span>
+                    </div>
+                </div>
+                <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.06em">${domain.name}</div>
+                <div class="answer-choices">
+                    ${q.options.map((opt, i) => {
+                        let cls = '';
+                        if (i === q.correct) cls = 'is-correct';
+                        else if (wasAnswered && tierResult.selectedOption === i && !tierResult.correct) cls = 'is-selected-wrong';
+                        else if (!wasAnswered) cls = 'not-answered';
+                        return `<div class="answer-choice ${cls}">
+                            <span style="font-weight:600;min-width:18px">${letters[i]}.</span>
+                            <span>${opt}</span>
+                            ${i === q.correct ? '<span style="margin-left:auto;font-size:0.75rem;padding-left:8px">✓ Correct</span>' : ''}
+                        </div>`;
+                    }).join('')}
+                </div>
+                <div class="rationale-box">
+                    <div class="rationale-label">Rationale</div>
+                    <div class="rationale-text">${q.rationale}</div>
+                </div>
+                ${!wasAnswered ? '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;font-style:italic">Not reached — you advanced beyond this domain\'s lower tier or did not reach this tier.</div>' : ''}
+            `;
+            sheet.appendChild(item);
+        });
+    });
+}
+
+async function saveResultsToSheet(pct, correct, total) {
+    if (!SHEETS_ENDPOINT) return; // not configured yet
+
+    const domainBreakdown = results.map(r => {
+        const asked = r.tiers.length;
+        const corr = r.tiers.filter(t => t.correct).length;
+        const maxTier = asked > 0 ? Math.max(...r.tiers.map(t => t.tier)) : -1;
+        return {
+            domain: r.domainName,
+            correct: corr,
+            asked: asked,
+            maxTier: maxTier + 1,
+            answers: r.tiers.map(t => ({
+                tier: t.tier + 1,
+                question: t.question.text,
+                selected: t.question.options[t.selectedOption],
+                correct: t.correct,
+                correctAnswer: t.question.options[t.question.correct],
+                rationale: t.question.rationale
+            }))
+        };
+    });
+
+    const payload = {
+        timestamp: new Date().toISOString(),
+        name: student.name,
+        year: student.year,
+        school: student.school,
+        email: student.email,
+        overallScore: pct,
+        correct: correct,
+        total: total,
+        domains: domainBreakdown
+    };
+
+    try {
+        await fetch(SHEETS_ENDPOINT, {
+            method: 'POST',
+            mode: 'no-cors', // required for Apps Script
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        console.log('Results saved to Sheets');
+    } catch (e) {
+        console.warn('Could not save to Sheets:', e);
+        // Fail silently — student experience unaffected
+    }
+}
+
+function sendFacultyReport(pct, correct, total) {
+    const tierNames = ['T1', 'T2', 'T3'];
+    let domainSummary = results.map(r => {
+        const asked = r.tiers.length;
+        const corr = r.tiers.filter(t => t.correct).length;
+        const maxTier = asked > 0 ? Math.max(...r.tiers.map(t => t.tier)) : -1;
+        return `${r.domainName}: ${corr}/${asked} correct${asked > 0 ? ', reached Tier ' + (maxTier+1) : ' (not attempted)'}`;
+    }).join('\n');
+
+    const body = encodeURIComponent(
+`Sage Project – Pediatric ID Resident Assessment Report
+
+Resident: ${student.name}
+PGY Year: ${student.year}
+Program: ${student.school}
+Email: ${student.email}
+Date: ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}
+
+OVERALL SCORE: ${correct}/${total} (${pct}%)
+
+DOMAIN BREAKDOWN:
+${domainSummary}
+
+---
+Assessment: Pediatric ID Resident Assessment (PL-3)
+Adaptive format – Tier 1 (Recognition) → Tier 2 (Application) → Tier 3 (Reasoning)
+sageproject.xyz`
+    );
+
+    const subject = encodeURIComponent(`Peds ID Resident Assessment – ${student.name} – ${pct}%`);
+    window.location.href = `mailto:${FACULTY_EMAIL}?subject=${subject}&body=${body}&cc=${encodeURIComponent(student.email)}`;
+}
+
+function retake() {
+    domainIndex = 0;
+    tierIndex = 0;
+    answered = false;
+    results = [];
+    showScreen('screen-intake');
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
