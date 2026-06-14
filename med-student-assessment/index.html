@@ -1354,7 +1354,8 @@ async function saveResultsToSheet(pct, correct, total) {
                 question: t.question.text,
                 selected: t.question.options[t.selectedOption],
                 correct: t.correct,
-                correctAnswer: t.question.options[t.question.correct]
+                correctAnswer: t.question.options[t.question.correct],
+                rationale: t.question.rationale
             }))
         };
     });

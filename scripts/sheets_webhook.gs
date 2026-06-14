@@ -87,32 +87,75 @@ function doPost(e) {
 function sendFacultyNotification(data) {
     const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // update to real email
 
-    const domainLines = data.domains.map(d => {
-        const pct = d.asked > 0 ? Math.round((d.correct / d.asked) * 100) + '%' : 'not reached';
-        const tier = d.maxTier > 0 ? 'Tier ' + d.maxTier : '—';
-        return `  ${d.domain}: ${pct} (${tier})`;
-    }).join('\n');
+    const date = new Date(data.timestamp).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
 
-    const subject = `[Sage] ${data.name} completed Peds ID Assessment — ${data.overallScore}%`;
-    const body = `A student has completed the Pediatric ID Rotation Assessment.
+    // ── Domain breakdown with missed questions ────────────────────────────────
+    let domainSections = '';
+    let totalMissed = 0;
+
+    data.domains.forEach(d => {
+        if (d.asked === 0) {
+            domainSections += `\n${d.domain.toUpperCase()}\n  Not reached\n`;
+            return;
+        }
+
+        const pct = Math.round((d.correct / d.asked) * 100);
+        const status = pct === 100 ? '✓ All correct' : `${d.correct}/${d.asked} correct (${pct}%)`;
+        domainSections += `\n${d.domain.toUpperCase()} — ${status} | Max: Tier ${d.maxTier}\n`;
+
+        // List every answered question with result
+        d.answers.forEach(a => {
+            const icon = a.correct ? '  ✓' : '  ✗';
+            domainSections += `${icon} [Tier ${a.tier}] ${a.question}\n`;
+            if (!a.correct) {
+                totalMissed++;
+                domainSections += `      Their answer:   ${a.selected}\n`;
+                domainSections += `      Correct answer: ${a.correctAnswer}\n`;
+                if (a.rationale) {
+                    domainSections += `      Rationale: ${a.rationale}\n`;
+                }
+            }
+        });
+    });
+
+    // ── Missed questions summary at top ───────────────────────────────────────
+    let missedSummary = '';
+    if (totalMissed === 0) {
+        missedSummary = 'Perfect score — no missed questions.';
+    } else {
+        missedSummary = `${totalMissed} question${totalMissed > 1 ? 's' : ''} missed (see breakdown below).`;
+    }
+
+    const subject = `[Sage] ${data.name} — ${data.overallScore}% — ${totalMissed} missed`;
+    const body =
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SAGE PROJECT — ASSESSMENT REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Student: ${data.name}
 Year:    ${data.year}
 School:  ${data.school}
 Email:   ${data.email}
-Date:    ${new Date(data.timestamp).toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}
+Date:    ${date}
 
-OVERALL: ${data.correct}/${data.total} (${data.overallScore}%)
+OVERALL SCORE: ${data.correct}/${data.total} (${data.overallScore}%)
+${missedSummary}
 
-DOMAIN BREAKDOWN:
-${domainLines}
-
-Full results are saved in the Sage Project Google Sheet.
-`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DOMAIN-BY-DOMAIN BREAKDOWN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${domainSections}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Full results and raw data saved in the Sage Project Google Sheet.
+Reply to this email or contact ${data.email} to follow up with the student.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
     try {
         MailApp.sendEmail({
             to: FACULTY_EMAIL,
+            cc: data.email,  // student gets a copy too
             subject: subject,
             body: body
         });
