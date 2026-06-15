@@ -1353,9 +1353,12 @@ async function saveResultsToSheet(pct, correct, total) {
             answers: r.tiers.map(t => ({
                 tier: t.tier + 1,
                 question: t.question.text,
+                options: t.question.options,
                 selected: t.question.options[t.selectedOption],
+                selectedIndex: t.selectedOption,
                 correct: t.correct,
                 correctAnswer: t.question.options[t.question.correct],
+                correctIndex: t.question.correct,
                 rationale: t.question.rationale
             }))
         };

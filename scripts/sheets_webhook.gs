@@ -31,6 +31,51 @@ function tabNameFor(assessmentType) {
     }
 }
 
+// ─── Admin read endpoint ─────────────────────────────────────────────────────
+// The admin dashboard fetches all submissions via GET ?key=<ADMIN_KEY>.
+// Change this passcode and keep it private — anyone with it can read all results.
+const ADMIN_KEY = 'sage-faculty-2026';
+
+function doGet(e) {
+    if (!e || !e.parameter || e.parameter.key !== ADMIN_KEY) {
+        return ContentService
+            .createTextOutput(JSON.stringify({ status: 'unauthorized' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const ss = getSpreadsheet();
+    const tabs = ['Med Student', 'Resident', 'Antimicrobial', 'Antimicrobial Selection', 'Responses'];
+    const submissions = [];
+
+    tabs.forEach(name => {
+        const sheet = ss.getSheetByName(name);
+        if (!sheet) return;
+        const values = sheet.getDataRange().getValues();
+        if (values.length < 2) return;
+
+        const headers = values[0];
+        const jsonCol = headers.indexOf('Full JSON');
+        if (jsonCol < 0) return;
+
+        for (let r = 1; r < values.length; r++) {
+            const raw = values[r][jsonCol];
+            if (!raw) continue;
+            try {
+                const parsed = JSON.parse(raw);
+                parsed._tab = name;
+                submissions.push(parsed);
+            } catch (err) { /* skip unparseable rows */ }
+        }
+    });
+
+    // Newest first
+    submissions.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+
+    return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok', count: submissions.length, submissions: submissions }))
+        .setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
     try {
         const data = JSON.parse(e.postData.contents);
