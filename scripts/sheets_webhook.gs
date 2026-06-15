@@ -99,6 +99,9 @@ function doPost(e) {
 
         sheet.appendRow(row);
 
+        // Write one row per question to the per-question detail tab
+        writeAnswerDetail(ss, data);
+
         // Send faculty notification email
         sendFacultyNotification(data);
 
@@ -110,6 +113,58 @@ function doPost(e) {
         return ContentService
             .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
             .setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+// Records every individual question/answer to a "<Tab> — Answers" detail tab,
+// one row per question. Works for both domain-scored assessments (med student,
+// antimicrobial) and the resident assessment (raw answers, scored server-side).
+function writeAnswerDetail(ss, data) {
+    const detailName = tabNameFor(data.assessmentType) + ' — Answers';
+    let detail = ss.getSheetByName(detailName);
+
+    if (!detail) {
+        detail = ss.insertSheet(detailName);
+        const headers = [
+            'Timestamp', 'Name', 'Email', 'Domain', 'Tier',
+            'Question', 'Their Answer', 'Correct Answer', 'Correct?', 'Rationale'
+        ];
+        detail.appendRow(headers);
+        detail.setFrozenRows(1);
+        const hr = detail.getRange(1, 1, 1, headers.length);
+        hr.setBackground('#2d5a3d');
+        hr.setFontColor('#ffffff');
+        hr.setFontWeight('bold');
+    }
+
+    const rows = [];
+
+    if (data.domains) {
+        // Domain-scored: each domain carries its answered questions
+        data.domains.forEach(d => {
+            (d.answers || []).forEach(a => {
+                rows.push([
+                    data.timestamp, data.name, data.email,
+                    d.domain, 'Tier ' + a.tier,
+                    a.question, a.selected, a.correctAnswer,
+                    a.correct ? 'Yes' : 'No', a.rationale || ''
+                ]);
+            });
+        });
+    } else if (data.answers) {
+        // Resident: flat list of {questionId, answer}; scored server-side
+        data.answers.forEach(a => {
+            rows.push([
+                data.timestamp, data.name, data.email,
+                '—', '—',
+                a.questionId, a.answer, '', '', ''
+            ]);
+        });
+    }
+
+    // Bulk-write all question rows at once
+    if (rows.length > 0) {
+        detail.getRange(detail.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
     }
 }
 
