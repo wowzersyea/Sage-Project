@@ -220,15 +220,17 @@ function openDetail(idx){
 
   let body = '';
 
-  // Resident (primary, Next.js): flat answers + goals, no answer key stored
+  // Pre-rotation goals (resident assessment) — show whenever present
+  if(s.goals){
+    body += `<div class="domain-block"><div class="domain-title">Pre-Rotation Goals</div>`;
+    Object.entries(s.goals).forEach(([k,v])=>{
+      body += `<div class="freetext"><div class="lbl">${esc(k)}</div>${esc(v||'—')}</div>`;
+    });
+    body += `</div>`;
+  }
+
+  // Resident with raw answers only (no answer key stored — legacy/client save)
   if(!s.domains && s.answers){
-    if(s.goals){
-      body += `<div class="domain-block"><div class="domain-title">Pre-Rotation Goals</div>`;
-      Object.entries(s.goals).forEach(([k,v])=>{
-        body += `<div class="freetext"><div class="lbl">${esc(k)}</div>${esc(v||'—')}</div>`;
-      });
-      body += `</div>`;
-    }
     body += `<div class="domain-block"><div class="domain-title">Answers (${s.answers.length})</div>`;
     s.answers.forEach(a=>{
       body += `<div class="q"><div class="q-text"><strong>${esc(a.questionId)}</strong></div>
