@@ -13,7 +13,7 @@
 //   docs.google.com/spreadsheets/d/<THIS_ID>/edit
 // Using openById() instead of getActiveSpreadsheet() means the script works
 // even when it's a standalone project (not bound to the sheet).
-const SPREADSHEET_ID = '1vtv38Ld3utmwq957a5voIAgiz8W6ySkTo7YE7dPNNKw';
+const SPREADSHEET_ID = '1vtv38Ld3utmwq957a5volAgiz8W6ySkTo7YE7dPNNKw';
 
 function getSpreadsheet() {
     if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
