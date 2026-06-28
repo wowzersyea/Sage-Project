@@ -126,9 +126,16 @@
     "\ud83d\udd34 MEASLES \u2014 IG SUPPLY AWARENESS",
     "JPIDS gap this period:",
     "PIDJ June 2026 (Vol. 45, Issue 6) full TOC:",
-    "Measles update cadence:"
+    "Measles update cadence:",
+    "\u26a0\ufe0f U.S. MEASLES ELIMINATION STATUS AT IMMINENT RISK \u2014 Updated June 25\u201326, 2026",
+    "Key epidemiologic context for pediatric practice:",
+    "CDC Operational Guidance for Investigating Locally Acquired Mosquito-Transmitted Malaria \u2014 United States, 2026",
+    "*MMWR Recommendations and Reports, Vol. 75, No. RR-1, Published May 21, 2026* | https://doi.org/10.15585/mmwr.rr7501a1",
+    "https://doi.org/10.15585/mmwr.ss7503a1",
+    "No new pediatric pharmacokinetic/pharmacodynamic modeling studies, population PK articles, or TDM-focused publications with confirmed publication dates of June 14\u201328, 2026 were identified",
+    "Updated data, June 25\u201326, 2026:"
   ],
-  "last_run": "2026-06-14T08:58:52.788361",
+  "last_run": "2026-06-28T08:37:49.683116",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -888,6 +895,57 @@
       "key_finding": "Nationwide Israeli matched case-control study (N=459,993) found BCG vaccination associated with reduced PFAPA risk, suggesting potential non-specific immune benefit and earlier diagnosis recognition that could reduce unnecessary antibiotic courses.",
       "study_type": "case-control",
       "digest_date": "2026-06-14"
+    },
+    {
+      "title": "Impaired Treg Response and Subclinical Cardiac Dysfunction in Children Following SARS-CoV-2 Infection",
+      "doi": "https://journals.lww.com/pidj/toc/2026/07000",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "July 2026 (online ahead of print June 2026)",
+      "topics": [
+        "SARS-CoV-2",
+        "post-COVID-19",
+        "cardiac-dysfunction",
+        "regulatory-T-cells",
+        "immune-dysregulation",
+        "pediatric"
+      ],
+      "key_finding": "Subclinical cardiac contractility alterations in children recovering from mild/asymptomatic COVID-19 are associated with reduced regulatory T cells, shorter telomeres, and elevated inflammatory markers at 3 months post-infection.",
+      "study_type": "cohort",
+      "digest_date": "2026-06-28"
+    },
+    {
+      "title": "CDC Operational Guidance for Investigating Locally Acquired Mosquito-Transmitted Malaria \u2014 United States, 2026",
+      "doi": "https://doi.org/10.15585/mmwr.rr7501a1",
+      "journal": "MMWR Recommendations and Reports",
+      "date": "May 21, 2026",
+      "topics": [
+        "malaria",
+        "locally-acquired-transmission",
+        "Plasmodium",
+        "Anopheles-mosquitoes",
+        "diagnostic-testing",
+        "epidemiologic-investigation"
+      ],
+      "key_finding": "Updated CDC operational guidance emphasizes enhanced investigations for suspected locally acquired malaria cases without travel history, including rapid diagnostic testing, molecular PCR confirmation, and coordinated epidemiologic and entomologic response.",
+      "study_type": "guideline",
+      "digest_date": "2026-06-28"
+    },
+    {
+      "title": "Foodborne Disease Outbreaks Associated with Marine Toxins, United States, 2011\u20132023",
+      "doi": "https://doi.org/10.15585/mmwr.ss7503a1",
+      "journal": "MMWR Surveillance Summaries",
+      "date": "June 18, 2026",
+      "topics": [
+        "marine-toxins",
+        "ciguatera",
+        "shellfish-poisoning",
+        "foodborne-disease",
+        "outbreak-surveillance",
+        "pediatric-emergency"
+      ],
+      "key_finding": "Over 13 years, 402 marine toxin outbreaks caused 1,280 illnesses and 1 death; 51% of outbreaks occurred in private homes and 70% involved domestically harvested foods, highlighting the need for clinician awareness of marine toxin exposure in coastal areas.",
+      "study_type": "surveillance",
+      "digest_date": "2026-06-28"
     }
   ]
 }
