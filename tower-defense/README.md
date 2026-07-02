@@ -15,8 +15,11 @@ The mechanics are drawn from the top-ranked Google Play tower-defense games
 - **Branching upgrade paths** — every tower has two paths of three tiers each.
   You can't fully max both, so each placement is a build decision, not just a
   position. (Bloons/Kingdom Rush style.)
-- **Storyline campaign** — three hand-crafted levels (Bloodstream → Lymph Node →
-  Deep Tissue) with narrative intro cards and a boss finale.
+- **Storyline campaign** — five hand-crafted chapters (Bloodstream → Lymph Node →
+  Deep Tissue → Bone Marrow → The Heart) with narrative intro cards, a boss
+  finale, and a twin-boss last stand — plus an **Endless mode** (Septic Surge)
+  with open-ended scaling, a superbug every 10th wave, and a saved personal
+  best.
 - **Upgradable weapons** — five tower types (Macrophage, Neutrophil, Antibiotic
   Battery, T-Cell Sniper, Fever Coil), each with distinct roles: single-target,
   splash (ground-only — it cannot target flying viruses), damage-over-time,
@@ -81,5 +84,7 @@ tooling below (not part of this repo):
    purchases through `grantTokens()` in `index.html` and re-answer the Data
    safety form.
 
-Store-listing assets still needed before submission: screenshots (phone +
-7"/10" tablet), a 1024×500 feature graphic, and short/full descriptions.
+Store-listing assets are pre-generated in `store/`: a 1024×500 feature
+graphic and four 1920×1080 screenshots (gameplay, upgrades, campaign,
+endless boss wave). Still needed: 7"/10" tablet screenshots if targeting
+tablets, and the short/full store descriptions.
