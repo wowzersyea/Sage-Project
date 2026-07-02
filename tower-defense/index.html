@@ -758,10 +758,12 @@ CV.addEventListener('pointerdown', ev=>{
   if(!G||G.over) return;
   const p=canvasPoint(ev);
   if(G.aimMode){ castAbility(G.aimMode,p.x,p.y); return; }
-  // find slot
-  let hit=null;
-  for(const slot of G.slots){ if(Math.hypot(slot.x-p.x,slot.y-p.y)<22){ hit=slot; break; } }
-  if(hit){ openPopover(hit,p); }
+  // find nearest slot; hit radius grows as the canvas shrinks so the
+  // on-screen touch target never drops below ~20 CSS px on phones
+  const hitR=Math.max(22, 20*W/CV.getBoundingClientRect().width);
+  let hit=null, hd=Infinity;
+  for(const slot of G.slots){ const d=Math.hypot(slot.x-p.x,slot.y-p.y); if(d<hd){ hd=d; hit=slot; } }
+  if(hit && hd<=hitR){ openPopover(hit); }
   else { closePopover(); }
 });
 
