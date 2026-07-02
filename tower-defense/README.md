@@ -19,7 +19,8 @@ The mechanics are drawn from the top-ranked Google Play tower-defense games
   Deep Tissue) with narrative intro cards and a boss finale.
 - **Upgradable weapons** — five tower types (Macrophage, Neutrophil, Antibiotic
   Battery, T-Cell Sniper, Fever Coil), each with distinct roles: single-target,
-  splash, damage-over-time, long-range burst, and crowd-control.
+  splash (ground-only — it cannot target flying viruses), damage-over-time,
+  long-range burst, and crowd-control.
 - **Dual currency** — earn **gold** in battle to build/upgrade, and spend
   premium **tokens** (💎) to *rush* upgrades instantly and power hero abilities,
   mirroring the convenience-currency model common to mobile TD games.
@@ -38,6 +39,8 @@ The mechanics are drawn from the top-ranked Google Play tower-defense games
 
 ## Enemies
 
-Bacteria, Strep chains, MRSA clusters, flying Viruses, Fungal spores, Biofilms
-(heavily armored), and a Pan-Resistant Superbug boss. Armor, flying, and
-slow/stun resistances make tower variety matter.
+Bacteria, Strep chains, MRSA clusters, flying Viruses (which slip past
+Neutrophil bursts), Fungal spores, Biofilms (heavily armored), and a
+Pan-Resistant Superbug boss. Armor, flying, and slow/stun resistances make
+tower variety matter. Wave compositions are generated from a fixed per-level
+seed, so levels play the same on every device and replay.
