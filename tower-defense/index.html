@@ -38,6 +38,11 @@
   .stat .ico{font-size:15px}
   .stat.gold{color:var(--gold)} .stat.token{color:var(--token)} .stat.lives{color:var(--hp)}
   .stat small{color:var(--muted);font-weight:500;font-size:11px}
+  #wavePreview{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:4px 10px;min-height:32px}
+  #wavePreview:empty{display:none}
+  #wavePreview .wp{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--muted)}
+  #wavePreview img{display:block}
   #levelName{font-weight:700;font-size:15px;margin-right:auto;letter-spacing:.2px}
   .btn{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);
     border-radius:10px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:13px;transition:.15s}
@@ -111,6 +116,7 @@
     <div class="stat"><small>WAVE</small>&nbsp;<span id="wave">0/0</span></div>
     <button class="btn ghost" id="speedBtn">▶ 1×</button>
     <button class="btn ghost" id="muteBtn" title="Sound">🔊</button>
+    <div id="wavePreview" title="Next wave"></div>
     <button class="btn primary" id="startBtn">Start Wave ▶</button>
     <button class="btn token" id="shopBtn">💎 Vault</button>
     <button class="btn ghost" id="menuBtn">☰</button>
@@ -128,6 +134,7 @@
   <div class="modal">
     <div class="tag" id="storyChapter">CHAPTER 1</div>
     <h2 id="storyTitle">The First Breach</h2>
+    <canvas id="storyArt" width="960" height="240" style="width:100%;border-radius:12px;border:1px solid var(--line);margin:8px 0;display:block"></canvas>
     <div class="story-card" id="storyText"></div>
     <div id="storyObjective" class="muted" style="font-size:13px;margin:8px 0"></div>
     <div class="center" style="margin-top:16px">
@@ -861,6 +868,22 @@ function enemySprite(type){
   return SPRITES.enemy[type]=c;
 }
 
+/* ---- UI thumbnails composed from the same sprites ---- */
+const THUMBS={tower:{},enemy:{}};
+function towerThumb(key){
+  if(THUMBS.tower[key]) return THUMBS.tower[key];
+  const c=mkCanvas(56,56), x=c.getContext('2d');
+  x.drawImage(towerBaseSprite(key),0,0);
+  x.translate(28,28); x.rotate(-Math.PI/2); x.drawImage(towerGunSprite(key),-20,-15);
+  return THUMBS.tower[key]=c.toDataURL();
+}
+function enemyThumb(type){
+  if(THUMBS.enemy[type]) return THUMBS.enemy[type];
+  const spr=enemySprite(type), c=mkCanvas(30,30), x=c.getContext('2d');
+  x.drawImage(spr,0,0,spr.width,spr.height,1,1,28,28);
+  return THUMBS.enemy[type]=c.toDataURL();
+}
+
 /* ---- particles & floating text ---- */
 function spawnParticles(px,py,color,n,sp){
   if(G.particles.length>320) return;
@@ -1115,6 +1138,15 @@ function updateHUD(){
   $('startBtn').disabled = G.waveActive || G.over || G.waveIdx>=G.L.waves.length;
   $('speedBtn').textContent=`▶ ${G.speed}×`;
   $('muteBtn').textContent = SAVE.muted ? '🔇' : '🔊';
+  // incoming wave composition preview (hidden mid-wave and when done)
+  const wp=$('wavePreview'); wp.innerHTML='';
+  if(!G.waveActive && !G.over && G.waveIdx<G.L.waves.length){
+    const agg={};
+    G.L.waves[G.waveIdx].groups.forEach(g=>{ agg[g.type]=(agg[g.type]||0)+g.count; });
+    for(const type in agg){ const d=document.createElement('span'); d.className='wp';
+      d.innerHTML=`<img src="${enemyThumb(type)}" width="22" height="22" alt="${ENEMIES[type].name}">×${agg[type]}`;
+      d.title=ENEMIES[type].name; wp.appendChild(d); }
+  }
   $('shopBalance').textContent=SAVE.tokens;
   renderAbilities();
 }
@@ -1190,7 +1222,7 @@ function renderBuild(slot){
   let html=`<h4>🏗️ Build Defense</h4><div class="tw-grid">`;
   for(const key of TOWER_KEYS){ const t=TOWERS[key]; const afford=G.gold>=t.cost;
     html+=`<div class="tw ${afford?'':'disabled'}" data-key="${key}">
-      <div class="em">${t.emoji}</div><div class="nm">${t.name}</div><div class="cost">🪙 ${t.cost}</div></div>`;
+      <img src="${towerThumb(key)}" width="40" height="40" alt=""><div class="nm">${t.name}</div><div class="cost">🪙 ${t.cost}</div></div>`;
   }
   html+=`</div><div class="info-line" id="twDesc">Tap a defense to see details.</div>`;
   POP.innerHTML=html;
@@ -1221,7 +1253,7 @@ function nextTier(t,P){
 }
 function renderUpgrade(slot){
   const t=slot.tower; const def=TOWERS[t.key]; const s=towerStats(t);
-  let html=`<h4>${def.emoji} ${def.name} <span class="muted" style="font-size:11px;font-weight:500">Lv ${t.pathA+t.pathB}</span></h4>`;
+  let html=`<h4><img src="${towerThumb(t.key)}" width="26" height="26" alt="" style="vertical-align:-7px"> ${def.name} <span class="muted" style="font-size:11px;font-weight:500">Lv ${t.pathA+t.pathB}</span></h4>`;
   html+=`<div class="info-line">DMG <b>${s.dmg.toFixed(0)}</b> · RNG <b>${s.range.toFixed(0)}</b> · ${(1/s.rate).toFixed(1)}/s`+
         `${s.splash?` · AoE ${s.splash.toFixed(0)}`:''}${s.dot?` · DoT ${s.dot.toFixed(0)}`:''}${s.slow?` · slow ${(s.slow*100).toFixed(0)}%`:''}</div>`;
   html+=`<div class="up-row">${pathHtml(t,'A',def)}${pathHtml(t,'B',def)}</div>`;
@@ -1283,8 +1315,41 @@ function sellTower(slot){
 }
 
 /* ---------- Flow: story, start, results ---------- */
+function drawStoryArt(levelIdx){
+  const L=LEVELS[levelIdx];
+  const c=$('storyArt'), x=c.getContext('2d'), w=c.width, h=c.height;
+  // tissue backdrop
+  let g=x.createRadialGradient(w*0.3,h*0.4,20,w*0.5,h*0.5,w*0.6);
+  g.addColorStop(0,'#152238'); g.addColorStop(1,'#080e1a');
+  x.fillStyle=g; x.fillRect(0,0,w,h);
+  const rnd=mulberry32(31+levelIdx*7);
+  for(let i=0;i<10;i++){ const bx=rnd()*w, by=rnd()*h, br=25+rnd()*60;
+    g=x.createRadialGradient(bx,by,5,bx,by,br);
+    g.addColorStop(0,'rgba(110,140,200,0.06)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    x.fillStyle=g; x.beginPath(); x.arc(bx,by,br,0,7); x.fill(); }
+  // vessel sweep
+  x.lineCap='round';
+  const sweep=(wd,st)=>{ x.strokeStyle=st; x.lineWidth=wd; x.beginPath();
+    x.moveTo(-20,h*0.72); x.quadraticCurveTo(w*0.45,h*0.15,w+20,h*0.6); x.stroke(); };
+  sweep(56,'#251b33'); sweep(48,'#31243f'); sweep(40,'#3a2a44'); sweep(26,'rgba(70,48,80,0.55)');
+  // marching pathogens of this level's pool
+  const pool=[...new Set(L.waves.flatMap(wv=>wv.groups.map(gr=>gr.type)))].slice(0,4);
+  pool.forEach((type,i)=>{ const spr=enemySprite(type); const t=0.18+i*0.17;
+    const px=t*w, py=(1-t)*(1-t)*h*0.72 + 2*(1-t)*t*h*0.15 + t*t*h*0.6;
+    const sc=(type==='boss'?1.15:1.35);
+    x.drawImage(spr, px-spr.width*sc/2, py-spr.height*sc/2, spr.width*sc, spr.height*sc); });
+  // defending towers on the tissue
+  [['macro',w*0.22,h*0.32],['tcell',w*0.62,h*0.78]].forEach(([k,px,py])=>{
+    x.drawImage(towerBaseSprite(k), px-28, py-28);
+    x.save(); x.translate(px,py); x.rotate(-0.5); x.drawImage(towerGunSprite(k),-20,-15); x.restore(); });
+  // vignette
+  g=x.createRadialGradient(w/2,h/2,h*0.4,w/2,h/2,w*0.62);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.5)');
+  x.fillStyle=g; x.fillRect(0,0,w,h);
+}
 function openStory(levelIdx){
   const L=LEVELS[levelIdx];
+  drawStoryArt(levelIdx);
   $('storyChapter').textContent=L.chapter;
   $('storyTitle').textContent=L.name.split('·').pop().trim();
   $('storyText').textContent=L.story;
