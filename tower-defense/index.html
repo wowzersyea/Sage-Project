@@ -340,7 +340,7 @@ const LEVELS = [
     name:'Bloodstream · The First Breach', chapter:'CHAPTER 1',
     story:"A splinter wound has seeded the bloodstream. Pathogens stream toward the heart. Station your first responders along the vessel and don't let them reach vital tissue.",
     objective:'Survive 10 waves · Starting gold 320 · 20 lives',
-    startGold:320, lives:20, hpScale:1,
+    startGold:320, lives:20, hpScale:1, theme:{bg:['#ffb397','#f4806e','#d75f58'], prop:'redcell'},
     path:[[-30,120],[220,120],[220,300],[520,300],[520,140],[760,140],[760,440],[990,440]],
     slots:slotGrid([[120,220],[320,220],[320,400],[420,200],[620,260],[660,340],[680,540],[860,300],[140,380],[520,470]]),
     waves:buildWaves(10, ['bacterium','strep'], false, 1)
@@ -349,7 +349,7 @@ const LEVELS = [
     name:'Lymph Node · Swarm Season', chapter:'CHAPTER 2',
     story:"The infection reached the lymph nodes and is replicating fast. Viral particles now slip through — they fly past ground defenses. Diversify, or be overrun.",
     objective:'Survive 12 waves · Flying viruses appear · 18 lives',
-    startGold:360, lives:18, hpScale:1.15,
+    startGold:360, lives:18, hpScale:1.15, theme:{bg:['#ffd3e0','#f2a6c0','#cf7d9d'], prop:'lymph'},
     path:[[-30,300],[180,300],[180,120],[460,120],[460,460],[760,460],[760,200],[990,200]],
     slots:slotGrid([[110,200],[280,200],[280,420],[380,240],[560,240],[560,380],[660,360],[860,120],[380,540],[680,540]]),
     waves:buildWaves(12, ['bacterium','strep','virus','staph'], false, 2)
@@ -358,7 +358,7 @@ const LEVELS = [
     name:'Deep Tissue · The Colony', chapter:'CHAPTER 3',
     story:"Down in the tissue, survivors formed a biofilm — a slime fortress that shrugs off single doses. Combination therapy and armor-piercing agents are your only hope.",
     objective:'Survive 14 waves · Armored biofilms · Boss finale',
-    startGold:500, lives:16, hpScale:1.25,
+    startGold:500, lives:16, hpScale:1.25, theme:{bg:['#ff9d8a','#e26e66','#b84d55'], prop:'fiber'},
     path:[[-30,80],[300,80],[300,300],[80,300],[80,520],[600,520],[600,180],[900,180],[900,520],[990,520]],
     slots:slotGrid([[180,180],[420,180],[200,400],[420,400],[500,300],[720,300],[720,440],[500,580],[820,300],[300,580]]),
     waves:buildWaves(14, ['strep','staph','virus','fungus','biofilm'], true, 3)
@@ -367,7 +367,7 @@ const LEVELS = [
     name:'Bone Marrow · Reinforcements', chapter:'CHAPTER 4',
     story:"The infection has reached the marrow — the factory of your defenders. Production lines are stalling while fungal spores burrow deep. Hold the corridors long enough for a fresh generation of immune cells to mature.",
     objective:'Survive 16 waves · Fungal burrows · Long corridors',
-    startGold:520, lives:15, hpScale:1.35,
+    startGold:520, lives:15, hpScale:1.35, theme:{bg:['#ffe3b3','#f2b378','#d18a52'], prop:'bone'},
     path:[[-30,520],[200,520],[200,120],[440,120],[440,420],[680,420],[680,120],[990,120]],
     slots:slotGrid([[120,420],[120,220],[300,220],[300,420],[520,220],[540,520],[770,220],[780,480],[880,220],[440,540]]),
     waves:buildWaves(16, ['bacterium','virus','staph','fungus'], false, 4)
@@ -376,7 +376,7 @@ const LEVELS = [
     name:'The Heart · Last Stand', chapter:'CHAPTER 5',
     story:"Everything converges on the heart. The pan-resistant strain has adapted, splitting into twin superbugs, and every pathogen you have ever fought marches behind them. This is the last line. There is nothing after it.",
     objective:'Survive 18 waves · Twin boss finale · Everything attacks',
-    startGold:560, lives:14, hpScale:1.45,
+    startGold:560, lives:14, hpScale:1.45, theme:{bg:['#ff9e8e','#e85a55','#b3323c'], prop:'muscle'},
     path:[[-30,100],[150,100],[150,500],[380,500],[380,100],[610,100],[610,500],[840,500],[840,100],[990,100]],
     slots:slotGrid([[80,300],[265,200],[265,400],[495,200],[495,400],[725,200],[725,400],[910,300],[80,520],[910,520]]),
     waves:buildWaves(18, ['strep','virus','staph','fungus','biofilm'], 2, 5)
@@ -385,7 +385,7 @@ const LEVELS = [
     name:'Endless · Septic Surge', chapter:'ENDLESS MODE', endless:true,
     story:"A limitless surge of pathogens pours through the bloodstream, each wave stronger than the last, with superbugs arriving every tenth wave. There is no victory here — only the record of how long you held. Good luck.",
     objective:'Survive as long as you can · Boss every 10th wave · Personal best is saved',
-    startGold:450, lives:20, hpScale:1.2,
+    startGold:450, lives:20, hpScale:1.2, theme:{bg:['#e8a0c0','#bd6b9a','#84446e'], prop:'debris'},
     path:[[-30,120],[220,120],[220,300],[520,300],[520,140],[760,140],[760,440],[990,440]],
     slots:slotGrid([[120,220],[320,220],[320,400],[420,200],[620,260],[660,340],[680,540],[860,300],[140,380],[520,470]]),
     waves:buildEndlessWaves(200, ['bacterium','strep','virus','staph','fungus','biofilm'], 9)
@@ -1075,15 +1075,69 @@ function spawnParticles(px,py,color,n,sp){
     G.particles.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:0.45+Math.random()*0.35,max:0.8,r:1.5+Math.random()*2.2,color}); }
 }
 
+/* ---- per-chapter biome props: each map reads as its own place ---- */
+function drawBiome(c, th, rnd){
+  const P=th.prop;
+  if(P==='redcell'){          // bloodstream: big drifting red cells
+    for(let i=0;i<9;i++){ const bx=rnd()*W, by=rnd()*H, br=16+rnd()*22;
+      c.globalAlpha=0.28; c.fillStyle='#e0556a';
+      c.beginPath(); c.ellipse(bx,by,br,br*0.72,rnd()*2,0,7); c.fill();
+      c.fillStyle='#c23c52'; c.beginPath(); c.ellipse(bx,by,br*0.5,br*0.34,rnd(),0,7); c.fill();
+      c.globalAlpha=1; }
+  } else if(P==='lymph'){     // lymph node: follicle rings + white lymphocytes
+    for(let i=0;i<6;i++){ const bx=rnd()*W, by=rnd()*H, br=40+rnd()*50;
+      c.strokeStyle='rgba(255,255,255,0.25)'; c.lineWidth=6; c.setLineDash([12,10]);
+      c.beginPath(); c.arc(bx,by,br,0,7); c.stroke(); c.setLineDash([]); }
+    for(let i=0;i<12;i++){ const bx=rnd()*W, by=rnd()*H, br=6+rnd()*8;
+      c.globalAlpha=0.55; c.fillStyle='#fff5fa'; c.beginPath(); c.arc(bx,by,br,0,7); c.fill();
+      c.fillStyle='#d9a8c4'; c.beginPath(); c.arc(bx+br*0.15,by,br*0.5,0,7); c.fill(); c.globalAlpha=1; }
+  } else if(P==='fiber'){     // deep tissue: diagonal muscle-fiber striations
+    c.globalAlpha=0.16; c.lineCap='round';
+    for(let i=0;i<16;i++){ const y0=rnd()*H*1.4-H*0.2, ln=180+rnd()*260, x0=rnd()*W;
+      c.strokeStyle=i%2?'#8f2f3c':'#ffb9a8'; c.lineWidth=8+rnd()*10;
+      c.beginPath(); c.moveTo(x0,y0); c.lineTo(x0+ln*0.9,y0+ln*0.45); c.stroke(); }
+    c.globalAlpha=1;
+  } else if(P==='bone'){      // marrow: trabecular honeycomb + fat globules
+    c.strokeStyle='rgba(190,130,70,0.30)'; c.lineWidth=7;
+    for(let i=0;i<11;i++){ const bx=rnd()*W, by=rnd()*H, br=24+rnd()*34;
+      c.beginPath(); c.arc(bx,by,br,rnd()*3,rnd()*3+2.4); c.stroke(); }
+    for(let i=0;i<8;i++){ const bx=rnd()*W, by=rnd()*H, br=10+rnd()*14;
+      c.globalAlpha=0.5; c.fillStyle='#fff2cc'; c.beginPath(); c.arc(bx,by,br,0,7); c.fill();
+      c.globalAlpha=0.25; c.fillStyle='#d9a860'; c.beginPath(); c.arc(bx,by,br,0,7); c.stroke(); c.globalAlpha=1; }
+  } else if(P==='muscle'){    // heart: horizontal cardiac striations + faint giant heart
+    c.globalAlpha=0.14;
+    for(let y=0;y<H;y+=26){ c.strokeStyle=(y/26)%2?'#8f1f2e':'#ffc2b3'; c.lineWidth=9;
+      c.beginPath(); c.moveTo(-10,y+Math.sin(y)*6);
+      for(let x2=0;x2<=W+20;x2+=60) c.lineTo(x2,y+Math.sin(x2*0.02+y)*8); c.stroke(); }
+    c.globalAlpha=0.13; c.fillStyle='#7d1626';
+    const hx=W*0.5,hy=H*0.52,sz=170;
+    c.beginPath(); c.moveTo(hx,hy+sz*0.78);
+    c.bezierCurveTo(hx-sz*1.15,hy+sz*0.12,hx-sz*0.72,hy-sz*0.72,hx,hy-sz*0.18);
+    c.bezierCurveTo(hx+sz*0.72,hy-sz*0.72,hx+sz*1.15,hy+sz*0.12,hx,hy+sz*0.78);
+    c.fill(); c.globalAlpha=1;
+  } else {                    // endless: septic debris + toxic bubbles
+    for(let i=0;i<14;i++){ const bx=rnd()*W, by=rnd()*H, br=3+rnd()*7;
+      c.globalAlpha=0.35; c.fillStyle=rnd()<0.5?'#5e2a4a':'#8a3e66';
+      c.save(); c.translate(bx,by); c.rotate(rnd()*3);
+      c.beginPath(); c.moveTo(-br,0); c.lineTo(0,-br*0.7); c.lineTo(br,0); c.lineTo(0,br*0.7);
+      c.closePath(); c.fill(); c.restore(); c.globalAlpha=1; }
+    for(let i=0;i<8;i++){ const bx=rnd()*W, by=rnd()*H, br=8+rnd()*14;
+      c.strokeStyle='rgba(220,255,230,0.3)'; c.lineWidth=2;
+      c.beginPath(); c.arc(bx,by,br,0,7); c.stroke(); }
+  }
+}
+
 /* ---- static per-level background: organic tissue + vessel ---- */
 function buildBG(){
   BG=mkCanvas(W,H);
   const c=BG.getContext('2d');
   const rnd=mulberry32(101+G.levelIdx*13);
-  // bright cartoon tissue
+  // bright cartoon tissue, themed per chapter
+  const th=(G.L.theme)||{bg:['#ffb397','#f4806e','#d75f58'],prop:'redcell'};
   let g=c.createRadialGradient(W*0.38,H*0.32,60,W*0.5,H*0.5,W*0.75);
-  g.addColorStop(0,'#ffb397'); g.addColorStop(0.55,'#f4806e'); g.addColorStop(1,'#d75f58');
+  g.addColorStop(0,th.bg[0]); g.addColorStop(0.55,th.bg[1]); g.addColorStop(1,th.bg[2]);
   c.fillStyle=g; c.fillRect(0,0,W,H);
+  drawBiome(c, th, rnd);
   // playful cell polka-dots
   for(let i=0;i<30;i++){ const bx=rnd()*W, by=rnd()*H, br=18+rnd()*55;
     g=c.createRadialGradient(bx-br*0.25,by-br*0.3,br*0.1,bx,by,br);
@@ -1114,6 +1168,11 @@ function buildBG(){
   g=c.createRadialGradient(W/2,H/2,H*0.45,W/2,H/2,H*0.95);
   g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(120,25,20,0.30)');
   c.fillStyle=g; c.fillRect(0,0,W,H);
+  // decorated border frame
+  c.strokeStyle='rgba(110,25,30,0.5)'; c.lineWidth=10;
+  c.strokeRect(5,5,W-10,H-10);
+  c.strokeStyle='rgba(255,230,215,0.20)'; c.lineWidth=2.5;
+  c.beginPath(); c.roundRect(11,11,W-22,H-22,10); c.stroke();
   // ambient drifting cells (drawn live; positions derived from elapsed)
   AMBIENT=[];
   for(let i=0;i<16;i++) AMBIENT.push({ x0:rnd()*W, y0:rnd()*H, vx:6+rnd()*10, vy:(rnd()-0.5)*6,
@@ -1125,6 +1184,11 @@ function draw(){
   CTX.save();
   if(G.shake>0.2) CTX.translate((Math.random()-0.5)*G.shake,(Math.random()-0.5)*G.shake);
   if(BG) CTX.drawImage(BG,0,0); else CTX.clearRect(0,0,W,H);
+  // tissue breathing: slow pulsing light
+  const br2=0.05+0.035*Math.sin(G.elapsed*0.9);
+  let bg2=CTX.createRadialGradient(W*0.45,H*0.4,60,W*0.5,H*0.5,W*0.7);
+  bg2.addColorStop(0,`rgba(255,244,225,${br2})`); bg2.addColorStop(1,'rgba(255,244,225,0)');
+  CTX.fillStyle=bg2; CTX.fillRect(0,0,W,H);
   // ambient drifting cells
   for(const am of AMBIENT){
     const ax=((am.x0+G.elapsed*am.vx)%(W+60))-30;
