@@ -175,6 +175,7 @@
 <!-- Wave / game over result -->
 <div class="modal-bg" id="resultModal">
   <div class="modal center">
+    <canvas id="resultArt" width="960" height="180" style="width:100%;border-radius:12px;border:1px solid var(--line);margin-bottom:10px;display:block"></canvas>
     <h2 id="resultTitle">Level Clear!</h2>
     <div id="resultBody" style="margin:10px 0"></div>
     <div class="pop-actions" style="justify-content:center">
@@ -884,6 +885,30 @@ function enemyThumb(type){
   return THUMBS.enemy[type]=c.toDataURL();
 }
 
+/* ---- campaign menu: mini map preview per level ---- */
+const LEVEL_THUMBS={};
+function levelThumb(idx){
+  if(LEVEL_THUMBS[idx]) return LEVEL_THUMBS[idx];
+  const L=LEVELS[idx], c=mkCanvas(120,72), x=c.getContext('2d');
+  let g=x.createRadialGradient(40,26,6,60,36,90);
+  g.addColorStop(0,'#152238'); g.addColorStop(1,'#080e1a');
+  x.fillStyle=g; x.fillRect(0,0,120,72);
+  const sx=120/W, sy=72/H, p=L.path;
+  x.lineJoin='round'; x.lineCap='round';
+  [[9,'#251b33'],[7,'#3a2a44'],[4,'rgba(80,55,92,0.8)']].forEach(([wd,st])=>{
+    x.strokeStyle=st; x.lineWidth=wd; x.beginPath();
+    x.moveTo(p[0][0]*sx,p[0][1]*sy);
+    for(let i=1;i<p.length;i++) x.lineTo(p[i][0]*sx,p[i][1]*sy); x.stroke(); });
+  // slots as faint dots
+  x.fillStyle='rgba(120,160,220,0.5)';
+  L.slots.forEach(sl=>{ x.beginPath(); x.arc(sl.x*sx, sl.y*sy, 1.6, 0, 7); x.fill(); });
+  // heart at the exit
+  const end=p[p.length-1];
+  x.fillStyle='#e0455e'; x.beginPath(); x.arc(end[0]*sx-2, end[1]*sy, 3, 0, 7); x.fill();
+  x.strokeStyle='rgba(255,255,255,0.08)'; x.lineWidth=1; x.strokeRect(0.5,0.5,119,71);
+  return LEVEL_THUMBS[idx]=c.toDataURL();
+}
+
 /* ---- particles & floating text ---- */
 function spawnParticles(px,py,color,n,sp){
   if(G.particles.length>320) return;
@@ -1362,6 +1387,41 @@ function beginLevel(levelIdx){
   buildBG();
   closePopover(); updateHUD();
 }
+function drawResultArt(kind){
+  const c=$('resultArt'), x=c.getContext('2d'), w=c.width, h=c.height;
+  let g=x.createRadialGradient(w*0.4,h*0.4,20,w*0.5,h*0.5,w*0.55);
+  if(kind==='win'){ g.addColorStop(0,'#14283a'); g.addColorStop(1,'#081220'); }
+  else if(kind==='lose'){ g.addColorStop(0,'#301220'); g.addColorStop(1,'#150710'); }
+  else { g.addColorStop(0,'#1b2340'); g.addColorStop(1,'#0a0f22'); }
+  x.fillStyle=g; x.fillRect(0,0,w,h);
+  const rnd=mulberry32(kind==='win'?5:kind==='lose'?6:7);
+  if(kind==='win'){
+    // triumphant tower line-up with confetti particles
+    TOWER_KEYS.forEach((k,i)=>{ const px=w*(0.18+i*0.16), py=h*0.62;
+      x.drawImage(towerBaseSprite(k), px-28, py-28);
+      x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.drawImage(towerGunSprite(k),-20,-15); x.restore(); });
+    for(let i=0;i<40;i++){ x.globalAlpha=0.5+rnd()*0.5;
+      x.fillStyle=['#ffcf5c','#4fe08b','#5fa9ff','#7ad3ff','#c58bff'][i%5];
+      x.fillRect(rnd()*w, rnd()*h*0.5, 3+rnd()*3, 3+rnd()*3); }
+    x.globalAlpha=1;
+  } else if(kind==='lose'){
+    // the superbug looms
+    const spr=enemySprite('boss');
+    x.drawImage(spr, w/2-spr.width, h*0.55-spr.height, spr.width*2, spr.height*2);
+    g=x.createRadialGradient(w/2,h/2,h*0.2,w/2,h/2,w*0.5);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(120,10,30,0.35)');
+    x.fillStyle=g; x.fillRect(0,0,w,h);
+  } else {
+    // endless: a marching horde silhouette
+    ['strep','virus','staph','fungus','biofilm','boss'].forEach((t,i)=>{
+      const spr=enemySprite(t); const sc=0.9+i*0.06;
+      x.globalAlpha=0.9; x.drawImage(spr, w*(0.1+i*0.15)-spr.width*sc/2, h*0.55-spr.height*sc/2, spr.width*sc, spr.height*sc); });
+    x.globalAlpha=1;
+  }
+  g=x.createRadialGradient(w/2,h/2,h*0.35,w/2,h/2,w*0.6);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.45)');
+  x.fillStyle=g; x.fillRect(0,0,w,h);
+}
 function gameOver(won){
   if(G.over) return;
   G.over=true; G.won=won;
@@ -1370,6 +1430,7 @@ function gameOver(won){
     const survived=G.waveIdx;
     const isRecord = survived > (SAVE.bestEndless||0);
     SAVE.bestEndless=Math.max(SAVE.bestEndless||0, survived); persist();
+    drawResultArt('endless');
     $('resultTitle').textContent='🌊 Surge Ended';
     $('resultBody').innerHTML=`<p>You held the line for <b>${survived}</b> wave${survived===1?'':'s'}.</p>
       <p class="token" style="font-weight:700">${isRecord?'🏅 New personal best!':'Personal best: '+(SAVE.bestEndless)+' waves'}</p>`;
@@ -1381,12 +1442,14 @@ function gameOver(won){
     SAVE.unlockedLevel=Math.max(SAVE.unlockedLevel, Math.min(LEVELS.length-1, G.levelIdx+1));
     const bonus=8 + G.levelIdx*4;
     SAVE.tokens+=bonus; persist();
+    drawResultArt('win');
     $('resultTitle').textContent='🏆 Level Clear!';
     $('resultBody').innerHTML=`<p>You held <b>${G.L.name.split('·')[0].trim()}</b> against the outbreak.</p>
       <p class="token" style="font-weight:700">+${bonus} 💎 tokens earned</p>
       <p class="muted">Lives remaining: ${G.lives} ❤️</p>`;
     $('resultNext').style.display = (G.levelIdx+1<LEVELS.length)?'inline-block':'none';
   } else {
+    drawResultArt('lose');
     $('resultTitle').textContent='💀 Tissue Breached';
     $('resultBody').innerHTML=`<p>The pathogens overwhelmed your defenses at wave ${G.waveIdx+1}.</p>
       <p class="muted">Regroup and try a different build — or rush a key upgrade with tokens.</p>`;
@@ -1444,7 +1507,10 @@ function openMenu(){
     const cleared = !L.endless && SAVE.cleared.includes(i);
     const sub = L.endless && SAVE.bestEndless ? L.objective+` · Best: ${SAVE.bestEndless} waves` : L.objective;
     const el=document.createElement('div'); el.className='shop-item';
-    el.innerHTML=`<div class="big">${L.endless?(unlocked?'🌊':'🔒'):cleared?'✅':unlocked?'⚔️':'🔒'}</div>
+    const badge=L.endless?(unlocked?'🌊':'🔒'):cleared?'✅':unlocked?'':'🔒';
+    el.innerHTML=`<div style="position:relative;flex:none;${unlocked?'':'filter:grayscale(1) brightness(0.6)'}">
+        <img src="${levelThumb(i)}" width="90" height="54" alt="" style="display:block;border-radius:8px">
+        ${badge?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px">${badge}</div>`:''}</div>
       <div class="grow"><b>${L.name}</b><div>${sub}</div></div>
       <button class="btn ${unlocked?'primary':'ghost'}" ${unlocked?'':'disabled'}>${L.endless?'Survive':cleared?'Replay':'Play'}</button>`;
     if(unlocked) el.querySelector('button').onclick=()=>{ hideModal('menuModal'); openStory(i); };
