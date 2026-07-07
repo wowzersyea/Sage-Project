@@ -830,7 +830,9 @@ function castAbility(key, x, y){
 /* ---------- Rendering ---------- */
 // Tissue background and vessel never change during a level — rendered once
 // per level to an offscreen canvas; sprites cached per tower/enemy type.
-let BG=null, AMBIENT=[];
+let BG=null, AMBIENT=[], NEAR=[];
+// 2.5D: units lower on screen are nearer the camera - scale them up subtly
+function persp(x,y){ const k=0.92+(y/H)*0.15; CTX.translate(x,y); CTX.scale(k,k); CTX.translate(-x,-y); }
 /* ---- color helpers ---- */
 function hexRGB(h){
   if(h[0]==='#'){ const n=parseInt(h.slice(1),16); return [n>>16&255, n>>8&255, n&255]; }
@@ -1296,6 +1298,12 @@ function buildBG(){
   AMBIENT=[];
   for(let i=0;i<16;i++) AMBIENT.push({ x0:rnd()*W, y0:rnd()*H, vx:6+rnd()*10, vy:(rnd()-0.5)*6,
     r:4+rnd()*8, red:rnd()<0.6, a:0.18+rnd()*0.16, ph:rnd()*7 });
+  NEAR=[];
+  for(let i=0;i<5;i++) NEAR.push({ x0:rnd()*W, y0:rnd()*H, vx:10+rnd()*14, r:28+rnd()*22, ph:rnd()*7 });
+  // distance haze: the top of the field recedes
+  g=c.createLinearGradient(0,0,0,H*0.4);
+  g.addColorStop(0,'rgba(140,45,40,0.16)'); g.addColorStop(1,'rgba(140,45,40,0)');
+  c.fillStyle=g; c.fillRect(0,0,W,H*0.4);
 }
 
 /* ---- live drawing ---- */
@@ -1322,12 +1330,20 @@ function draw(){
   }
   drawPath();
   drawHeart();
-  for(const slot of G.slots) drawSlot(slot);
-  // range preview
+  // range preview under all units
   if(G.selectedSlot && G.selectedSlot.tower){ const t=G.selectedSlot.tower; const s=t._stats||towerStats(t);
     CTX.beginPath(); CTX.arc(t.x,t.y,s.range,0,7); CTX.fillStyle='rgba(95,169,255,0.07)'; CTX.fill();
     CTX.strokeStyle='rgba(95,169,255,0.35)'; CTX.stroke(); }
-  for(const e of G.enemies) drawEnemy(e);
+  // painter's algorithm: draw back-to-front by screen y with perspective scale
+  const drawables=[];
+  for(const slot of G.slots) drawables.push({y:slot.y, s:slot});
+  for(const e of G.enemies){ const p=enemyPos(e); drawables.push({y:p.y, e, py:p.y}); }
+  drawables.sort((a,b)=>a.y-b.y);
+  for(const d of drawables){
+    CTX.save(); persp(d.s?d.s.x:enemyPos(d.e).x, d.y);
+    if(d.s) drawSlot(d.s); else drawEnemy(d.e);
+    CTX.restore();
+  }
   // projectiles with trails
   for(const pr of G.projectiles){
     if(pr.trail){ for(let i=0;i<pr.trail.length;i++){ const tp=pr.trail[i], k=(i+1)/pr.trail.length;
@@ -1342,6 +1358,14 @@ function draw(){
       CTX.beginPath(); CTX.arc(pt.x,pt.y,pt.r,0,7); CTX.fill(); }
     CTX.globalAlpha=1; CTX.globalCompositeOperation='source-over'; }
   for(const fx of G.effects) drawEffect(fx);
+  // near-layer parallax floaters (foreground depth cue)
+  for(const nc of NEAR){
+    const nx=((nc.x0+G.elapsed*nc.vx*2.2)%(W+140))-70;
+    const ny=((nc.y0+Math.sin(G.elapsed*0.5+nc.ph)*18)%(H+140)+H+140)%(H+140)-70;
+    let ng=CTX.createRadialGradient(nx,ny,nc.r*0.2,nx,ny,nc.r);
+    ng.addColorStop(0,'rgba(255,190,175,0.10)'); ng.addColorStop(1,'rgba(255,190,175,0)');
+    CTX.fillStyle=ng; CTX.beginPath(); CTX.arc(nx,ny,nc.r,0,7); CTX.fill();
+  }
   // floating bounty text
   for(const f of G.floats){ CTX.globalAlpha=Math.max(0,1-f.t/f.max);
     CTX.font='700 13px Outfit'; CTX.textAlign='center';
