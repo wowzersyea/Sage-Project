@@ -146,7 +146,8 @@
     <div class="stat lives"><span class="ico">❤️</span><span id="lives">20</span></div>
     <div class="stat"><small>WAVE</small>&nbsp;<span id="wave">0/0</span></div>
     <button class="btn ghost" id="speedBtn">▶ 1×</button>
-    <button class="btn ghost" id="muteBtn" title="Sound">🔊</button>
+    <button class="btn ghost" id="muteBtn" title="Sound effects">🔊</button>
+    <button class="btn ghost" id="musicBtn" title="Music">🎵</button>
     <div id="wavePreview" title="Next wave"></div>
     <button class="btn primary" id="startBtn">Start Wave ▶</button>
     <button class="btn token" id="shopBtn">💎 Vault</button>
@@ -228,7 +229,7 @@ const W = CV.width, H = CV.height;
 
 /* ---------- Persistent save ---------- */
 const SAVE_KEY = 'immunopolis_save_v1';
-function freshSave(){ return { tokens:25, unlockedLevel:0, cleared:[], research:{}, lastDaily:0, muted:false, bestEndless:0 }; }
+function freshSave(){ return { tokens:25, unlockedLevel:0, cleared:[], research:{}, lastDaily:0, muted:false, musicMuted:false, bestEndless:0 }; }
 let SAVE = loadSave();
 // Validate each field: a corrupt/hand-edited save must never crash the game
 // or smuggle in a wrong type (e.g. cleared:null, tokens:"25").
@@ -242,6 +243,7 @@ function loadSave(){
     if(s.research && typeof s.research==='object' && !Array.isArray(s.research)) d.research=s.research;
     if(typeof s.lastDaily==='number' && isFinite(s.lastDaily)) d.lastDaily=s.lastDaily;
     if(typeof s.muted==='boolean') d.muted=s.muted;
+    if(typeof s.musicMuted==='boolean') d.musicMuted=s.musicMuted;
     if(typeof s.bestEndless==='number' && isFinite(s.bestEndless)) d.bestEndless=Math.max(0, Math.floor(s.bestEndless));
   }catch(e){}
   return d;
@@ -283,7 +285,69 @@ const AudioFX = {
     if(now-(this._t[name]||0) < ms) return;
     this._t[name]=now; this.play(name); }
 };
-document.addEventListener('pointerdown', ()=>AudioFX.ensure(), {passive:true});
+document.addEventListener('pointerdown', ()=>{ AudioFX.ensure();
+  if(!Music.track && typeof G!=='undefined' && G && !G.over) Music.play(G.waveActive?'battle':'menu');
+}, {passive:true});
+
+/* ---------- Music: WebAudio chip-tune engine, no assets ----------
+   Lookahead scheduler over 32 eighth-note steps per track. */
+const Music={
+  track:null, timer:null, step:0, nextT:0, gain:null,
+  TEMPO:{menu:88, battle:126, boss:144},
+  ensure(){ AudioFX.ensure(); if(!AudioFX.ctx) return false;
+    if(!this.gain){ this.gain=AudioFX.ctx.createGain();
+      this.gain.gain.value=SAVE.musicMuted?0:1; this.gain.connect(AudioFX.ctx.destination); }
+    return true; },
+  play(name){ if(this.track===name) return;
+    if(!this.ensure()){ this.track=name; return; } // remember; starts on first gesture
+    this.track=name; this.step=0;
+    if(this.timer) clearInterval(this.timer);
+    this.nextT=AudioFX.ctx.currentTime+0.06;
+    this.timer=setInterval(()=>this.tick(), 90);
+  },
+  stop(){ this.track=null; if(this.timer){ clearInterval(this.timer); this.timer=null; } },
+  setMuted(m){ if(this.gain) this.gain.gain.value=m?0:1; },
+  note(t,f,dur,type,vol){ const c=AudioFX.ctx;
+    const o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.value=f;
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0008,t+dur);
+    o.connect(g); g.connect(this.gain); o.start(t); o.stop(t+dur+0.05); },
+  kick(t){ const c=AudioFX.ctx; const o=c.createOscillator(), g=c.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(130,t); o.frequency.exponentialRampToValueAtTime(38,t+0.12);
+    g.gain.setValueAtTime(0.12,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.14);
+    o.connect(g); g.connect(this.gain); o.start(t); o.stop(t+0.16); },
+  hat(t){ this.note(t,6200,0.03,'square',0.012); },
+  tick(){ if(!this.track||!AudioFX.ctx) return; const c=AudioFX.ctx;
+    if(c.state==='suspended') return;
+    const spb=30/this.TEMPO[this.track];  // eighth-note seconds
+    while(this.nextT < c.currentTime+0.28){
+      this.sched(this.track, this.step%32, this.nextT, spb);
+      this.nextT+=spb; this.step++;
+    } },
+  sched(tr,st,t,spb){
+    const A2=110,C3=130.8,D3=146.8,E3=164.8,F3=174.6,G3=196,A3=220,C4=261.6,D4=293.7,E4=329.6,G4=392,A4=440,C5=523.3,E5=659.3;
+    if(tr==='menu'){
+      if(st%8===0) this.note(t,[A2,F3*0.5,G3*0.5,E3*0.5][ (st/8)|0 ],spb*7,'triangle',0.05);
+      if(st%16===4) [A3,C4,E4].forEach(f=>this.note(t,f,spb*10,'sine',0.018));
+      const mel=[A4,0,C5,0, E4,0,G4,0, A4,0,E4,0, C4,0,0,0];
+      if(st%2===0 && mel[(st/2)%16]) this.note(t,mel[(st/2)%16],spb*1.6,'sine',0.03);
+    } else if(tr==='battle'){
+      if(st%4===0) this.kick(t);
+      if(st%2===1) this.hat(t);
+      const bass=[A2,A2,C3,A2, A2,A2,D3,C3][(st/4)|0];
+      if(st%2===0) this.note(t,bass,spb*1.4,'triangle',0.06);
+      const arp=[A4,C5,E5,C5, A4,E4,A4,C5, G4,C5,E5,C5, A4,E4,C4,E4];
+      if(st%2===0) this.note(t,arp[(st/2)%16],spb*1.1,'square',0.02);
+    } else { // boss
+      if(st%2===0) this.kick(t);
+      this.hat(t);
+      const riff=[D3,D3,F3,D3, G3*0.5,G3*0.5,D3,F3][(st/4)|0];
+      this.note(t,riff*0.5,spb*0.9,'sawtooth',0.05);
+      const stab=[D4,0,F3*2,0, 0,D4,0,G3*2, D4,0,F3*2,0, A3*2,0,G3*2,0];
+      if(st%2===0 && stab[(st/2)%16]) this.note(t,stab[(st/2)%16],spb*0.9,'square',0.025);
+    }
+  }
+};
 
 /* ---------- Tower definitions (branching upgrade paths) ---------- */
 // Each tower: two upgrade paths (A / B), each with 3 tiers. Classic TD build-decision design.
@@ -524,6 +588,7 @@ function startWave(){
   G.spawnStart = G.elapsed;
   toast(`Wave ${G.waveIdx+1} incoming!`);
   AudioFX.play('wave');
+  Music.play(wave.groups.some(g=>g.type==='boss') ? 'boss' : 'battle');
   updateHUD();
 }
 function spawnEnemy(type, hpMul){
@@ -1513,6 +1578,7 @@ function updateHUD(){
   $('startBtn').disabled = G.waveActive || G.over || G.waveIdx>=G.L.waves.length;
   $('speedBtn').textContent=`▶ ${G.speed}×`;
   $('muteBtn').textContent = SAVE.muted ? '🔇' : '🔊';
+  $('musicBtn').style.opacity = SAVE.musicMuted ? 0.45 : 1;
   // incoming wave composition preview (hidden mid-wave and when done)
   const wp=$('wavePreview'); wp.innerHTML='';
   if(!G.waveActive && !G.over && G.waveIdx<G.L.waves.length){
@@ -1734,6 +1800,7 @@ function openStory(levelIdx){
 }
 function beginLevel(levelIdx){
   G=newGame(levelIdx);
+  Music.play('menu');
   buildBG();
   closePopover(); updateHUD();
 }
@@ -1775,6 +1842,7 @@ function drawResultArt(kind){
 function gameOver(won){
   if(G.over) return;
   G.over=true; G.won=won;
+  Music.stop();
   AudioFX.play(won?'win':'lose');
   if(G.L.endless){
     const survived=G.waveIdx;
@@ -1876,6 +1944,8 @@ $('menuReset').onclick=()=>{ if(confirm('Reset all campaign progress and tokens?
 $('startBtn').onclick=()=>startWave();
 $('speedBtn').onclick=()=>{ G.speed = G.speed===1?2:G.speed===2?3:1; $('speedBtn').textContent=`▶ ${G.speed}×`; };
 $('muteBtn').onclick=()=>{ SAVE.muted=!SAVE.muted; persist(); $('muteBtn').textContent=SAVE.muted?'🔇':'🔊'; };
+$('musicBtn').onclick=()=>{ SAVE.musicMuted=!SAVE.musicMuted; persist();
+  Music.setMuted(SAVE.musicMuted); $('musicBtn').style.opacity=SAVE.musicMuted?0.45:1; };
 function modalOpen(){ return Array.from(document.querySelectorAll('.modal-bg')).some(m=>m.style.display==='flex'); }
 document.addEventListener('keydown',e=>{
   if(!G || G.over || modalOpen()) return;
