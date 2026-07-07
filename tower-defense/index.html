@@ -754,6 +754,36 @@ function capEllipse(x,cx,cy,rx,ry,col){ // cylinder end cap
   x.beginPath(); x.ellipse(cx,cy,rx,ry,0,0,7); x.stroke();
 }
 
+/* ---- cartoon faces: the CoC-style character layer ---- */
+function face(x,cx,cy,sc,mood){
+  const ink='#2a1420';
+  const eye=(ex,ey,rx,ry,lid)=>{
+    x.fillStyle='#fff'; x.beginPath(); x.ellipse(ex,ey,rx,ry,0,0,7); x.fill();
+    x.strokeStyle=ink; x.lineWidth=Math.max(0.8,sc*0.2);
+    x.beginPath(); x.ellipse(ex,ey,rx,ry,0,0,7); x.stroke();
+    x.fillStyle=ink; x.beginPath(); x.arc(ex+sc*0.14,ey+sc*0.12,Math.min(rx,ry)*0.52,0,7); x.fill();
+    x.fillStyle='#fff'; x.beginPath(); x.arc(ex+sc*0.02,ey-sc*0.08,Math.min(rx,ry)*0.2,0,7); x.fill();
+    if(lid){ x.fillStyle=ink; x.beginPath(); x.ellipse(ex,ey-ry*0.55,rx*1.05,ry*0.5,0,0,7); x.fill(); } };
+  x.lineCap='round';
+  if(mood==='cyclops'){ eye(cx,cy,sc*1.1,sc*1.1);
+    x.strokeStyle=ink; x.lineWidth=sc*0.3;
+    x.beginPath(); x.arc(cx,cy+sc*1.7,sc*0.55,Math.PI*0.2,Math.PI*0.8); x.stroke(); return; }
+  const sleepy=mood==='sleepy';
+  eye(cx-sc*0.8,cy,sc*0.58,sc*0.75,sleepy); eye(cx+sc*0.8,cy,sc*0.58,sc*0.75,sleepy);
+  x.strokeStyle=ink; x.lineWidth=Math.max(1,sc*0.26);
+  if(mood==='angry'){
+    x.beginPath(); x.moveTo(cx-sc*1.35,cy-sc*1.05); x.lineTo(cx-sc*0.3,cy-sc*0.6); x.stroke();
+    x.beginPath(); x.moveTo(cx+sc*1.35,cy-sc*1.05); x.lineTo(cx+sc*0.3,cy-sc*0.6); x.stroke();
+    x.beginPath(); x.arc(cx,cy+sc*1.6,sc*0.5,Math.PI*1.15,Math.PI*1.85); x.stroke();
+  } else if(mood==='grin'){
+    x.beginPath(); x.arc(cx,cy+sc*0.55,sc*0.7,Math.PI*0.12,Math.PI*0.88); x.stroke();
+  } else if(mood==='derp'){
+    x.beginPath(); x.arc(cx+sc*0.35,cy+sc*0.75,sc*0.45,Math.PI*0.05,Math.PI*0.95); x.stroke();
+  } else { // sleepy / calm
+    x.beginPath(); x.moveTo(cx-sc*0.45,cy+sc*1); x.lineTo(cx+sc*0.45,cy+sc*1); x.stroke();
+  }
+}
+
 /* ---- sprite cache: towers & enemies rendered once, blitted per frame ---- */
 const SPRITES={ towerBase:{}, towerGun:{}, enemy:{} };
 
@@ -807,21 +837,24 @@ function towerGunSprite(key){
   if(SPRITES.towerGun[key]) return SPRITES.towerGun[key];
   const col=TOWERS[key].color, c=mkCanvas(60,30), x=c.getContext('2d');
   // pivot at (20,15), gun points right
+  const gface=(fx,fy,sc,mood)=>{ x.save(); x.translate(fx,fy); x.rotate(Math.PI/2); face(x,0,0,sc,mood); x.restore(); };
   x.lineJoin='round';
   if(key==='macro'){           // organic engulfing pod: shaded capsule + core
     hcyl(x,12,8,30,14,col,7);
     capEllipse(x,40,15,4.5,7,col);
-    phongBall(x,22,15,4.2,shade(col,-0.2),0.6);
     x.strokeStyle=shade(col,-0.55,0.8); x.lineWidth=1; x.beginPath(); x.roundRect(12,8,30,14,7); x.stroke();
+    gface(24,15,3.2,'grin');            // friendly guardian
   } else if(key==='neutro'){   // stout mortar: barrel + breech band + muzzle ring
     hcyl(x,10,7,34,16,col,5);
     hcyl(x,23,5,5,20,shade(col,-0.25),2.5);
     hcyl(x,40,5,7,20,shade(col,0.12),3.5);
     capEllipse(x,46,15,2.6,9,shade(col,-0.15));
     x.fillStyle='rgba(0,0,0,0.55)'; x.beginPath(); x.ellipse(46,15,1.6,6,0,0,7); x.fill();
+    gface(17,15,3.0,'angry');           // gruff artillery sergeant
   } else if(key==='abx'){      // syringe: glass barrel + plunger + needle
     hcyl(x,10,9,24,12,col,4);
     x.fillStyle='rgba(255,255,255,0.4)'; x.beginPath(); x.roundRect(13,10.5,17,3,1.5); x.fill();
+    gface(21,15,2.9,'derp');            // giddy lab tech
     hcyl(x,3,11,8,8,shade(col,-0.3),2);
     let g=x.createLinearGradient(0,13,0,17);
     g.addColorStop(0,'#f4f9ff'); g.addColorStop(0.5,'#b9c9de'); g.addColorStop(1,'#7787a0');
@@ -833,6 +866,7 @@ function towerGunSprite(key){
     capEllipse(x,52,15,1.8,5.5,shade(col,0.05));
     phongBall(x,24,8.5,3.6,shade(col,0.15),0.9);
     x.fillStyle='#0c1424'; x.beginPath(); x.arc(24.6,8.9,1.2,0,7); x.fill();
+    gface(15,15,2.5,'sleepy');          // stone-cold sniper
   } else {                     // fever coil: crystal chevrons + frost orb
     x.lineCap='round';
     for(let i=0;i<3;i++){ const bx=14+i*10;
@@ -841,6 +875,7 @@ function towerGunSprite(key){
       x.strokeStyle=shade(col,0.55,0.95); x.lineWidth=2;
       x.beginPath(); x.moveTo(bx-0.5,8); x.lineTo(bx+6.5,14.5); x.lineTo(bx-0.5,20.5); x.stroke(); }
     phongBall(x,46,15,4.5,col,0.95);
+    gface(46,15,1.9,'grin');            // chill frost buddy
   }
   return SPRITES.towerGun[key]=c;
 }
@@ -851,21 +886,32 @@ function enemySprite(type){
   const c=mkCanvas(S,S), x=c.getContext('2d');
   const ball=(bx,by,br,base)=>phongBall(x,bx,by,br,base,0.7);
   if(type==='bacterium'){
+    // cilia feet
+    x.strokeStyle=shade(col,-0.6,0.95); x.lineWidth=r*0.16; x.lineCap='round';
+    [-0.8,-0.3,0.2,0.7].forEach(o=>{ x.beginPath(); x.moveTo(m+o*r,m+r*0.6);
+      x.lineTo(m+o*r-r*0.12,m+r*1.05); x.stroke(); });
     hcyl(x,m-r*1.25,m-r*0.75,r*2.5,r*1.5,col,r*0.75);
     x.strokeStyle=shade(col,-0.55,0.8); x.lineWidth=1.5;
     x.beginPath(); x.roundRect(m-r*1.25,m-r*0.75,r*2.5,r*1.5,r*0.75); x.stroke();
-    [[-0.5,-0.05],[0.1,0.2],[0.55,-0.1]].forEach(o=>phongBall(x,m+o[0]*r,m+o[1]*r,r*0.22,shade(col,-0.25),0.5));
+    [[-0.7,0.25],[-0.25,-0.3]].forEach(o=>phongBall(x,m+o[0]*r,m+o[1]*r,r*0.2,shade(col,-0.25),0.5));
+    face(x,m+r*0.45,m-r*0.05,r*0.3,'grin');
     let g=x.createRadialGradient(m-r*0.6,m-r*0.5,0,m-r*0.6,m-r*0.5,r*0.7);
     g.addColorStop(0,'rgba(255,255,255,0.65)'); g.addColorStop(1,'rgba(255,255,255,0)');
     x.fillStyle=g; x.beginPath(); x.ellipse(m-r*0.45,m-r*0.4,r*0.75,r*0.3,-0.25,0,7); x.fill();
   } else if(type==='strep'){
-    [[-0.85,0.55],[0,0],[0.85,-0.55]].forEach(o=>ball(m+o[0]*r, m+o[1]*r, r*0.78, col));
+    x.strokeStyle=shade(col,-0.6,0.95); x.lineWidth=r*0.18; x.lineCap='round';
+    [[-0.85,0.55],[0,0],[0.85,-0.55]].forEach(o=>{ x.beginPath();
+      x.moveTo(m+o[0]*r,m+o[1]*r+r*0.6); x.lineTo(m+o[0]*r,m+o[1]*r+r*1.0); x.stroke(); });
+    [[-0.85,0.55],[0,0]].forEach(o=>ball(m+o[0]*r, m+o[1]*r, r*0.78, col));
+    ball(m+0.85*r, m-0.55*r, r*0.82, col);
+    face(x,m+0.85*r, m-0.6*r, r*0.26,'derp');
   } else if(type==='staph'){
     [[0.62,0.15],[0,0.7],[0,-0.62],[-0.62,0.15],[0,0]].forEach((o,i)=>{
       ball(m+o[0]*r, m+o[1]*r, r*0.55, i<2?shade(col,-0.18):col);
       if(i<4){ x.fillStyle='rgba(0,0,0,0.22)';
         x.beginPath(); x.ellipse(m+o[0]*r*0.55, m+o[1]*r*0.55, r*0.4, r*0.3, 0, 0, 7); x.fill(); } });
-    ball(m,m,r*0.55,shade(col,0.08));
+    ball(m,m,r*0.58,shade(col,0.08));
+    face(x,m,m-r*0.05,r*0.2,'angry');
     x.strokeStyle='rgba(230,240,255,0.55)'; x.lineWidth=2.2;
     x.beginPath(); x.arc(m,m,r*1.18,0,7); x.stroke();
     x.strokeStyle='rgba(230,240,255,0.2)'; x.lineWidth=5;
@@ -877,9 +923,7 @@ function enemySprite(type){
       x.lineTo(m+Math.cos(a)*r*1.65, m+Math.sin(a)*r*1.65); x.stroke();
       x.fillStyle=shade(col,0.35); x.beginPath(); x.arc(m+Math.cos(a)*r*1.65, m+Math.sin(a)*r*1.65, r*0.24, 0, 7); x.fill(); }
     ball(m,m,r*0.95,col);
-    let g=x.createRadialGradient(m,m,r*0.1,m,m,r*0.45);
-    g.addColorStop(0,shade(col,-0.55,0.95)); g.addColorStop(1,shade(col,-0.2,0.2));
-    x.fillStyle=g; x.beginPath(); x.arc(m,m,r*0.42,0,7); x.fill();
+    face(x,m,m-r*0.05,r*0.34,'cyclops');
   } else if(type==='fungus'){
     let sg=x.createLinearGradient(m-r*0.4,0,m+r*0.4,0);
     sg.addColorStop(0,'#f5ead8'); sg.addColorStop(0.45,'#e2d0b5'); sg.addColorStop(1,'#a9906e');
@@ -893,6 +937,7 @@ function enemySprite(type){
     x.strokeStyle=shade(col,-0.5); x.lineWidth=1.5; x.stroke();
     x.fillStyle='rgba(255,255,255,0.75)';
     [[-0.55,-0.4],[0.1,-0.7],[0.6,-0.35]].forEach(o=>{ x.beginPath(); x.arc(m+o[0]*r,m+o[1]*r,r*0.16,0,7); x.fill(); });
+    face(x,m,m+r*0.45,r*0.18,'sleepy');
   } else if(type==='biofilm'){
     const rnd=mulberry32(77); x.beginPath();
     for(let i=0;i<=10;i++){ const a=i/10*Math.PI*2, rr=r*(0.85+rnd()*0.28);
@@ -904,8 +949,9 @@ function enemySprite(type){
     x.fillStyle=g; x.fill();
     x.strokeStyle=shade(col,-0.45,0.9); x.lineWidth=2.5; x.stroke();
     x.fillStyle='rgba(255,255,255,0.35)';
-    [[-0.45,-0.3,0.28],[0.3,0.15,0.2],[-0.05,0.45,0.14],[0.5,-0.4,0.16]].forEach(o=>{
+    [[-0.45,-0.35,0.24],[0.5,-0.42,0.14]].forEach(o=>{
       x.beginPath(); x.arc(m+o[0]*r,m+o[1]*r,r*o[2],0,7); x.fill(); });
+    face(x,m+r*0.05,m+r*0.1,r*0.22,'derp');
   } else { // boss
     x.strokeStyle=shade(col,-0.25,0.95); x.lineWidth=3;
     for(let i=0;i<12;i++){ const a=i/12*Math.PI*2;
@@ -917,6 +963,13 @@ function enemySprite(type){
     g.addColorStop(0,'rgba(60,4,16,0)'); g.addColorStop(0.8,'rgba(60,4,16,0)'); g.addColorStop(1,'rgba(60,4,16,0.4)');
     x.fillStyle=g; x.beginPath(); x.arc(m,m,r,0,7); x.fill();
     x.strokeStyle='#2a060d'; x.lineWidth=2; x.beginPath(); x.arc(m,m,r,0,7); x.stroke();
+    // horns
+    x.fillStyle='#5a0d1a'; x.strokeStyle='#2a060d'; x.lineWidth=1.5;
+    [[-1,-1],[1,-1]].forEach(hd=>{ x.beginPath();
+      x.moveTo(m+hd[0]*r*0.45, m-r*0.65);
+      x.quadraticCurveTo(m+hd[0]*r*0.85, m-r*1.15, m+hd[0]*r*0.55, m-r*1.35);
+      x.quadraticCurveTo(m+hd[0]*r*0.62, m-r*0.95, m+hd[0]*r*0.22, m-r*0.78);
+      x.closePath(); x.fill(); x.stroke(); });
     // scowling eyes (emissive)
     x.shadowColor='#ffe066'; x.shadowBlur=6;
     x.fillStyle='#ffe066';
