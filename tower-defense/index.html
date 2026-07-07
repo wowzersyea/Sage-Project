@@ -839,53 +839,81 @@ function towerBaseSprite(key){
   return SPRITES.towerBase[key]=c;
 }
 
-function towerGunSprite(key){
-  if(SPRITES.towerGun[key]) return SPRITES.towerGun[key];
-  const col=TOWERS[key].color, c=mkCanvas(60,30), x=c.getContext('2d');
-  // pivot at (20,15), gun points right
+function towerGunSprite(key, a, b){
+  a=a|0; b=b|0;
+  const ck=key+'_'+a+'_'+b;
+  if(SPRITES.towerGun[ck]) return SPRITES.towerGun[ck];
+  const col=TOWERS[key].color, c=mkCanvas(76,36), x=c.getContext('2d');
+  const tot=a+b, maxed=(a>=3||b>=3), P=24, M=18; // pivot (P,M), gun points right
   const gface=(fx,fy,sc,mood)=>{ x.save(); x.translate(fx,fy); x.rotate(Math.PI/2); face(x,0,0,sc,mood); x.restore(); };
+  const crown=(cx2,cy2)=>{ x.save(); x.translate(cx2,cy2); x.rotate(Math.PI/2);
+    x.fillStyle='#ffd23f'; x.strokeStyle='#8a5f16'; x.lineWidth=1;
+    x.beginPath(); x.moveTo(-5,2); x.lineTo(-5,-2); x.lineTo(-2.5,0); x.lineTo(0,-3); x.lineTo(2.5,0); x.lineTo(5,-2); x.lineTo(5,2); x.closePath(); x.fill(); x.stroke();
+    x.fillStyle='#ff3355'; x.beginPath(); x.arc(0,0.4,1.1,0,7); x.fill(); x.restore(); };
+  const spikes=(sx,sy,n,len)=>{ x.fillStyle=shade(col,0.45); x.strokeStyle=shade(col,-0.6,0.9); x.lineWidth=1;
+    for(let i=0;i<n;i++){ const oy=sy+(i-(n-1)/2)*6;
+      x.beginPath(); x.moveTo(sx,oy-2.4); x.lineTo(sx+len,oy); x.lineTo(sx,oy+2.4); x.closePath(); x.fill(); x.stroke(); } };
   x.lineJoin='round';
-  if(key==='macro'){           // organic engulfing pod: shaded capsule + core
-    hcyl(x,12,8,30,14,col,7);
-    capEllipse(x,40,15,4.5,7,col);
-    x.strokeStyle=shade(col,-0.55,0.8); x.lineWidth=1; x.beginPath(); x.roundRect(12,8,30,14,7); x.stroke();
-    gface(24,15,3.2,'grin');            // friendly guardian
-  } else if(key==='neutro'){   // stout mortar: barrel + breech band + muzzle ring
-    hcyl(x,10,7,34,16,col,5);
-    hcyl(x,23,5,5,20,shade(col,-0.25),2.5);
-    hcyl(x,40,5,7,20,shade(col,0.12),3.5);
-    capEllipse(x,46,15,2.6,9,shade(col,-0.15));
-    x.fillStyle='rgba(0,0,0,0.55)'; x.beginPath(); x.ellipse(46,15,1.6,6,0,0,7); x.fill();
-    gface(17,15,3.0,'angry');           // gruff artillery sergeant
-  } else if(key==='abx'){      // syringe: glass barrel + plunger + needle
-    hcyl(x,10,9,24,12,col,4);
-    x.fillStyle='rgba(255,255,255,0.4)'; x.beginPath(); x.roundRect(13,10.5,17,3,1.5); x.fill();
-    gface(21,15,2.9,'derp');            // giddy lab tech
-    hcyl(x,3,11,8,8,shade(col,-0.3),2);
-    let g=x.createLinearGradient(0,13,0,17);
+  if(key==='macro'){                     // engulfing pod: grows, gains fangs (A) and side scoops (B)
+    const L=28+tot*2.6, H=14+tot*1.1, y0=M-H/2;
+    for(let i=0;i<b;i++){ const px2=P+6+i*7;      // B: engulf scoop pods
+      phongBall(x,px2,y0-2,3.4,shade(col,-0.15),0.6); phongBall(x,px2,y0+H+2,3.4,shade(col,-0.15),0.6); }
+    hcyl(x,P-8,y0,L,H,col,H/2);
+    capEllipse(x,P-8+L-2,M,4.5+tot*0.5,H/2-1,col);
+    if(a>0) spikes(P-8+L+1,M,Math.min(3,a),4+a*1.2); // A: fang spikes at the maw
+    gface(P+2,M,3.2+tot*0.15,'grin');
+    if(maxed) crown(P-11,M);
+  } else if(key==='neutro'){             // mortar: fatter, extra muzzle rings (A), net canisters (B)
+    const L=32+tot*2.4, H=16+tot*1.2, y0=M-H/2;
+    for(let i=0;i<b;i++){ hcyl(x,P+2+i*8,y0+H+1,6,5,shade(col,-0.2),2); } // B: canisters
+    hcyl(x,P-10,y0,L,H,col,5);
+    hcyl(x,P+3,y0-2,5,H+4,shade(col,-0.25),2.5);
+    for(let i=0;i<=Math.min(2,a);i++){ hcyl(x,P-12+L-i*7,y0-2,6,H+4,shade(col,0.12),3); } // A: muzzle rings
+    capEllipse(x,P-10+L+2,M,2.6,H/2+1,shade(col,-0.15));
+    x.fillStyle='rgba(0,0,0,0.55)'; x.beginPath(); x.ellipse(P-10+L+2,M,1.6,H/2-2,0,0,7); x.fill();
+    gface(P-3,M,3.0+tot*0.12,'angry');
+    if(maxed) crown(P-13,M);
+  } else if(key==='abx'){                // syringe: bigger vial, twin needle (A3), side tanks (B)
+    const L=22+tot*2, H=12+tot*1, y0=M-H/2;
+    for(let i=0;i<b;i++){ hcyl(x,P-2+i*7,y0-5,5,4,shade(col,0.2),2); }    // B: reagent tanks
+    hcyl(x,P-10,y0,L,H,col,4);
+    x.fillStyle='rgba(255,255,255,0.4)'; x.beginPath(); x.roundRect(P-7,y0+1.5,L-8,3,1.5); x.fill();
+    let g=x.createLinearGradient(0,M-2,0,M+2);
     g.addColorStop(0,'#f4f9ff'); g.addColorStop(0.5,'#b9c9de'); g.addColorStop(1,'#7787a0');
-    x.fillStyle=g; x.fillRect(34,13.5,12,3);
-    capEllipse(x,34,15,1.6,6,shade(col,0.1));
-  } else if(key==='tcell'){    // receptor rifle: long barrel + scope sphere + muzzle
-    hcyl(x,8,11.5,42,7,col,3.5);
-    hcyl(x,44,9.5,8,11,shade(col,0.12),3);
-    capEllipse(x,52,15,1.8,5.5,shade(col,0.05));
-    phongBall(x,24,8.5,3.6,shade(col,0.15),0.9);
-    x.fillStyle='#0c1424'; x.beginPath(); x.arc(24.6,8.9,1.2,0,7); x.fill();
-    gface(15,15,2.5,'sleepy');          // stone-cold sniper
-  } else {                     // fever coil: crystal chevrons + frost orb
+    x.fillStyle=g;
+    if(a>=3){ x.fillRect(P-10+L,M-4,12+a*2,2.6); x.fillRect(P-10+L,M+1.5,12+a*2,2.6); } // twin needles
+    else x.fillRect(P-10+L,M-1.5,12+a*2,3);
+    hcyl(x,P-17,M-4,8,8,shade(col,-0.3),2);
+    gface(P+1,M,2.9+tot*0.12,'derp');
+    if(maxed) crown(P-19,M);
+  } else if(key==='tcell'){              // rifle: longer, muzzle brake (A2+), fins/antenna (B)
+    const L=40+tot*2.6, H=7+tot*0.5;
+    for(let i=0;i<b;i++){ spikes(P-6-i*5,M+H+3,1,5); }                     // B: stabilizer fins
+    hcyl(x,P-14,M-H/2,L,H,col,H/2);
+    hcyl(x,P-14+L-4,M-H/2-2,8,H+4,shade(col,0.12),3);
+    if(a>=2){ hcyl(x,P-14+L+3,M-H/2-1,5,H+2,shade(col,-0.2),2); }          // muzzle brake
+    capEllipse(x,P-14+L+(a>=2?9:5),M,1.8,H/2+1.5,shade(col,0.05));
+    phongBall(x,P+2,M-H/2-3,3.6+a*0.4,shade(col,0.15),0.9);
+    x.fillStyle='#0c1424'; x.beginPath(); x.arc(P+2.6,M-H/2-2.6,1.2+a*0.15,0,7); x.fill();
+    gface(P-9,M,2.5+tot*0.1,'sleepy');
+    if(maxed) crown(P-16,M);
+  } else {                               // fever coil: more chevrons (A), bigger orb + halo (B)
     x.lineCap='round';
-    for(let i=0;i<3;i++){ const bx=14+i*10;
+    const n=3+Math.min(2,a);
+    for(let i=0;i<n;i++){ const bx=P-10+i*9;
       x.strokeStyle=shade(col,-0.35,0.9); x.lineWidth=4.2;
-      x.beginPath(); x.moveTo(bx,9); x.lineTo(bx+7,15); x.lineTo(bx,21); x.stroke();
+      x.beginPath(); x.moveTo(bx,M-6); x.lineTo(bx+7,M); x.lineTo(bx,M+6); x.stroke();
       x.strokeStyle=shade(col,0.55,0.95); x.lineWidth=2;
-      x.beginPath(); x.moveTo(bx-0.5,8); x.lineTo(bx+6.5,14.5); x.lineTo(bx-0.5,20.5); x.stroke(); }
-    phongBall(x,46,15,4.5,col,0.95);
-    gface(46,15,1.9,'grin');            // chill frost buddy
+      x.beginPath(); x.moveTo(bx-0.5,M-7); x.lineTo(bx+6.5,M-0.5); x.lineTo(bx-0.5,M+6.5); x.stroke(); }
+    const orb=4.5+b*0.9, ox=P-10+n*9+orb+1;
+    if(b>=2){ x.strokeStyle=shade(col,0.3,0.8); x.lineWidth=1.6;
+      x.beginPath(); x.ellipse(ox,M,orb+3.5,orb*0.55,0.4,0,7); x.stroke(); }  // halo ring
+    phongBall(x,ox,M,orb,col,0.95);
+    gface(ox,M-1,1.5+b*0.25,'grin');
+    if(maxed) crown(P-13,M);
   }
-  return SPRITES.towerGun[key]=c;
+  return SPRITES.towerGun[ck]=c;
 }
-
 function enemySprite(type, f){
   f = (type==='bacterium'||type==='strep'||type==='biofilm') ? (f||0)%2 : 0;
   const key=type+f;
@@ -1005,8 +1033,8 @@ const THUMBS={tower:{},enemy:{}};
 function towerThumb(key){
   if(THUMBS.tower[key]) return THUMBS.tower[key];
   const c=mkCanvas(56,56), x=c.getContext('2d');
-  x.drawImage(towerBaseSprite(key),0,0);
-  x.translate(28,28); x.rotate(-Math.PI/2); x.drawImage(towerGunSprite(key),-20,-15);
+  x.drawImage(towerBaseSprite(key),0,2);
+  x.translate(28,28); x.rotate(-Math.PI/2); x.drawImage(towerGunSprite(key,0,0),-24,-18);
   return THUMBS.tower[key]=c.toDataURL();
 }
 function enemyThumb(type){
@@ -1204,11 +1232,16 @@ function drawSlot(slot){
   const def=TOWERS[t.key];
   CTX.drawImage(towerBaseSprite(t.key), slot.x-30, slot.y-27);
   // rotating gun with recoil
+  // maxed-path aura
+  if(t.pathA>=3||t.pathB>=3){ CTX.globalAlpha=0.3+0.15*Math.sin(G.elapsed*3);
+    CTX.strokeStyle=def.color; CTX.lineWidth=3;
+    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,26+Math.sin(G.elapsed*3)*2,21,0,0,7); CTX.stroke();
+    CTX.globalAlpha=1; }
   const breath=1+0.035*Math.sin(G.elapsed*2.2+slot.x*0.13);
   const rp=t.recoil||0;
   CTX.save(); CTX.translate(slot.x,slot.y-4); CTX.rotate(t.angle||0);
   CTX.scale(breath*(1+rp*0.12), (2-breath)*(1-rp*0.08));
-  CTX.drawImage(towerGunSprite(t.key), -20-rp*4, -15);
+  CTX.drawImage(towerGunSprite(t.key, t.pathA, t.pathB), -24-rp*4, -18);
   CTX.restore();
   // tier pips: glowing diamonds along the top arc
   const tier=t.pathA+t.pathB;
@@ -1540,7 +1573,7 @@ function drawStoryArt(levelIdx){
   // defending towers on the tissue
   [['macro',w*0.22,h*0.32],['tcell',w*0.62,h*0.78]].forEach(([k,px,py])=>{
     x.drawImage(towerBaseSprite(k), px-28, py-28);
-    x.save(); x.translate(px,py); x.rotate(-0.5); x.drawImage(towerGunSprite(k),-20,-15); x.restore(); });
+    x.save(); x.translate(px,py); x.rotate(-0.5); x.drawImage(towerGunSprite(k,0,0),-24,-18); x.restore(); });
   // vignette
   g=x.createRadialGradient(w/2,h/2,h*0.4,w/2,h/2,w*0.62);
   g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.5)');
@@ -1573,7 +1606,7 @@ function drawResultArt(kind){
     // triumphant tower line-up with confetti particles
     TOWER_KEYS.forEach((k,i)=>{ const px=w*(0.18+i*0.16), py=h*0.62;
       x.drawImage(towerBaseSprite(k), px-28, py-28);
-      x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.drawImage(towerGunSprite(k),-20,-15); x.restore(); });
+      x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.drawImage(towerGunSprite(k,3,2),-24,-18); x.restore(); });
     for(let i=0;i<40;i++){ x.globalAlpha=0.5+rnd()*0.5;
       x.fillStyle=['#ffcf5c','#4fe08b','#5fa9ff','#7ad3ff','#c58bff'][i%5];
       x.fillRect(rnd()*w, rnd()*h*0.5, 3+rnd()*3, 3+rnd()*3); }
