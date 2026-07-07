@@ -55,7 +55,7 @@
   .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
   /* Stage */
   #stageWrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  #stage{background:#0e1626;touch-action:none;max-width:100%;max-height:100%}
+  #stage{background:#e56a5e;touch-action:none;max-width:100%;max-height:100%}
   /* Build/upgrade popover */
   #popover{position:absolute;z-index:30;width:240px;background:var(--panel);border:1px solid var(--line);
     border-radius:14px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.6);display:none}
@@ -258,7 +258,7 @@ document.addEventListener('pointerdown', ()=>AudioFX.ensure(), {passive:true});
 // Each tower: two upgrade paths (A / B), each with 3 tiers. Classic TD build-decision design.
 const TOWERS = {
   macro: {
-    name:'Macrophage', emoji:'🛡️', cost:80, color:'#5fa9ff',
+    name:'Macrophage', emoji:'🛡️', cost:80, color:'#3f8cff',
     range:118, dmg:12, rate:0.62, splash:0, proj:'#8fd0ff', desc:'Reliable single-target engulfer.',
     pathA:{ name:'Precision', tiers:[
       {label:'Sharpened Enzymes', cost:70, dmg:10, rate:-0.06, note:'+dmg, faster'},
@@ -270,7 +270,7 @@ const TOWERS = {
       {label:'Cytokine Storm', cost:400, splash:34, dmg:26, slow:0.35, note:'splash also slows'} ]}
   },
   neutro: {
-    name:'Neutrophil', emoji:'💥', cost:140, color:'#ff9f43', // splash artillery, ground-only
+    name:'Neutrophil', emoji:'💥', cost:140, color:'#ff9124', // splash artillery, ground-only
     range:132, dmg:26, rate:1.25, splash:46, proj:'#ffc27a', noAir:true, desc:'Lobs bursts — great vs swarms. Cannot hit flying.',
     pathA:{ name:'Ordnance', tiers:[
       {label:'Dense Granules', cost:120, dmg:22, splash:12, note:'+dmg, +radius'},
@@ -282,7 +282,7 @@ const TOWERS = {
       {label:'Immobilize Field', cost:560, slow:0.35, splash:26, note:'near-freeze zone'} ]}
   },
   abx: {
-    name:'Antibiotic Battery', emoji:'☣️', cost:120, color:'#4fe08b', // DoT / poison
+    name:'Antibiotic Battery', emoji:'☣️', cost:120, color:'#2fdd66', // DoT / poison
     range:120, dmg:6, rate:0.9, dot:14, dotTime:2.4, proj:'#7cf3ad', desc:'Applies stacking damage-over-time.',
     pathA:{ name:'Bactericidal', tiers:[
       {label:'Higher MIC Dose', cost:110, dot:12, note:'stronger DoT'},
@@ -294,7 +294,7 @@ const TOWERS = {
       {label:'Combination Therapy', cost:500, dot:20, pierce:0.6, splash:40, note:'splashes DoT'} ]}
   },
   tcell: {
-    name:'T-Cell Sniper', emoji:'🎯', cost:200, color:'#c58bff', // long range single hit
+    name:'T-Cell Sniper', emoji:'🎯', cost:200, color:'#b45cff', // long range single hit
     range:230, dmg:70, rate:1.9, splash:0, proj:'#e0c2ff', desc:'Extreme range, high single-target burst.',
     pathA:{ name:'Cytotoxic', tiers:[
       {label:'Perforin Rounds', cost:160, dmg:60, note:'heavy damage'},
@@ -306,7 +306,7 @@ const TOWERS = {
       {label:'Global Surveillance', cost:620, range:120, dmg:120, note:'covers the map'} ]}
   },
   fever: {
-    name:'Fever Coil', emoji:'❄️', cost:100, color:'#5fe0ff', // support slow/AoE
+    name:'Fever Coil', emoji:'❄️', cost:100, color:'#2fd4ff', // support slow/AoE
     range:110, dmg:4, rate:0.7, splash:60, slow:0.35, proj:'#b7f2ff', desc:'Chills all foes in range (support).',
     pathA:{ name:'Pyrexia', tiers:[
       {label:'Higher Setpoint', cost:100, dmg:8, splash:16, note:'+dmg, +radius'},
@@ -323,13 +323,13 @@ const TOWER_KEYS = Object.keys(TOWERS);
 /* ---------- Enemy archetypes (pathogens) ---------- */
 // pack scales how many of a type spawn per wave slot: heavies come in small groups
 const ENEMIES = {
-  bacterium:{ name:'Bacterium', emoji:'🦠', hp:60, speed:52, armor:0, bounty:8, color:'#9be36a', r:11, pack:1 },
-  strep:{ name:'Strep Chain', emoji:'🔗', hp:34, speed:74, armor:0, bounty:6, color:'#ffd36a', r:9, pack:1.1 },
-  staph:{ name:'MRSA Cluster', emoji:'🟣', hp:150, speed:44, armor:8, bounty:16, color:'#c58bff', r:14, pack:0.5 },
-  virus:{ name:'Virus', emoji:'🧬', hp:44, speed:96, armor:2, bounty:10, color:'#66d9ff', r:9, flying:true, pack:0.85 },
-  fungus:{ name:'Fungal Spore', emoji:'🍄', hp:230, speed:38, armor:14, bounty:26, color:'#ff8fa3', r:15, pack:0.38 },
-  biofilm:{ name:'Biofilm', emoji:'🫧', hp:520, speed:30, armor:26, bounty:48, color:'#7fe0d0', r:18, pack:0.22 },
-  boss:{ name:'Pan-Resistant Superbug', emoji:'👹', hp:5200, speed:26, armor:30, bounty:400, color:'#ff5c72', r:26, boss:true, pack:1 }
+  bacterium:{ name:'Bacterium', emoji:'🦠', hp:60, speed:52, armor:0, bounty:8, color:'#7ee63c', r:11, pack:1 },
+  strep:{ name:'Strep Chain', emoji:'🔗', hp:34, speed:74, armor:0, bounty:6, color:'#ffd23f', r:9, pack:1.1 },
+  staph:{ name:'MRSA Cluster', emoji:'🟣', hp:150, speed:44, armor:8, bounty:16, color:'#b45cff', r:14, pack:0.5 },
+  virus:{ name:'Virus', emoji:'🧬', hp:44, speed:96, armor:2, bounty:10, color:'#3fd6ff', r:9, flying:true, pack:0.85 },
+  fungus:{ name:'Fungal Spore', emoji:'🍄', hp:230, speed:38, armor:14, bounty:26, color:'#ff5f8f', r:15, pack:0.38 },
+  biofilm:{ name:'Biofilm', emoji:'🫧', hp:520, speed:30, armor:26, bounty:48, color:'#36e0c3', r:18, pack:0.22 },
+  boss:{ name:'Pan-Resistant Superbug', emoji:'👹', hp:5200, speed:26, armor:30, bounty:400, color:'#ff3355', r:26, boss:true, pack:1 }
 };
 
 /* ---------- Levels (paths, tower slots, waves, story) ---------- */
@@ -713,34 +713,45 @@ function castAbility(key, x, y){
 // per level to an offscreen canvas; sprites cached per tower/enemy type.
 let BG=null, AMBIENT=[];
 /* ---- color helpers ---- */
-function hexRGB(h){ const n=parseInt(h.slice(1),16); return [n>>16&255, n>>8&255, n&255]; }
+function hexRGB(h){
+  if(h[0]==='#'){ const n=parseInt(h.slice(1),16); return [n>>16&255, n>>8&255, n&255]; }
+  const m=h.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);  // accept rgba() from nested shade()
+  return m ? [+m[1],+m[2],+m[3]] : [128,128,128];
+}
 function shade(h,f,a){ const c=hexRGB(h); const t=f<0?0:255, p=Math.abs(f);
   return `rgba(${Math.round(c[0]+(t-c[0])*p)},${Math.round(c[1]+(t-c[1])*p)},${Math.round(c[2]+(t-c[2])*p)},${a===undefined?1:a})`; }
 function mkCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
 /* ---- pre-rendered-3D shading (global light: top-left) ---- */
 function phongBall(x,bx,by,br,base,spec){
   let g=x.createRadialGradient(bx-br*0.45,by-br*0.5,br*0.08,bx,by,br*1.05);
-  g.addColorStop(0,shade(base,0.7)); g.addColorStop(0.35,shade(base,0.25));
-  g.addColorStop(0.7,base); g.addColorStop(1,shade(base,-0.62));
+  g.addColorStop(0,shade(base,0.72)); g.addColorStop(0.35,shade(base,0.3));
+  g.addColorStop(0.7,base); g.addColorStop(1,shade(base,-0.42));
   x.fillStyle=g; x.beginPath(); x.arc(bx,by,br,0,7); x.fill();
   g=x.createRadialGradient(bx-br*0.42,by-br*0.48,0,bx-br*0.42,by-br*0.48,br*0.4);
   g.addColorStop(0,'rgba(255,255,255,'+(spec===undefined?0.8:spec)+')'); g.addColorStop(1,'rgba(255,255,255,0)');
   x.fillStyle=g; x.beginPath(); x.arc(bx,by,br,0,7); x.fill();
   x.save(); x.beginPath(); x.arc(bx,by,br,0,7); x.clip();
   g=x.createRadialGradient(bx+br*0.55,by+br*0.6,br*0.15,bx+br*0.55,by+br*0.6,br*0.85);
-  g.addColorStop(0,'rgba(150,195,255,0.25)'); g.addColorStop(1,'rgba(150,195,255,0)');
+  g.addColorStop(0,'rgba(255,235,190,0.3)'); g.addColorStop(1,'rgba(255,235,190,0)');
   x.fillStyle=g; x.fillRect(bx-br,by-br,br*2,br*2); x.restore();
+  // chunky cartoon outline
+  x.strokeStyle=shade(base,-0.72,0.95); x.lineWidth=Math.min(2.6,Math.max(1,br*0.17));
+  x.beginPath(); x.arc(bx,by,br,0,7); x.stroke();
 }
 function hcyl(x,x0,y0,w,h,col,r){  // horizontal cylinder body (lit from above)
   let g=x.createLinearGradient(0,y0,0,y0+h);
-  g.addColorStop(0,shade(col,-0.1)); g.addColorStop(0.22,shade(col,0.68));
-  g.addColorStop(0.5,shade(col,0.08)); g.addColorStop(0.82,shade(col,-0.48)); g.addColorStop(1,shade(col,-0.62));
+  g.addColorStop(0,shade(col,0.05)); g.addColorStop(0.22,shade(col,0.72));
+  g.addColorStop(0.5,shade(col,0.18)); g.addColorStop(0.82,shade(col,-0.25)); g.addColorStop(1,shade(col,-0.4));
   x.fillStyle=g; x.beginPath(); x.roundRect(x0,y0,w,h,r===undefined?h/2:r); x.fill();
+  x.strokeStyle=shade(col,-0.72,0.95); x.lineWidth=Math.min(2.4,Math.max(1.1,h*0.13));
+  x.beginPath(); x.roundRect(x0,y0,w,h,r===undefined?h/2:r); x.stroke();
 }
 function capEllipse(x,cx,cy,rx,ry,col){ // cylinder end cap
   let g=x.createRadialGradient(cx-rx*0.3,cy-ry*0.4,rx*0.1,cx,cy,rx);
   g.addColorStop(0,shade(col,0.5)); g.addColorStop(0.7,shade(col,-0.1)); g.addColorStop(1,shade(col,-0.5));
   x.fillStyle=g; x.beginPath(); x.ellipse(cx,cy,rx,ry,0,0,7); x.fill();
+  x.strokeStyle=shade(col,-0.7,0.9); x.lineWidth=1.2;
+  x.beginPath(); x.ellipse(cx,cy,rx,ry,0,0,7); x.stroke();
 }
 
 /* ---- sprite cache: towers & enemies rendered once, blitted per frame ---- */
@@ -753,36 +764,41 @@ function towerBaseSprite(key){
   const hex=dy=>{ const pts=[]; for(let i=0;i<6;i++){ const a=i*Math.PI/3+Math.PI/6;
     pts.push([m+Math.cos(a)*R, top+Math.sin(a)*R*SQ+(dy||0)]); } return pts; };
   const tp=hex(0), bp=hex(DEPTH);
-  // directional cast shadow
-  x.fillStyle='rgba(0,0,0,0.4)'; x.beginPath();
+  // directional cast shadow (warm)
+  x.fillStyle='rgba(120,35,25,0.4)'; x.beginPath();
   x.ellipse(m+4,top+DEPTH+6,R+1,R*SQ*0.9,0,0,7); x.fill();
   // extruded side faces (front-facing edges only), lit from the left
   for(let i=0;i<6;i++){ const a=tp[i], b=tp[(i+1)%6];
     if((a[1]+b[1])/2 <= top) continue;
     const midx=(a[0]+b[0])/2;
     let g=x.createLinearGradient(0,top,0,top+R*SQ+DEPTH);
-    const lit=midx<m?0.12:-0.12;
-    g.addColorStop(0,shade('#233757',lit)); g.addColorStop(1,shade('#0a1322',lit*0.5));
+    const lit=midx<m?0.14:-0.14;
+    g.addColorStop(0,shade('#c9a06b',lit)); g.addColorStop(1,shade('#8a5f3c',lit*0.5));
     x.fillStyle=g; x.beginPath();
     x.moveTo(a[0],a[1]); x.lineTo(b[0],b[1]);
     x.lineTo(bp[(i+1)%6][0],bp[(i+1)%6][1]); x.lineTo(bp[i][0],bp[i][1]);
     x.closePath(); x.fill();
-    x.strokeStyle='rgba(0,0,0,0.35)'; x.lineWidth=0.7; x.stroke(); }
+    x.strokeStyle='rgba(90,50,25,0.55)'; x.lineWidth=1; x.stroke(); }
   // top face, lit top-left
   let g=x.createLinearGradient(m-R,top-R*SQ,m+R,top+R*SQ);
-  g.addColorStop(0,'#3a5484'); g.addColorStop(0.45,'#22345a'); g.addColorStop(1,'#101c33');
+  g.addColorStop(0,'#ffe9c4'); g.addColorStop(0.45,'#eccb96'); g.addColorStop(1,'#c99e6b');
   x.fillStyle=g; x.beginPath();
   tp.forEach((pt,i)=> i?x.lineTo(pt[0],pt[1]):x.moveTo(pt[0],pt[1])); x.closePath(); x.fill();
-  // emissive colored trim on the top face
-  x.lineWidth=2; x.strokeStyle=shade(col,0.1,0.95);
-  x.shadowColor=col; x.shadowBlur=5; x.stroke(); x.shadowBlur=0;
+  // chunky outline + colored trim band
+  x.lineWidth=2.6; x.strokeStyle='#6e4526'; x.stroke();
+  x.lineWidth=2; x.strokeStyle=shade(col,0.05,0.95);
+  x.shadowColor=col; x.shadowBlur=5;
+  x.save(); x.scale(1,1); x.beginPath();
+  tp.forEach((pt,i)=>{ const sx2=m+(pt[0]-m)*0.86, sy2=top+(pt[1]-top)*0.86;
+    i?x.lineTo(sx2,sy2):x.moveTo(sx2,sy2); }); x.closePath(); x.stroke(); x.restore();
+  x.shadowBlur=0;
   // recessed turret mount
   g=x.createRadialGradient(m-3,top-3,2,m,top,12);
-  g.addColorStop(0,'#101b30'); g.addColorStop(0.8,'#1c2c4c'); g.addColorStop(1,'#2c4066');
+  g.addColorStop(0,'#7a5233'); g.addColorStop(0.8,'#9c6f45'); g.addColorStop(1,'#b3855a');
   x.fillStyle=g; x.beginPath(); x.ellipse(m,top,12,12*SQ,0,0,7); x.fill();
-  x.strokeStyle='rgba(0,0,0,0.5)'; x.lineWidth=1;
+  x.strokeStyle='rgba(80,45,20,0.7)'; x.lineWidth=1.4;
   x.beginPath(); x.ellipse(m,top,12,12*SQ,0,Math.PI,Math.PI*2); x.stroke();
-  x.strokeStyle='rgba(190,215,255,0.25)';
+  x.strokeStyle='rgba(255,240,210,0.4)';
   x.beginPath(); x.ellipse(m,top,12,12*SQ,0,0,Math.PI); x.stroke();
   return SPRITES.towerBase[key]=c;
 }
@@ -896,9 +912,9 @@ function enemySprite(type){
       x.beginPath(); x.moveTo(m+Math.cos(a)*r*0.8, m+Math.sin(a)*r*0.8);
       x.lineTo(m+Math.cos(a)*r*1.35, m+Math.sin(a)*r*1.35); x.stroke();
       x.fillStyle=shade(col,0.15); x.beginPath(); x.arc(m+Math.cos(a)*r*1.35, m+Math.sin(a)*r*1.35, r*0.12,0,7); x.fill(); }
-    phongBall(x,m,m,r,shade(col,-0.12),0.5);
+    phongBall(x,m,m,r,shade(col,0.06),0.6);
     let g=x.createRadialGradient(m+r*0.35,m+r*0.4,r*0.1,m,m,r*1.02);
-    g.addColorStop(0,'rgba(20,2,6,0)'); g.addColorStop(0.75,'rgba(20,2,6,0)'); g.addColorStop(1,'rgba(20,2,6,0.65)');
+    g.addColorStop(0,'rgba(60,4,16,0)'); g.addColorStop(0.8,'rgba(60,4,16,0)'); g.addColorStop(1,'rgba(60,4,16,0.4)');
     x.fillStyle=g; x.beginPath(); x.arc(m,m,r,0,7); x.fill();
     x.strokeStyle='#2a060d'; x.lineWidth=2; x.beginPath(); x.arc(m,m,r,0,7); x.stroke();
     // scowling eyes (emissive)
@@ -941,11 +957,11 @@ function levelThumb(idx){
   if(LEVEL_THUMBS[idx]) return LEVEL_THUMBS[idx];
   const L=LEVELS[idx], c=mkCanvas(120,72), x=c.getContext('2d');
   let g=x.createRadialGradient(40,26,6,60,36,90);
-  g.addColorStop(0,'#152238'); g.addColorStop(1,'#080e1a');
+  g.addColorStop(0,'#ffab90'); g.addColorStop(1,'#c85450');
   x.fillStyle=g; x.fillRect(0,0,120,72);
   const sx=120/W, sy=72/H, p=L.path;
   x.lineJoin='round'; x.lineCap='round';
-  [[9,'#251b33'],[7,'#3a2a44'],[4,'rgba(80,55,92,0.8)']].forEach(([wd,st])=>{
+  [[9,'#7e2436'],[7,'#c13b52'],[4,'rgba(240,120,145,0.9)']].forEach(([wd,st])=>{
     x.strokeStyle=st; x.lineWidth=wd; x.beginPath();
     x.moveTo(p[0][0]*sx,p[0][1]*sy);
     for(let i=1;i<p.length;i++) x.lineTo(p[i][0]*sx,p[i][1]*sy); x.stroke(); });
@@ -971,43 +987,44 @@ function buildBG(){
   BG=mkCanvas(W,H);
   const c=BG.getContext('2d');
   const rnd=mulberry32(101+G.levelIdx*13);
-  // deep tissue gradient
-  let g=c.createRadialGradient(W*0.38,H*0.35,60,W*0.5,H*0.5,W*0.75);
-  g.addColorStop(0,'#132036'); g.addColorStop(0.6,'#0c1526'); g.addColorStop(1,'#070d18');
+  // bright cartoon tissue
+  let g=c.createRadialGradient(W*0.38,H*0.32,60,W*0.5,H*0.5,W*0.75);
+  g.addColorStop(0,'#ffb397'); g.addColorStop(0.55,'#f4806e'); g.addColorStop(1,'#d75f58');
   c.fillStyle=g; c.fillRect(0,0,W,H);
-  // faint cellular blobs
-  for(let i=0;i<26;i++){ const bx=rnd()*W, by=rnd()*H, br=30+rnd()*90;
-    g=c.createRadialGradient(bx,by,br*0.2,bx,by,br);
-    g.addColorStop(0,`rgba(${90+rnd()*40|0},${120+rnd()*50|0},${190},0.045)`); g.addColorStop(1,'rgba(0,0,0,0)');
-    c.fillStyle=g; c.beginPath(); c.arc(bx,by,br,0,7); c.fill(); }
+  // playful cell polka-dots
+  for(let i=0;i<30;i++){ const bx=rnd()*W, by=rnd()*H, br=18+rnd()*55;
+    g=c.createRadialGradient(bx-br*0.25,by-br*0.3,br*0.1,bx,by,br);
+    g.addColorStop(0,'rgba(255,226,210,0.35)'); g.addColorStop(0.8,'rgba(255,200,185,0.12)'); g.addColorStop(1,'rgba(255,200,185,0)');
+    c.fillStyle=g; c.beginPath(); c.arc(bx,by,br,0,7); c.fill();
+    c.strokeStyle='rgba(200,90,75,0.15)'; c.lineWidth=2;
+    c.beginPath(); c.arc(bx,by,br*0.82,0,7); c.stroke(); }
   // vessel: raised 3D tube — drop shadow, walls, carved lumen, gloss
   const p=G.L.path;
   const stroke=(w,style,ox,oy)=>{ c.save(); c.translate(ox||0,oy||0);
     c.strokeStyle=style; c.lineWidth=w;
     c.beginPath(); c.moveTo(p[0][0],p[0][1]); for(let i=1;i<p.length;i++)c.lineTo(p[i][0],p[i][1]); c.stroke(); c.restore(); };
   c.lineJoin='round'; c.lineCap='round';
-  stroke(58,'rgba(0,0,0,0.38)',4,7);        // directional drop shadow (raised tube)
-  stroke(64,'rgba(150,80,115,0.10)');       // ambient glow
-  stroke(54,'#241a31');                     // outer wall
-  stroke(47,'#37273f');                     // wall
-  stroke(44,'rgba(255,225,240,0.10)',0,-2); // top wall highlight (light from above)
-  g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#453150'); g.addColorStop(1,'#342544');
+  stroke(58,'rgba(140,35,25,0.35)',4,7);    // warm drop shadow (raised tube)
+  stroke(56,'#7e2436');                     // chunky cartoon outline
+  stroke(48,'#a83048');                     // outer wall
+  stroke(44,'rgba(255,255,255,0.25)',0,-2); // top wall highlight
+  g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#ef5f7c'); g.addColorStop(1,'#d94a66');
   stroke(38,g);                             // lumen
-  stroke(30,'rgba(0,0,0,0.32)',0,-4);       // upper inner occlusion (carved)
-  stroke(24,'rgba(255,235,245,0.08)',0,5);  // lower bounce light
-  stroke(7,'rgba(255,255,255,0.05)',0,-9);  // gloss line
-  // key light from top-left
+  stroke(30,'rgba(130,25,50,0.40)',0,-4);   // upper inner occlusion (carved)
+  stroke(24,'rgba(255,220,230,0.30)',0,5);  // lower bounce light
+  stroke(7,'rgba(255,255,255,0.35)',0,-9);  // gloss line
+  // sunny key light from top-left
   g=c.createLinearGradient(0,0,W*0.9,H*0.9);
-  g.addColorStop(0,'rgba(160,190,240,0.07)'); g.addColorStop(0.5,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.22)');
+  g.addColorStop(0,'rgba(255,250,225,0.16)'); g.addColorStop(0.5,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(150,40,30,0.15)');
   c.fillStyle=g; c.fillRect(0,0,W,H);
-  // vignette
+  // warm vignette
   g=c.createRadialGradient(W/2,H/2,H*0.45,W/2,H/2,H*0.95);
-  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.42)');
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(120,25,20,0.30)');
   c.fillStyle=g; c.fillRect(0,0,W,H);
   // ambient drifting cells (drawn live; positions derived from elapsed)
   AMBIENT=[];
   for(let i=0;i<16;i++) AMBIENT.push({ x0:rnd()*W, y0:rnd()*H, vx:6+rnd()*10, vy:(rnd()-0.5)*6,
-    r:4+rnd()*8, red:rnd()<0.6, a:0.05+rnd()*0.09, ph:rnd()*7 });
+    r:4+rnd()*8, red:rnd()<0.6, a:0.18+rnd()*0.16, ph:rnd()*7 });
 }
 
 /* ---- live drawing ---- */
@@ -1020,9 +1037,11 @@ function draw(){
     const ax=((am.x0+G.elapsed*am.vx)%(W+60))-30;
     const ay=((am.y0+G.elapsed*am.vy+Math.sin(G.elapsed*0.7+am.ph)*12)%(H+60)+H+60)%(H+60)-30;
     CTX.globalAlpha=am.a;
-    if(am.red){ CTX.fillStyle='#a33d55'; CTX.beginPath(); CTX.arc(ax,ay,am.r,0,7); CTX.fill();
-      CTX.fillStyle='#7d2c40'; CTX.beginPath(); CTX.arc(ax,ay,am.r*0.45,0,7); CTX.fill(); }
-    else { CTX.fillStyle='#5f88c9'; CTX.beginPath(); CTX.arc(ax,ay,am.r*0.6,0,7); CTX.fill(); }
+    if(am.red){ CTX.fillStyle='#ff8f9d'; CTX.beginPath(); CTX.arc(ax,ay,am.r,0,7); CTX.fill();
+      CTX.fillStyle='#e8637a'; CTX.beginPath(); CTX.arc(ax,ay,am.r*0.45,0,7); CTX.fill();
+      CTX.strokeStyle='rgba(160,45,60,0.5)'; CTX.lineWidth=1.2;
+      CTX.beginPath(); CTX.arc(ax,ay,am.r,0,7); CTX.stroke(); }
+    else { CTX.fillStyle='#ffe0b3'; CTX.beginPath(); CTX.arc(ax,ay,am.r*0.6,0,7); CTX.fill(); }
     CTX.globalAlpha=1;
   }
   drawPath();
@@ -1063,17 +1082,17 @@ function drawPath(){
   const p=G.L.path;
   CTX.lineJoin='round'; CTX.lineCap='round';
   // wide soft plasma current
-  CTX.strokeStyle='rgba(200,150,190,0.06)'; CTX.lineWidth=16; CTX.setLineDash([26,30]);
+  CTX.strokeStyle='rgba(255,255,255,0.10)'; CTX.lineWidth=16; CTX.setLineDash([26,30]);
   CTX.lineDashOffset=-(G.elapsed*46)%56;
   CTX.beginPath(); CTX.moveTo(p[0][0],p[0][1]); for(let i=1;i<p.length;i++)CTX.lineTo(p[i][0],p[i][1]); CTX.stroke();
   // bright center flow
-  CTX.strokeStyle='rgba(235,190,215,0.30)'; CTX.lineWidth=2.5; CTX.setLineDash([9,17]);
+  CTX.strokeStyle='rgba(255,240,245,0.55)'; CTX.lineWidth=2.5; CTX.setLineDash([9,17]);
   CTX.lineDashOffset=-(G.elapsed*46)%26;
   CTX.beginPath(); CTX.moveTo(p[0][0],p[0][1]); for(let i=1;i<p.length;i++)CTX.lineTo(p[i][0],p[i][1]); CTX.stroke();
   CTX.setLineDash([]);
   // travelling plasma cells
   for(let i=0;i<3;i++){ const d=(G.elapsed*60+i*G.pathLen/3)%G.pathLen; const q=posAlong(G.L.path,d);
-    CTX.globalAlpha=0.35; CTX.fillStyle='#d9a3b8';
+    CTX.globalAlpha=0.6; CTX.fillStyle='#ffc9d4';
     CTX.beginPath(); CTX.ellipse(q.x,q.y,6,3.6,q.ang,0,7); CTX.fill(); CTX.globalAlpha=1; }
 }
 
@@ -1090,7 +1109,10 @@ function drawHeart(){
   g=CTX.createRadialGradient(hx-s*0.3,hy-s*0.25,1,hx,hy,s*1.1);
   g.addColorStop(0,'#ff8fa3'); g.addColorStop(0.6,'#e0455e'); g.addColorStop(1,'#8f1f33');
   CTX.fillStyle=g; CTX.fill();
-  CTX.strokeStyle='rgba(60,8,18,0.8)'; CTX.lineWidth=1.5; CTX.stroke();
+  CTX.strokeStyle='#7d1626'; CTX.lineWidth=2.6; CTX.stroke();
+  let sg=CTX.createRadialGradient(hx-s*0.35,hy-s*0.35,0,hx-s*0.35,hy-s*0.35,s*0.5);
+  sg.addColorStop(0,'rgba(255,255,255,0.75)'); sg.addColorStop(1,'rgba(255,255,255,0)');
+  CTX.fillStyle=sg; CTX.beginPath(); CTX.arc(hx-s*0.3,hy-s*0.3,s*0.42,0,7); CTX.fill();
 }
 
 function drawSlot(slot){
@@ -1098,17 +1120,19 @@ function drawSlot(slot){
   if(!t){
     const sel=G.selectedSlot===slot;
     let g=CTX.createRadialGradient(slot.x+3,slot.y+4,2,slot.x,slot.y,17);
-    g.addColorStop(0,sel?'rgba(95,169,255,0.4)':'rgba(30,50,84,0.9)'); g.addColorStop(1,'rgba(6,12,24,0.95)');
+    g.addColorStop(0,sel?'rgba(255,235,170,0.95)':'rgba(214,148,96,0.95)'); g.addColorStop(1,'rgba(150,90,55,0.95)');
     CTX.fillStyle=g; CTX.beginPath(); CTX.ellipse(slot.x,slot.y,16,13,0,0,7); CTX.fill();
-    // recessed edge: dark top lip, lit bottom lip
-    CTX.strokeStyle='rgba(0,0,0,0.6)'; CTX.lineWidth=2;
-    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,16,13,0,Math.PI,Math.PI*2); CTX.stroke();
-    CTX.strokeStyle='rgba(170,200,245,0.28)';
-    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,16,13,0,0,Math.PI); CTX.stroke();
-    CTX.strokeStyle=sel?'rgba(150,200,255,0.9)':'rgba(120,160,220,0.4)';
-    CTX.lineWidth=1.2; CTX.setLineDash([5,5]); CTX.lineDashOffset=-G.elapsed*8;
-    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,12,9.5,0,0,7); CTX.stroke(); CTX.setLineDash([]);
-    CTX.fillStyle='rgba(180,205,240,0.8)'; CTX.font='14px Outfit'; CTX.textAlign='center';
+    // recessed edge: dark top lip, lit bottom lip + cartoon outline
+    CTX.strokeStyle='#7c4a28'; CTX.lineWidth=2.4;
+    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,16,13,0,0,7); CTX.stroke();
+    CTX.strokeStyle='rgba(90,50,25,0.55)'; CTX.lineWidth=2;
+    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,13.5,10.7,0,Math.PI,Math.PI*2); CTX.stroke();
+    CTX.strokeStyle='rgba(255,240,210,0.55)';
+    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,13.5,10.7,0,0,Math.PI); CTX.stroke();
+    CTX.strokeStyle=sel?'rgba(255,250,220,0.95)':'rgba(255,235,200,0.55)';
+    CTX.lineWidth=1.3; CTX.setLineDash([5,5]); CTX.lineDashOffset=-G.elapsed*8;
+    CTX.beginPath(); CTX.ellipse(slot.x,slot.y,11,8.6,0,0,7); CTX.stroke(); CTX.setLineDash([]);
+    CTX.fillStyle='rgba(110,60,30,0.95)'; CTX.font='700 14px Outfit'; CTX.textAlign='center';
     CTX.fillText('＋',slot.x,slot.y+4.5); CTX.textAlign='left';
     return;
   }
@@ -1134,9 +1158,9 @@ function drawEnemy(e){
   const bob=e.flying ? Math.sin(G.elapsed*4+seed)*3 : 0;
   // directional cast shadow (light from top-left)
   const shOff=e.flying?7:4;
-  CTX.globalAlpha=e.flying?0.2:0.32; CTX.fillStyle='#000';
+  CTX.globalAlpha=e.flying?0.22:0.35; CTX.fillStyle='#8c2418';
   CTX.beginPath(); CTX.ellipse(p.x+shOff, p.y+e.r*(e.flying?1.5:0.85)+shOff*0.6, e.r*0.95, e.r*0.36, 0.15, 0, 7); CTX.fill();
-  CTX.globalAlpha=0.14; CTX.beginPath();
+  CTX.globalAlpha=0.15; CTX.beginPath();
   CTX.ellipse(p.x+shOff, p.y+e.r*(e.flying?1.5:0.85)+shOff*0.6, e.r*1.3, e.r*0.5, 0.15, 0, 7); CTX.fill();
   CTX.globalAlpha=1;
   // body with wobble squash/stretch (viruses & boss slowly spin)
@@ -1412,18 +1436,18 @@ function drawStoryArt(levelIdx){
   const c=$('storyArt'), x=c.getContext('2d'), w=c.width, h=c.height;
   // tissue backdrop
   let g=x.createRadialGradient(w*0.3,h*0.4,20,w*0.5,h*0.5,w*0.6);
-  g.addColorStop(0,'#152238'); g.addColorStop(1,'#080e1a');
+  g.addColorStop(0,'#ffab90'); g.addColorStop(1,'#cf5a52');
   x.fillStyle=g; x.fillRect(0,0,w,h);
   const rnd=mulberry32(31+levelIdx*7);
   for(let i=0;i<10;i++){ const bx=rnd()*w, by=rnd()*h, br=25+rnd()*60;
     g=x.createRadialGradient(bx,by,5,bx,by,br);
-    g.addColorStop(0,'rgba(110,140,200,0.06)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    g.addColorStop(0,'rgba(255,225,210,0.30)'); g.addColorStop(1,'rgba(255,225,210,0)');
     x.fillStyle=g; x.beginPath(); x.arc(bx,by,br,0,7); x.fill(); }
   // vessel sweep
   x.lineCap='round';
   const sweep=(wd,st)=>{ x.strokeStyle=st; x.lineWidth=wd; x.beginPath();
     x.moveTo(-20,h*0.72); x.quadraticCurveTo(w*0.45,h*0.15,w+20,h*0.6); x.stroke(); };
-  sweep(56,'#251b33'); sweep(48,'#31243f'); sweep(40,'#3a2a44'); sweep(26,'rgba(70,48,80,0.55)');
+  sweep(58,'#7e2436'); sweep(50,'#a83048'); sweep(40,'#e2536e'); sweep(26,'rgba(150,30,60,0.5)');
   // marching pathogens of this level's pool
   const pool=[...new Set(L.waves.flatMap(wv=>wv.groups.map(gr=>gr.type)))].slice(0,4);
   pool.forEach((type,i)=>{ const spr=enemySprite(type); const t=0.18+i*0.17;
@@ -1457,9 +1481,9 @@ function beginLevel(levelIdx){
 function drawResultArt(kind){
   const c=$('resultArt'), x=c.getContext('2d'), w=c.width, h=c.height;
   let g=x.createRadialGradient(w*0.4,h*0.4,20,w*0.5,h*0.5,w*0.55);
-  if(kind==='win'){ g.addColorStop(0,'#14283a'); g.addColorStop(1,'#081220'); }
-  else if(kind==='lose'){ g.addColorStop(0,'#301220'); g.addColorStop(1,'#150710'); }
-  else { g.addColorStop(0,'#1b2340'); g.addColorStop(1,'#0a0f22'); }
+  if(kind==='win'){ g.addColorStop(0,'#ffc07d'); g.addColorStop(1,'#e0704f'); }
+  else if(kind==='lose'){ g.addColorStop(0,'#a03448'); g.addColorStop(1,'#54121f'); }
+  else { g.addColorStop(0,'#ff9d87'); g.addColorStop(1,'#b8474e'); }
   x.fillStyle=g; x.fillRect(0,0,w,h);
   const rnd=mulberry32(kind==='win'?5:kind==='lose'?6:7);
   if(kind==='win'){
