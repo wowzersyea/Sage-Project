@@ -1,6 +1,6 @@
 /* Immunopolis service worker: cache-first app shell for offline play.
    Bump CACHE_VERSION on every release that changes any shell file. */
-const CACHE_VERSION = 'immunopolis-v11';
+const CACHE_VERSION = 'immunopolis-v12';
 const SHELL = [
   './',
   './index.html',
