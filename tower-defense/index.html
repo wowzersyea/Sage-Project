@@ -578,9 +578,13 @@ function damageEnemy(e, dmg, opt){
   if(opt.pierce) armor *= (1-opt.pierce);
   let d = Math.max(1, dmg - armor*0.5);
   if(e.marked) d*=1.25;
-  if(opt.crit && Math.random()<opt.crit) d*=3;
+  let crit=false;
+  if(opt.crit && Math.random()<opt.crit){ d*=3; crit=true; }
   e.hp -= d;
   e.hitT=0.12;
+  if(d>=6 && G.floats.length<40){ const fp=enemyPos(e);
+    G.floats.push({x:fp.x+(Math.random()-0.5)*10, y:fp.y-e.r-4, txt:String(Math.round(d)),
+      t:0, max:crit?0.8:0.55, color:crit?'#ffd23f':(e.boss?'#ff8296':'#ffffff')}); }
   if(opt.slow){ e.slowT=Math.max(e.slowT,1.1); e.slowAmt=Math.max(e.slowAmt,opt.slow); }
   if(opt.stun){ e.stunT=Math.max(e.stunT,opt.stun); }
   if(opt.marks){ e.marked=true; }
@@ -592,7 +596,11 @@ function killEnemy(e){
   G.gold += e.bounty;
   const p=enemyPos(e);
   spawnParticles(p.x, p.y, e.color, e.boss?26:8, e.boss?170:90);
-  G.floats.push({x:p.x, y:p.y-e.r-8, txt:'+'+e.bounty, t:0, max:0.9, color:'#ffcf5c'});
+  G.floats.push({x:p.x, y:p.y-e.r-8, txt:'+'+e.bounty, t:0, max:0.9, color:'#ffd23f'});
+  const nCoins=Math.min(4, 1+((e.bounty/12)|0));
+  for(let i=0;i<nCoins;i++) pushFx({type:'coin', x:p.x+(Math.random()-0.5)*14, y:p.y,
+    x1:W*0.42, y1:-24, cx:p.x+(Math.random()-0.5)*160, cy:p.y-90-Math.random()*70,
+    t:-0.07*i, max:0.62});
   if(e.boss) G.shake=Math.max(G.shake,9);
   G.effects.push({type:'death', x:p.x, y:p.y, t:0, max:0.38, etype:e.type, rot:(Math.random()-0.5)*2});
   G.effects.push({type:'pop', x:p.x, y:p.y, t:0, max:0.4, color:e.color, r:e.r});
@@ -617,6 +625,9 @@ function update(dt){
     if(e.dots.length){
       for(const dot of e.dots){ e.hp -= dot.dps*dt; dot.t-=dt; }
       e.dots = e.dots.filter(d=>d.t>0);
+      e.dripT=(e.dripT||0)+dt;
+      if(e.dripT>0.35){ e.dripT=0; const dp=enemyPos(e);
+        pushFx({type:'drip', x:dp.x+(Math.random()-0.5)*e.r, y:dp.y+e.r*0.4, t:0, max:0.5}); }
       if(e.hp<=0){ killEnemy(e); continue; }
     }
     if(e.hitT>0) e.hitT-=dt;
@@ -674,7 +685,8 @@ function update(dt){
   }
   G.projectiles=G.projectiles.filter(p=>!p.dead);
   // effects
-  for(const fx of G.effects){ fx.t+=dt; }
+  for(const fx of G.effects){ fx.t+=dt;
+    if(fx.type==='coin' && fx.t>=fx.max && !fx.done){ fx.done=true; goldPulse(); } }
   G.effects=G.effects.filter(fx=>fx.t<fx.max);
   // particles / floating text / screen shake
   for(const pt of G.particles){ pt.x+=pt.vx*dt; pt.y+=pt.vy*dt;
@@ -699,7 +711,12 @@ function update(dt){
 function applyHit(pr, x, y){
   const opt={pierce:pr.pierce, crit:pr.crit, slow:pr.slow, dot:pr.dot, dotTime:pr.dotTime, stun:pr.stun, marks:pr.marks};
   if(pr.splash>0){
-    G.effects.push({type:'blast', x, y, t:0, max:0.25, r:pr.splash, color:TOWERS[pr.key].proj});
+    // multi-stage: flash -> shockwave -> debris -> rising smoke
+    pushFx({type:'flash', x, y, t:0, max:0.09, r:pr.splash*0.55});
+    pushFx({type:'shock', x, y, t:0, max:0.32, r:pr.splash});
+    spawnParticles(x, y, TOWERS[pr.key].proj, 6, 130);
+    for(let i=0;i<3;i++) pushFx({type:'smoke', x:x+(Math.random()-0.5)*pr.splash*0.5,
+      y:y+(Math.random()-0.5)*pr.splash*0.3, t:-0.06*i, max:0.55, r:6+Math.random()*7});
     for(const e of G.enemies){ const p=enemyPos(e); if(Math.hypot(p.x-x,p.y-y)<=pr.splash){ damageEnemy(e,pr.dmg,opt); } }
   } else if(pr.chain){
     // pierce chain: hit target + nearest others
@@ -1099,6 +1116,12 @@ function levelThumb(idx){
   return LEVEL_THUMBS[idx]=c.toDataURL();
 }
 
+/* ---- effect budget: never let choreography melt the frame ---- */
+function pushFx(fx){ if(G.effects.length<240) G.effects.push(fx); }
+function goldPulse(){ const el=$('gold').parentElement; if(!el||el._p) return; el._p=1;
+  el.style.transition='transform .12s'; el.style.transform='scale(1.2)';
+  setTimeout(()=>{ el.style.transform=''; el._p=0; },140); }
+
 /* ---- particles & floating text ---- */
 function spawnParticles(px,py,color,n,sp){
   if(G.particles.length>320) return;
@@ -1383,10 +1406,13 @@ function drawEnemy(e){
   if(e.boss){ CTX.globalAlpha=0.5+0.3*Math.sin(G.elapsed*5);
     CTX.fillStyle='#ffd0d8'; CTX.beginPath(); CTX.arc(p.x,p.y+bob,e.r*0.22,0,7); CTX.fill(); CTX.globalAlpha=1; }
   // status
-  if(e.slowT>0){ CTX.strokeStyle='rgba(120,220,255,0.85)'; CTX.lineWidth=2;
-    CTX.beginPath(); CTX.arc(p.x,p.y+bob,e.r+4,0,7); CTX.stroke();
-    CTX.fillStyle='rgba(160,230,255,0.9)'; CTX.font='10px Outfit';
-    CTX.fillText('❄',p.x+e.r,p.y+bob-e.r); }
+  if(e.slowT>0){ // orbiting ice shards
+    for(let ci=0;ci<4;ci++){ const ca=G.elapsed*2.2+ci*Math.PI/2+seed;
+      const cx2=p.x+Math.cos(ca)*(e.r+5), cy2=p.y+bob+Math.sin(ca)*(e.r+5)*0.65;
+      CTX.save(); CTX.translate(cx2,cy2); CTX.rotate(ca);
+      CTX.fillStyle='rgba(185,240,255,0.95)'; CTX.strokeStyle='rgba(40,120,170,0.85)'; CTX.lineWidth=0.9;
+      CTX.beginPath(); CTX.moveTo(0,-3.4); CTX.lineTo(2.4,0); CTX.lineTo(0,3.4); CTX.lineTo(-2.4,0);
+      CTX.closePath(); CTX.fill(); CTX.stroke(); CTX.restore(); } }
   if(e.stunT>0){ CTX.fillStyle='#ffe066'; CTX.font='12px Outfit'; CTX.fillText('✦',p.x+e.r,p.y+bob-e.r); }
   if(e.marked){ CTX.strokeStyle='rgba(255,92,114,0.9)'; CTX.lineWidth=1.5;
     CTX.beginPath(); CTX.arc(p.x,p.y+bob,e.r+7,0,7); CTX.stroke(); }
@@ -1400,7 +1426,29 @@ function drawEnemy(e){
 }
 
 function drawEffect(fx){
-  const k=fx.t/fx.max;
+  if(fx.t<0) return;
+  const k=Math.max(0,fx.t)/fx.max;
+  if(fx.type==='flash'){ CTX.globalAlpha=1-k; CTX.fillStyle='#fff';
+    CTX.beginPath(); CTX.arc(fx.x,fx.y,fx.r*(0.6+k*0.4),0,7); CTX.fill();
+    CTX.globalAlpha=(1-k)*0.6; CTX.fillStyle='#ffe9a8';
+    CTX.beginPath(); CTX.arc(fx.x,fx.y,fx.r*(0.9+k*0.5),0,7); CTX.fill(); CTX.globalAlpha=1; return; }
+  if(fx.type==='shock'){ CTX.globalAlpha=(1-k)*0.85;
+    CTX.strokeStyle='#fff'; CTX.lineWidth=5*(1-k)+1;
+    CTX.beginPath(); CTX.arc(fx.x,fx.y,fx.r*(0.25+k*0.95),0,7); CTX.stroke();
+    CTX.globalAlpha=(1-k)*0.35; CTX.strokeStyle='#ffcf9a'; CTX.lineWidth=10*(1-k)+2;
+    CTX.beginPath(); CTX.arc(fx.x,fx.y,fx.r*(0.2+k*0.8),0,7); CTX.stroke(); CTX.globalAlpha=1; return; }
+  if(fx.type==='smoke'){ CTX.globalAlpha=(1-k)*0.3; CTX.fillStyle='#e8d5c8';
+    CTX.beginPath(); CTX.arc(fx.x+Math.sin(fx.t*6)*2, fx.y-k*22, fx.r*(0.7+k*0.9),0,7); CTX.fill();
+    CTX.globalAlpha=1; return; }
+  if(fx.type==='coin'){ const e2=k*k*(3-2*k);
+    const ix=(1-e2)*(1-e2)*fx.x + 2*(1-e2)*e2*fx.cx + e2*e2*fx.x1;
+    const iy=(1-e2)*(1-e2)*fx.y + 2*(1-e2)*e2*fx.cy + e2*e2*fx.y1;
+    CTX.fillStyle='#ffd23f'; CTX.strokeStyle='#8a5f16'; CTX.lineWidth=1.5;
+    CTX.beginPath(); CTX.arc(ix,iy,5,0,7); CTX.fill(); CTX.stroke();
+    CTX.fillStyle='rgba(255,255,255,0.8)'; CTX.beginPath(); CTX.arc(ix-1.5,iy-1.5,1.4,0,7); CTX.fill(); return; }
+  if(fx.type==='drip'){ CTX.globalAlpha=(1-k)*0.9; CTX.fillStyle='#7cf3ad';
+    CTX.beginPath(); CTX.ellipse(fx.x, fx.y+k*16, 2.2, 3.2, 0, 0, 7); CTX.fill();
+    CTX.globalAlpha=1; return; }
   if(fx.type==='muzzle'){ CTX.globalAlpha=1-k; CTX.fillStyle='#fff';
     CTX.beginPath(); CTX.arc(fx.x,fx.y,3*(1-k)+1,0,7); CTX.fill();
     CTX.globalAlpha=(1-k)*0.7; CTX.fillStyle=fx.color;
