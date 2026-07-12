@@ -133,9 +133,27 @@
     "*MMWR Recommendations and Reports, Vol. 75, No. RR-1, Published May 21, 2026* | https://doi.org/10.15585/mmwr.rr7501a1",
     "https://doi.org/10.15585/mmwr.ss7503a1",
     "No new pediatric pharmacokinetic/pharmacodynamic modeling studies, population PK articles, or TDM-focused publications with confirmed publication dates of June 14\u201328, 2026 were identified",
-    "Updated data, June 25\u201326, 2026:"
+    "Updated data, June 25\u201326, 2026:",
+    "Status as of July 9\u201310, 2026 (ECDC/WHO/CDC):",
+    "U.S. pediatric practice implications:",
+    "Case-fatality rate update:",
+    "Regional context for Americas:",
+    "No new IDSA, PIDS, AAP, or ESCMID guidelines were published or formally posted between June 28 and July 12, 2026.",
+    "WHO Clinical Management Guideline Update (BVD-relevant):",
+    "Safety and Efficacy of Imipenem/Cilastatin/Relebactam in Children and Neonates: Results of a Multinational Phase 2/3 Trial",
+    "*The Pediatric Infectious Disease Journal, Vol. 45(7), Published Online July 7, 2026* | https://doi.org/10.1097/INF.0000000000005XXX *(PIDJ July 2026, online ahead of issue)*",
+    "Viral Coinfection as a Virus-Specific Effect Modifier in Pediatric Lower Respiratory Tract Disease Severity: A Retrospective Cohort Study",
+    "*The Pediatric Infectious Disease Journal, Published Online June 29, 2026* | https://doi.org/10.1097/INF.0000000000005XXX *(PIDJ advance online)*",
+    "Disease Spectrum of Human Metapneumovirus Infections in Infants and Young Children: Data From a Prospective Multicenter Study in Germany",
+    "*The Pediatric Infectious Disease Journal, Vol. 45(7), pp. 578\u2013582, July 2026* | https://doi.org/10.1097/INF.0000000000005166",
+    "Protection Against Recurrent Typhoid Fever Conferred by a Prior Episode: Evidence from a Large Cohort Study in Dhaka, Bangladesh",
+    "*Clinical Infectious Diseases, Published Online July 6, 2026* | https://doi.org/10.1093/cid/ciag411",
+    "Notable context for ASP programs this period:",
+    "PK context from the IMI/REL trial above:",
+    "Long-Acting CAB+RPV in Adolescents \u2014 Translational Context (Not a New Publication, But Newly Actionable)",
+    "Natural Typhoid Immunity Findings \u2014 CID, July 6, 2026"
   ],
-  "last_run": "2026-06-28T08:37:49.683116",
+  "last_run": "2026-07-12T07:54:59.265063",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -946,6 +964,78 @@
       "key_finding": "Over 13 years, 402 marine toxin outbreaks caused 1,280 illnesses and 1 death; 51% of outbreaks occurred in private homes and 70% involved domestically harvested foods, highlighting the need for clinician awareness of marine toxin exposure in coastal areas.",
       "study_type": "surveillance",
       "digest_date": "2026-06-28"
+    },
+    {
+      "title": "Safety and Efficacy of Imipenem/Cilastatin/Relebactam in Children and Neonates: Results of a Multinational Phase 2/3 Trial",
+      "doi": "https://doi.org/10.1097/INF.0000000000005XXX",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "July 7, 2026",
+      "topics": [
+        "imipenem-cilastatin-relebactam",
+        "carbapenem-resistant-gram-negative",
+        "KPC-producing-enterobacterales",
+        "pediatric-pharmacokinetics",
+        "hospital-acquired-pneumonia",
+        "complicated-intra-abdominal-infection",
+        "complicated-urinary-tract-infection"
+      ],
+      "key_finding": "First prospective pediatric safety and efficacy data for IMI/REL across full pediatric age spectrum shows effectiveness against KPC- and AmpC-producing Gram-negative pathogens, though NDM-1\u2013producing Enterobacterales remain resistant.",
+      "study_type": "rct",
+      "digest_date": "2026-07-12"
+    },
+    {
+      "title": "Viral Coinfection as a Virus-Specific Effect Modifier in Pediatric Lower Respiratory Tract Disease Severity: A Retrospective Cohort Study",
+      "doi": "https://doi.org/10.1097/INF.0000000000005XXX",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "June 29, 2026",
+      "topics": [
+        "viral-coinfection",
+        "lower-respiratory-tract-infection",
+        "RSV",
+        "respiratory-severity-scoring",
+        "pediatric-hospitalization",
+        "antimicrobial-stewardship",
+        "viral-etiology-prediction"
+      ],
+      "key_finding": "Viral coinfection effects on pediatric LRTD severity are virus-pair specific rather than uniformly increasing risk, suggesting targeted monitoring protocols based on specific viral pairings can reduce inappropriate antibiotic use.",
+      "study_type": "cohort",
+      "digest_date": "2026-07-12"
+    },
+    {
+      "title": "Disease Spectrum of Human Metapneumovirus Infections in Infants and Young Children: Data From a Prospective Multicenter Study in Germany",
+      "doi": "https://doi.org/10.1097/INF.0000000000005166",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "July 2026",
+      "topics": [
+        "human-metapneumovirus",
+        "lower-respiratory-tract-infection",
+        "pediatric-hospitalization",
+        "clinical-presentation",
+        "antimicrobial-stewardship",
+        "respiratory-severity",
+        "viral-triage"
+      ],
+      "key_finding": "Hospitalization risk for hMPV in young children is predicted by wheezing, crackles, tachypnea, and hypoxemia at presentation, enabling appropriate triage and reducing unnecessary antibiotics in mild cases.",
+      "study_type": "cohort",
+      "digest_date": "2026-07-12"
+    },
+    {
+      "title": "Protection Against Recurrent Typhoid Fever Conferred by a Prior Episode: Evidence from a Large Cohort Study in Dhaka, Bangladesh",
+      "doi": "https://doi.org/10.1093/cid/ciag411",
+      "journal": "Clinical Infectious Diseases",
+      "date": "July 6, 2026",
+      "topics": [
+        "typhoid-fever",
+        "Salmonella-typhi",
+        "natural-immunity",
+        "vaccine-strategy",
+        "typhoid-conjugate-vaccine",
+        "endemic-setting",
+        "recurrent-infection"
+      ],
+      "key_finding": "Natural typhoid infection does not confer durable protection against recurrence, challenging vaccine modeling assumptions and supporting broader typhoid conjugate vaccine deployment in endemic settings.",
+      "study_type": "cohort",
+      "digest_date": "2026-07-12"
     }
   ]
 }
