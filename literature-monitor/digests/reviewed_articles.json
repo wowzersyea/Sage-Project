@@ -151,9 +151,14 @@
     "Notable context for ASP programs this period:",
     "PK context from the IMI/REL trial above:",
     "Long-Acting CAB+RPV in Adolescents \u2014 Translational Context (Not a New Publication, But Newly Actionable)",
-    "Natural Typhoid Immunity Findings \u2014 CID, July 6, 2026"
+    "Natural Typhoid Immunity Findings \u2014 CID, July 6, 2026",
+    "PICO Questions & Recommendations:",
+    "Clinical Implications for Pediatric ID/ASP Programs:",
+    "*MMWR Morbidity and Mortality Weekly Report, Vol. 75, No. 27, July 16, 2026* | DOI: https://doi.org/10.15585/mmwr.mm7527a1",
+    "Implications for pediatric practice:",
+    "No new pediatric PK/PD, population pharmacokinetic modeling, TDM, or AUC-guided dosing publications meeting inclusion criteria (July 12\u201326, 2026) were identified in priority journals (Clinical Pharmacokinetics, Therapeutic Drug Monitoring, Pharmacotherapy, Pediatric Drugs, AAC) during this search period."
   ],
-  "last_run": "2026-07-12T07:54:59.265063",
+  "last_run": "2026-07-26T08:03:17.619295",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -1036,6 +1041,91 @@
       "key_finding": "Natural typhoid infection does not confer durable protection against recurrence, challenging vaccine modeling assumptions and supporting broader typhoid conjugate vaccine deployment in endemic settings.",
       "study_type": "cohort",
       "digest_date": "2026-07-12"
+    },
+    {
+      "title": "2026 IDSA/ESCMID Clinical Practice Guidelines on Staphylococcus aureus Bacteremia: Risk Stratification, Diagnostic Evaluation, and Management of Adults and Children \u2014 Part 1",
+      "doi": "https://www.idsociety.org/2026-clinical-practice-guidelines-by-the-infectious-diseases-society-of-america-and-european-society-of-clinical-microbiology-and-infectious-diseases-on-staphylococcus-aureus-bacteremia-risk-stratification-diagnostic-evaluation-and-management-of-adults/",
+      "journal": "IDSA & ESCMID",
+      "date": "July 2026",
+      "topics": [
+        "staphylococcus-aureus-bacteremia",
+        "risk-stratification",
+        "infective-endocarditis",
+        "follow-up-blood-cultures",
+        "echocardiography",
+        "pediatric-SAB",
+        "antimicrobial-duration"
+      ],
+      "key_finding": "All children with SAB should be treated as potentially 'increased risk' for deep-seated foci; TTE is not routinely recommended in uncomplicated pediatric SAB (unlike adults); 14-day antibiotic duration is consensus-supported for SAB without deep-seated foci.",
+      "study_type": "guideline",
+      "digest_date": "2026-07-26"
+    },
+    {
+      "title": "Universal VRE Screening in a High-Acuity PICU: Clinical Yield, Infection Outcomes, and Implications for Surveillance Program Design",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "July 22, 2026",
+      "topics": [
+        "vancomycin-resistant-enterococcus",
+        "PICU",
+        "surveillance",
+        "infection-prevention",
+        "screening-stewardship",
+        "high-acuity-ICU"
+      ],
+      "key_finding": "In a high-acuity PICU with robust infection prevention infrastructure, VRE colonization including E. faecium did not progress to clinical infection, suggesting marginal clinical yield of universal screening compared with operational costs.",
+      "study_type": "cohort",
+      "digest_date": "2026-07-26"
+    },
+    {
+      "title": "Duration of Bacteremia and Orthopedic Outcomes in Children with S. aureus Acute Hematogenous Osteoarticular Infection (AHOAI): A Two-Center Prospective Surveillance Cohort",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "July 21, 2026",
+      "topics": [
+        "staphylococcus-aureus",
+        "osteomyelitis",
+        "bacteremia-duration",
+        "orthopedic-complications",
+        "acute-hematogenous-osteoarticular-infection"
+      ],
+      "key_finding": "Among 532 cases of S. aureus AHOAI with 343 bacteremic patients, median bacteremia duration was 1 day (IQR 1-3 days) and 11.4% developed orthopedic complications, providing data to inform therapy escalation decisions in children with prolonged bacteremia.",
+      "study_type": "cohort",
+      "digest_date": "2026-07-26"
+    },
+    {
+      "title": "Molecular Epidemiology and Genotypic Shift of Coxsackievirus A16 and Co-circulating Enteroviruses in Pediatric Hand, Foot, and Mouth Disease \u2014 Multicenter Surveillance, China",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "July 22, 2026",
+      "topics": [
+        "coxsackievirus-A16",
+        "coxsackievirus-A6",
+        "hand-foot-mouth-disease",
+        "molecular-epidemiology",
+        "enterovirus-surveillance",
+        "genotypic-shift"
+      ],
+      "key_finding": "CVA6 predominated (52.8%) followed by CVA16 (23.8%); phylogenetic analysis revealed emergence of new CVA16 subgenotype B1c displacing previously dominant B1a/B1b lineages, with implications for post-EV-A71 vaccine era pathogen dynamics.",
+      "study_type": "cross-sectional",
+      "digest_date": "2026-07-26"
+    },
+    {
+      "title": "Genotype-Specific Detection of Measles Virus Using Wastewater Surveillance \u2014 Wisconsin, February 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7527a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "July 16, 2026",
+      "topics": [
+        "measles",
+        "wastewater-surveillance",
+        "genotype-B3",
+        "molecular-detection",
+        "outbreak-investigation",
+        "genotype-D8"
+      ],
+      "key_finding": "An adenine-to-guanine mutation in the N-gene probe-binding region of genotype B3 caused the original wastewater assay to fail detection of internationally circulating B3 measles; a modified probe released in March 2026 restored detection sensitivity.",
+      "study_type": "case-series",
+      "digest_date": "2026-07-26"
     }
   ]
 }
