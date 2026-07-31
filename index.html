@@ -1119,6 +1119,87 @@
             padding: 4rem 2rem 6rem;
         }
 
+        /* Mentee LC - advising booking */
+        .mentee-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 2rem 6rem;
+        }
+
+        .mentee-card {
+            background: var(--surface-raised);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+        }
+
+        .mentee-hours {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .mentee-hours-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            background: var(--sage-50);
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1.1rem;
+        }
+
+        .mentee-day {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            color: var(--sage-500);
+        }
+
+        .mentee-time {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .mentee-note {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mentee-embed {
+            border: 1px solid var(--sage-100);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--warm-50);
+        }
+
+        .mentee-embed iframe {
+            display: block;
+            width: 100%;
+            height: 560px;
+            border: 0;
+        }
+
+        .mentee-fallback {
+            margin-top: 1rem;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .mentee-fallback a {
+            color: var(--sage-600);
+        }
+
+        @media (max-width: 640px) {
+            .mentee-section { padding: 1rem 1rem 4rem; }
+            .mentee-card { padding: 1.25rem; }
+            .mentee-hours-item { flex: 1 1 100%; }
+        }
+
         .podcast-card {
             display: flex;
             gap: 2.5rem;
@@ -1213,6 +1294,7 @@
                 <a href="med-student-assessment/">Med Student</a>
                 <a href="antimicrobial-selection/">Antimicrobial Selection</a>
                 <a href="#podcast">Podcast</a>
+                <a href="#mentee-lc">Mentee LC</a>
             </nav>
         </div>
     </header>
@@ -1486,6 +1568,48 @@
                 </div>
             </div>
         </section>
+
+        <section class="mentee-section" id="mentee-lc">
+            <div class="section-header">
+                <h2>Mentee LC</h2>
+                <p>Learning Community advising &mdash; book a slot in office hours to talk through career plans, a tough case, research, or whatever's on your mind</p>
+            </div>
+
+            <div class="mentee-card">
+                <div class="mentee-meta">
+                    <div class="mentee-hours">
+                        <div class="mentee-hours-item">
+                            <span class="mentee-day">Tuesdays</span>
+                            <span class="mentee-time">9:00 AM &ndash; 2:00 PM</span>
+                        </div>
+                        <div class="mentee-hours-item">
+                            <span class="mentee-day">Wednesdays</span>
+                            <span class="mentee-time">10:00 AM &ndash; 12:00 PM</span>
+                        </div>
+                    </div>
+                    <p class="mentee-note">
+                        Pick 30 or 60 minutes. Only genuinely free times are shown &mdash; the
+                        calendar is checked live, so you can't land on something already booked.
+                        You'll get an Outlook invite with a Zoom link.
+                    </p>
+                </div>
+
+                <!-- Served from the office machine over Cloudflare Tunnel, so
+                     availability reflects the real calendar. If that machine is
+                     asleep the iframe shows its own "unreachable" message. -->
+                <div class="mentee-embed">
+                    <iframe id="booking-frame"
+                            title="Book advising time"
+                            loading="lazy"
+                            referrerpolicy="no-referrer"></iframe>
+                </div>
+
+                <p class="mentee-fallback">
+                    Form not loading? <a id="booking-link" href="https://book.sageproject.xyz/" target="_blank" rel="noopener">Open it in a new tab</a>
+                    or email <a href="mailto:maemurph@utmb.edu">maemurph@utmb.edu</a> directly.
+                </p>
+            </div>
+        </section>
     </main>
 
     <footer>
@@ -1665,6 +1789,31 @@
                     return;
                 }
                 closeModal();
+            }
+        });
+
+        // Mentee LC booking form. Served from the office machine over Cloudflare
+        // Tunnel in production; falls back to the local service when this page is
+        // previewed from localhost, so the section can be checked without DNS.
+        const BOOKING_ORIGIN = (/^(localhost|127\.0\.0\.1)$/.test(location.hostname))
+            ? 'http://localhost:8787'
+            : 'https://book.sageproject.xyz';
+
+        (function initBooking() {
+            const frame = document.getElementById('booking-frame');
+            if (frame) frame.src = BOOKING_ORIGIN + '/?embed=1';
+            const link = document.getElementById('booking-link');
+            if (link) link.href = BOOKING_ORIGIN + '/';
+        })();
+
+        // Let the iframe size itself, so the section never shows an inner
+        // scrollbar or a slab of dead space as the form grows through its steps.
+        window.addEventListener('message', (e) => {
+            if (e.origin !== BOOKING_ORIGIN) return;
+            const h = e.data && e.data.advisingHeight;
+            const frame = document.getElementById('booking-frame');
+            if (frame && typeof h === 'number' && h > 120 && h < 4000) {
+                frame.style.height = h + 'px';
             }
         });
 
