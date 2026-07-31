@@ -1803,7 +1803,9 @@
 
         (function initBooking() {
             const frame = document.getElementById('booking-frame');
-            if (frame) frame.src = BOOKING_ORIGIN + '/?embed=1';
+            // Cache-bust every load: browsers hold an iframe's HTML aggressively,
+            // which can pin a mentee to an outdated booking flow indefinitely.
+            if (frame) frame.src = BOOKING_ORIGIN + '/?embed=1&v=' + Date.now();
             const link = document.getElementById('booking-link');
             if (link) link.href = BOOKING_ORIGIN + '/';
         })();
