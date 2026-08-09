@@ -156,9 +156,28 @@
     "Clinical Implications for Pediatric ID/ASP Programs:",
     "*MMWR Morbidity and Mortality Weekly Report, Vol. 75, No. 27, July 16, 2026* | DOI: https://doi.org/10.15585/mmwr.mm7527a1",
     "Implications for pediatric practice:",
-    "No new pediatric PK/PD, population pharmacokinetic modeling, TDM, or AUC-guided dosing publications meeting inclusion criteria (July 12\u201326, 2026) were identified in priority journals (Clinical Pharmacokinetics, Therapeutic Drug Monitoring, Pharmacotherapy, Pediatric Drugs, AAC) during this search period."
+    "No new pediatric PK/PD, population pharmacokinetic modeling, TDM, or AUC-guided dosing publications meeting inclusion criteria (July 12\u201326, 2026) were identified in priority journals (Clinical Pharmacokinetics, Therapeutic Drug Monitoring, Pharmacotherapy, Pediatric Drugs, AAC) during this search period.",
+    "No unambiguously practice-changing publications identified this period.",
+    "PICO Questions & Recommendations:",
+    "*Clinical Infectious Diseases, Published Online August 6, 2026* | [https://doi.org/10.1093/cid/ciag406](https://doi.org/10.1093/cid/ciag406)",
+    "Article at pp. 659\u2013664 (PIDJ Vol. 45(8))",
+    "Article at pp. 665\u2013670",
+    "Article at pp. 671\u2013676",
+    "Article at pp. 677\u2013683",
+    "Article at pp. 684\u2013691",
+    "Article at pp. 699\u2013706",
+    "Article at pp. 724\u2013732",
+    "Article at pp. 733\u2013741",
+    "Article at pp. e281\u2013e287, e316\u2013e319",
+    "Misidentification of a Specimen as Neisseria meningitidis During a University Classroom Laboratory Exercise \u2014 Utah, 2025",
+    "Notable contextual note:",
+    "Key Updates in Version 5.0 (March 2026) with Direct Pediatric Relevance:",
+    "Q3 (Pediatric-specific addition):",
+    "Q7 (New for Version 5.0):",
+    "No new FDA drug safety communications, pediatric drug shortages, or new resistance alerts directly relevant to pediatric ID/ASP practice were identified with confirmed publication dates of July 26 \u2013 August 09, 2026.",
+    "Ongoing monitoring reminders from prior periods:"
   ],
-  "last_run": "2026-07-26T08:03:17.619295",
+  "last_run": "2026-08-09T06:34:28.355553",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -1126,6 +1145,100 @@
       "key_finding": "An adenine-to-guanine mutation in the N-gene probe-binding region of genotype B3 caused the original wastewater assay to fail detection of internationally circulating B3 measles; a modified probe released in March 2026 restored detection sensitivity.",
       "study_type": "case-series",
       "digest_date": "2026-07-26"
+    },
+    {
+      "title": "ESPID Guidelines for the Management of Invasive Group A Streptococcal (iGAS) Infections in Children",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-08-05",
+      "topics": [
+        "group-a-streptococcus",
+        "invasive-GAS",
+        "beta-lactam-therapy",
+        "clindamycin",
+        "IVIG",
+        "post-exposure-prophylaxis",
+        "necrotizing-fasciitis",
+        "streptococcal-toxic-shock-syndrome"
+      ],
+      "key_finding": "Addition of clindamycin to beta-lactam therapy is recommended for severe/invasive iGAS presentations, IVIG may be considered in severe cases, and post-exposure prophylaxis with 10-day beta-lactam regimen is recommended for household contacts <10 years of age.",
+      "study_type": "guideline",
+      "digest_date": "2026-08-09"
+    },
+    {
+      "title": "The Effectiveness of Nirsevimab on Antibiotic Use in Children Using Target Trial Emulation",
+      "doi": "https://doi.org/10.1093/cid/ciag406",
+      "journal": "Clinical Infectious Diseases",
+      "date": "2026-08-06",
+      "topics": [
+        "nirsevimab",
+        "RSV-prophylaxis",
+        "antimicrobial-stewardship",
+        "antibiotic-prescribing",
+        "bronchiolitis",
+        "acute-otitis-media",
+        "respiratory-syncytial-virus",
+        "outpatient-prescribing"
+      ],
+      "key_finding": "Nirsevimab administration resulted in a 14.4% reduction in overall outpatient antibiotic prescribing for ARTIs and a 40.3% reduction in antibiotic prescribing specifically for bronchiolitis, demonstrating a secondary antimicrobial stewardship benefit.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-09"
+    },
+    {
+      "title": "Machine Learning Tools for Predicting Pediatric Urinary Tract Infections Caused by ESBL-Producing Bacteria",
+      "doi": "https://journals.lww.com/pidj/abstract/9900/machine_learning_tools_for_predicting_pediatric.1639.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-08-04",
+      "topics": [
+        "ESBL-producing-bacteria",
+        "urinary-tract-infection",
+        "machine-learning",
+        "predictive-modeling",
+        "empiric-antibiotic-therapy",
+        "antimicrobial-stewardship",
+        "carbapenem-sparing",
+        "negative-predictive-value"
+      ],
+      "key_finding": "Machine learning models achieved a very high negative predictive value of approximately 0.98 for ESBL-positive UTIs, enabling safe de-escalation to narrow-spectrum therapy in the majority of pediatric cases.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-09"
+    },
+    {
+      "title": "Misidentification of a Specimen as Neisseria meningitidis During a University Classroom Laboratory Exercise \u2014 Utah, 2025",
+      "doi": "https://www.cdc.gov/mmwr/index2026.html",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "2026-07-23",
+      "topics": [
+        "Neisseria-meningitidis",
+        "laboratory-misidentification",
+        "biosafety",
+        "prophylaxis-cascade",
+        "infection-prevention",
+        "diagnostic-error",
+        "confirmatory-testing"
+      ],
+      "key_finding": "Laboratory misidentification of non-meningococcal organisms as N. meningitidis can trigger unnecessary prophylaxis cascades in close contacts; confirmatory testing before initiating meningococcal prophylaxis is clinically prudent.",
+      "study_type": "case-series",
+      "digest_date": "2026-08-09"
+    },
+    {
+      "title": "IDSA 2026 Guidance on the Treatment of Antimicrobial Resistant Gram-Negative Infections (Version 5.0)",
+      "doi": "https://www.idsociety.org/practice-guideline/amr-guidance/",
+      "journal": "IDSA Living Guidance Document",
+      "date": "2026-03-01",
+      "topics": [
+        "antimicrobial-resistance",
+        "gram-negative-resistance",
+        "ESBL-producing-Enterobacterales",
+        "carbapenem-resistant-Enterobacterales",
+        "ceftazidime-avibactam",
+        "pediatric-dosing",
+        "difficult-to-treat-pseudomonas",
+        "carbapenem-resistant-Acinetobacter"
+      ],
+      "key_finding": "Version 5.0 updates preferred agents for resistant gram-negative infections and explicitly cross-references pediatric consensus dosing recommendations for newer beta-lactam agents including cefiderocol, ceftazidime-avibactam, ceftolozane-tazobactam, imipenem-cilastatin-relebactam, and sulbactam-durlobactam.",
+      "study_type": "guideline",
+      "digest_date": "2026-08-09"
     }
   ]
 }
