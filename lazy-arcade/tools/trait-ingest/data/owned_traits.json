@@ -1,0 +1,1250 @@
+{
+  "source": "on-chain enumeration + IPFS metadata",
+  "collection": "0x8943c7bac1914c9a7aba750bf2b6b09fd21037e0",
+  "collection_size": 10078,
+  "operator_wallet": "0x575161e774566Fb51E0a217ff6f64825eafE850a",
+  "owned_count": 73,
+  "rarity_basis": null,
+  "trait_counts": null,
+  "owned_tokens": {
+    "482": {
+      "id": 482,
+      "name": "#482",
+      "image": "ipfs://QmXWtyxncEWUqmoQo7srYW7WZ2Ys8DWZee6XXKjjm1ALUD",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Standard",
+        "Bodygear": "Leopard Fur Coat",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Bunny Ears",
+        "Mane": "Top Knot - Red",
+        "Mouth": "Yawning"
+      }
+    },
+    "631": {
+      "id": 631,
+      "name": "#631",
+      "image": "ipfs://QmeVvqNWn4XXxMujNkpL4KyPdguLqaPvViPaGvC1ZaJEjK",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Brown",
+        "Bodygear": "Referee shirt",
+        "Earring": "Nothing",
+        "Eyes": "Evil",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Green",
+        "Mouth": "Meat"
+      }
+    },
+    "660": {
+      "id": 660,
+      "name": "#660",
+      "image": "ipfs://QmcxjkFC5HiWXaEXwEbq34EgmwUoYq31gDanWha5zzv1pL",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Spots",
+        "Bodygear": "Nothing",
+        "Earring": "Nothing",
+        "Eyes": "Closed",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up + Top Knot - Brown",
+        "Mouth": "Yelling"
+      }
+    },
+    "685": {
+      "id": 685,
+      "name": "#685",
+      "image": "ipfs://QmNxWRRBywAhbh9x9vGoJJeyzwaZRo9ZaS59WXUWTE4qQr",
+      "traits": {
+        "Background": "Silver",
+        "Body": "Scratched Up",
+        "Bodygear": "Ripped Shirt - White",
+        "Earring": "Nothing",
+        "Eyes": "Closed",
+        "Headgear": "Straw Beach Hat",
+        "Mane": "Top Knot - Blue",
+        "Mouth": "Smirk"
+      }
+    },
+    "840": {
+      "id": 840,
+      "name": "#840",
+      "image": "ipfs://QmddgDp6C7dcioGR99vW59ZhFs18euArmi6AEYzsKcV1Ms",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Spots",
+        "Bodygear": "Ripped Shirt - White",
+        "Earring": "Nothing",
+        "Eyes": "Monocle",
+        "Headgear": "Bunny Ears",
+        "Mane": "Double Tied Up - Fire",
+        "Mouth": "Roaring"
+      }
+    },
+    "1466": {
+      "id": 1466,
+      "name": "#1466",
+      "image": "ipfs://QmeoDJxtsTxPyVYvuFRD8wiUUu3LZ6CiovZACKDTQFnoeh",
+      "traits": {
+        "Background": "Mithril",
+        "Body": "Spots",
+        "Bodygear": "Black Hoodie",
+        "Earring": "Nothing",
+        "Eyes": "Angry",
+        "Headgear": "Police Hat",
+        "Mane": "Top Knot - Orange",
+        "Mouth": "Big Smile"
+      }
+    },
+    "1506": {
+      "id": 1506,
+      "name": "#1506",
+      "image": "ipfs://QmW4L5yaQYozzosu2vfy3Ns1GGQfTQiUHKhA6C8D4bJpCs",
+      "traits": {
+        "Background": "Seagreen",
+        "Body": "Zebra",
+        "Bodygear": "Lion Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Goofy Eyes",
+        "Headgear": "Sheriff Hat",
+        "Mane": "White",
+        "Mouth": "Pipe"
+      }
+    },
+    "1589": {
+      "id": 1589,
+      "name": "#1589",
+      "image": "ipfs://QmT143hQmaEwjg1MU7rWCcnz966K7KqXs8RRJNQ6w8Nouu",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Galaxy",
+        "Bodygear": "Ripped Shirt - Black",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Dork Glasses",
+        "Headgear": "Straw Beach Hat",
+        "Mane": "Top Knot - Red",
+        "Mouth": "Licking Nose"
+      }
+    },
+    "1708": {
+      "id": 1708,
+      "name": "#1708",
+      "image": "ipfs://QmPvi2cjJKCv6GUp7fPFsTWBjq1eVUemvydajwDPDmVsmG",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Spotted Leopard",
+        "Bodygear": "Gold Chain",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Angry",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up - Ice",
+        "Mouth": "Big Smile"
+      }
+    },
+    "1723": {
+      "id": 1723,
+      "name": "#1723",
+      "image": "ipfs://QmXG19ms4FAwJiFMVs9HXm9PcYq25mgLzjdCQtGs9QdmA5",
+      "traits": {
+        "Background": "Silver",
+        "Body": "Standard",
+        "Bodygear": "Police Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Closed",
+        "Headgear": "Bunny Ears",
+        "Mane": "Top Knot - Ice",
+        "Mouth": "Big Smile"
+      }
+    },
+    "1725": {
+      "id": 1725,
+      "name": "#1725",
+      "image": "ipfs://QmXRHg2VuTxGjrAoVfrXHqcFd2ZFs3yu7BhVTbP6fDnCWc",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Lion Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "Horns",
+        "Mane": "Black",
+        "Mouth": "Party Horn"
+      }
+    },
+    "1802": {
+      "id": 1802,
+      "name": "#1802",
+      "image": "ipfs://QmYn3xVzfsq136xqUVkuhV6VpeMs7b72B3XHE8Fsp2TEbZ",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "White",
+        "Bodygear": "Ethereum Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Goofy Eyes",
+        "Headgear": "Nothing",
+        "Mane": "Orange",
+        "Mouth": "Licking Nose"
+      }
+    },
+    "2038": {
+      "id": 2038,
+      "name": "#2038",
+      "image": "ipfs://QmUu8WiB6edL3S9mo1KCacwPRDU8qck5Cq2Tqv4xCRTovF",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Black",
+        "Bodygear": "Floaties",
+        "Earring": "Green Ball",
+        "Eyes": "Water Goggles",
+        "Headgear": "Police Hat",
+        "Mane": "Emerald",
+        "Mouth": "Standard"
+      }
+    },
+    "2115": {
+      "id": 2115,
+      "name": "#2115",
+      "image": "ipfs://QmXK9cVGc2VttoD77YN6HcU7uZCNjS2nCje3h8zGqM6ehm",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Standard",
+        "Bodygear": "Black Hoodie",
+        "Earring": "Lion Head",
+        "Eyes": "Dork Glasses",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up - Orange",
+        "Mouth": "Meat"
+      }
+    },
+    "2301": {
+      "id": 2301,
+      "name": "#2301",
+      "image": "ipfs://QmbcXbyMWbymSpxBEADC16mez33v16PrCQkj4hms8FEoah",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Pink",
+        "Bodygear": "Hawaiian Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Water Goggles",
+        "Headgear": "Halo",
+        "Mane": "Orange",
+        "Mouth": "Licking Nose"
+      }
+    },
+    "2531": {
+      "id": 2531,
+      "name": "#2531",
+      "image": "ipfs://QmUXahvc1nbKEXtVDbhZEM51wbwJsRTwcTz3W1JGBsrBEh",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Grey",
+        "Bodygear": "Police Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Monocle",
+        "Headgear": "Nothing",
+        "Mane": "Black",
+        "Mouth": "Big Smile"
+      }
+    },
+    "2734": {
+      "id": 2734,
+      "name": "#2734",
+      "image": "ipfs://QmTgWuaYNoiwHuttNgKMXSFUVpDXfpBH4uUt4VQ7yapmkG",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Black",
+        "Bodygear": "Ranger Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Bucket Hat",
+        "Mane": "Double Tied Up - White",
+        "Mouth": "Whistle"
+      }
+    },
+    "2735": {
+      "id": 2735,
+      "name": "#2735",
+      "image": "ipfs://QmYC1pZcGTK2ypEFjpmTPcT6vxA87xp8foERtdaD4jC5JZ",
+      "traits": {
+        "Background": "Silver",
+        "Body": "Grey",
+        "Bodygear": "Gold Chain",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Pirate Hat",
+        "Mane": "Orange",
+        "Mouth": "Bubble Gum "
+      }
+    },
+    "2976": {
+      "id": 2976,
+      "name": "#2976",
+      "image": "ipfs://QmYUaw6n2MRFMzKB9H5vrQZntVMY2K2ZdhZQBRmcwWHaxS",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Zebra",
+        "Bodygear": "Floaties",
+        "Earring": "Nothing",
+        "Eyes": "Angry",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Brown",
+        "Mouth": "Surprised"
+      }
+    },
+    "3084": {
+      "id": 3084,
+      "name": "#3084",
+      "image": "ipfs://QmNa1fs928dnGPZqtWrM9wpMjDU9q1gJUiHw9BJAHsELs5",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Lizard Blue",
+        "Bodygear": "Football Jersey - Blue",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "Spinner Hat",
+        "Mane": "Double Tied Up - Emerald",
+        "Mouth": "Standard"
+      }
+    },
+    "3273": {
+      "id": 3273,
+      "name": "#3273",
+      "image": "ipfs://QmWqb3so4toeySK3rm1Ya9y7k75qQF77tra2ti6dWN3U2s",
+      "traits": {
+        "Background": "Magenta",
+        "Body": "Lizard Blue",
+        "Bodygear": "Ripped Shirt - White",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Nothing",
+        "Mane": "Brown",
+        "Mouth": "Bloody Mouth"
+      }
+    },
+    "3346": {
+      "id": 3346,
+      "name": "#3346",
+      "image": "ipfs://QmUf6Aqqi1pLh37rkMbQzrHLyrtNEcLPRFEwmSMEVtnepw",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Zombie",
+        "Bodygear": "Ripped Shirt - Black",
+        "Earring": "Nothing",
+        "Eyes": "Anime - Blue",
+        "Headgear": "Sheriff Hat",
+        "Mane": "Top Knot - White",
+        "Mouth": "Surprised"
+      }
+    },
+    "3354": {
+      "id": 3354,
+      "name": "#3354",
+      "image": "ipfs://QmaWx4ZZBgmvrrWcp7oZgrfNcqY3hmsZsrTztkjqzpR8HK",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Football Jersey - Blue",
+        "Earring": "Nothing",
+        "Eyes": "Dork Glasses",
+        "Headgear": "Sheriff Hat",
+        "Mane": "Teal",
+        "Mouth": "Standard"
+      }
+    },
+    "3406": {
+      "id": 3406,
+      "name": "#3406",
+      "image": "ipfs://QmbxQeo73424XCPXa4ebUykWue9XXtgRkn46DVrhNkTuWt",
+      "traits": {
+        "Background": "Silver",
+        "Body": "Brown",
+        "Bodygear": "Ripped Shirt - Black",
+        "Earring": "Nothing",
+        "Eyes": "Angry",
+        "Headgear": "Spinner Hat",
+        "Mane": "Double Tied Up - Red",
+        "Mouth": "Gargling"
+      }
+    },
+    "3579": {
+      "id": 3579,
+      "name": "#3579",
+      "image": "ipfs://QmQvKvxzVyGJgrTD9VTy14LCfX5uG3mnm71zVL7AFzxb4L",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Grey",
+        "Bodygear": "Ethereum Business Shirt",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Fake Glasses",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Orange",
+        "Mouth": "Licking Nose"
+      }
+    },
+    "3714": {
+      "id": 3714,
+      "name": "#3714",
+      "image": "ipfs://QmZPpjqmcDJekueVLKZFRZoUh2cBkRpbN7UTi4jwpRsnNG",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Lizard Blue",
+        "Bodygear": "Space Suit",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Sheriff Hat",
+        "Mane": "Brown",
+        "Mouth": "Standard"
+      }
+    },
+    "3915": {
+      "id": 3915,
+      "name": "#3915",
+      "image": "ipfs://QmZoA33SKX2Wj8euy4azmMS4Y1Cudjj38gssC4rws57D3t",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Spotted Leopard",
+        "Bodygear": "Referee shirt",
+        "Earring": "Nothing",
+        "Eyes": "Raised Eyebrow",
+        "Headgear": "Nothing",
+        "Mane": "Purple",
+        "Mouth": "Bloody Mouth"
+      }
+    },
+    "3951": {
+      "id": 3951,
+      "name": "#3951",
+      "image": "ipfs://QmNzn3zmwtTYhEcnNwu4JzS8Qig7gCDHCeX5nC5DGtqva1",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Brown",
+        "Bodygear": "Chef Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Goofy Eyes",
+        "Headgear": "Nothing",
+        "Mane": "Bloody",
+        "Mouth": "Gargling"
+      }
+    },
+    "4019": {
+      "id": 4019,
+      "name": "#4019",
+      "image": "ipfs://QmWpbjp4r5r4Nxcei3YNuYa8izd3z3tBxKbQyFdPSj6uT9",
+      "traits": {
+        "Background": "Magenta",
+        "Body": "Standard",
+        "Bodygear": "Ethereum Business Shirt",
+        "Earring": "Green Ball",
+        "Eyes": "Closed",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up - Ice",
+        "Mouth": "Yelling"
+      }
+    },
+    "4117": {
+      "id": 4117,
+      "name": "#4117",
+      "image": "ipfs://QmUcKCnY4WLRdAnFZff4eXy6eMfTWXESiUkj3vcafp2axD",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Brown",
+        "Bodygear": "Purple Fur Coat",
+        "Earring": "Nothing",
+        "Eyes": "Goofy Eyes",
+        "Headgear": "Pirate Hat",
+        "Mane": "Top Knot - Green",
+        "Mouth": "Standard"
+      }
+    },
+    "4230": {
+      "id": 4230,
+      "name": "#4230",
+      "image": "ipfs://QmfJuxtTjnNUut1U83UzxKxDtopbc4HZHGgQX5QpHeYNwg",
+      "traits": {
+        "Background": "Silver",
+        "Body": "Standard",
+        "Bodygear": "Ranger Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Dork Glasses",
+        "Headgear": "Crown",
+        "Mane": "Double Tied Up - Blue",
+        "Mouth": "Money Mouth"
+      }
+    },
+    "4435": {
+      "id": 4435,
+      "name": "#4435",
+      "image": "ipfs://QmRcY27pQGzdDWhSAiSvFF4jC7VRuHbY2QMnh7ABvPnrH5",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Standard",
+        "Bodygear": "Police Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Surprised",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Green",
+        "Mouth": "Yelling"
+      }
+    },
+    "4514": {
+      "id": 4514,
+      "name": "#4514",
+      "image": "ipfs://QmWFPeBiGdAqFuZwkDa4JrxkK4VDPfPre2SvLEiPbgA99D",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Standard",
+        "Bodygear": "Ranger Shirt",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Stoner",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Red",
+        "Mouth": "Standard"
+      }
+    },
+    "4522": {
+      "id": 4522,
+      "name": "#4522",
+      "image": "ipfs://QmQz1KNME2w6KGamDCUzvaK5q94BYEtvZYyE52Fgxc5WwY",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Tan",
+        "Bodygear": "Referee shirt",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Shades",
+        "Headgear": "Nothing",
+        "Mane": "Purple",
+        "Mouth": "Big Smile"
+      }
+    },
+    "4748": {
+      "id": 4748,
+      "name": "#4748",
+      "image": "ipfs://QmVawDnWwxEUKwEVsBE91Xf3n9mMcP6R67cdFEEjYV6pjD",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Red",
+        "Bodygear": "Floaties",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Sleepy",
+        "Headgear": "Nothing",
+        "Mane": "Black",
+        "Mouth": "Licking Nose"
+      }
+    },
+    "4837": {
+      "id": 4837,
+      "name": "#4837",
+      "image": "ipfs://QmeDXbFaWN2vkdYDRN1s58fCxsLq3M7bYq5CZ3H9ZAnaAe",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Spotted Leopard",
+        "Bodygear": "Lion Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Money Eyes",
+        "Headgear": "Bucket Hat",
+        "Mane": "Double Tied Up - Orange",
+        "Mouth": "Big Smile"
+      }
+    },
+    "5065": {
+      "id": 5065,
+      "name": "#5065",
+      "image": "ipfs://QmdaiSEoqnEkjwNN2xvMSYPjct4QHiAnrGiGUNpv7QoBDH",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Pink",
+        "Bodygear": "Chef Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Sad",
+        "Headgear": "Bucket Hat",
+        "Mane": "Teal",
+        "Mouth": "Sad"
+      }
+    },
+    "5105": {
+      "id": 5105,
+      "name": "#5105",
+      "image": "ipfs://Qmf5s97BhuLsDerGNzxxYzLZP7ax5SmbxNjaLQ8RQhJwgk",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Spotted Leopard",
+        "Bodygear": "Floaties",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "Horns",
+        "Mane": "Black",
+        "Mouth": "Big Smile"
+      }
+    },
+    "5216": {
+      "id": 5216,
+      "name": "#5216",
+      "image": "ipfs://QmSi5phRzuivGPdxWDKPUKwnZVi4Y227u4k2iZdLWA2FeL",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Spotted Leopard",
+        "Bodygear": "Gold Chain",
+        "Earring": "Nothing",
+        "Eyes": "Evil",
+        "Headgear": "LAZY Hat",
+        "Mane": "Red",
+        "Mouth": "Money Mouth"
+      }
+    },
+    "5298": {
+      "id": 5298,
+      "name": "#5298",
+      "image": "ipfs://QmeYh7FTTSZvHrPpyiYavFFqfePTFfkZYwg1eGsVMvK9NV",
+      "traits": {
+        "Background": "Mithril",
+        "Body": "Zebra",
+        "Bodygear": "Ripped Shirt - Black",
+        "Earring": "Nothing",
+        "Eyes": "Closed",
+        "Headgear": "Bunny Ears",
+        "Mane": "Top Knot - Brown",
+        "Mouth": "Roaring"
+      }
+    },
+    "5307": {
+      "id": 5307,
+      "name": "#5307",
+      "image": "ipfs://QmdmmAtgsqMbqtHWWmZXvRyHkCJG8TfeWp1Z1k2dZVVWes",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Lizard Blue",
+        "Bodygear": "Police Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Raised Eyebrow",
+        "Headgear": "Pirate Hat",
+        "Mane": "Double Tied Up - Blue",
+        "Mouth": "Standard"
+      }
+    },
+    "5348": {
+      "id": 5348,
+      "name": "#5348",
+      "image": "ipfs://QmdnjKYNJ7Ws536SfndhQw3YHdzrtF1WpJ2GcBMTTqnyzw",
+      "traits": {
+        "Background": "Mithril",
+        "Body": "Grey",
+        "Bodygear": "Lab Coat",
+        "Earring": "Nothing",
+        "Eyes": "Anime - Brown",
+        "Headgear": "Black Cap",
+        "Mane": "Brown",
+        "Mouth": "Bubble Gum "
+      }
+    },
+    "5468": {
+      "id": 5468,
+      "name": "#5468",
+      "image": "ipfs://QmWZGFTfUYETHabVzAwZd9hQJh2FKU42x5yn68XyaUCo1C",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Zebra",
+        "Bodygear": "Hawaiian Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up + Top Knot - Black",
+        "Mouth": "Party Horn"
+      }
+    },
+    "5529": {
+      "id": 5529,
+      "name": "#5529",
+      "image": "ipfs://QmP4P1Wn1JpRkG3dafKrx2XSyB7no9ryzWL2rShrmK2yiM",
+      "traits": {
+        "Background": "Mithril",
+        "Body": "Tan",
+        "Bodygear": "Police Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Goofy Eyes",
+        "Headgear": "Black Cap",
+        "Mane": "Black",
+        "Mouth": "Roaring"
+      }
+    },
+    "5707": {
+      "id": 5707,
+      "name": "#5707",
+      "image": "ipfs://QmNURgfMaK7VWvucPhwDvLJ9JGJBAncirjzMLfrao54LgL",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Chef Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Goofy Eyes",
+        "Headgear": "Straw Beach Hat",
+        "Mane": "Top Knot - Black",
+        "Mouth": "Gargling"
+      }
+    },
+    "5708": {
+      "id": 5708,
+      "name": "#5708",
+      "image": "ipfs://Qme8DthZdfAbmhrfaeVnQnSx92mVW1sQ5LkVF1YqLN2TWb",
+      "traits": {
+        "Background": "Elemental",
+        "Body": "Brown",
+        "Bodygear": "Nothing",
+        "Earring": "Nothing",
+        "Eyes": "Sad",
+        "Headgear": "Spinner Hat",
+        "Mane": "Orange",
+        "Mouth": "Bubble Gum "
+      }
+    },
+    "5759": {
+      "id": 5759,
+      "name": "#5759",
+      "image": "ipfs://QmXpVC6pUBMXWWXAHT3uhsuxdCi7HVMnGF3J91R2wm61XU",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Chef Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Sad",
+        "Headgear": "Police Hat",
+        "Mane": "Double Tied Up - Ice",
+        "Mouth": "Standard"
+      }
+    },
+    "5768": {
+      "id": 5768,
+      "name": "#5768",
+      "image": "ipfs://QmcmY9LhPVCtzAiXpsttm5XhMQVe1m8ggwLCnWQDGeruJC",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Tan",
+        "Bodygear": "Purple Fur Coat",
+        "Earring": "Nothing",
+        "Eyes": "Winking",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Rainbow",
+        "Mouth": "Sad"
+      }
+    },
+    "5778": {
+      "id": 5778,
+      "name": "#5778",
+      "image": "ipfs://QmXZ1CkDwrbQG6BPaQTDR9xNfqQaXEp3QXi4Awqg3YRiSy",
+      "traits": {
+        "Background": "Mithril",
+        "Body": "Spotted Leopard",
+        "Bodygear": "Referee shirt",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "Nothing",
+        "Mane": "Ice",
+        "Mouth": "Smirk"
+      }
+    },
+    "5813": {
+      "id": 5813,
+      "name": "#5813",
+      "image": "ipfs://QmVHqUQ2awBTe4APHNGzbbDXobKaTktk3jWZCF2hAcuvSf",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Standard",
+        "Bodygear": "Football Jersey - Blue",
+        "Earring": "Nothing",
+        "Eyes": "BTC Eyes",
+        "Headgear": "Bunny Ears",
+        "Mane": "Top Knot - Orange",
+        "Mouth": "Gold Smile"
+      }
+    },
+    "6013": {
+      "id": 6013,
+      "name": "#6013",
+      "image": "ipfs://QmYX1HJ9pS722BRvGjPTmtS7h5b5oDYgHHadcK8Ls75j1d",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Business Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up + Top Knot - Brown",
+        "Mouth": "Party Horn"
+      }
+    },
+    "6128": {
+      "id": 6128,
+      "name": "#6128",
+      "image": "ipfs://QmZzLuADMYvsZhawASKeGTTwJ9s3zrStPkz5DMFBoMyJEX",
+      "traits": {
+        "Background": "Silver",
+        "Body": "Standard",
+        "Bodygear": "Purple Fur Coat",
+        "Earring": "Nothing",
+        "Eyes": "BTC Eyes",
+        "Headgear": "Pirate Hat",
+        "Mane": "Top Knot - Blue",
+        "Mouth": "Big Smile"
+      }
+    },
+    "6278": {
+      "id": 6278,
+      "name": "#6278",
+      "image": "ipfs://QmUCA7gVgWsLGXzecenkvVqHofvqurzMMMyJq4RNDccRYp",
+      "traits": {
+        "Background": "Amethyst",
+        "Body": "Brown",
+        "Bodygear": "Football Jersey - Blue",
+        "Earring": "Nothing",
+        "Eyes": "Concerned",
+        "Headgear": "Spinner Hat",
+        "Mane": "Top Knot - Red",
+        "Mouth": "Big Smile"
+      }
+    },
+    "6626": {
+      "id": 6626,
+      "name": "#6626",
+      "image": "ipfs://QmWr6YN271GaE1fdfvXEZTjhwr5x2UyYaDA8AdAYCcDhuE",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Ripped Shirt - White",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Water Goggles",
+        "Headgear": "Spinner Hat",
+        "Mane": "Purple",
+        "Mouth": "Yelling"
+      }
+    },
+    "7184": {
+      "id": 7184,
+      "name": "#7184",
+      "image": "ipfs://QmTBQCcXQT2rmgRUnWjSBR8PSC4zrL7vkeSKVHDRX9f8EK",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Brown",
+        "Bodygear": "Gold Chain",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "Straw Beach Hat",
+        "Mane": "Bloody",
+        "Mouth": "Big Smile"
+      }
+    },
+    "7213": {
+      "id": 7213,
+      "name": "#7213",
+      "image": "ipfs://QmbDxs8dpkSp4kTS1KzEwfw7zgq7PKDNBFP6V1bL44N4sz",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Brown",
+        "Bodygear": "Ethereum Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Water Goggles",
+        "Headgear": "Safari Hat",
+        "Mane": "Black",
+        "Mouth": "Yelling"
+      }
+    },
+    "7243": {
+      "id": 7243,
+      "name": "#7243",
+      "image": "ipfs://QmZjMJSGJE7vEoR6hupU8GbmAzWAMkGAnncDHfbnwFjUzD",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Black",
+        "Bodygear": "Ethereum Business Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "Nothing",
+        "Mane": "Double Tied Up - Red",
+        "Mouth": "Tongue Out"
+      }
+    },
+    "7250": {
+      "id": 7250,
+      "name": "#7250",
+      "image": "ipfs://QmdadcWWKfQu4DBJuva4x8oxXGi9xKUFsnYtv6RCGdxvE4",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Zombie",
+        "Bodygear": "Football Jersey - Red",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Shades",
+        "Headgear": "Spinner Hat",
+        "Mane": "Double Tied Up + Top Knot - Brown",
+        "Mouth": "Tongue Out"
+      }
+    },
+    "7902": {
+      "id": 7902,
+      "name": "#7902",
+      "image": "ipfs://QmUxL1N1Vcu7eKzBUoagVvmrQMbVcx9CYBTeV8eb1AtNCn",
+      "traits": {
+        "Background": "Blue",
+        "Body": "Standard",
+        "Bodygear": "Lab Coat",
+        "Earring": "Nothing",
+        "Eyes": "3D Glasses",
+        "Headgear": "Santa Hat",
+        "Mane": "Double Tied Up - Emerald",
+        "Mouth": "Yelling"
+      }
+    },
+    "7906": {
+      "id": 7906,
+      "name": "#7906",
+      "image": "ipfs://QmV4ywBgkSgZtNN1FbvNH52542dnc1o6yRvH7qDyvGGMW8",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Pink",
+        "Bodygear": "Football Jersey - Red",
+        "Earring": "Small Gold Hoop",
+        "Eyes": "Sleepy",
+        "Headgear": "Nothing",
+        "Mane": "Bloody",
+        "Mouth": "Bubble Gum "
+      }
+    },
+    "8053": {
+      "id": 8053,
+      "name": "#8053",
+      "image": "ipfs://QmZsvEhEeJv85fPX2az9SH1naC9HdPmWcP2uUssbdTUZHB",
+      "traits": {
+        "Background": "Mithril",
+        "Body": "Pink",
+        "Bodygear": "Gold Chain",
+        "Earring": "Nothing",
+        "Eyes": "Angry",
+        "Headgear": "Spinner Hat",
+        "Mane": "Top Knot - Black",
+        "Mouth": "Big Smile"
+      }
+    },
+    "8123": {
+      "id": 8123,
+      "name": "#8123",
+      "image": "ipfs://QmPq5PmTERT9PPxRrkwara4R9eSS1Eq8pc4PnMwHCTCJQa",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Standard",
+        "Bodygear": "Gold Chain",
+        "Earring": "Nothing",
+        "Eyes": "Water Goggles",
+        "Headgear": "Halo",
+        "Mane": "Top Knot - Black",
+        "Mouth": "Roaring"
+      }
+    },
+    "8256": {
+      "id": 8256,
+      "name": "#8256",
+      "image": "ipfs://QmW6BpeBpb4etvvxun71FDYaDVtkUrvB376pCQqpPpnemR",
+      "traits": {
+        "Background": "Magenta",
+        "Body": "Pink",
+        "Bodygear": "Floaties",
+        "Earring": "Nothing",
+        "Eyes": "Shades",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Brown",
+        "Mouth": "Tongue Out"
+      }
+    },
+    "8395": {
+      "id": 8395,
+      "name": "#8395",
+      "image": "ipfs://QmdFDsJDUnku8nwFC6qNAvhCCCt3QdFWLiz25M5ECZgred",
+      "traits": {
+        "Background": "Adamant",
+        "Body": "Tan",
+        "Bodygear": "Football Jersey - Red",
+        "Earring": "Nothing",
+        "Eyes": "Water Goggles",
+        "Headgear": "LAZY Hat",
+        "Mane": "Double Tied Up + Top Knot - Black",
+        "Mouth": "Standard"
+      }
+    },
+    "8890": {
+      "id": 8890,
+      "name": "#8890",
+      "image": "ipfs://QmbxMkXHMJeyurLJVwjtGQF8jqWEhEVczmuXFr9mAPYawn",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Standard",
+        "Bodygear": "Ripped Shirt - White",
+        "Earring": "Green Ball",
+        "Eyes": "Winking",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Green",
+        "Mouth": "Gargling"
+      }
+    },
+    "8908": {
+      "id": 8908,
+      "name": "#8908",
+      "image": "ipfs://Qmbc9tToFJUxTSoXduGKvyDXAQXjwmJFRbcJLPYyzUakqg",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Grey",
+        "Bodygear": "Ripped Shirt - Black",
+        "Earring": "Green Ball",
+        "Eyes": "Concerned",
+        "Headgear": "Spinner Hat",
+        "Mane": "Top Knot - Fire",
+        "Mouth": "Grin"
+      }
+    },
+    "8925": {
+      "id": 8925,
+      "name": "#8925",
+      "image": "ipfs://QmQpcju6ZE98yocY58oTENw1HhZFAcF6XpPY4hfbThB5s9",
+      "traits": {
+        "Background": "Magenta",
+        "Body": "Pink",
+        "Bodygear": "Coconut Bra",
+        "Earring": "Nothing",
+        "Eyes": "Concerned",
+        "Headgear": "Horns",
+        "Mane": "Double Tied Up - Rainbow",
+        "Mouth": "Big Smile"
+      }
+    },
+    "8968": {
+      "id": 8968,
+      "name": "#8968",
+      "image": "ipfs://QmdkFd83SG9RLWHWwoQLBYRGHv3TzqENzzbkA6PF3MhgU4",
+      "traits": {
+        "Background": "Khakhi",
+        "Body": "Grey",
+        "Bodygear": "Ethereum Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Monocle",
+        "Headgear": "Nothing",
+        "Mane": "Red",
+        "Mouth": "Big Smile"
+      }
+    },
+    "9095": {
+      "id": 9095,
+      "name": "#9095",
+      "image": "ipfs://QmYHobkpHRmjTYdZLetKYe9oq6miQC7Q3gachhfy7ndhED",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Black",
+        "Bodygear": "Football Jersey - Red",
+        "Earring": "Nothing",
+        "Eyes": "Dork Glasses",
+        "Headgear": "Crown",
+        "Mane": "Double Tied Up - Red",
+        "Mouth": "Whistle"
+      }
+    },
+    "9290": {
+      "id": 9290,
+      "name": "#9290",
+      "image": "ipfs://QmToPWrZUJ2fyhq88TBXcre28tjVzhWmkw5wqf2WcxdCZj",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Brown",
+        "Bodygear": "Floaties",
+        "Earring": "Nothing",
+        "Eyes": "Anime - Blue",
+        "Headgear": "Nothing",
+        "Mane": "Teal",
+        "Mouth": "Cigar"
+      }
+    },
+    "9468": {
+      "id": 9468,
+      "name": "#9468",
+      "image": "ipfs://QmZzYxdxMQ7FUi8oLpfNK9H335ewV1wD5Kbu4aXngf7nnT",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Galaxy",
+        "Bodygear": "Hawaiian Shirt",
+        "Earring": "Nothing",
+        "Eyes": "Sleepy",
+        "Headgear": "LAZY Hat",
+        "Mane": "Fire",
+        "Mouth": "Bloody Mouth"
+      }
+    },
+    "9772": {
+      "id": 9772,
+      "name": "#9772",
+      "image": "ipfs://QmSQPcDVbZP5UN6e2G1w2MeMxiRRp7oPG9RvziBiQw4RF1",
+      "traits": {
+        "Background": "Light purple",
+        "Body": "Pink",
+        "Bodygear": "Police Uniform",
+        "Earring": "Nothing",
+        "Eyes": "Money Eyes",
+        "Headgear": "Nothing",
+        "Mane": "Top Knot - Purple",
+        "Mouth": "Tongue Out"
+      }
+    },
+    "9943": {
+      "id": 9943,
+      "name": "#9943",
+      "image": "ipfs://QmbHucN81HGG1i3PNuu2KbYR89YNwmy51wYDtoeBKwgoXR",
+      "traits": {
+        "Background": "Iron",
+        "Body": "Pink",
+        "Bodygear": "Floaties",
+        "Earring": "Nothing",
+        "Eyes": "Eye Mask",
+        "Headgear": "LAZY Hat",
+        "Mane": "Emerald",
+        "Mouth": "Bloody Mouth"
+      }
+    }
+  },
+  "licensed_traits": [
+    "Background::Adamant",
+    "Background::Amethyst",
+    "Background::Blue",
+    "Background::Elemental",
+    "Background::Iron",
+    "Background::Khakhi",
+    "Background::Light purple",
+    "Background::Magenta",
+    "Background::Mithril",
+    "Background::Seagreen",
+    "Background::Silver",
+    "Body::Black",
+    "Body::Brown",
+    "Body::Galaxy",
+    "Body::Grey",
+    "Body::Lizard Blue",
+    "Body::Pink",
+    "Body::Red",
+    "Body::Scratched Up",
+    "Body::Spots",
+    "Body::Spotted Leopard",
+    "Body::Standard",
+    "Body::Tan",
+    "Body::White",
+    "Body::Zebra",
+    "Body::Zombie",
+    "Bodygear::Black Hoodie",
+    "Bodygear::Business Shirt",
+    "Bodygear::Chef Uniform",
+    "Bodygear::Coconut Bra",
+    "Bodygear::Ethereum Business Shirt",
+    "Bodygear::Ethereum Shirt",
+    "Bodygear::Floaties",
+    "Bodygear::Football Jersey - Blue",
+    "Bodygear::Football Jersey - Red",
+    "Bodygear::Gold Chain",
+    "Bodygear::Hawaiian Shirt",
+    "Bodygear::Lab Coat",
+    "Bodygear::Leopard Fur Coat",
+    "Bodygear::Lion Shirt",
+    "Bodygear::Nothing",
+    "Bodygear::Police Uniform",
+    "Bodygear::Purple Fur Coat",
+    "Bodygear::Ranger Shirt",
+    "Bodygear::Referee shirt",
+    "Bodygear::Ripped Shirt - Black",
+    "Bodygear::Ripped Shirt - White",
+    "Bodygear::Space Suit",
+    "Earring::Green Ball",
+    "Earring::Lion Head",
+    "Earring::Nothing",
+    "Earring::Small Gold Hoop",
+    "Eyes::3D Glasses",
+    "Eyes::Angry",
+    "Eyes::Anime - Blue",
+    "Eyes::Anime - Brown",
+    "Eyes::BTC Eyes",
+    "Eyes::Closed",
+    "Eyes::Concerned",
+    "Eyes::Dork Glasses",
+    "Eyes::Evil",
+    "Eyes::Eye Mask",
+    "Eyes::Fake Glasses",
+    "Eyes::Goofy Eyes",
+    "Eyes::Money Eyes",
+    "Eyes::Monocle",
+    "Eyes::Raised Eyebrow",
+    "Eyes::Sad",
+    "Eyes::Shades",
+    "Eyes::Sleepy",
+    "Eyes::Stoner",
+    "Eyes::Surprised",
+    "Eyes::Water Goggles",
+    "Eyes::Winking",
+    "Headgear::Black Cap",
+    "Headgear::Bucket Hat",
+    "Headgear::Bunny Ears",
+    "Headgear::Crown",
+    "Headgear::Halo",
+    "Headgear::Horns",
+    "Headgear::LAZY Hat",
+    "Headgear::Nothing",
+    "Headgear::Pirate Hat",
+    "Headgear::Police Hat",
+    "Headgear::Safari Hat",
+    "Headgear::Santa Hat",
+    "Headgear::Sheriff Hat",
+    "Headgear::Spinner Hat",
+    "Headgear::Straw Beach Hat",
+    "Mane::Black",
+    "Mane::Bloody",
+    "Mane::Brown",
+    "Mane::Double Tied Up + Top Knot - Black",
+    "Mane::Double Tied Up + Top Knot - Brown",
+    "Mane::Double Tied Up - Blue",
+    "Mane::Double Tied Up - Emerald",
+    "Mane::Double Tied Up - Fire",
+    "Mane::Double Tied Up - Ice",
+    "Mane::Double Tied Up - Orange",
+    "Mane::Double Tied Up - Rainbow",
+    "Mane::Double Tied Up - Red",
+    "Mane::Double Tied Up - White",
+    "Mane::Emerald",
+    "Mane::Fire",
+    "Mane::Ice",
+    "Mane::Orange",
+    "Mane::Purple",
+    "Mane::Red",
+    "Mane::Teal",
+    "Mane::Top Knot - Black",
+    "Mane::Top Knot - Blue",
+    "Mane::Top Knot - Brown",
+    "Mane::Top Knot - Fire",
+    "Mane::Top Knot - Green",
+    "Mane::Top Knot - Ice",
+    "Mane::Top Knot - Orange",
+    "Mane::Top Knot - Purple",
+    "Mane::Top Knot - Rainbow",
+    "Mane::Top Knot - Red",
+    "Mane::Top Knot - White",
+    "Mane::White",
+    "Mouth::Big Smile",
+    "Mouth::Bloody Mouth",
+    "Mouth::Bubble Gum ",
+    "Mouth::Cigar",
+    "Mouth::Gargling",
+    "Mouth::Gold Smile",
+    "Mouth::Grin",
+    "Mouth::Licking Nose",
+    "Mouth::Meat",
+    "Mouth::Money Mouth",
+    "Mouth::Party Horn",
+    "Mouth::Pipe",
+    "Mouth::Roaring",
+    "Mouth::Sad",
+    "Mouth::Smirk",
+    "Mouth::Standard",
+    "Mouth::Surprised",
+    "Mouth::Tongue Out",
+    "Mouth::Whistle",
+    "Mouth::Yawning",
+    "Mouth::Yelling"
+  ]
+}

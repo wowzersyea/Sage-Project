@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lazy Arcade - Provably Fair Verifier</title>
+<style>
+  :root{
+    --bg:#f7f5f2; --panel:#fffdfb; --ink:#1c1a17; --muted:#6b645c;
+    --line:#e2dcd3; --accent:#b8860b; --ok:#1c7c4a; --bad:#b3261e;
+    --code:#f0ece5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15130f; --panel:#1e1b16; --ink:#f0ece5; --muted:#a49b8f;
+      --line:#332e26; --accent:#e0b34d; --ok:#5fd39b; --bad:#ff8a80;
+      --code:#26221b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15130f; --panel:#1e1b16; --ink:#f0ece5; --muted:#a49b8f;
+    --line:#332e26; --accent:#e0b34d; --ok:#5fd39b; --bad:#ff8a80;
+    --code:#26221b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:2rem 1rem}
+  .wrap{max-width:820px;margin:0 auto}
+  h1{font-size:1.6rem;margin:0 0 .25rem}
+  .sub{color:var(--muted);margin:0 0 1.5rem}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+         padding:1.25rem;margin-bottom:1.25rem}
+  label{display:block;font-weight:600;font-size:.85rem;margin:.85rem 0 .3rem}
+  input,select{width:100%;padding:.6rem .7rem;border:1px solid var(--line);
+        border-radius:8px;background:var(--code);color:var(--ink);
+        font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem}
+  button{margin-top:1.1rem;padding:.7rem 1.3rem;border:0;border-radius:8px;
+         background:var(--accent);color:#1c1a17;font-weight:700;cursor:pointer;font-size:.95rem}
+  button:hover{filter:brightness(1.08)}
+  .out{margin-top:1.1rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+       font-size:.85rem;white-space:pre-wrap;word-break:break-all}
+  .ok{color:var(--ok);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .stops{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+  .stop{background:var(--code);border:1px solid var(--line);border-radius:8px;
+        padding:.5rem .8rem;font-family:ui-monospace,monospace;font-size:.9rem}
+  .stop b{display:block;color:var(--muted);font-size:.7rem;font-weight:600}
+  code{background:var(--code);padding:.1rem .35rem;border-radius:4px;
+       font-size:.85em;word-break:break-all}
+  ol{padding-left:1.2rem} li{margin:.4rem 0}
+  .scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lazy Arcade - Provably Fair Verifier</h1>
+  <p class="sub">Re-derive any spin yourself. Nothing here talks to our servers; the
+  page computes everything locally in your browser.</p>
+
+  <div class="panel">
+    <h2 style="margin-top:0;font-size:1.05rem">How it works</h2>
+    <ol>
+      <li>Before your first spin we publish <code>SHA256(serverSeed)</code> on Base.
+          We cannot change the seed after that without the hash changing.</li>
+      <li>Each spin mixes that secret seed with <em>your</em> client seed and a
+          nonce that increases every spin:<br>
+          <code>HMAC_SHA256(serverSeed, "clientSeed:nonce:gameId")</code></li>
+      <li>Reel stops come from those bytes by rejection sampling &mdash; four bytes
+          at a time, discarding values that would bias the result. Never modulo.</li>
+      <li>When the seed rotates we reveal it. Paste it below and confirm every
+          spin it ever produced.</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <label for="seed">Revealed server seed (64 hex characters)</label>
+    <input id="seed" spellcheck="false" placeholder="00070e151c232a31...">
+
+    <label for="hash">Committed hash published on-chain (optional, but check it)</label>
+    <input id="hash" spellcheck="false" placeholder="2dfd602a7a260b7a...">
+
+    <label for="client">Your client seed</label>
+    <input id="client" spellcheck="false" value="client-0">
+
+    <label for="nonce">Nonce (spin number for this seed pair)</label>
+    <input id="nonce" type="number" min="0" step="1" value="0">
+
+    <label for="game">Game</label>
+    <select id="game">
+      <option value="pride">PRIDE - 1024 ways</option>
+      <option value="cubcluster">CUB CLUSTER - cluster pays</option>
+      <option value="traitvault">TRAIT VAULT - 40 lines</option>
+      <option value="hilo">RARITY HI/LO</option>
+    </select>
+
+    <button id="go">Verify this spin</button>
+    <div class="out" id="out"></div>
+  </div>
+
+  <div class="panel">
+    <h2 style="margin-top:0;font-size:1.05rem">Published strip lengths</h2>
+    <p class="sub" style="margin:0 0 .6rem">A reel stop is an index into that reel's
+    virtual strip. These lengths are part of the published paytable.</p>
+    <div class="scroll"><div class="stops" id="published"></div></div>
+  </div>
+</div>
+
+<script>
+// Strip lengths per reel, matching packages/engine/src/paytables/weights/*.weights.
+// Hi/Lo draws a single card ordinal instead of reel stops.
+const STRIPS = {
+  pride:      [152, 164, 156, 164, 165],
+  cubcluster: [159, 166, 168, 166, 171],
+  traitvault: [160, 158, 165, 163, 153],
+  hilo:       [10078]
+};
+
+const enc = new TextEncoder();
+
+function hex(buf){
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function bytesFromHex(s){
+  const clean = s.trim().toLowerCase().replace(/^0x/, "");
+  if (!/^[0-9a-f]*$/.test(clean) || clean.length % 2 !== 0) return null;
+  const out = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16);
+  return out;
+}
+
+async function sha256Hex(bytes){
+  return hex(await crypto.subtle.digest("SHA-256", bytes));
+}
+
+async function hmacBlock(keyBytes, message){
+  const key = await crypto.subtle.importKey(
+    "raw", keyBytes, {name: "HMAC", hash: "SHA-256"}, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(message)));
+}
+
+/**
+ * Byte stream identical to packages/engine/src/rng and crates/mathsim/src/rng.rs:
+ * block 0 has no counter suffix, block k >= 1 is suffixed ":k".
+ */
+class HmacRng {
+  constructor(seedBytes, prefix){
+    this.seed = seedBytes; this.prefix = prefix;
+    this.block = null; this.pos = 32; this.blockIndex = 0; this.primed = false;
+  }
+  async refill(){
+    let msg;
+    if (!this.primed){ this.primed = true; msg = this.prefix; }
+    else { this.blockIndex += 1; msg = this.prefix + ":" + this.blockIndex; }
+    this.block = await hmacBlock(this.seed, msg);
+    this.pos = 0;
+  }
+  async nextU32(){
+    if (this.pos + 4 > 32) await this.refill();
+    const b = this.block;
+    const v = ((b[this.pos] << 24) >>> 0) + (b[this.pos+1] << 16) + (b[this.pos+2] << 8) + b[this.pos+3];
+    this.pos += 4;
+    return v >>> 0;
+  }
+  async below(n){
+    if (n === 1) return 0;
+    const TWO32 = 2 ** 32;
+    const limit = TWO32 - (TWO32 % n);   // reject at or above this
+    for (;;){
+      const x = await this.nextU32();
+      if (x < limit) return x % n;
+    }
+  }
+}
+
+document.getElementById("go").addEventListener("click", async () => {
+  const out = document.getElementById("out");
+  const seedHex = document.getElementById("seed").value;
+  const seed = bytesFromHex(seedHex);
+  if (!seed || seed.length !== 32){
+    out.innerHTML = '<span class="bad">Server seed must be exactly 64 hex characters (32 bytes).</span>';
+    return;
+  }
+
+  const committed = document.getElementById("hash").value.trim().toLowerCase().replace(/^0x/, "");
+  const clientSeed = document.getElementById("client").value;
+  const nonce = document.getElementById("nonce").value.trim();
+  const game = document.getElementById("game").value;
+
+  let lines = [];
+  const actualHash = await sha256Hex(seed);
+  lines.push("SHA256(serverSeed) = " + actualHash);
+  if (committed){
+    lines.push(actualHash === committed
+      ? '<span class="ok">MATCHES the committed hash. This seed is the one that was locked in.</span>'
+      : '<span class="bad">DOES NOT MATCH the committed hash. Do not trust this result.</span>');
+  } else {
+    lines.push('<span class="bad">No committed hash supplied - compare it against the on-chain commitment yourself.</span>');
+  }
+
+  const prefix = clientSeed + ":" + nonce + ":" + game;
+  lines.push("");
+  lines.push("HMAC message = " + prefix);
+
+  const rng = new HmacRng(seed, prefix);
+  const lengths = STRIPS[game];
+  const stops = [];
+  for (const len of lengths) stops.push(await rng.below(len));
+
+  out.innerHTML = lines.join("\n");
+
+  const label = game === "hilo" ? "Card ordinal" : "Reel";
+  const box = document.createElement("div");
+  box.className = "stops";
+  stops.forEach((s, i) => {
+    const d = document.createElement("div");
+    d.className = "stop";
+    d.innerHTML = "<b>" + label + " " + (i + 1) + "</b>" + s +
+                  '<span style="color:var(--muted)"> / ' + lengths[i] + "</span>";
+    box.appendChild(d);
+  });
+  out.appendChild(box);
+});
+
+const pub = document.getElementById("published");
+for (const [game, lengths] of Object.entries(STRIPS)){
+  const d = document.createElement("div");
+  d.className = "stop";
+  d.innerHTML = "<b>" + game + "</b>" + lengths.join(" / ");
+  pub.appendChild(d);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "note": "Symbol -> art source map. Every entry sourced from a Lazy Lions trait MUST name a trait the operator actually holds; tools/atlas-build/check-licensing.py enforces this in CI (spec Sec. 5.3).",
+  "rarityMethod": "statistical rarity: sum of 1/r_t across a token's traits, r_t = count_t / 10078",
+  "symbols": [
+    {
+      "id": "WILD",
+      "tier": "wild",
+      "source": "COMMISSIONED",
+      "status": "BLOCKED_PENDING_ART",
+      "reason": "Spec Sec. 6.3 assigns WILD to a Signature Series lion. The operator holds 73 Lions and NONE of them are Signature Series, so no Signature art is licensed to this project. Per Sec. 5.3 the remedy is commissioned original art in the same style, not sourcing the trait elsewhere.",
+      "brief": "Original 'Pride Wild' lion crest in Lazy Lions house style. Must not reproduce any Signature Series character."
+    },
+    {
+      "id": "SCATTER",
+      "tier": "scatter",
+      "source": "COMMISSIONED",
+      "status": "OK",
+      "reason": "The $LAZY coin is project branding, not a collection trait, so it carries no trait-licensing dependency.",
+      "brief": "$LAZY coin token face."
+    },
+
+    { "id": "P1", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 482, "status": "OK" },
+    { "id": "P2", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 631, "status": "OK" },
+    { "id": "P3", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 660, "status": "OK" },
+    { "id": "P4", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 685, "status": "OK" },
+
+    { "id": "M1", "tier": "mid", "source": "TRAIT", "trait": "Headgear::Spinner Hat", "status": "OK" },
+    { "id": "M2", "tier": "mid", "source": "TRAIT", "trait": "Bodygear::Gold Chain", "status": "OK" },
+    { "id": "M3", "tier": "mid", "source": "TRAIT", "trait": "Eyes::Shades", "status": "OK" },
+    { "id": "M4", "tier": "mid", "source": "TRAIT", "trait": "Mouth::Big Smile", "status": "OK" },
+
+    { "id": "L1", "tier": "low", "source": "TRAIT", "trait": "Background::Khakhi", "status": "OK", "render": "gem glyph derived from background colour" },
+    { "id": "L2", "tier": "low", "source": "TRAIT", "trait": "Background::Adamant", "status": "OK", "render": "gem glyph derived from background colour" },
+    { "id": "L3", "tier": "low", "source": "TRAIT", "trait": "Background::Iron", "status": "OK", "render": "gem glyph derived from background colour" },
+    { "id": "L4", "tier": "low", "source": "TRAIT", "trait": "Background::Mithril", "status": "OK", "render": "gem glyph derived from background colour" }
+  ]
+}

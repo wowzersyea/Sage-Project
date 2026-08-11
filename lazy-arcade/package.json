@@ -1,0 +1,17 @@
+{
+  "name": "lazy-arcade",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Provably-fair Web3 arcade on Base -- engine, math harness and verifier.",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "verify:golden": "node --experimental-strip-types tests/verify-golden.ts",
+    "gate:licensing": "python3 tools/atlas-build/check-licensing.py",
+    "math:test": "cd crates/mathsim && cargo test --release",
+    "math:build": "cd crates/mathsim && cargo build --release",
+    "check": "npm run math:test && npm run verify:golden && npm run gate:licensing"
+  }
+}

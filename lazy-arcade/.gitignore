@@ -1,0 +1,6 @@
+# Rust build output
+crates/mathsim/target/
+# Node
+node_modules/
+# Ingest logs (data/ IS committed -- it is the licensing gate's input)
+tools/trait-ingest/*.log
