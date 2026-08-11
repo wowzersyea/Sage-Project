@@ -7,3 +7,5 @@ tools/trait-ingest/*.log
 # Source NFT images (large, refetchable via tools/atlas-build/fetch-deck.py).
 # The derived tiles are inlined into play/index.html and ARE committed.
 tools/atlas-build/cache/
+# build logs
+tools/atlas-build/*.log
