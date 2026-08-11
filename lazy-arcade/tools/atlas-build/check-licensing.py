@@ -22,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SYMBOLS = os.path.join(ROOT, "packages", "assets", "symbols.json")
 OWNED = os.path.join(ROOT, "tools", "trait-ingest", "data", "owned_traits.json")
+OWNED_CUBS = os.path.join(ROOT, "tools", "trait-ingest", "data", "owned_cubs.json")
 
 
 def fail(message: str, code: int = 1):
@@ -38,6 +39,15 @@ def main() -> int:
     owned = json.load(open(OWNED))
     licensed_traits = set(owned["licensed_traits"])
     owned_token_ids = {int(t) for t in owned["owned_tokens"]}
+
+    # Lazy Cubs are a separate collection with separate holdings. Commercial
+    # rights follow the tokens the operator holds in EACH collection, so Cub
+    # symbols are checked against Cub holdings -- never against the Lions.
+    cubs = json.load(open(OWNED_CUBS)) if os.path.exists(OWNED_CUBS) else {}
+    owned_cub_ids = {int(t) for t in cubs}
+    licensed_cub_traits = {
+        f"{c}::{v}" for tok in cubs.values() for c, v in tok["traits"].items()
+    }
 
     violations: list[str] = []
     blocked: list[str] = []
@@ -73,6 +83,24 @@ def main() -> int:
             else:
                 ok += 1
 
+        elif source == "OWNED_CUB":
+            token_id = sym.get("tokenId")
+            if not cubs:
+                violations.append(f"{sid}: no owned Cub data -- run trait-ingest for Lazy Cubs")
+            elif token_id not in owned_cub_ids:
+                violations.append(f"{sid}: Cub #{token_id} is not held by {owned['operator_wallet']}")
+            else:
+                ok += 1
+
+        elif source == "CUB_TRAIT":
+            trait = sym.get("trait")
+            if not cubs:
+                violations.append(f"{sid}: no owned Cub data -- run trait-ingest for Lazy Cubs")
+            elif trait not in licensed_cub_traits:
+                violations.append(f"{sid}: trait {trait!r} is NOT present on any Cub the operator holds")
+            else:
+                ok += 1
+
         elif source == "COMMISSIONED":
             # Original art carries no trait dependency, but it must not quietly
             # claim a trait it has no rights to.
@@ -86,7 +114,8 @@ def main() -> int:
             violations.append(f"{sid}: unknown source {source!r}")
 
     print(f"licensing gate: {len(symbols)} symbols checked against "
-          f"{len(licensed_traits)} licensed traits / {len(owned_token_ids)} owned tokens")
+          f"{len(licensed_traits)} Lion traits / {len(owned_token_ids)} Lions, "
+          f"{len(licensed_cub_traits)} Cub traits / {len(owned_cub_ids)} Cubs")
     print(f"  cleared : {ok}")
 
     if blocked:

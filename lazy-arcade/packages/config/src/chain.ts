@@ -41,7 +41,20 @@ export const LAZY_LIONS_L1 = "0x8943c7bac1914c9a7aba750bf2b6b09fd21037e0" as con
 export const LAZY_LIONS_METADATA_CID =
   "QmNpHFmk4GbJxDon2r2soYpwmrKaz1s6QfGMnBJtjA2ESd" as const;
 
-export const LAZY_CUBS_CONTRACT = UNCONFIRMED;
+/**
+ * Lazy Cubs. CONFIRMED 2026-08-11 by reading the contract, not by trusting a
+ * listing: name() -> "Lazy Cubs", symbol() -> "CUBS", totalSupply() -> 9,099.
+ *
+ * Note the supply: several third-party sources still describe Lazy Cubs as an
+ * 834-piece collection. On-chain says 9,099. Trust the contract.
+ *
+ * The operator holds 63 Cubs on Ethereum mainnet — the same chain as the
+ * Lions, so the Bronze sacrifice tier shares the cross-chain path in Sec. 9.1
+ * rather than needing a second one.
+ */
+export const LAZY_CUBS_CONTRACT = "0xe6a9826e3b6638d01de95b55690bd4ee7eff9441" as const;
+export const LAZY_CUBS_SUPPLY = 9_099;
+export const OPERATOR_CUBS_COUNT_AT_INGEST = 63;
 
 /**
  * yahoooo.eth -- CONFIRMED 2026-08-11.
