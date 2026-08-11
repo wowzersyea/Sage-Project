@@ -1,0 +1,1013 @@
+<title>Lazy Arcade — Math Test Bench</title>
+<style>
+/* Deliberately single-theme: this is a machine cabinet, not a document.
+   Every colour is painted explicitly so the page holds on any host ground. */
+:root{
+  --ground:#14110C;
+  --surface:#1E1A13;
+  --surface-2:#262016;
+  --line:#3A3124;
+  --ink:#F2EBDD;
+  --muted:#A2977F;
+  --gold:#E8B23C;
+  --gold-dim:#8A6A22;
+  --data:#5AA9E6;      /* instrumentation only, never decoration */
+  --win:#6FD08C;
+  --warn:#E2703A;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.5;
+  padding:clamp(12px,2.5vw,28px);
+}
+.shell{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+/* ---- header ---- */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 22px;
+       border-bottom:1px solid var(--line);padding-bottom:14px}
+.wordmark{font-weight:800;font-size:clamp(19px,2.6vw,26px);letter-spacing:.16em;
+          text-transform:uppercase;line-height:1.1}
+.wordmark span{color:var(--gold)}
+.tagline{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.02em}
+.build{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);
+       text-align:right;line-height:1.7}
+.build b{color:var(--data);font-weight:600}
+
+/* ---- tabs ---- */
+nav{display:flex;flex-wrap:wrap;gap:8px}
+.tab{background:var(--surface);border:1px solid var(--line);color:var(--muted);
+     font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+     padding:9px 14px;border-radius:2px;cursor:pointer;transition:border-color .15s,color .15s}
+.tab:hover{color:var(--ink);border-color:var(--gold-dim)}
+.tab[aria-selected="true"]{color:var(--ground);background:var(--gold);border-color:var(--gold);font-weight:700}
+.tab:focus-visible{outline:2px solid var(--data);outline-offset:2px}
+
+/* ---- layout ---- */
+.bench{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media(max-width:900px){.bench{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:16px}
+.panel h2{margin:0 0 12px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+          text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* ---- reels ---- */
+.grid{display:grid;gap:6px;background:var(--ground);padding:8px;border-radius:2px;
+      border:1px solid var(--line)}
+.grid.reels{grid-template-columns:repeat(5,1fr)}
+.col{display:grid;grid-template-rows:repeat(4,1fr);gap:6px}
+.cell{aspect-ratio:1/.92;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:2px;border-radius:2px;background:var(--surface-2);
+      border:1px solid transparent;padding:3px;text-align:center;overflow:hidden;
+      transition:transform .12s,border-color .12s,box-shadow .12s}
+.cell .g{font-size:clamp(15px,2.6vw,24px);font-weight:800;line-height:1}
+.cell .n{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.02em;
+         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cell.hit{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 18px -4px var(--gold);
+          transform:scale(1.04)}
+.cell.gone{opacity:.18}
+.grid.idle .cell{opacity:.3;filter:saturate(.4)}
+.cell.spinning{animation:blur .28s linear infinite}
+@keyframes blur{0%{opacity:.45;transform:translateY(-3px)}50%{opacity:1}100%{opacity:.45;transform:translateY(3px)}}
+@media(prefers-reduced-motion:reduce){
+  .cell,.cell.spinning{animation:none;transition:none}
+  .cell.hit{transform:none}
+}
+
+/* symbol tiers */
+.t-wild{background:linear-gradient(160deg,#4A3A12,#2A2110);color:var(--gold)}
+.t-scat{background:linear-gradient(160deg,#123A4A,#102028);color:var(--data)}
+.t-prem{color:#F0C868}
+.t-mid{color:#C9B892}
+.t-low{color:#8E866F}
+
+/* ---- controls ---- */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.bet{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+select,button{font-family:var(--mono);font-size:12px}
+select{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
+       padding:9px 10px;border-radius:2px}
+.btn{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
+     padding:10px 16px;border-radius:2px;cursor:pointer;letter-spacing:.08em;
+     text-transform:uppercase;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){border-color:var(--gold-dim);background:#2E2618}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--gold);color:var(--ground);border-color:var(--gold);font-weight:700}
+.btn.primary:hover:not(:disabled){background:#F2C155;border-color:#F2C155}
+.btn:focus-visible{outline:2px solid var(--data);outline-offset:2px}
+
+/* ---- readouts ---- */
+.bar{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;padding-top:14px;
+     border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
+.kv{display:flex;flex-direction:column;gap:1px}
+.kv .k{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kv .v{font-size:15px;font-variant-numeric:tabular-nums;font-weight:600}
+.v.pos{color:var(--win)} .v.gold{color:var(--gold)} .v.data{color:var(--data)}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-family:var(--mono)}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:2px;padding:9px 10px}
+.stat .k{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-size:16px;font-variant-numeric:tabular-nums;margin-top:2px;font-weight:600}
+
+/* RTP convergence meter */
+.meter{margin-top:12px}
+.meter .track{position:relative;height:6px;background:var(--surface-2);
+              border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.meter .fill{position:absolute;top:0;bottom:0;left:50%;background:var(--data);opacity:.75}
+.meter .target{position:absolute;top:-3px;bottom:-3px;left:50%;width:1px;background:var(--gold)}
+.meter .scale{display:flex;justify-content:space-between;font-family:var(--mono);
+              font-size:9px;color:var(--muted);margin-top:4px}
+
+/* ---- log / fairness ---- */
+.log{font-family:var(--mono);font-size:11px;max-height:190px;overflow-y:auto;
+     display:flex;flex-direction:column;gap:3px}
+.log div{display:flex;justify-content:space-between;gap:10px;
+         border-bottom:1px solid var(--surface-2);padding-bottom:2px}
+.log .w{color:var(--win)} .log .l{color:var(--muted)}
+.fair{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;
+      display:flex;flex-direction:column;gap:7px}
+.fair b{color:var(--ink);font-weight:600;display:block;font-size:9px;letter-spacing:.1em;
+        text-transform:uppercase;margin-bottom:2px}
+.fair input{width:100%;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
+            padding:6px 7px;border-radius:2px;font-family:var(--mono);font-size:10px}
+
+/* ---- paytable ---- */
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+th,td{text-align:right;padding:3px 5px;border-bottom:1px solid var(--surface-2)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+td{font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+
+/* ---- hi/lo ---- */
+.card{background:var(--surface-2);border:1px solid var(--line);border-radius:3px;
+      padding:26px 18px;text-align:center;margin-bottom:14px}
+.card .rank{font-size:clamp(30px,7vw,52px);font-weight:800;color:var(--gold);
+            font-variant-numeric:tabular-nums;line-height:1}
+.card .of{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+.card .pct{font-family:var(--mono);font-size:12px;color:var(--data);margin-top:8px}
+.hilo-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hilo-btns .btn{padding:14px 8px;flex-direction:column;display:flex;align-items:center;gap:3px}
+.hilo-btns .btn small{font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0}
+.hilo-btns .btn:disabled small{color:var(--warn)}
+
+.note{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.65;
+      border-left:2px solid var(--gold-dim);padding-left:10px}
+.note b{color:var(--gold);font-weight:600}
+footer{border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);
+       font-size:10px;color:var(--muted);line-height:1.7}
+.hidden{display:none!important}
+</style>
+
+<div class="shell">
+<header>
+  <div>
+    <div class="wordmark">Lazy <span>Arcade</span></div>
+    <div class="tagline">math test bench — play money, real verified odds</div>
+  </div>
+  <div class="build">
+    verified RTP <b>0.97009</b> / <b>0.97023</b> / <b>0.96994</b><br>
+    250M · 250M · 600M spins, production HMAC rng
+  </div>
+</header>
+
+<nav role="tablist" aria-label="Games">
+  <button class="tab" role="tab" aria-selected="true"  data-game="pride">Pride · 1024 ways</button>
+  <button class="tab" role="tab" aria-selected="false" data-game="cubcluster">Cub Cluster</button>
+  <button class="tab" role="tab" aria-selected="false" data-game="traitvault">Trait Vault</button>
+  <button class="tab" role="tab" aria-selected="false" data-game="hilo">Rarity Hi/Lo</button>
+</nav>
+
+<div class="bench">
+  <div>
+    <!-- ---------- slots ---------- -->
+    <section class="panel" id="slotPanel">
+      <h2 id="slotTitle">Pride — 5 reels × 4 rows, 1024 ways</h2>
+      <div class="grid reels" id="reels"></div>
+
+      <div class="controls">
+        <div class="bet">
+          <label for="bet">BET</label>
+          <select id="bet">
+            <option>100</option><option>200</option><option>300</option>
+            <option>500</option><option>1000</option><option>2500</option><option>5000</option>
+          </select>
+          <span>$LAZY</span>
+        </div>
+        <button class="btn primary" id="spin">Spin</button>
+        <button class="btn" id="auto">Auto ×100</button>
+        <button class="btn" id="stop" disabled>Stop</button>
+      </div>
+
+      <div class="bar">
+        <div class="kv"><span class="k">Balance</span><span class="v gold" id="bal">100,000</span></div>
+        <div class="kv"><span class="k">Last win</span><span class="v" id="lastWin">—</span></div>
+        <div class="kv"><span class="k">Status</span><span class="v" id="status" style="font-size:12px">Ready</span></div>
+        <div class="kv" id="meterBox" style="display:none">
+          <span class="k">Mane meter</span><span class="v data" id="mane">0 / 40</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- hi/lo ---------- -->
+    <section class="panel hidden" id="hiloPanel">
+      <h2>Rarity Hi/Lo — is the next NFT rarer or commoner?</h2>
+      <div class="card">
+        <div class="rank" id="hlRank">—</div>
+        <div class="of">rarity ordinal of <span id="hlN">10,078</span> · 1 = most common</div>
+        <div class="pct" id="hlOdds"></div>
+      </div>
+      <div class="hilo-btns">
+        <button class="btn" id="hlCommoner">Commoner<small id="hlCommonerPay"></small></button>
+        <button class="btn" id="hlRarer">Rarer<small id="hlRarerPay"></small></button>
+      </div>
+      <div class="controls">
+        <div class="bet">
+          <label for="hlBet">STAKE</label>
+          <select id="hlBet">
+            <option>100</option><option>200</option><option>300</option>
+            <option>500</option><option>1000</option><option>2500</option><option>5000</option>
+          </select>
+          <span>$LAZY</span>
+        </div>
+        <button class="btn primary" id="hlCash" disabled>Cash out</button>
+        <button class="btn" id="hlDeck">Deck: collection</button>
+      </div>
+      <div class="bar">
+        <div class="kv"><span class="k">Balance</span><span class="v gold" id="hlBal">100,000</span></div>
+        <div class="kv"><span class="k">Streak mult</span><span class="v" id="hlMult">1.00×</span></div>
+        <div class="kv"><span class="k">At risk</span><span class="v" id="hlRisk">0</span></div>
+        <div class="kv"><span class="k">Status</span><span class="v" id="hlStatus" style="font-size:12px">Pick a direction</span></div>
+      </div>
+      <p class="note" style="margin-top:14px">
+        Every offered bet returns exactly 97%: <b>payout = 0.97 / P(direction)</b>.
+        When a direction drops below 5% probability it is <b>disabled, never capped</b> —
+        capping would quietly break the 97% on precisely the bets worth scrutinising.
+        Round cap 5,000×.
+      </p>
+    </section>
+
+    <section class="panel" style="margin-top:18px">
+      <h2 id="ptTitle">Paytable</h2>
+      <div class="scroll"><table id="paytable"></table></div>
+    </section>
+  </div>
+
+  <!-- ---------- telemetry rail ---------- -->
+  <aside style="display:flex;flex-direction:column;gap:18px">
+    <section class="panel">
+      <h2>This session</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">Spins</div><div class="v" id="sSpins">0</div></div>
+        <div class="stat"><div class="k">Measured RTP</div><div class="v data" id="sRtp">—</div></div>
+        <div class="stat"><div class="k">Hit rate</div><div class="v" id="sHit">—</div></div>
+        <div class="stat"><div class="k">Best win</div><div class="v gold" id="sBest">—</div></div>
+      </div>
+      <div class="meter">
+        <div class="track"><div class="fill" id="mFill"></div><div class="target"></div></div>
+        <div class="scale"><span>0.90</span><span>0.97 target</span><span>1.04</span></div>
+      </div>
+      <p class="note" style="margin-top:12px">
+        Short sessions swing wildly — that is the product working, not a bug.
+        A few hundred spins says almost nothing about RTP; it took
+        <b>600M spins</b> to pin Trait Vault to ±0.0003.
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>Spin log</h2>
+      <div class="log" id="log"><div class="l"><span>no spins yet</span><span></span></div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Provably fair</h2>
+      <div class="fair">
+        <div><b>Server seed hash (committed)</b><span id="fHash">—</span></div>
+        <div><b>Client seed (edit freely)</b><input id="fClient" value="player-1" spellcheck="false"></div>
+        <div><b>Nonce</b><span id="fNonce">0</span></div>
+        <button class="btn" id="fReveal" style="margin-top:2px">Reveal &amp; rotate seed</button>
+        <div id="fRevealed" class="hidden"><b>Revealed server seed</b><span id="fSeed"></span></div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<footer>
+  <b style="color:var(--warn)">Placeholder art.</b> Symbols are typographic stand-ins labelled with the
+  operator's real owned traits. WILD is deliberately blank of Lion art — the licensing gate blocks it,
+  because none of the 73 owned Lions is a Signature Series.<br>
+  Play money only. No wallet, no $LAZY, no chain. Strip weights, paytables, win caps and the
+  HMAC-SHA256 outcome derivation are the verified production values.
+</footer>
+</div>
+
+<script>
+"use strict";
+/* ============================================================================
+   Math ported 1:1 from crates/mathsim (Rust). Any divergence here is a bug:
+   the whole point of this bench is that it plays the odds that were verified.
+   ========================================================================== */
+
+const WILD=0, SCAT=1, REELS=5, ROWS=4, CELLS=20, NSYM=14;
+
+/* Symbol identity uses the operator's real ingested traits (see
+   packages/assets/symbols.json). Glyphs are placeholders for real art. */
+const SYM=[
+  {id:"WILD",g:"★",n:"wild",cls:"t-wild"},
+  {id:"SCAT",g:"◎",n:"$LAZY",cls:"t-scat"},
+  {id:"P1",g:"🦁",n:"Lion 482",cls:"t-prem"},
+  {id:"P2",g:"🦁",n:"Lion 631",cls:"t-prem"},
+  {id:"P3",g:"🦁",n:"Lion 660",cls:"t-prem"},
+  {id:"P4",g:"🦁",n:"Lion 685",cls:"t-prem"},
+  {id:"M1",g:"🎩",n:"Spinner Hat",cls:"t-mid"},
+  {id:"M2",g:"⛓",n:"Gold Chain",cls:"t-mid"},
+  {id:"M3",g:"🕶",n:"Shades",cls:"t-mid"},
+  {id:"M4",g:"😁",n:"Big Smile",cls:"t-mid"},
+  {id:"L1",g:"◆",n:"Khakhi",cls:"t-low"},
+  {id:"L2",g:"◇",n:"Adamant",cls:"t-low"},
+  {id:"L3",g:"▲",n:"Iron",cls:"t-low"},
+  {id:"L4",g:"▼",n:"Mithril",cls:"t-low"}
+];
+const P1=2,P2=3,P3=4,P4=5,M1=6,M2=7,M3=8,M4=9,L1=10,L2=11,L3=12,L4=13;
+
+/* ---- verified weights (packages/engine/src/paytables/weights/*.weights) ---- */
+const CONF={
+  pride:{
+    scale:2.58737, cap:2000,
+    w:[[0,4,6,6,3,9,7,14,14,20,20,18,18,13],
+       [6,4,11,12,8,9,7,14,14,14,14,16,16,19],
+       [8,4,6,7,8,9,12,13,15,15,16,16,16,11],
+       [6,5,6,7,8,9,12,13,19,15,16,16,16,16],
+       [0,4,6,10,8,8,12,18,12,15,18,18,18,18]]
+  },
+  cubcluster:{
+    scale:41.706771, cap:2500,
+    w:[[8,0,13,20,0,0,26,28,0,0,32,32,0,0],
+       [8,0,18,20,0,0,26,28,0,0,32,34,0,0],
+       [9,0,18,21,0,0,26,28,0,0,32,34,0,0],
+       [10,0,15,21,0,0,26,28,0,0,32,34,0,0],
+       [14,0,18,20,0,0,26,27,0,0,32,34,0,0]]
+  },
+  traitvault:{
+    scale:34.208794, cap:1000, coinP:0.005492868493533963,
+    w:[[0,0,5,6,8,7,11,12,8,14,22,20,26,21],
+       [5,0,5,6,7,8,10,12,13,15,17,20,20,20],
+       [5,0,5,6,7,8,11,12,13,14,24,20,20,20],
+       [9,0,5,6,7,3,11,12,13,14,22,19,22,20],
+       [0,0,1,8,12,8,10,7,11,9,20,20,26,21]]
+  }
+};
+
+/* Largest-remainder spread — identical to game.rs::build_strip. Even spacing
+   matters: clumping changes how often a 4-row window catches two of a symbol,
+   which moves RTP without moving any weight. */
+function buildStrip(w){
+  const total=w.reduce((a,b)=>a+b,0), placed=new Array(NSYM).fill(0), out=[];
+  for(let i=1;i<=total;i++){
+    let best=-1,bestDebt=-Infinity;
+    for(let s=0;s<NSYM;s++){
+      if(w[s]===0||placed[s]>=w[s])continue;
+      const debt=w[s]*(i/total)-placed[s];
+      if(debt>bestDebt+1e-12){bestDebt=debt;best=s;}
+    }
+    placed[best]++; out.push(best);
+  }
+  return out;
+}
+for(const k in CONF) CONF[k].strips=CONF[k].w.map(buildStrip);
+
+/* ---- paytables (tables.rs), pre-scaled ---- */
+function prideePays(){
+  const p=Array.from({length:NSYM},()=>[0,0,0,0,0,0]);
+  const set=(s,v)=>{p[s][3]=v[0];p[s][4]=v[1];p[s][5]=v[2];};
+  set(P1,[.40,1.60,8.00]); set(P2,[.30,1.20,6.00]); set(P3,[.24,.90,4.50]); set(P4,[.20,.70,3.50]);
+  set(M1,[.12,.40,1.60]);  set(M2,[.10,.32,1.30]); set(M3,[.08,.26,1.05]); set(M4,[.07,.22,.85]);
+  set(L1,[.05,.14,.55]);   set(L2,[.04,.12,.45]);  set(L3,[.035,.10,.38]); set(L4,[.03,.08,.32]);
+  set(SCAT,[1,3,20]);
+  return p.map(r=>r.map(v=>v*CONF.pride.scale));
+}
+function clusterPays(){
+  const GROWTH=[1,1.6,2.5,4,6,9,13,18,25,34,45,60,80,105,140,180];
+  const base={[P1]:.50,[P2]:.40,[P3]:.32,[P4]:.26,[M1]:.16,[M2]:.13,[M3]:.11,[M4]:.09,
+              [L1]:.06,[L2]:.05,[L3]:.045,[L4]:.04};
+  const p=Array.from({length:NSYM},()=>new Array(CELLS+1).fill(0));
+  for(const s in base) for(let n=5;n<=CELLS;n++) p[s][n]=base[s]*GROWTH[n-5]*CONF.cubcluster.scale;
+  return p;
+}
+function vaultPays(){
+  const p=Array.from({length:NSYM},()=>[0,0,0,0,0,0]);
+  const set=(s,two,v)=>{p[s][2]=two;p[s][3]=v[0];p[s][4]=v[1];p[s][5]=v[2];};
+  set(P1,.5,[5,25,125]); set(P2,.4,[4,20,100]); set(P3,0,[3,15,75]); set(P4,0,[2.5,12,60]);
+  set(M1,0,[1.5,6,30]);  set(M2,0,[1.2,5,25]);  set(M3,0,[1,4,20]);  set(M4,0,[.8,3,15]);
+  set(L1,0,[.5,2,10]);   set(L2,0,[.4,1.6,8]);  set(L3,0,[.35,1.4,7]); set(L4,0,[.3,1.2,6]);
+  return p.map(r=>r.map(v=>v*CONF.traitvault.scale));
+}
+const PAYS={pride:prideePays(),cubcluster:clusterPays(),traitvault:vaultPays()};
+
+/* 40 paylines — flats first, then every path stepping <=1 row (game.rs). */
+function paylines40(){
+  const lines=[];
+  for(let r=0;r<ROWS;r++) lines.push([r,r,r,r,r]);
+  const path=[0,0,0,0,0];
+  (function walk(pos){
+    if(lines.length>=40) return;
+    if(pos===REELS){
+      if(!path.every(r=>r===path[0])) lines.push(path.slice());
+      return;
+    }
+    const lo = pos===0?0:Math.max(0,path[pos-1]-1);
+    const hi = pos===0?ROWS-1:Math.min(ROWS-1,path[pos-1]+1);
+    for(let r=lo;r<=hi;r++){ path[pos]=r; walk(pos+1); if(lines.length>=40) return; }
+  })(0);
+  return lines;
+}
+const LINES=paylines40();
+
+/* ============================ provably fair ============================== */
+/* SHA-256 + HMAC implemented in-page rather than via Web Crypto. Web Crypto is
+   async, which would force pre-buffering a fixed block count per spin and cap
+   how fast auto-play can run. This is synchronous, so the stream extends
+   lazily -- exactly like rng.rs. Verified byte-for-byte against
+   tests/golden/rng.json (see tests/verify-play-math.mjs). */
+const K256=new Uint32Array([
+0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+const rotr=(x,n)=>((x>>>n)|(x<<(32-n)))>>>0;
+
+function sha256(bytes){
+  const len=bytes.length;
+  const padded=new Uint8Array((((len+9)+63)>>6)<<6);
+  padded.set(bytes); padded[len]=0x80;
+  const dv=new DataView(padded.buffer);
+  const bits=len*8;
+  dv.setUint32(padded.length-8,Math.floor(bits/4294967296));
+  dv.setUint32(padded.length-4,bits>>>0);
+  const h=new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
+                           0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+  const w=new Uint32Array(64);
+  for(let off=0;off<padded.length;off+=64){
+    for(let i=0;i<16;i++) w[i]=dv.getUint32(off+i*4);
+    for(let i=16;i<64;i++){
+      const a=w[i-15],b=w[i-2];
+      const s0=(rotr(a,7)^rotr(a,18)^(a>>>3))>>>0;
+      const s1=(rotr(b,17)^rotr(b,19)^(b>>>10))>>>0;
+      w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;
+    }
+    let a=h[0],b=h[1],c=h[2],d=h[3],e=h[4],f=h[5],g=h[6],hh=h[7];
+    for(let i=0;i<64;i++){
+      const S1=(rotr(e,6)^rotr(e,11)^rotr(e,25))>>>0;
+      const ch=((e&f)^((~e)&g))>>>0;
+      const t1=(hh+S1+ch+K256[i]+w[i])>>>0;
+      const S0=(rotr(a,2)^rotr(a,13)^rotr(a,22))>>>0;
+      const maj=((a&b)^(a&c)^(b&c))>>>0;
+      const t2=(S0+maj)>>>0;
+      hh=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;
+    }
+    h[0]=(h[0]+a)>>>0;h[1]=(h[1]+b)>>>0;h[2]=(h[2]+c)>>>0;h[3]=(h[3]+d)>>>0;
+    h[4]=(h[4]+e)>>>0;h[5]=(h[5]+f)>>>0;h[6]=(h[6]+g)>>>0;h[7]=(h[7]+hh)>>>0;
+  }
+  const out=new Uint8Array(32), odv=new DataView(out.buffer);
+  for(let i=0;i<8;i++) odv.setUint32(i*4,h[i]);
+  return out;
+}
+
+function utf8(str){
+  const out=[];
+  for(let i=0;i<str.length;i++){
+    let c=str.charCodeAt(i);
+    if(c<0x80) out.push(c);
+    else if(c<0x800){ out.push(0xc0|(c>>6),0x80|(c&63)); }
+    else if(c>=0xd800&&c<0xdc00){
+      const c2=str.charCodeAt(++i);
+      c=0x10000+((c-0xd800)<<10)+(c2-0xdc00);
+      out.push(0xf0|(c>>18),0x80|((c>>12)&63),0x80|((c>>6)&63),0x80|(c&63));
+    }
+    else out.push(0xe0|(c>>12),0x80|((c>>6)&63),0x80|(c&63));
+  }
+  return new Uint8Array(out);
+}
+
+function hmacSha256(key,msgBytes){
+  let k=new Uint8Array(64);
+  if(key.length>64) k.set(sha256(key)); else k.set(key);
+  const ipad=new Uint8Array(64+msgBytes.length), opad=new Uint8Array(96);
+  for(let i=0;i<64;i++){ ipad[i]=k[i]^0x36; opad[i]=k[i]^0x5c; }
+  ipad.set(msgBytes,64);
+  opad.set(sha256(ipad),64);
+  return sha256(opad);
+}
+
+const hex=b=>[...b].map(x=>x.toString(16).padStart(2,"0")).join("");
+
+/* Same stream as rng.rs and packages/engine/src/rng: block 0 carries no
+   counter suffix, block k>=1 is suffixed ":k". Rejection sampling on 4-byte
+   big-endian chunks -- never modulo, which would bias every reel low. */
+class Rng{
+  constructor(seed,client,nonce,game){
+    this.seed=seed; this.prefix=`${client}:${nonce}:${game}`;
+    this.block=null; this.pos=32; this.index=0; this.primed=false;
+  }
+  refill(){
+    let msg;
+    if(!this.primed){ this.primed=true; msg=this.prefix; }
+    else { this.index++; msg=`${this.prefix}:${this.index}`; }
+    this.block=hmacSha256(this.seed,utf8(msg));
+    this.pos=0;
+  }
+  u32(){
+    if(this.pos+4>32) this.refill();
+    const b=this.block,i=this.pos; this.pos+=4;
+    return (((b[i]<<24)>>>0)+(b[i+1]<<16)+(b[i+2]<<8)+b[i+3])>>>0;
+  }
+  below(n){
+    if(n===1) return 0;
+    const T=4294967296, limit=T-(T%n);
+    for(;;){ const x=this.u32(); if(x<limit) return x%n; }
+  }
+}
+const makeRng=(seed,client,nonce,game)=>new Rng(seed,client,nonce,game);
+
+/* ============================== games =================================== */
+function drawGrid(strips,rng){
+  const g=[];
+  for(let r=0;r<REELS;r++){
+    const st=strips[r], stop=rng.below(st.length), col=[];
+    for(let row=0;row<ROWS;row++) col.push(st[(stop+row)%st.length]);
+    g.push(col);
+  }
+  return g;
+}
+function capWin(o,cap){
+  const t=o.base+o.feature;
+  if(t<=cap) return o;
+  const k=cap/t;
+  return {base:o.base*k,feature:o.feature*k,fs:o.fs,marks:o.marks,frames:o.frames};
+}
+
+/* ---- PRIDE: 1024 ways ---- */
+function prideEval(grid,multWilds,pays,marks){
+  let total=0;
+  for(let s=P1;s<NSYM;s++){
+    const nat=[],wl=[];
+    for(let r=0;r<REELS;r++){
+      let a=0,b=0;
+      for(let row=0;row<ROWS;row++){
+        const c=grid[r][row];
+        if(c===s)a++; else if(c===WILD)b++;
+      }
+      nat.push(a); wl.push(b);
+    }
+    let len=0; while(len<REELS && nat[len]+wl[len]>0) len++;
+    if(len<3) continue;
+    const pay=pays[s][len]; if(!pay) continue;
+    if(!multWilds){
+      let ways=1; for(let r=0;r<len;r++) ways*=(nat[r]+wl[r]);
+      total+=pay*ways;
+    }else{
+      let dp=new Array(REELS+2).fill(0); dp[0]=1;
+      for(let r=0;r<len;r++){
+        const nx=new Array(REELS+2).fill(0);
+        for(let k=0;k<=r;k++){ if(!dp[k])continue; nx[k]+=dp[k]*nat[r]; nx[k+1]+=dp[k]*wl[r]; }
+        dp=nx;
+      }
+      let acc=0;
+      for(let k=0;k<=len;k++) acc+=dp[k]*(k===0?1:Math.min(10,2*k));
+      total+=pay*acc;
+    }
+    if(marks) for(let r=0;r<len;r++) for(let row=0;row<ROWS;row++)
+      if(grid[r][row]===s||grid[r][row]===WILD) marks.add(r+":"+row);
+  }
+  return total;
+}
+function spinPride(rng){
+  const pays=PAYS.pride, strips=CONF.pride.strips;
+  const grid=drawGrid(strips,rng);
+  const marks=new Set();
+  let base=prideEval(grid,false,pays,marks);
+  let scat=0;
+  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(grid[r][row]===SCAT) scat++;
+  base+=pays[SCAT][Math.min(scat,REELS)]||0;
+  const frames=[{grid,marks:new Set(marks),label:null}];
+  let feature=0, fs=false;
+  if(scat>=3){
+    fs=true;
+    for(let i=0;i<10;i++){
+      const g2=drawGrid(strips,rng), m2=new Set();
+      feature+=prideEval(g2,true,pays,m2);
+      let sc=0; for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(g2[r][row]===SCAT) sc++;
+      feature+=pays[SCAT][Math.min(sc,REELS)]||0;
+      frames.push({grid:g2,marks:m2,label:`free spin ${i+1}/10 · ×2 wilds`});
+    }
+  }
+  return capWin({base,feature,fs,marks,frames},CONF.pride.cap);
+}
+
+/* ---- CUB CLUSTER: 5+ orthogonal, tumbles ---- */
+function clusterFind(grid,pays){
+  let total=0; const remove=new Set();
+  for(let s=P1;s<NSYM;s++){
+    const seen=new Set();
+    for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
+      const key=r+":"+row;
+      if(seen.has(key)) continue;
+      const c=grid[r][row];
+      if(c!==s&&c!==WILD) continue;
+      const stack=[[r,row]], comp=[]; let nat=0; seen.add(key);
+      while(stack.length){
+        const [a,b]=stack.pop(); comp.push([a,b]);
+        if(grid[a][b]===s) nat++;
+        const nb=[[a-1,b],[a+1,b],[a,b-1],[a,b+1]];
+        for(const [x,y] of nb){
+          if(x<0||x>=REELS||y<0||y>=ROWS) continue;
+          const k2=x+":"+y;
+          if(seen.has(k2)) continue;
+          const cc=grid[x][y];
+          if(cc===s||cc===WILD){ seen.add(k2); stack.push([x,y]); }
+        }
+      }
+      if(nat===0||comp.length<5) continue;      // pure-wild blob pays nothing
+      const pay=pays[s][Math.min(comp.length,CELLS)];
+      if(!pay) continue;
+      total+=pay;
+      comp.forEach(([a,b])=>remove.add(a+":"+b));
+    }
+  }
+  return {total,remove};
+}
+function spinCluster(rng){
+  const pays=PAYS.cubcluster, strips=CONF.cubcluster.strips;
+  const LADDER=[1,2,3,5,8];
+  let grid=drawGrid(strips,rng);
+  let base=0,feature=0,chain=0;
+  const frames=[];
+  for(;;){
+    const {total,remove}=clusterFind(grid,pays);
+    if(total===0){ frames.push({grid:grid.map(c=>c.slice()),marks:new Set(),label:chain?`chain ended after ${chain}`:null}); break; }
+    const mult=LADDER[Math.min(chain,LADDER.length-1)];
+    const paid=total*mult;
+    if(chain===0) base+=paid; else feature+=paid;
+    frames.push({grid:grid.map(c=>c.slice()),marks:new Set(remove),
+                 label:`tumble ${chain+1} · ×${mult}`});
+    // clear, fall, refill from the top
+    const ng=[];
+    for(let r=0;r<REELS;r++){
+      const keep=[];
+      for(let row=0;row<ROWS;row++) if(!remove.has(r+":"+row)) keep.push(grid[r][row]);
+      const need=ROWS-keep.length, fresh=[];
+      for(let i=0;i<need;i++){ const st=strips[r]; fresh.push(st[rng.below(st.length)]); }
+      ng.push(fresh.concat(keep));
+    }
+    grid=ng; chain++;
+    if(chain>60) break;
+  }
+  return capWin({base,feature,fs:chain>1,marks:new Set(),frames},CONF.cubcluster.cap);
+}
+
+/* ---- TRAIT VAULT: 40 lines + persistent Mane Meter ---- */
+const COIN_V=[1,2,3,5,10,20], COIN_W=[400,300,180,80,30,10];
+function spinVault(rng,state){
+  const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
+  const grid=drawGrid(strips,rng);
+  const marks=new Set();
+  let lineUnits=0;
+  for(const line of LINES){
+    const s=grid[0][line[0]];
+    if(s===SCAT||s===WILD) continue;
+    let n=0;
+    for(let r=0;r<REELS;r++){
+      const c=grid[r][line[r]];
+      if(c===s||c===WILD) n++; else break;
+    }
+    const pay=pays[s][n];
+    if(pay){ lineUnits+=pay; for(let r=0;r<n;r++) marks.add(r+":"+line[r]); }
+  }
+  const base=lineUnits/40;
+
+  let mane=0;
+  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
+    const c=grid[r][row];
+    if(c>=M1&&c<=M4){ mane++; marks.add(r+":"+row); }
+  }
+  state.mane+=mane;
+  const frames=[{grid,marks,label:null}];
+
+  let feature=0, fs=false;
+  if(state.mane>=40){
+    state.mane-=40; fs=true;                       // carry the remainder
+    const SCALE=1e6, thr=Math.round(CONF.traitvault.coinP*SCALE);
+    const wTot=COIN_W.reduce((a,b)=>a+b,0);
+    const filled=new Array(CELLS).fill(0);
+    for(let spin=0;spin<6;spin++){
+      for(let c=0;c<CELLS;c++){
+        if(filled[c]) continue;
+        if(rng.below(SCALE)<thr){
+          let pick=rng.below(wTot), val=COIN_V[0];
+          for(let i=0;i<COIN_W.length;i++){ if(pick<COIN_W[i]){val=COIN_V[i];break;} pick-=COIN_W[i]; }
+          filled[c]=val; feature+=val;
+        }
+      }
+      const g2=[],m2=new Set();
+      for(let r=0;r<REELS;r++){ const col=[];
+        for(let row=0;row<ROWS;row++){ const idx=r*ROWS+row;
+          col.push(filled[idx]?SCAT:L4);
+          if(filled[idx]) m2.add(r+":"+row);
+        } g2.push(col);
+      }
+      frames.push({grid:g2,marks:m2,label:`hold & win · respin ${spin+1}/6`,coins:filled.slice()});
+    }
+  }
+  return capWin({base,feature,fs,marks,frames},CONF.traitvault.cap);
+}
+
+/* ---- RARITY HI/LO ---- */
+const HOUSE=0.97, MIN_P=0.05, ROUND_CAP=5000;
+const pRarer=(n,p)=>(n-p)/(n-1);
+const pCommoner=(n,p)=>(p-1)/(n-1);
+const payout=(n,p,dir)=>{ const q=dir==="rarer"?pRarer(n,p):pCommoner(n,p);
+  return q<MIN_P?null:HOUSE/q; };
+
+/* @@@DOM_BOUNDARY@@@ everything below touches the DOM */
+/* =============================== state ================================== */
+let game="pride";
+let serverSeed=crypto.getRandomValues(new Uint8Array(32));
+let nonce=0;
+const vaultState={mane:0};
+let balance=100000, autoLeft=0, busy=false, stopFlag=false;
+const S={spins:0,staked:0,returned:0,hits:0,best:0};
+let hl={n:10078,mode:"collection",card:null,mult:1,risk:0,live:false};
+
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+
+function refreshHash(){ $("fHash").textContent=hex(sha256(serverSeed)); }
+
+/* ============================== rendering =============================== */
+function renderGrid(grid,marks,coins,idle){
+  const el=$("reels"); el.innerHTML=""; el.classList.toggle("idle",!!idle);
+  for(let r=0;r<REELS;r++){
+    const col=document.createElement("div"); col.className="col";
+    for(let row=0;row<ROWS;row++){
+      const s=grid[r][row], meta=SYM[s];
+      const d=document.createElement("div");
+      d.className="cell "+meta.cls+(marks&&marks.has(r+":"+row)?" hit":"");
+      const idx=r*ROWS+row;
+      const isCoin=coins&&coins[idx];
+      d.innerHTML=`<span class="g">${isCoin?"◎":meta.g}</span><span class="n">${
+        isCoin?coins[idx]+"×":meta.n}</span>`;
+      col.appendChild(d);
+    }
+    el.appendChild(col);
+  }
+}
+function blankGrid(){
+  const g=[]; for(let r=0;r<REELS;r++){const c=[];for(let row=0;row<ROWS;row++)c.push(L4);g.push(c);}
+  return g;
+}
+function updateStats(){
+  $("sSpins").textContent=fmt(S.spins);
+  $("bal").textContent=fmt(balance);
+  $("hlBal").textContent=fmt(balance);
+  if(S.staked>0){
+    const rtp=S.returned/S.staked;
+    $("sRtp").textContent=rtp.toFixed(4);
+    $("sHit").textContent=(S.hits/S.spins*100).toFixed(1)+"%";
+    const pos=Math.max(0,Math.min(1,(rtp-0.90)/0.14));
+    const f=$("mFill"), mid=0.5;
+    const x=pos, l=Math.min(x,mid), w=Math.abs(x-mid);
+    f.style.left=(l*100)+"%"; f.style.width=(w*100)+"%";
+    f.style.background = rtp>=0.9695&&rtp<=0.9705 ? "var(--win)" : "var(--data)";
+  }
+  $("sBest").textContent=S.best?S.best.toFixed(1)+"×":"—";
+  $("fNonce").textContent=nonce;
+  if(game==="traitvault"){ $("meterBox").style.display=""; $("mane").textContent=vaultState.mane+" / 40"; }
+  else $("meterBox").style.display="none";
+}
+function logSpin(bet,win){
+  const l=$("log");
+  if(l.firstChild&&l.firstChild.textContent.includes("no spins")) l.innerHTML="";
+  const d=document.createElement("div");
+  const mult=win/bet;
+  d.className=win>0?"w":"l";
+  d.innerHTML=`<span>#${nonce}</span><span>${win>0?"+"+fmt(win)+" · "+mult.toFixed(2)+"×":"—"}</span>`;
+  l.prepend(d);
+  while(l.children.length>60) l.lastChild.remove();
+}
+
+/* ============================== play loop =============================== */
+async function doSpin(){
+  if(busy) return;
+  const bet=+$("bet").value;
+  if(balance<bet){ $("status").textContent="Out of credit"; autoLeft=0; return; }
+  busy=true; $("spin").disabled=true;
+  balance-=bet; nonce++;
+
+  // 64 blocks = 2KB of stream: ample for a full free-spin round or long tumble.
+  const rng=makeRng(serverSeed,$("fClient").value,nonce,game);
+  const out = game==="pride"      ? spinPride(rng)
+            : game==="cubcluster" ? spinCluster(rng)
+            :                       spinVault(rng,vaultState);
+
+  const winMult=out.base+out.feature, win=winMult*bet;
+  balance+=win;
+  S.spins++; S.staked+=bet; S.returned+=win;
+  if(win>0) S.hits++;
+  if(winMult>S.best) S.best=winMult;
+
+  // step through frames so free spins / tumbles are visible
+  const frames=out.frames&&out.frames.length?out.frames:[{grid:blankGrid(),marks:new Set()}];
+  const fast=autoLeft>0;
+  for(let i=0;i<frames.length;i++){
+    const f=frames[i];
+    renderGrid(f.grid,f.marks,f.coins);
+    $("status").textContent=f.label||(winMult>0?`win ${winMult.toFixed(2)}×`:"no win");
+    if(!fast && frames.length>1 && i<frames.length-1) await sleep(260);
+  }
+  $("lastWin").textContent = win>0 ? "+"+fmt(win) : "—";
+  $("lastWin").className = "v "+(win>0?"pos":"");
+  if(winMult>0) $("status").textContent=`win ${winMult.toFixed(2)}×`+(out.fs?" (feature)":"");
+  logSpin(bet,win); updateStats();
+  busy=false; $("spin").disabled=false;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function runAuto(){
+  autoLeft=100; stopFlag=false;
+  $("auto").disabled=true; $("stop").disabled=false;
+  while(autoLeft>0&&!stopFlag&&balance>=+$("bet").value){
+    autoLeft--;
+    await doSpin();
+    await sleep(18);
+  }
+  autoLeft=0; $("auto").disabled=false; $("stop").disabled=true;
+  $("status").textContent="Auto finished";
+}
+
+/* ============================== hi/lo =================================== */
+function hlDraw(exclude){
+  nonce++;
+  const rng=makeRng(serverSeed,$("fClient").value,nonce,"hilo");
+  if(exclude==null) return rng.below(hl.n)+1;
+  const k=rng.below(hl.n-1)+1;
+  return k>=exclude?k+1:k;
+}
+function hlRender(){
+  $("hlRank").textContent=hl.card?fmt(hl.card):"—";
+  $("hlN").textContent=fmt(hl.n);
+  if(!hl.card){ $("hlOdds").textContent=""; return; }
+  const pr=pRarer(hl.n,hl.card), pc=pCommoner(hl.n,hl.card);
+  $("hlOdds").textContent=`P(rarer) ${(pr*100).toFixed(2)}% · P(commoner) ${(pc*100).toFixed(2)}%`;
+  const setBtn=(btn,lab,dir)=>{
+    const p=payout(hl.n,hl.card,dir);
+    btn.disabled = p===null;
+    btn.querySelector("small").textContent = p===null ? "disabled below 5%" : p.toFixed(2)+"×";
+  };
+  setBtn($("hlRarer"),"rarer","rarer");
+  setBtn($("hlCommoner"),"commoner","commoner");
+  $("hlMult").textContent=hl.mult.toFixed(2)+"×";
+  $("hlRisk").textContent=fmt(hl.risk);
+  $("hlCash").disabled=!hl.live;
+}
+async function hlPick(dir){
+  if(busy) return; busy=true;
+  const stake=+$("hlBet").value;
+  if(!hl.live){
+    if(balance<stake){ $("hlStatus").textContent="Out of credit"; busy=false; return; }
+    balance-=stake; hl.risk=stake; hl.mult=1; hl.live=true;
+    S.spins++; S.staked+=stake;
+  }
+  const mult=payout(hl.n,hl.card,dir);
+  const next=hlDraw(hl.card);
+  const correct = dir==="rarer" ? next>hl.card : next<hl.card;
+  hl.card=next;
+  if(correct){
+    hl.mult*=mult;
+    if(hl.mult>=ROUND_CAP){
+      hl.mult=ROUND_CAP;
+      const won=hl.risk*hl.mult; balance+=won; S.returned+=won; S.hits++;
+      if(hl.mult>S.best) S.best=hl.mult;
+      $("hlStatus").textContent=`Round cap reached — forced cash out +${fmt(won)}`;
+      hl.live=false; hl.risk=0; hl.mult=1;
+    } else $("hlStatus").textContent=`Correct — ${hl.mult.toFixed(2)}× banked, keep going or cash out`;
+  } else {
+    $("hlStatus").textContent="Wrong — stake lost";
+    hl.live=false; hl.risk=0; hl.mult=1;
+  }
+  logSpin(stake, correct?0:0);
+  hlRender(); updateStats(); busy=false;
+}
+function hlCashOut(){
+  if(!hl.live) return;
+  const won=hl.risk*hl.mult;
+  balance+=won; S.returned+=won; S.hits++;
+  if(hl.mult>S.best) S.best=hl.mult;
+  $("hlStatus").textContent=`Cashed out +${fmt(won)}`;
+  hl.live=false; hl.risk=0; hl.mult=1;
+  hlRender(); updateStats();
+}
+
+/* ============================== paytable ================================ */
+function renderPaytable(){
+  const t=$("paytable");
+  if(game==="hilo"){
+    $("ptTitle").textContent="Payout curve — sampled positions";
+    let h="<tr><th>Ordinal</th><th>P(rarer)</th><th>Rarer pays</th><th>P(commoner)</th><th>Commoner pays</th></tr>";
+    for(const p of [1,100,500,2000,5039,8000,9600,9990,10078]){
+      if(p>hl.n) continue;
+      const pr=pRarer(hl.n,p), pc=pCommoner(hl.n,p);
+      const a=payout(hl.n,p,"rarer"), b=payout(hl.n,p,"commoner");
+      h+=`<tr><td>${fmt(p)}</td><td>${(pr*100).toFixed(2)}%</td>
+          <td>${a===null?'<span style="color:var(--warn)">disabled</span>':a.toFixed(2)+"×"}</td>
+          <td>${(pc*100).toFixed(2)}%</td>
+          <td>${b===null?'<span style="color:var(--warn)">disabled</span>':b.toFixed(2)+"×"}</td></tr>`;
+    }
+    t.innerHTML=h; return;
+  }
+  if(game==="cubcluster"){
+    $("ptTitle").textContent="Paytable — cluster size × bet";
+    let h="<tr><th>Symbol</th><th>5</th><th>7</th><th>9</th><th>12</th><th>16</th><th>20</th></tr>";
+    for(const s of [P1,P2,M1,M2,L1,L2]){
+      h+=`<tr><td>${SYM[s].n}</td>`;
+      for(const n of [5,7,9,12,16,20]) h+=`<td>${PAYS.cubcluster[s][n].toFixed(2)}</td>`;
+      h+="</tr>";
+    }
+    t.innerHTML=h+`<tr><td colspan="7" style="color:var(--muted);border:0;padding-top:8px">
+      Tumble multipliers 1 · 2 · 3 · 5 · 8 (caps at 8). Max win 2,500×.</td></tr>`;
+    return;
+  }
+  const pays=PAYS[game];
+  $("ptTitle").textContent = game==="pride"
+    ? "Paytable — × total bet, per winning way"
+    : "Paytable — × line bet (40 lines)";
+  let h="<tr><th>Symbol</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>";
+  for(let s=SCAT;s<NSYM;s++){
+    if(game==="traitvault"&&s===SCAT) continue;
+    if(!pays[s].some(v=>v>0)) continue;
+    h+=`<tr><td>${SYM[s].n}</td>`;
+    for(const n of [2,3,4,5]) h+=`<td>${pays[s][n]?pays[s][n].toFixed(2):"—"}</td>`;
+    h+="</tr>";
+  }
+  h+=`<tr><td colspan="5" style="color:var(--muted);border:0;padding-top:8px">${
+    game==="pride"
+      ? "Wild on reels 2–4 only. 3+ $LAZY scatters award 10 free spins with additive ×2 wilds, capped ×10. Max win 2,000×."
+      : "Wild on reels 2–4 only. Every mid-tier symbol landed adds +1 to the Mane Meter; at 40 it awards a 6-respin Hold &amp; Win. Max win 1,000×."
+  }</td></tr>`;
+  t.innerHTML=h;
+}
+
+/* ================================ wiring ================================ */
+function selectGame(g){
+  game=g; stopFlag=true; autoLeft=0;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.game===g)));
+  const isHilo=g==="hilo";
+  $("slotPanel").classList.toggle("hidden",isHilo);
+  $("hiloPanel").classList.toggle("hidden",!isHilo);
+  if(!isHilo){
+    $("slotTitle").textContent = g==="pride" ? "Pride — 5 reels × 4 rows, 1024 ways"
+      : g==="cubcluster" ? "Cub Cluster — 5×4 cluster pays with tumbles"
+      : "Trait Vault — 40 fixed lines + persistent Mane Meter";
+    renderGrid(blankGrid(),null,null,true);
+    $("status").textContent="Ready";
+    $("lastWin").textContent="—"; $("lastWin").className="v";
+  } else if(!hl.card){ {hl.card=hlDraw(null);hlRender();updateStats();} }
+  renderPaytable(); updateStats();
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>selectGame(t.dataset.game)));
+$("spin").addEventListener("click",doSpin);
+$("auto").addEventListener("click",runAuto);
+$("stop").addEventListener("click",()=>{stopFlag=true;autoLeft=0;});
+$("hlRarer").addEventListener("click",()=>hlPick("rarer"));
+$("hlCommoner").addEventListener("click",()=>hlPick("commoner"));
+$("hlCash").addEventListener("click",hlCashOut);
+$("hlDeck").addEventListener("click",()=>{
+  hl.mode = hl.mode==="collection"?"owned":"collection";
+  hl.n = hl.mode==="collection"?10078:73;
+  $("hlDeck").textContent="Deck: "+hl.mode;
+  hl.live=false; hl.risk=0; hl.mult=1;
+  hl.card=hlDraw(null);
+  hlRender(); renderPaytable(); updateStats();
+});
+$("fReveal").addEventListener("click",()=>{
+  $("fSeed").textContent=hex(serverSeed);
+  $("fRevealed").classList.remove("hidden");
+  serverSeed=crypto.getRandomValues(new Uint8Array(32));
+  nonce=0; refreshHash(); updateStats();
+});
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space"&&game!=="hilo"&&!busy&&e.target.tagName!=="INPUT"&&e.target.tagName!=="SELECT"){
+    e.preventDefault(); doSpin();
+  }
+});
+
+refreshHash();
+selectGame("pride");
+</script>
