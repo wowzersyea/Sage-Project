@@ -130,6 +130,48 @@ quote a spin count derived from the game's measured volatility rather than a
 flat 100M. Higher-volatility games need proportionally more: the requirement
 scales with variance, so Cub Cluster at ~5.2 needs roughly twice Pride's count.
 
+### Calibrating to +/-0.0005 costs as much as verifying to it
+
+This is the subtlest trap in the whole exercise, and it caught two rounds of
+work before the cause was clear.
+
+A calibration step solves for the pay scale that produces 97%. But the solve is
+only as good as the RTP measurement it is built on, and *that* measurement
+carries the same statistical error as a verification run. Concretely:
+
+- Pride was recalibrated from a 30M-spin measurement that read **0.97083**.
+- The true value at that scale, from two independent 250M runs, is **~0.96958**.
+- The calibration point was high by 0.0012 — comfortably inside its own
+  +/-0.0013 error bar, so nothing looked wrong.
+- The solve dutifully lowered the pay scale, and the next 250M verification
+  came back at **0.96878** — worse than before recalibrating.
+
+Decomposition (above) sharpens the *slope*, because `base_rtp` has far lower
+variance than total RTP. It does nothing for the *level*, which is set by the
+measured RTP at the calibration point. There is no clever way around this: to
+place the level to +/-0.0005 you need a measurement good to +/-0.0005, which is
+the same ~200M+ spins a verification needs.
+
+**The working method** is therefore to pool full-scale runs rather than trust
+any single calibration:
+
+1. Verify at full scale. Record RTP, and for Trait Vault the base/feature split.
+2. Convert each run to a slope: `alpha = base_rtp / pay_scale` (plus the
+   constant feature term where one exists).
+3. Pool the slopes across every run at every scale, weighting by spin count.
+4. Solve once from the pooled slope.
+
+Pride's two independent 250M runs produced alphas of 0.3748894 and 0.3749067 —
+agreement to five significant figures, which both confirms the proportionality
+assumption and gives a slope far better determined than any single RTP
+measurement. That pooled slope, not a fresh calibration run, is what the
+shipped scales are derived from.
+
+The practical consequence for certification: **budget roughly twice the
+simulation you expect**, once to place the level and once to prove it, and
+never let a short calibration run overwrite a scale that a long verification
+has already validated.
+
 ### The optimizer overfits, and the harness catches it
 
 `optimize` searches at a few hundred thousand spins on the cheap RNG. Pride came
