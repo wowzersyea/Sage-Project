@@ -106,6 +106,30 @@ equals 0.97 to within 1e-9. Also asserted:
 - At least one direction is always offered, at every position.
 - Rarity Swap is priced at exact EV, so it cannot move RTP either way.
 
+### 100M spins cannot resolve RTP to the spec's own tolerance
+
+Spec Sec. 6.2 sets the exit criterion at "RTP in [0.9695, 0.9705] at 100M
+spins" — a +/-0.0005 band. But Pride's measured volatility index is 3.645, so
+at 100M spins the 95% confidence interval on RTP is **+/-0.00071**, which is
+*wider than the band it is being tested against*. A run can land inside the
+band while the true RTP sits outside it, and vice versa.
+
+The two numbers need each other to be consistent:
+
+| Spins | 95% CI at volatility 3.645 |
+|---|---|
+| 100M | +/-0.00071 |
+| 200M | +/-0.00051 |
+| 400M | +/-0.00036 |
+
+**204M spins** is the point where the CI finally matches the +/-0.0005
+tolerance. Anything less is not a proof at the claimed precision — it is a
+measurement whose error bar exceeds the thing being measured. Pride is
+therefore re-verified at 400M here, and any certification submission should
+quote a spin count derived from the game's measured volatility rather than a
+flat 100M. Higher-volatility games need proportionally more: the requirement
+scales with variance, so Cub Cluster at ~5.2 needs roughly twice Pride's count.
+
 ### The optimizer overfits, and the harness catches it
 
 `optimize` searches at a few hundred thousand spins on the cheap RNG. Pride came
@@ -160,7 +184,28 @@ specific M-tier symbol instead of all four. Either keeps the spec's stated
 mechanic while making the meter behave like a meter. A feature that fires every
 6 spins is a base-game mechanic wearing a meter's clothes.
 
-### 5.3 Hit frequency and volatility targets are not yet met
+### 5.3 The max-win figures were aspirational, not enforced
+
+Spec Sec. 6.4 states a max win per game (2,000x / 2,500x / 1,000x). Nothing in
+the mechanics enforces them: Cub Cluster's tumble chains were measured paying
+**3,104x** against its stated 2,500x maximum.
+
+That is not a cosmetic overshoot. A published max-win number that the game can
+exceed is false disclosure, and `Bankroll.sol`'s per-round exposure caps
+(Sec. 7.5) would be sized against the wrong number — the bankroll would be
+under-reserved for exactly the outcomes that threaten it.
+
+A hard cap is now applied to every settled spin. It clamps the **total**, then
+scales base and feature down together, so capping cannot silently distort the
+reported base/feature split. Three tests cover it, including one that drives an
+absurd pay scale through all three games and asserts no spin can exceed the
+published ceiling.
+
+Because the cap removes probability mass from the top of the win distribution,
+it lowers RTP slightly — so every game was recalibrated *after* the cap was
+introduced, not before.
+
+### 5.4 Hit frequency and volatility targets are not yet met
 
 RTP is the hard exit criterion and is treated as such. The secondary targets are
 soft pulls in the optimizer's loss function and currently miss:

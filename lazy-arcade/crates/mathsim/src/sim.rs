@@ -38,6 +38,20 @@ impl GameKind {
         }
     }
 
+    /// Hard ceiling on a single spin's total win, in multiples of total bet
+    /// (spec Sec. 6.4). This is a real cap enforced on every settled spin, not
+    /// a design aspiration: without it Cub Cluster's tumble chains were
+    /// observed paying 3104x against a stated 2500x maximum, which would make
+    /// the published max-win figure false and leave `Bankroll.sol` exposure
+    /// caps sized against the wrong number.
+    pub fn max_win(&self) -> f64 {
+        match self {
+            GameKind::Pride => 2_000.0,
+            GameKind::CubCluster => 2_500.0,
+            GameKind::TraitVault => 1_000.0,
+        }
+    }
+
     /// Reels on which a wild may never appear. Pride and Trait Vault restrict
     /// wilds to reels 2-4; Cub Cluster has no such restriction.
     pub fn wild_forbidden_reels(&self) -> &'static [usize] {
@@ -258,11 +272,12 @@ pub fn run(cfg: &RunConfig) -> Stats {
                     // keeps its own persistent state -- equivalent to N players
                     // each playing a long sequential session.
                     let mut state = GameState::default();
+                    let cap = kind.max_win();
                     match mode {
                         RngMode::Fast => {
                             let mut rng = FastRng::new(seed ^ ((t as u64 + 1) << 32));
                             for _ in 0..spins {
-                                let out = machine.spin(&mut rng, &mut state);
+                                let out = apply_win_cap(machine.spin(&mut rng, &mut state), cap);
                                 stats.record(&out);
                             }
                         }
@@ -272,7 +287,7 @@ pub fn run(cfg: &RunConfig) -> Stats {
                             for i in 0..spins {
                                 let mut rng =
                                     HmacRng::new(&server_seed, &client_seed, i, kind.id());
-                                let out = machine.spin(&mut rng, &mut state);
+                                let out = apply_win_cap(machine.spin(&mut rng, &mut state), cap);
                                 stats.record(&out);
                             }
                         }
@@ -290,6 +305,25 @@ pub fn run(cfg: &RunConfig) -> Stats {
     })
 }
 
+/// Clamp a spin to the game's published maximum win.
+///
+/// The cap applies to the SETTLED TOTAL, so base and feature are scaled down
+/// together rather than truncating only the feature -- otherwise the reported
+/// base/feature split would drift as a side effect of capping.
+#[inline]
+fn apply_win_cap(out: SpinOutcome, cap: f64) -> SpinOutcome {
+    let total = out.total();
+    if total <= cap {
+        return out;
+    }
+    let ratio = cap / total;
+    SpinOutcome {
+        base: out.base * ratio,
+        feature: out.feature * ratio,
+        feature_triggered: out.feature_triggered,
+    }
+}
+
 fn derive_server_seed(seed: u64) -> [u8; 32] {
     let mut out = [0u8; 32];
     for (i, chunk) in out.chunks_mut(8).enumerate() {
@@ -301,6 +335,47 @@ fn derive_server_seed(seed: u64) -> [u8; 32] {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn win_cap_clamps_total_and_preserves_the_split_ratio() {
+        let out = SpinOutcome { base: 3000.0, feature: 1000.0, feature_triggered: true };
+        let capped = apply_win_cap(out, 2_500.0);
+        assert!((capped.total() - 2_500.0).abs() < 1e-9);
+        // 3:1 before, 3:1 after.
+        assert!((capped.base / capped.feature - 3.0).abs() < 1e-9);
+        assert!(capped.feature_triggered);
+    }
+
+    #[test]
+    fn win_cap_leaves_ordinary_spins_untouched() {
+        let out = SpinOutcome { base: 12.0, feature: 3.0, feature_triggered: true };
+        let capped = apply_win_cap(out, 2_500.0);
+        assert_eq!(capped.base, 12.0);
+        assert_eq!(capped.feature, 3.0);
+    }
+
+    #[test]
+    fn no_simulated_spin_can_exceed_the_published_max_win() {
+        for kind in [GameKind::Pride, GameKind::CubCluster, GameKind::TraitVault] {
+            let stats = run(&RunConfig {
+                kind,
+                spins: 200_000,
+                seed: 31,
+                threads: 4,
+                rng_mode: RngMode::Fast,
+                strips: kind.default_strips(),
+                coin_probability: 0.03,
+                pay_scale: 500.0, // absurd scale to force the cap to bind
+            });
+            assert!(
+                stats.max_win <= kind.max_win() + 1e-6,
+                "{:?} paid {} against a cap of {}",
+                kind,
+                stats.max_win,
+                kind.max_win()
+            );
+        }
+    }
 
     #[test]
     fn hmac_and_fast_rng_agree_on_rtp_within_noise() {

@@ -1,0 +1,63 @@
+name: Lazy Arcade
+
+# Only runs when the arcade actually changes, so the rest of the site's CI is
+# unaffected by a Rust toolchain install.
+on:
+  pull_request:
+    paths: ['lazy-arcade/**', '.github/workflows/lazy-arcade.yml']
+  push:
+    branches: [main]
+    paths: ['lazy-arcade/**', '.github/workflows/lazy-arcade.yml']
+
+jobs:
+  math-and-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: lazy-arcade
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            lazy-arcade/crates/mathsim/target
+          key: ${{ runner.os }}-mathsim-${{ hashFiles('lazy-arcade/crates/mathsim/**/*.rs', 'lazy-arcade/crates/mathsim/Cargo.toml') }}
+
+      # Covers the RNG (RFC 4231 + NIST vectors), every game's pay logic,
+      # the win cap, and the optimizer's structural constraints.
+      - name: Math harness tests
+        run: cd crates/mathsim && cargo test --release
+
+      # The server, the client verifier and the Rust sim must agree on every
+      # byte. If they drift, a player replaying a spin gets a different answer
+      # than the server did.
+      - name: Golden vectors (Rust <-> TypeScript)
+        run: node --experimental-strip-types tests/verify-golden.ts
+
+      # Spec Sec. 5.3: no symbol may reference art the operator does not own.
+      - name: Licensing gate
+        run: python3 tools/atlas-build/check-licensing.py
+
+      # A short RTP smoke test. The real exit criterion is a multi-hundred-
+      # million-spin run (see docs/PHASE-0-1-FINDINGS.md on why 100M is not
+      # enough to resolve +/-0.0005); this only catches gross regressions.
+      - name: RTP smoke test
+        run: |
+          cd crates/mathsim
+          W=../../packages/engine/src/paytables/weights
+          for game in pride cubcluster traitvault; do
+            ./target/release/mathsim simulate --game "$game" --spins 2000000 \
+              --rng fast --seed 42 --weights "$W/$game.weights" \
+              | grep -E 'RTP  |volatility index|max win'
+          done
