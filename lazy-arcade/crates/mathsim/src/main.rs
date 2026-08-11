@@ -417,12 +417,18 @@ fn cmd_buyprice(flags: &HashMap<String, String>) -> i32 {
     0
 }
 
-/// Solve the ante-bet scatter multiplier.
+/// Price the ante bet.
 ///
-/// The ante charges 1.25x stake for a richer scatter supply. Raising scatter
-/// weight also lengthens the strip, which thins every other symbol -- so the
-/// base game weakens as the feature strengthens, and "just double the
-/// scatters" lands nowhere near 97%. Bisect on the multiplier instead.
+/// The obvious formulation -- "charge +25% stake, double the scatter chance" --
+/// does not survive contact with integer strip weights. Pride carries 4-5
+/// scatters per reel, so the smallest possible bump is +1, which moves the
+/// trigger rate by roughly 40% and jumps RTP from 0.91 to 1.05. Nothing lands
+/// on 0.97, and no multiplier in between exists to solve for: k = 1.387 and
+/// k = 1.430 round to the same strips and return the same number.
+///
+/// So invert it. Fix the scatter supply at each achievable INTEGER step and
+/// solve the stake, which is continuous. That yields ante tiers a player can
+/// actually be charged for, each EV-neutral by construction.
 fn cmd_ante(flags: &HashMap<String, String>) -> i32 {
     let kind = require_game(flags);
     if kind != GameKind::Pride {
@@ -430,7 +436,6 @@ fn cmd_ante(flags: &HashMap<String, String>) -> i32 {
         return 2;
     }
     let spins: u64 = flag(flags, "spins", 12_000_000);
-    let stake: f64 = flag(flags, "stake", 1.25);
     let target: f64 = flag(flags, "target-rtp", 0.97);
     let threads: usize = flag(flags, "threads", default_threads());
     let seed: u64 = flag(flags, "seed", 42);
@@ -441,32 +446,36 @@ fn cmd_ante(flags: &HashMap<String, String>) -> i32 {
         load_weights(&path)
     };
 
-    let measure = |k: f64| -> Stats {
-        run(&RunConfig {
-            kind, spins, seed, threads, rng_mode: RngMode::Hmac,
-            strips: base_strips.with_ante(k), coin_probability, pay_scale,
-            stake_mult: stake,
-        })
-    };
+    println!("=== ANTE TIERS -- {} ({spins} spins per tier) ===", kind.id());
+    println!("  scatter/reel is an integer, so the tiers below are every ante");
+    println!("  this strip length can express.\n");
+    println!("  {:<10} {:>12} {:>14} {:>16}", "extra scat", "return/base", "feature freq", "EV-neutral stake");
 
-    println!("solving ante multiplier for {} at stake {stake}x ({spins} spins per probe)", kind.id());
-    let (mut lo, mut hi) = (1.0f64, 12.0f64);
-    let mut best = 1.0;
-    for step in 0..8 {
-        let mid = 0.5 * (lo + hi);
-        let st = measure(mid);
-        println!("  k = {mid:>6.3}  ->  RTP {:.5}  feature 1 in {:.0}",
-                 st.rtp(), if st.feature_frequency() > 0.0 { 1.0 / st.feature_frequency() } else { f64::INFINITY });
-        if st.rtp() < target { lo = mid; } else { hi = mid; }
-        best = mid;
-        if (st.rtp() - target).abs() < 0.0008 { println!("  converged at step {step}"); break; }
+    for extra in 0..=3u32 {
+        let mut spec = base_strips.clone();
+        for reel in 0..REELS {
+            if spec.weights[reel][SCAT as usize] > 0 {
+                spec.weights[reel][SCAT as usize] += extra;
+            }
+        }
+        // Measure at stake 1.0 so the result is raw return per base bet; the
+        // EV-neutral stake then falls straight out of it.
+        let st = run(&RunConfig {
+            kind, spins, seed, threads, rng_mode: RngMode::Hmac,
+            strips: spec, coin_probability, pay_scale, stake_mult: 1.0,
+        });
+        let ret = st.rtp();
+        let stake = ret / target;
+        let freq = st.feature_frequency();
+        println!("  {:<10} {:>12.5} {:>14} {:>15.4}x",
+                 format!("+{extra}"),
+                 ret,
+                 if freq > 0.0 { format!("1 in {:.0}", 1.0 / freq) } else { "never".into() },
+                 stake);
     }
-    println!();
-    println!("  ANTE SCATTER MULTIPLIER: {best:.3}");
-    println!("  stake {stake}x, target RTP {target:.5}");
-    println!();
-    println!("  Verify with a full run before shipping -- these probes carry the same");
-    println!("  measurement error that made the pay-scale calibration overshoot.");
+    println!("\n  Read: charging that stake for that scatter supply keeps RTP at {target:.5}.");
+    println!("  +0 is the base game and must come out at 1.0000x -- if it does not,");
+    println!("  the base calibration has drifted and nothing below it is trustworthy.");
     0
 }
 
