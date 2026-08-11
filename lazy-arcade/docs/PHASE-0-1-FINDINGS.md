@@ -98,9 +98,13 @@ volatility (see the statistical-power note below for why 100M is not enough).
 |---|---|---|---|---|
 | Pride | 250M | **0.97009** | +/-0.00045 | PASS |
 | Cub Cluster | 250M | **0.97023** | +/-0.00066 | PASS |
-| Trait Vault | 600M | see below | +/-0.00030 | see below |
+| Trait Vault | 600M | **0.96994** | +/-0.00030 | PASS |
 | Hi/Lo (collection, N=10,078) | 20M decisions | **0.969830** | — | PASS |
 | Hi/Lo (owned, N=73) | 5M decisions | **0.969687** | — | PASS |
+
+All four games meet the 97% RTP exit criterion. Trait Vault's base/feature
+split came out at exactly 74.0 / 23.0 against a 74 / 23 target, which is the
+two-axis calibration doing precisely what it was built for.
 
 Hi/Lo's maximum observed per-step multiplier was 19.3942x against the 19.4x
 ceiling, and 17.46x in the owned deck — the disabled-direction rule holds.
@@ -272,14 +276,16 @@ soft pulls in the optimizer's loss function and currently miss:
 
 | Game | Hit freq (target) | Volatility (target) | Base/feature split (target) |
 |---|---|---|---|
-| Pride | 0.573 (0.38) | 3.65 (4.2) | 79.6 / 17.3 (68 / 29) |
+| Pride | 0.573 (0.38) | 3.65 (4.2) | 79.7 / 17.3 (68 / 29) |
 | Cub Cluster | 0.104 (0.44) | 5.32 (5.4) | 70.2 / 26.8 (71 / 26) |
-| Trait Vault | 0.222 (0.48) | 3.71 (3.1) | 74.2 / 23.0 (74 / 23) |
+| Trait Vault | 0.222 (0.48) | 3.70 (3.1) | 74.0 / 23.0 (74 / 23) |
 
-Cub Cluster and Trait Vault both hit their base/feature split closely — Trait
-Vault's 74.2 / 23.0 against a 74 / 23 target is the two-axis calibration
-working as intended. Pride's split is the one that is off, because its free
-spins carry less of the return than the spec budgets for.
+Cub Cluster and Trait Vault both hit their base/feature split — Trait Vault's
+74.0 / 23.0 against a 74 / 23 target is the two-axis calibration working as
+intended. Pride's split is the one that is off, because its free spins carry
+less of the return than the spec budgets for; fixing it means making the
+feature richer and the base correspondingly leaner, which is a paytable-shape
+change rather than a weighting one.
 
 Hit frequency and volatility cannot be closed by strip weights alone. Both are
 governed by the *shape* of the paytable — which symbol pays what at which
