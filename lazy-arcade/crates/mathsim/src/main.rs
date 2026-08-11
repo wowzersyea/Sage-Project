@@ -33,6 +33,8 @@ fn main() {
         "simulate" => cmd_simulate(&flags),
         "optimize" => cmd_optimize(&flags),
         "calibrate" => cmd_calibrate(&flags),
+        "buyprice" => cmd_buyprice(&flags),
+        "ante" => cmd_ante(&flags),
         "hilo" => cmd_hilo(&flags),
         "golden" => cmd_golden(&flags),
         "help" | "--help" | "-h" => {
@@ -55,6 +57,8 @@ mathsim <command> [flags]
   optimize --game <...> [--target-rtp R] [--tolerance T] [--iters N]
            [--eval-spins N] [--seed N] [--threads N] [--out FILE]
   calibrate --game <...> --weights FILE [--spins N] [--target-rtp R] [--out FILE]
+  buyprice --game <...> [--spins N]      EV-neutral price of buying the feature
+  ante     --game <...> [--spins N]      solve the ante scatter multiplier
   hilo     [--decisions N] [--deck collection|owned] [--n N] [--seed N]
   golden   [--count N] [--out FILE]
 
@@ -123,6 +127,7 @@ fn cmd_simulate(flags: &HashMap<String, String>) -> i32 {
         strips,
         coin_probability,
         pay_scale,
+        stake_mult: 1.0,
     });
     let elapsed = started.elapsed();
 
@@ -261,6 +266,7 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
                 strips: strips.clone(),
                 coin_probability: coin,
                 pay_scale: scale,
+                stake_mult: 1.0,
             })
         };
         let coin_a = coin_probability;
@@ -290,6 +296,7 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
             strips: strips.clone(),
             coin_probability,
             pay_scale: scale,
+            stake_mult: 1.0,
         })
     };
 
@@ -359,6 +366,107 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
         }
     }
     println!("\nNext: verify with `mathsim simulate --game {} --spins 100000000 --rng hmac --weights {out_path}`.", kind.id());
+    0
+}
+
+/// Price a "buy the feature" button so it is exactly EV-neutral.
+///
+/// A bought feature must return the same 97% as a spun one. If the price sits
+/// below EV/0.97 the button is an arbitrage on the bankroll -- the same failure
+/// mode as an underpriced sacrifice package (spec Sec. 9.3), and far easier to
+/// exploit because it needs no NFT and no cross-chain hop.
+fn cmd_buyprice(flags: &HashMap<String, String>) -> i32 {
+    let kind = require_game(flags);
+    if kind == GameKind::CubCluster {
+        eprintln!("Cub Cluster has no discrete feature to buy -- its tumbles are part of the base spin.");
+        return 2;
+    }
+    let spins: u64 = flag(flags, "spins", 40_000_000);
+    let threads: usize = flag(flags, "threads", default_threads());
+    let path = flags.get("weights").cloned().unwrap_or_default();
+    let (strips, coin_probability, pay_scale) = if path.is_empty() {
+        (kind.default_strips(), tables::VAULT_COIN_PROBABILITY, 1.0)
+    } else {
+        load_weights(&path)
+    };
+
+    let stats = run(&RunConfig {
+        kind, spins, seed: flag(flags, "seed", 42), threads,
+        rng_mode: RngMode::Hmac, strips, coin_probability, pay_scale, stake_mult: 1.0,
+    });
+
+    let freq = stats.feature_frequency();
+    if freq <= 0.0 {
+        eprintln!("feature never triggered in {spins} spins");
+        return 1;
+    }
+    let ev_per_trigger = stats.feature_rtp() / freq;
+    let price = ev_per_trigger / 0.97;
+
+    println!("=== BUY FEATURE PRICE -- {} ===", kind.id());
+    println!("  spins                 : {spins}");
+    println!("  feature RTP           : {:.5} per spin", stats.feature_rtp());
+    println!("  feature frequency     : {:.5}  (1 in {:.0})", freq, 1.0 / freq);
+    println!("  EV per triggered round: {:.4}x total bet", ev_per_trigger);
+    println!();
+    println!("  EV-NEUTRAL BUY PRICE  : {:.4}x total bet", price);
+    println!("  (buying returns {:.5} -- identical to spinning for it)", ev_per_trigger / price);
+    println!();
+    println!("  NOTE: buy-bonus mechanics are prohibited in several regulated markets");
+    println!("        (the UK among them). Ship behind a jurisdiction flag.");
+    0
+}
+
+/// Solve the ante-bet scatter multiplier.
+///
+/// The ante charges 1.25x stake for a richer scatter supply. Raising scatter
+/// weight also lengthens the strip, which thins every other symbol -- so the
+/// base game weakens as the feature strengthens, and "just double the
+/// scatters" lands nowhere near 97%. Bisect on the multiplier instead.
+fn cmd_ante(flags: &HashMap<String, String>) -> i32 {
+    let kind = require_game(flags);
+    if kind != GameKind::Pride {
+        eprintln!("only Pride has a scatter-triggered feature; ante does not apply to {}.", kind.id());
+        return 2;
+    }
+    let spins: u64 = flag(flags, "spins", 12_000_000);
+    let stake: f64 = flag(flags, "stake", 1.25);
+    let target: f64 = flag(flags, "target-rtp", 0.97);
+    let threads: usize = flag(flags, "threads", default_threads());
+    let seed: u64 = flag(flags, "seed", 42);
+    let path = flags.get("weights").cloned().unwrap_or_default();
+    let (base_strips, coin_probability, pay_scale) = if path.is_empty() {
+        (kind.default_strips(), tables::VAULT_COIN_PROBABILITY, 1.0)
+    } else {
+        load_weights(&path)
+    };
+
+    let measure = |k: f64| -> Stats {
+        run(&RunConfig {
+            kind, spins, seed, threads, rng_mode: RngMode::Hmac,
+            strips: base_strips.with_ante(k), coin_probability, pay_scale,
+            stake_mult: stake,
+        })
+    };
+
+    println!("solving ante multiplier for {} at stake {stake}x ({spins} spins per probe)", kind.id());
+    let (mut lo, mut hi) = (1.0f64, 12.0f64);
+    let mut best = 1.0;
+    for step in 0..8 {
+        let mid = 0.5 * (lo + hi);
+        let st = measure(mid);
+        println!("  k = {mid:>6.3}  ->  RTP {:.5}  feature 1 in {:.0}",
+                 st.rtp(), if st.feature_frequency() > 0.0 { 1.0 / st.feature_frequency() } else { f64::INFINITY });
+        if st.rtp() < target { lo = mid; } else { hi = mid; }
+        best = mid;
+        if (st.rtp() - target).abs() < 0.0008 { println!("  converged at step {step}"); break; }
+    }
+    println!();
+    println!("  ANTE SCATTER MULTIPLIER: {best:.3}");
+    println!("  stake {stake}x, target RTP {target:.5}");
+    println!();
+    println!("  Verify with a full run before shipping -- these probes carry the same");
+    println!("  measurement error that made the pay-scale calibration overshoot.");
     0
 }
 

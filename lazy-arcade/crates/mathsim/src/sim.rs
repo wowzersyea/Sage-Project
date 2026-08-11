@@ -248,6 +248,9 @@ pub struct RunConfig {
     pub strips: StripSpec,
     pub coin_probability: f64,
     pub pay_scale: f64,
+    /// Total stake per spin, in units of the base bet. The ante bet charges
+    /// 1.25; everything is recorded per unit staked so RTP stays comparable.
+    pub stake_mult: f64,
 }
 
 pub fn run(cfg: &RunConfig) -> Stats {
@@ -273,11 +276,12 @@ pub fn run(cfg: &RunConfig) -> Stats {
                     // each playing a long sequential session.
                     let mut state = GameState::default();
                     let cap = kind.max_win();
+                    let stake = if cfg.stake_mult > 0.0 { cfg.stake_mult } else { 1.0 };
                     match mode {
                         RngMode::Fast => {
                             let mut rng = FastRng::new(seed ^ ((t as u64 + 1) << 32));
                             for _ in 0..spins {
-                                let out = apply_win_cap(machine.spin(&mut rng, &mut state), cap);
+                                let out = per_stake(apply_win_cap(machine.spin(&mut rng, &mut state), cap), stake);
                                 stats.record(&out);
                             }
                         }
@@ -287,7 +291,7 @@ pub fn run(cfg: &RunConfig) -> Stats {
                             for i in 0..spins {
                                 let mut rng =
                                     HmacRng::new(&server_seed, &client_seed, i, kind.id());
-                                let out = apply_win_cap(machine.spin(&mut rng, &mut state), cap);
+                                let out = per_stake(apply_win_cap(machine.spin(&mut rng, &mut state), cap), stake);
                                 stats.record(&out);
                             }
                         }
@@ -322,6 +326,15 @@ fn apply_win_cap(out: SpinOutcome, cap: f64) -> SpinOutcome {
         feature: out.feature * ratio,
         feature_triggered: out.feature_triggered,
     }
+}
+
+/// Express an outcome per unit staked, so an ante round at 1.25x stake is
+/// directly comparable to a base round.
+#[inline]
+fn per_stake(out: SpinOutcome, stake: f64) -> SpinOutcome {
+    if stake == 1.0 { return out; }
+    SpinOutcome { base: out.base / stake, feature: out.feature / stake,
+                  feature_triggered: out.feature_triggered }
 }
 
 fn derive_server_seed(seed: u64) -> [u8; 32] {
@@ -366,6 +379,7 @@ mod tests {
                 strips: kind.default_strips(),
                 coin_probability: 0.03,
                 pay_scale: 500.0, // absurd scale to force the cap to bind
+                stake_mult: 1.0,
             });
             assert!(
                 stats.max_win <= kind.max_win() + 1e-6,
@@ -390,6 +404,7 @@ mod tests {
             strips: GameKind::Pride.default_strips(),
             coin_probability: 0.0,
             pay_scale: 1.0,
+            stake_mult: 1.0,
         };
         let fast = run(&base);
         let hmac = run(&RunConfig { rng_mode: RngMode::Hmac, ..base });
@@ -412,6 +427,7 @@ mod tests {
             strips: GameKind::CubCluster.default_strips(),
             coin_probability: 0.0,
             pay_scale: 1.0,
+            stake_mult: 1.0,
         };
         assert_eq!(run(&cfg).sum.to_bits(), run(&cfg).sum.to_bits());
     }
@@ -429,6 +445,7 @@ mod tests {
             strips: GameKind::TraitVault.default_strips(),
             coin_probability: 0.03,
             pay_scale: 1.0,
+            stake_mult: 1.0,
         };
         assert_eq!(run(&cfg).sum.to_bits(), run(&cfg).sum.to_bits());
     }

@@ -64,6 +64,7 @@ fn evaluate(
         strips: strips.clone(),
         coin_probability,
         pay_scale,
+        stake_mult: 1.0,
     })
 }
 

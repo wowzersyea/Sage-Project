@@ -38,6 +38,24 @@ pub struct Strips {
 }
 
 impl StripSpec {
+    /// Ante bet: the player stakes extra for a richer scatter supply.
+    ///
+    /// Scaling the scatter weight lengthens the strip, which dilutes every
+    /// other symbol slightly -- so the base game gets marginally weaker as the
+    /// feature gets more frequent. That is real, not an artefact, and it is
+    /// why the ante multiplier has to be SOLVED against a full simulation
+    /// rather than assumed to be "double the scatters".
+    pub fn with_ante(&self, k: f64) -> StripSpec {
+        let mut out = self.clone();
+        for reel in 0..REELS {
+            let w = out.weights[reel][SCAT as usize];
+            if w > 0 {
+                out.weights[reel][SCAT as usize] = ((w as f64) * k).round().max(1.0) as u32;
+            }
+        }
+        out
+    }
+
     pub fn build(&self) -> Strips {
         let reels: Vec<Vec<u8>> = (0..REELS).map(|r| build_strip(&self.weights[r])).collect();
         for (i, reel) in reels.iter().enumerate() {
