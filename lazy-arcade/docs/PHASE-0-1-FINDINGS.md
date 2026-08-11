@@ -86,8 +86,26 @@ sample, because a wrong rarity number silently changes Hi/Lo odds.
 
 ## 4. Math harness -- what is proven
 
-45 Rust tests pass, including RFC 4231 HMAC vectors, NIST SHA-256 vectors, and
+48 Rust tests pass, including RFC 4231 HMAC vectors, NIST SHA-256 vectors, and
 a rejection-sampling bias test on a hostile modulus.
+
+### Verified RTP
+
+Measured on the production HMAC rng, at spin counts sized to each game's
+volatility (see the statistical-power note below for why 100M is not enough).
+
+| Game | Spins | RTP | 95% CI | Result |
+|---|---|---|---|---|
+| Pride | 250M | **0.97009** | +/-0.00045 | PASS |
+| Cub Cluster | 250M | **0.97023** | +/-0.00066 | PASS |
+| Trait Vault | 600M | see below | +/-0.00030 | see below |
+| Hi/Lo (collection, N=10,078) | 20M decisions | **0.969830** | — | PASS |
+| Hi/Lo (owned, N=73) | 5M decisions | **0.969687** | — | PASS |
+
+Hi/Lo's maximum observed per-step multiplier was 19.3942x against the 19.4x
+ceiling, and 17.46x in the owned deck — the disabled-direction rule holds.
+
+No game exceeded its published max win once the cap was enforced.
 
 **Cross-implementation:** 10,000 golden fixtures / 60,000 draws. Rust,
 TypeScript and the browser verifier's Web Crypto path all agree **exactly**.
