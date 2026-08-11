@@ -210,20 +210,25 @@ introduced, not before.
 RTP is the hard exit criterion and is treated as such. The secondary targets are
 soft pulls in the optimizer's loss function and currently miss:
 
-| Game | RTP | Hit freq (target) | Volatility (target) |
+| Game | Hit freq (target) | Volatility (target) | Base/feature split (target) |
 |---|---|---|---|
-| Pride | on target | ~0.57 (0.38) | ~3.7 (4.2) |
-| Cub Cluster | on target | ~0.10 (0.44) | ~5.2 (5.4) |
-| Trait Vault | on target | ~0.28 (0.48) | ~3.2 (3.1) |
+| Pride | 0.573 (0.38) | 3.65 (4.2) | 79.6 / 17.3 (68 / 29) |
+| Cub Cluster | 0.104 (0.44) | 5.32 (5.4) | 70.2 / 26.8 (71 / 26) |
+| Trait Vault | 0.222 (0.48) | 3.71 (3.1) | 74.2 / 23.0 (74 / 23) |
 
-Hitting hit-frequency and volatility simultaneously with RTP requires reshaping
-the *paytables* (which symbol pays what at which count), not just the strip
-weights the optimizer currently searches. That is the natural next iteration:
-give the optimizer the paytable shape as a search axis, subject to the max-win
-caps.
+Cub Cluster and Trait Vault both hit their base/feature split closely — Trait
+Vault's 74.2 / 23.0 against a 74 / 23 target is the two-axis calibration
+working as intended. Pride's split is the one that is off, because its free
+spins carry less of the return than the spec budgets for.
+
+Hit frequency and volatility cannot be closed by strip weights alone. Both are
+governed by the *shape* of the paytable — which symbol pays what at which
+count — and the optimizer currently searches only weights and a single global
+scale. Giving it the paytable shape as a search axis, subject to the max-win
+caps, is the natural next iteration.
 
 All three are within the 5.5 volatility ceiling, which is the constraint that
-actually matters for the "low volatility" product claim.
+actually backs the "low volatility" product claim.
 
 ---
 

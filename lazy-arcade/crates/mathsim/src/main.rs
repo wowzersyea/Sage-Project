@@ -293,14 +293,47 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
         })
     };
 
-    let scale1 = scale0 * 1.5;
     let stats0 = measure(scale0);
-    println!("  scale {scale0:.6} -> RTP {:.5}", stats0.rtp());
-    let stats1 = measure(scale1);
-    println!("  scale {scale1:.6} -> RTP {:.5}", stats1.rtp());
+    println!(
+        "  scale {scale0:.6} -> RTP {:.5} (base {:.5}, feature {:.5})",
+        stats0.rtp(),
+        stats0.base_rtp(),
+        stats0.feature_rtp()
+    );
 
-    let alpha = (stats1.rtp() - stats0.rtp()) / (scale1 - scale0);
-    let beta = stats0.rtp() - alpha * scale0;
+    // Decompose rather than fit a second point.
+    //
+    // A two-point fit works but is imprecise: each point carries the full
+    // variance of total RTP, and that error lands directly in the solved
+    // scale. Trait Vault missed by 0.0019 that way, entirely explained by the
+    // +/-0.0021 error bar on its 12M-spin calibration points.
+    //
+    // Decomposition is exact instead. Base wins are strictly proportional to
+    // pay scale, and `base_rtp` has far lower variance than total RTP because
+    // it excludes the feature's heavy tail, so one run pins the slope better
+    // than two runs pin the line.
+    let base0 = stats0.base_rtp();
+    let feat0 = stats0.feature_rtp();
+    let (alpha, beta) = if kind == GameKind::TraitVault {
+        // Hold and Win pays coin values that do not scale with the paytable,
+        // so the feature is a constant term.
+        (base0 / scale0, feat0)
+    } else {
+        // Pride's free spins and Cub Cluster's tumbles both pay from the
+        // scaled paytable, so everything rides the slope.
+        ((base0 + feat0) / scale0, 0.0)
+    };
+
+    // Proportionality holds only while the max-win cap is not biting; if it
+    // is, the relationship bends and this solve would overshoot.
+    let cap = kind.max_win();
+    if stats0.max_win >= cap * 0.999 {
+        println!(
+            "  NOTE: max win {:.1}x is at the {cap:.0}x cap, so RTP is no longer\n\
+             \x20       strictly proportional to pay scale. Re-verify and iterate.",
+            stats0.max_win
+        );
+    }
     if !(alpha.is_finite() && alpha > 1e-9) {
         eprintln!(
             "cannot calibrate: RTP barely responds to pay scale (slope {alpha:.3e}). \
@@ -314,7 +347,7 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
         return 1;
     }
 
-    println!("  fit: RTP = {alpha:.6} * scale + {beta:.6}");
+    println!("  model: RTP = {alpha:.6} * scale + {beta:.6}");
     println!("  solved pay_scale for {target:.5}: {solved:.6}");
 
     let out_path = flags.get("out").cloned().unwrap_or(path);
