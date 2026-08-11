@@ -49,6 +49,11 @@ jobs:
       - name: Licensing gate
         run: python3 tools/atlas-build/check-licensing.py
 
+      # `cargo test` only builds test harnesses into target/release/deps, so
+      # the CLI binary has to be built explicitly.
+      - name: Build mathsim binary
+        run: cd crates/mathsim && cargo build --release
+
       # A short RTP smoke test. The real exit criterion is a multi-hundred-
       # million-spin run (see docs/PHASE-0-1-FINDINGS.md on why 100M is not
       # enough to resolve +/-0.0005); this only catches gross regressions.
