@@ -9,3 +9,6 @@ tools/trait-ingest/*.log
 tools/atlas-build/cache/
 # build logs
 tools/atlas-build/*.log
+# Full-collection metadata: a 10k-token build input, refetchable in ~3 min via
+# tools/trait-ingest/fetch-collection.py. The derived rarity.json IS committed.
+tools/trait-ingest/data/collection_traits.json

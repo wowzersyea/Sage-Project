@@ -145,6 +145,36 @@ console.log("\nHi/Lo exactness");
         `worst deviation ${worst.toExponential(2)} over ${offered} offers`);
   check("no offered multiplier exceeds 19.4x", maxMult <= 19.4 + 1e-9,
         `max ${maxMult.toFixed(4)}x`);
+
+  // The shipped deck is now 101 rarity ranks (0..100), not 10,078 ordinals.
+  // Every property the ordinal design relied on has to survive the change.
+  const R = 101;
+  let rWorst = 0, rOffered = 0, alwaysOne = true;
+  const disabled = [];
+  for (let p = 1; p <= R; p++) {
+    let any = false;
+    for (const dir of ["rarer", "commoner"]) {
+      const mult = M.payout(R, p, dir);
+      if (mult === null) continue;
+      any = true; rOffered++;
+      const prob = dir === "rarer" ? M.pRarer(R, p) : M.pCommoner(R, p);
+      rWorst = Math.max(rWorst, Math.abs(prob * mult - 0.97));
+    }
+    if (!any) alwaysOne = false;
+    if (M.payout(R, p, "rarer") === null || M.payout(R, p, "commoner") === null) {
+      disabled.push(p - 1);
+    }
+    if (Math.abs(M.pRarer(R, p) + M.pCommoner(R, p) - 1) > 1e-12) rWorst = Infinity;
+  }
+  check("rank deck: every offered bet returns exactly 0.97", rWorst < 1e-9,
+        `worst ${rWorst.toExponential(2)} over ${rOffered} offers`);
+  check("rank deck: a playable direction exists at every rank", alwaysOne);
+  // Probabilities are r/100 and (100-r)/100, so the 5% floor bites at exactly
+  // r < 5 and r > 95. If this ever shifts, the floor logic has drifted.
+  check("rank deck: disabled exactly outside ranks 5..95",
+        disabled.every(r => r < 5 || r > 95) &&
+        disabled.length === 10,
+        `disabled at ranks ${disabled.join(",")}`);
 }
 
 /* --------------------------------------------------------------- 4. RTP */

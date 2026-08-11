@@ -70,7 +70,36 @@ export const OPERATOR_WALLET = "0x575161e774566Fb51E0a217ff6f64825eafE850a" as c
  * flow in Sec. 9.1 genuinely has to be cross-chain. It is not optional.
  */
 export const OPERATOR_LIONS_CHAIN = "ethereum-mainnet" as const;
-export const OPERATOR_LIONS_COUNT_AT_INGEST = 73;
+
+/**
+ * A second operator wallet, added 2026-08-11 to widen rarity coverage in Hi/Lo.
+ *
+ * UNCONFIRMED ADDRESS. The operator named the OpenSea profile
+ * "LazyTerminatorsV2"; the address below was inferred by scraping that page and
+ * then corroborated on-chain (it holds 47 Lions and 1 Cub, and no other
+ * candidate on the page holds any). That is strong but it is not proof of
+ * ownership, and licensing depends on it -- confirm the address directly with
+ * the operator before mainnet.
+ */
+export const OPERATOR_WALLET_2 = "0x5d466e6f2b4ae0b2256574e2268c777f114297b2" as const;
+export const OPERATOR_WALLET_2_CONFIRMED = false;
+
+/** 73 in the primary wallet + 47 in the second. */
+export const OPERATOR_LIONS_COUNT_AT_INGEST = 120;
+export const OPERATOR_CUBS_COUNT_AT_INGEST_TOTAL = 64;
+
+/**
+ * Collection size, and a discrepancy worth knowing about: the spec says
+ * 10,078 Lions, lazylionsnft.com says 10,000, and totalSupply() says 10,080.
+ * The metadata API serves 9,999 of them. Rarity here is computed over the
+ * 9,999 actually retrievable, which is what `rarity.json` records -- if the
+ * missing tokens ever resolve, ranks shift and Hi/Lo must be re-verified.
+ */
+export const LIONS_TOTAL_SUPPLY_ONCHAIN = 10_080;
+export const LIONS_RARITY_BASIS = 9_999;
+
+/** Hi/Lo rarity ranks: 0..100 inclusive, equal-population buckets. */
+export const HILO_RARITY_RANKS = 101;
 
 /** MUST be a Safe, not an EOA. Deploy scripts assert `code.length > 0`. */
 export const TREASURY_MULTISIG = UNCONFIRMED;
@@ -154,8 +183,13 @@ export function unresolvedChainConfig(): UnresolvedConstant[] {
     if (value === UNCONFIRMED) out.push({ name, why });
   };
   check("LAZY_TOKEN_BASE", LAZY_TOKEN_BASE, "official $LAZY on Base; impostor tokens exist");
-  check("LAZY_CUBS_CONTRACT", LAZY_CUBS_CONTRACT, "Cubs collection address");
   check("OPERATOR_WALLET", OPERATOR_WALLET, "needed to enumerate owned traits (licensing gate)");
+  if (!OPERATOR_WALLET_2_CONFIRMED) {
+    out.push({
+      name: "OPERATOR_WALLET_2",
+      why: "address inferred from an OpenSea profile, not confirmed by the operator",
+    });
+  }
   check("TREASURY_MULTISIG", TREASURY_MULTISIG, "must be a Safe; deploy asserts contract code");
   if (VRF_PROVIDER === null) {
     out.push({ name: "VRF_PROVIDER", why: "no Base VRF coordinator confirmed available" });
