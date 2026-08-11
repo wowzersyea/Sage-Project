@@ -364,12 +364,14 @@ footer b{color:var(--hot)}
 
         <div class="spinwrap">
           <div class="mini">
+            <button class="btn" id="ante" aria-pressed="false">Ante</button>
             <button class="btn" id="turbo" aria-pressed="false">Turbo</button>
             <button class="btn" id="sound" aria-pressed="true">Sound</button>
           </div>
           <div class="mini">
             <button class="btn" id="auto">Auto</button>
             <button class="btn" id="autoCfg">Limits</button>
+            <button class="btn" id="buy">Buy</button>
             <button class="btn" id="deck">Deck: all</button>
           </div>
           <button class="spin" id="spin">Spin</button>
@@ -558,6 +560,32 @@ function paylines40(){
 }
 const LINES=paylines40();
 
+/* Measured, not guessed. `mathsim buyprice` reports the EV of one triggered
+   round; the price is that EV / 0.97 so buying returns exactly what spinning
+   for it returns. Under-price this and it is an arbitrage on the bankroll --
+   the same failure mode as an underpriced sacrifice package, minus the NFT. */
+const BUY_PRICE={pride:18.3073, traitvault:1.6350};
+
+/* Ante tiers come from `mathsim ante`. Scatter weight is an integer, so +1 per
+   reel is the smallest ante this strip length can express; the stake is solved
+   to keep RTP at 0.97 rather than fixed at a marketing-friendly +25%. */
+const ANTE={pride:{extraScatter:1, stake:1.1441}};
+function anteStrips(){
+  const w=CONF.pride.w.map(r=>r.slice());
+  for(const reel of w) if(reel[SCAT]>0) reel[SCAT]+=ANTE.pride.extraScatter;
+  return w.map(buildStrip);
+}
+let ANTE_STRIPS=null;
+
+function buyFeature(rng,which){
+  if(which==="pride"){
+    const r=prideFreeSpins(rng,CONF.pride.strips,PAYS.pride);
+    return capWin({base:0,feature:r.feature,fs:true,marks:new Set(),frames:r.frames},CONF.pride.cap);
+  }
+  const hw=vaultHoldAndWin(rng);
+  return capWin({base:0,feature:hw.feature,fs:true,marks:new Set(),frames:hw.frames},CONF.traitvault.cap);
+}
+
 /* ============================ provably fair ============================== */
 /* SHA-256 + HMAC implemented in-page rather than via Web Crypto. Web Crypto is
    async, which would force pre-buffering a fixed block count per spin and cap
@@ -720,8 +748,22 @@ function prideEval(grid,multWilds,pays,marks){
   }
   return total;
 }
-function spinPride(rng){
-  const pays=PAYS.pride, strips=CONF.pride.strips;
+/* The free-spin round, shared by a natural trigger and a bought one. Sharing
+   it is the point: a bought feature priced off the measured EV of the spun
+   feature is only honest if it is literally the same round. */
+function prideFreeSpins(rng,strips,pays){
+  let feature=0; const frames=[];
+  for(let i=0;i<10;i++){
+    const g2=drawGrid(strips,rng), m2=new Set();
+    feature+=prideEval(g2,true,pays,m2);
+    let sc=0; for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(g2[r][row]===SCAT) sc++;
+    feature+=pays[SCAT][Math.min(sc,REELS)]||0;
+    frames.push({grid:g2,marks:m2,label:`free spin ${i+1}/10 · ×2 wilds`});
+  }
+  return {feature,frames};
+}
+function spinPride(rng,stripsOverride){
+  const pays=PAYS.pride, strips=stripsOverride||CONF.pride.strips;
   const grid=drawGrid(strips,rng);
   const marks=new Set();
   let base=prideEval(grid,false,pays,marks);
@@ -732,13 +774,8 @@ function spinPride(rng){
   let feature=0, fs=false;
   if(scat>=3){
     fs=true;
-    for(let i=0;i<10;i++){
-      const g2=drawGrid(strips,rng), m2=new Set();
-      feature+=prideEval(g2,true,pays,m2);
-      let sc=0; for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(g2[r][row]===SCAT) sc++;
-      feature+=pays[SCAT][Math.min(sc,REELS)]||0;
-      frames.push({grid:g2,marks:m2,label:`free spin ${i+1}/10 · ×2 wilds`});
-    }
+    const r=prideFreeSpins(rng,strips,pays);
+    feature=r.feature; frames.push(...r.frames);
   }
   return capWin({base,feature,fs,marks,frames},CONF.pride.cap);
 }
@@ -806,6 +843,32 @@ function spinCluster(rng){
 
 /* ---- TRAIT VAULT: 40 lines + persistent Mane Meter ---- */
 const COIN_V=[1,2,3,5,10,20], COIN_W=[400,300,180,80,30,10];
+/* Hold & Win, shared by the meter trigger and the buy button. */
+function vaultHoldAndWin(rng){
+  const SCALE=1e6, thr=Math.round(CONF.traitvault.coinP*SCALE);
+  const wTot=COIN_W.reduce((a,b)=>a+b,0);
+  const filled=new Array(CELLS).fill(0);
+  let feature=0; const frames=[];
+  for(let spin=0;spin<6;spin++){
+    for(let c=0;c<CELLS;c++){
+      if(filled[c]) continue;
+      if(rng.below(SCALE)<thr){
+        let pick=rng.below(wTot), val=COIN_V[0];
+        for(let i=0;i<COIN_W.length;i++){ if(pick<COIN_W[i]){val=COIN_V[i];break;} pick-=COIN_W[i]; }
+        filled[c]=val; feature+=val;
+      }
+    }
+    const g2=[],m2=new Set();
+    for(let r=0;r<REELS;r++){ const col=[];
+      for(let row=0;row<ROWS;row++){ const idx=r*ROWS+row;
+        col.push(filled[idx]?SCAT:L4);
+        if(filled[idx]) m2.add(r+":"+row);
+      } g2.push(col);
+    }
+    frames.push({grid:g2,marks:m2,label:`hold & win · respin ${spin+1}/6`,coins:filled.slice()});
+  }
+  return {feature,frames};
+}
 function spinVault(rng,state){
   const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
   const grid=drawGrid(strips,rng);
@@ -839,27 +902,8 @@ function spinVault(rng,state){
   let feature=0, fs=false;
   if(state.mane>=40){
     state.mane-=40; fs=true;                       // carry the remainder
-    const SCALE=1e6, thr=Math.round(CONF.traitvault.coinP*SCALE);
-    const wTot=COIN_W.reduce((a,b)=>a+b,0);
-    const filled=new Array(CELLS).fill(0);
-    for(let spin=0;spin<6;spin++){
-      for(let c=0;c<CELLS;c++){
-        if(filled[c]) continue;
-        if(rng.below(SCALE)<thr){
-          let pick=rng.below(wTot), val=COIN_V[0];
-          for(let i=0;i<COIN_W.length;i++){ if(pick<COIN_W[i]){val=COIN_V[i];break;} pick-=COIN_W[i]; }
-          filled[c]=val; feature+=val;
-        }
-      }
-      const g2=[],m2=new Set();
-      for(let r=0;r<REELS;r++){ const col=[];
-        for(let row=0;row<ROWS;row++){ const idx=r*ROWS+row;
-          col.push(filled[idx]?SCAT:L4);
-          if(filled[idx]) m2.add(r+":"+row);
-        } g2.push(col);
-      }
-      frames.push({grid:g2,marks:m2,label:`hold & win · respin ${spin+1}/6`,coins:filled.slice()});
-    }
+    const hw=vaultHoldAndWin(rng);
+    feature=hw.feature; frames.push(...hw.frames);
   }
   return capWin({base,feature,fs,marks,frames},CONF.traitvault.cap);
 }
@@ -1048,7 +1092,7 @@ let serverSeed=crypto.getRandomValues(new Uint8Array(32));
 let nonce=0;
 const vaultState={mane:0};
 let balance=100000, busy=false, autoLeft=0, stopAuto=false, turbo=false;
-let featTotal=0, autoBaseline=0, history=[];
+let featTotal=0, autoBaseline=0, history=[], anteOn=false, buyNext=false;
 const S={spins:0,staked:0,returned:0,hits:0,best:0};
 let hl={n:10078,mode:"collection",card:null,mult:1,risk:0,live:false,hist:[],auto:0};
 
@@ -1197,14 +1241,23 @@ async function countUp(target){
 async function doSpin(){
   if(busy) return;
   const bet=+$("bet").value;
-  if(balance<bet){ autoLeft=0; flash("Out of credit"); return; }
+  const buying=buyNext&&BUY_PRICE[game]!==undefined;
+  const useAnte=anteOn&&game==="pride"&&!buying;
+  // Stake is what the player actually pays: base bet, ante-loaded bet, or the
+  // EV-neutral buy price. Session RTP is measured against this, not the bet.
+  const stake = buying ? bet*BUY_PRICE[game] : useAnte ? bet*ANTE.pride.stake : bet;
+  if(balance<stake){ autoLeft=0; buyNext=false; $("buy").setAttribute("aria-pressed","false");
+                     flash("Out of credit"); return; }
   busy=true; $("spin").disabled=true; $("winOut").textContent="0";
-  balance-=bet; nonce++; updateHud();
+  balance-=stake; nonce++; updateHud();
 
+  if(useAnte&&!ANTE_STRIPS) ANTE_STRIPS=anteStrips();
   const rng=makeRng(serverSeed,$("fClient").value,nonce,game);
-  const out = game==="pride" ? spinPride(rng)
+  const out = buying ? buyFeature(rng,game)
+            : game==="pride" ? spinPride(rng,useAnte?ANTE_STRIPS:null)
             : game==="cubcluster" ? spinCluster(rng)
             : spinVault(rng,vaultState);
+  if(buying){ buyNext=false; $("buy").setAttribute("aria-pressed","false"); }
 
   const frames=out.frames&&out.frames.length?out.frames:[{grid:blankGrid(),marks:new Set()}];
   const first=frames[0];
@@ -1262,7 +1315,7 @@ async function doSpin(){
   }
 
   balance+=win;
-  S.spins++; S.staked+=bet; S.returned+=win;
+  S.spins++; S.staked+=stake; S.returned+=win;
   if(win>0) S.hits++;
   if(winMult>S.best) S.best=winMult;
 
@@ -1274,10 +1327,10 @@ async function doSpin(){
     await countUp(win);
     if(winMult>=5) coins(18,.9);
   }
-  history.push({nonce,game,client:$("fClient").value,bet,win,mult:winMult,
+  history.push({nonce,game,client:$("fClient").value,bet:stake,win,mult:winMult,
                 seed:hex(serverSeed)});
   if(history.length>200) history.shift();
-  logSpin(win,winMult);
+  logSpin(win,win/stake);
   updateHud();
   busy=false; $("spin").disabled=false;
 }
@@ -1404,6 +1457,15 @@ async function hlCash(){
 }
 
 /* =============================== hud ==================================== */
+function refreshCostLabels(){
+  const bet=+$("bet").value;
+  const p=BUY_PRICE[game];
+  $("buy").textContent = p===undefined ? "Buy n/a"
+    : buyNext ? `Buy ${fmt(bet*p)}` : `Buy ${p.toFixed(1)}×`;
+  $("buy").disabled = p===undefined;
+  $("ante").textContent = anteOn ? `Ante ${fmt(bet*ANTE.pride.stake)}` : "Ante";
+  $("ante").style.display = game==="pride" ? "" : "none";
+}
 function updateHud(){
   $("bal").textContent=fmt(balance);
   $("sSpins").textContent=fmt(S.spins);
@@ -1506,6 +1568,10 @@ function selectGame(g){
   $("auto").style.display=isHilo?"none":"";
   $("deck").style.display=isHilo?"":"none";
   $("autoCfg").style.display=isHilo?"none":"";
+  $("buy").style.display=isHilo?"none":"";
+  $("turbo").style.display=isHilo?"none":"";
+  buyNext=false; $("buy").setAttribute("aria-pressed","false");
+  if(!isHilo) refreshCostLabels(); else $("ante").style.display="none";
   if(isHilo) $("autoPanel").classList.remove("on");
   $("chipFeat").classList.add("hidden");
   $("riskRo").style.display=isHilo?"":"none";
@@ -1557,6 +1623,15 @@ $("autoCfg").addEventListener("click",()=>$("autoPanel").classList.toggle("on"))
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>selectGame(t.dataset.game)));
 $("spin").addEventListener("click",()=>{ac();startMusic();doSpin();});
 $("auto").addEventListener("click",()=>{ac();runAuto();});
+$("ante").addEventListener("click",()=>{
+  anteOn=!anteOn; $("ante").setAttribute("aria-pressed",String(anteOn));
+  refreshCostLabels();
+});
+$("buy").addEventListener("click",()=>{
+  buyNext=!buyNext; $("buy").setAttribute("aria-pressed",String(buyNext));
+  refreshCostLabels();
+});
+$("bet").addEventListener("change",refreshCostLabels);
 $("turbo").addEventListener("click",()=>{turbo=!turbo;$("turbo").setAttribute("aria-pressed",String(turbo));});
 $("sound").addEventListener("click",()=>{
   muted=!muted; $("sound").setAttribute("aria-pressed",String(!muted));

@@ -65,14 +65,63 @@ verification run.
 | Random multiplier orbs (2x-500x) | core of the feel | none | Would blow the 5.5 volatility ceiling on its own. This is *the* signature mechanic and it is incompatible with the current spec. |
 | Unlimited tumbles | yes | ladder caps at 8x | Same reason: uncapped chains are a variance engine. |
 | Free-spin retrigger | yes | deliberately none | Retriggers are the biggest single variance contributor in a feature. |
-| Ante bet (+25% stake, 2x scatter chance) | yes | **DONE** | Implementable EV-neutrally; see below. |
-| Buy free spins (~100x) | yes | **DONE** | Priced from measured feature EV, see below. |
+| Ante bet | yes | **DONE** | Priced by solving the stake, not the odds — see 1.1. |
+| Buy free spins | yes | **DONE** | Priced from measured feature EV — see 1.2. |
 
-**Ante bet and Buy Bonus are now implemented and priced from measurement, not
-guesswork.** Both must stay EV-neutral or they become an arbitrage on the
-bankroll — the same failure mode as the sacrifice packages in spec Sec. 9.3.
-Note that buy-bonus mechanics are prohibited in several regulated markets (UK
-among them); the feature is behind a flag for that reason.
+### 1.1 The ante bet cannot be "+25% stake for double the scatters"
+
+That formulation does not survive contact with integer strip weights. Pride
+carries 4–5 scatters per reel, so the smallest bump available is +1, which
+moves the trigger rate about 40% and jumps RTP from 0.91 to 1.05. Nothing lands
+on 0.97, and there is no multiplier in between to solve for: k = 1.387 and
+k = 1.430 round to identical strips and return identical numbers.
+
+So the solve is inverted — fix the scatter supply at each achievable integer
+step, solve the *stake*, which is continuous. `mathsim ante` reports:
+
+| Extra scatter/reel | Return per base bet | Feature frequency | EV-neutral stake |
+|---|---|---|---|
+| +0 (base game) | 0.97052 | 1 in 102 | **1.0005x** |
+| +1 | 1.10973 | 1 in 57 | **1.1441x** |
+| +2 | 1.30731 | 1 in 36 | **1.3477x** |
+| +3 | 1.57383 | 1 in 24 | **1.6225x** |
+
+The +0 row is a free correctness check: it must come out at 1.0000x, and it
+does. If it ever drifts, the base calibration has moved and every row under it
+is untrustworthy.
+
+The bench ships the **+1 tier at 1.1441x stake** — cheaper than Pragmatic's
++25% and it nearly doubles the trigger rate.
+
+### 1.2 Buy-feature prices, measured
+
+`mathsim buyprice` measures the EV of one triggered round and prices at
+EV / 0.97, so buying returns exactly what spinning for it returns.
+
+| Game | Feature EV per trigger | EV-neutral price | Verified return |
+|---|---|---|---|
+| Pride | 17.758x | **18.3073x** total bet | 0.97000 |
+| Trait Vault | 1.586x | **1.6350x** total bet | 0.97000 |
+
+Two things fall out of this that are worth stating plainly:
+
+- **Pragmatic charges ~100x because their feature is worth ~97x. Ours is worth
+  17.8x.** That gap is the volatility ceiling showing up in the shop window: a
+  low-variance free-spin round simply is not worth much, so the buy button
+  cannot feel like a big decision. This is the clearest single illustration of
+  Sec. 0's tension.
+- **Trait Vault's buy price of 1.635x is faintly absurd** — a "buy the feature"
+  button for 1.6x on something that already fires every 7 spins. It is further
+  evidence that the 40-count Mane Meter is a base-game mechanic wearing a
+  meter's clothes (see PHASE-0-1-FINDINGS.md §5.2).
+
+Both prices are asserted EV-neutral by test, and the bought round is *literally
+the same code path* as the spun one — the free-spin loop and the Hold & Win are
+shared functions, so a bought feature cannot silently diverge from the feature
+whose EV set the price.
+
+Buy-bonus mechanics are prohibited in several regulated markets (the UK among
+them). Ship behind a jurisdiction flag.
 
 ---
 

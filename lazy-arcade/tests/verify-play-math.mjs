@@ -37,6 +37,7 @@ const exported = [
   "spinPride", "spinCluster", "spinVault", "buildStrip",
   "CONF", "PAYS", "LINES", "SYM", "prideEval", "clusterFind",
   "payout", "pRarer", "pCommoner", "MIN_P", "HOUSE",
+  "swapFee", "buyFeature", "BUY_PRICE", "ANTE", "anteStrips",
 ];
 const M = new Function(`${mathOnly}\nreturn {${exported.join(",")}};`)();
 
@@ -173,6 +174,47 @@ console.log("\nRTP convergence (loose -- catches porting errors, not calibration
     check(`${game} respects max win cap`, maxWin <= cap + 1e-6,
           `max ${maxWin.toFixed(1)}x vs cap ${cap}x`);
   }
+}
+
+/* ------------------------------------------- 5. ante + buy are EV-neutral */
+console.log("\nAnte and buy-feature pricing");
+{
+  const seed = new Uint8Array(32).map((_, i) => (i * 53 + 7) & 0xff);
+
+  // A bought round must return exactly what spinning for it returns. Under-price
+  // it and the button is an arbitrage on the bankroll.
+  for (const [game, spins] of [["pride", 120000], ["traitvault", 200000]]) {
+    let sum = 0, sumSq = 0;
+    for (let n = 0; n < spins; n++) {
+      const out = M.buyFeature(M.makeRng(seed, "buy", n, game), game);
+      const t = out.base + out.feature;
+      sum += t; sumSq += t * t;
+    }
+    const ev = sum / spins;
+    const vol = Math.sqrt(Math.max(0, sumSq / spins - ev * ev));
+    const ci = 1.96 * vol / Math.sqrt(spins);
+    const rtp = ev / M.BUY_PRICE[game];
+    check(`${game} buy-feature RTP`, Math.abs(rtp - 0.97) < 3 * ci / M.BUY_PRICE[game] + 0.01,
+          `${rtp.toFixed(4)} at price ${M.BUY_PRICE[game]}x (EV ${ev.toFixed(3)}x)`);
+  }
+
+  // Ante: extra scatter supply paid for with a solved stake.
+  const strips = M.anteStrips();
+  let sum = 0, sumSq = 0, trig = 0;
+  const spins = 300000;
+  for (let n = 0; n < spins; n++) {
+    const out = M.spinPride(M.makeRng(seed, "ante", n, "pride"), strips);
+    const t = out.base + out.feature;
+    sum += t; sumSq += t * t;
+    if (out.fs) trig++;
+  }
+  const ret = sum / spins;
+  const vol = Math.sqrt(Math.max(0, sumSq / spins - ret * ret));
+  const ci = 1.96 * vol / Math.sqrt(spins);
+  const rtp = ret / M.ANTE.pride.stake;
+  check("pride ante RTP at solved stake",
+        Math.abs(rtp - 0.97) < 3 * ci + 0.01,
+        `${rtp.toFixed(4)} at stake ${M.ANTE.pride.stake}x, feature 1 in ${(spins/Math.max(1,trig)).toFixed(0)}`);
 }
 
 console.log(
