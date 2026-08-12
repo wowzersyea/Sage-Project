@@ -74,15 +74,12 @@ export const OPERATOR_LIONS_CHAIN = "ethereum-mainnet" as const;
 /**
  * A second operator wallet, added 2026-08-11 to widen rarity coverage in Hi/Lo.
  *
- * UNCONFIRMED ADDRESS. The operator named the OpenSea profile
- * "LazyTerminatorsV2"; the address below was inferred by scraping that page and
- * then corroborated on-chain (it holds 47 Lions and 1 Cub, and no other
- * candidate on the page holds any). That is strong but it is not proof of
- * ownership, and licensing depends on it -- confirm the address directly with
- * the operator before mainnet.
+ * CONFIRMED by the operator. Originally inferred from the OpenSea profile
+ * "LazyTerminatorsV2" and corroborated on-chain (47 Lions, 1 Cub; no other
+ * candidate on that page holds any), then confirmed directly.
  */
 export const OPERATOR_WALLET_2 = "0x5d466e6f2b4ae0b2256574e2268c777f114297b2" as const;
-export const OPERATOR_WALLET_2_CONFIRMED = false;
+export const OPERATOR_WALLET_2_CONFIRMED = true;   // confirmed by the operator
 
 /** 73 in the primary wallet + 47 in the second. */
 export const OPERATOR_LIONS_COUNT_AT_INGEST = 120;
@@ -97,6 +94,16 @@ export const OPERATOR_CUBS_COUNT_AT_INGEST_TOTAL = 64;
  */
 export const LIONS_TOTAL_SUPPLY_ONCHAIN = 10_080;
 export const LIONS_RARITY_BASIS = 9_999;
+
+/**
+ * Lazy Drinks, ERC-1155. id 0 = Juice, 1 = Milk, 2 = Special.
+ * The operator holds 11 Juice and ZERO Milk/Special on-chain; Milk art is used
+ * on asserted permission rather than holdings (see packages/assets/symbols.json).
+ * That distinction is deliberate -- it is the only art in the build whose
+ * rights the licensing gate cannot verify for itself.
+ */
+export const LAZY_DRINKS_CONTRACT = "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc" as const;
+export const OPERATOR_DRINKS_HELD = { juice: 11, milk: 0, special: 0 } as const;
 
 /** Hi/Lo rarity ranks: 0..100 inclusive, equal-population buckets. */
 export const HILO_RARITY_RANKS = 101;

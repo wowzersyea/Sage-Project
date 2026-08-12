@@ -138,11 +138,13 @@
       "id": "CUB:L1",
       "tier": "low",
       "game": "cubcluster",
-      "source": "COMMISSIONED",
-      "status": "BLOCKED_PENDING_ART",
-      "reason": "Lazy Milk. The Lazy Drinks collection (0x65f9f7f4...1cbc, ERC-1155) holds the real art at token id 1, but the operator owns ZERO Milk and zero Special -- only 11 Juice (id 0). Milk art is therefore not licensed to this project, exactly like WILD. Acquiring a single Lazy Milk unlocks it and the builder picks it up automatically.",
-      "note": "highest-paying low symbol in Cub Cluster, by request",
-      "brief": "Original milk carton in Lazy house style until a Lazy Milk is held."
+      "source": "ASSERTED_PERMISSION",
+      "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
+      "tokenId": 1,
+      "status": "OK",
+      "reason": "Lazy Milk, real Lazy Drinks NFT art. The operator holds ZERO of token id 1 on-chain and has asserted separate permission to use it. Recorded as ASSERTED_PERMISSION rather than OWNED_DRINK so the provenance is not misread later as verified ownership.",
+      "verification": "none on-chain; rests on the operator's statement",
+      "note": "highest-paying low symbol in Cub Cluster, by request"
     },
     {
       "id": "CUB:L2",

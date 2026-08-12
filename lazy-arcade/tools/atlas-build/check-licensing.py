@@ -51,6 +51,7 @@ def main() -> int:
 
     violations: list[str] = []
     blocked: list[str] = []
+    asserted: list[str] = []
     ok = 0
 
     for sym in symbols:
@@ -112,6 +113,16 @@ def main() -> int:
             else:
                 ok += 1
 
+        elif source == "ASSERTED_PERMISSION":
+            # Rights claimed by the operator rather than proven by holdings.
+            # Allowed, but surfaced on every run: this is the one category the
+            # gate cannot actually verify, so it must never pass quietly.
+            if not sym.get("reason"):
+                violations.append(f"{sid}: ASSERTED_PERMISSION requires a documented reason")
+            else:
+                asserted.append(f"{sid} ({sym.get('contract','?')} #{sym.get('tokenId','?')})")
+                ok += 1
+
         elif source == "COMMISSIONED":
             # Original art carries no trait dependency, but it must not quietly
             # claim a trait it has no rights to.
@@ -128,6 +139,12 @@ def main() -> int:
           f"{len(licensed_traits)} Lion traits / {len(owned_token_ids)} Lions, "
           f"{len(licensed_cub_traits)} Cub traits / {len(owned_cub_ids)} Cubs")
     print(f"  cleared : {ok}")
+
+    if asserted:
+        print(f"  asserted: {len(asserted)} rights claimed by the operator, NOT verifiable "
+              f"on-chain -- confirm before mainnet")
+        for a in asserted:
+            print(f"      - {a}")
 
     if blocked:
         print(f"  blocked : {len(blocked)} (needs commissioned art before shipping)")
