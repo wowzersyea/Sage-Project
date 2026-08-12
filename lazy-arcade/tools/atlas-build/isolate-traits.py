@@ -68,6 +68,20 @@ BAND = {
     "Bodygear": (0.00, 0.58, 1.00, 1.00),
 }
 
+# Cubs sit lower and smaller in frame, so their bands are shifted down.
+CUB_BAND = {
+    "Headgear": (0.18, 0.24, 0.82, 0.58),
+    "Eyes":     (0.24, 0.42, 0.76, 0.66),
+    "Mouth":    (0.22, 0.52, 0.78, 0.80),
+    "Bodygear": (0.06, 0.70, 0.94, 1.00),
+}
+
+# (symbol, category, value, collection)
+CUB_TARGETS = [
+    ("M1", "Headgear", "LAZY Hat", "cub"),
+    ("M2", "Mouth",    "Money Mouth", "cub"),
+]
+
 TARGETS = [
     ("L1", "Headgear", "Crown"),
     ("L2", "Bodygear", "Hawaiian Shirt"),
@@ -152,9 +166,9 @@ def diverse(candidates, traits, limit):
     return out
 
 
-def band_mask(cat):
+def band_mask(cat, collection="lion"):
     m = Image.new("L", (R, R), 0)
-    b = BAND[cat]
+    b = (CUB_BAND if collection == "cub" else BAND)[cat]
     ImageDraw.Draw(m).rectangle([int(b[0]*R), int(b[1]*R), int(b[2]*R), int(b[3]*R)], fill=255)
     return m
 
@@ -173,8 +187,8 @@ def geodesic(seed, mask, iters=45):
     return cur
 
 
-def isolate(base_id, holders, non_holders, cat, tol=12, ntol=26):
-    band = band_mask(cat)
+def isolate(base_id, holders, non_holders, cat, tol=12, ntol=26, collection="lion"):
+    band = band_mask(cat, collection)
     base = load(base_id)
 
     agree = band.copy()
