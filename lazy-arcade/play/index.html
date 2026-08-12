@@ -8,6 +8,7 @@
   --cab-2:#150D20;
   --reel-1:#1B1226;
   --reel-2:#120B1A;
+  --screen-edge:#3A2452;
   --line:#442C63;
   --ink:#F6EEE0;
   --muted:#A192B8;
@@ -17,24 +18,28 @@
   --data:#63B7F0;
   --win:#5FE39B;
   --hot:#FF5E7A;
+  --panel:#1E1230;
+  --panel-2:#150C20;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --cell:78px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* Scene sits behind the shell. body keeps an explicit painted colour so the
+   page never borrows the host's ground if the canvas is slow to appear. */
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
+.wrap{position:relative;z-index:1}
 body{
-  background:
-    radial-gradient(120% 80% at 50% -10%, #3A2154 0%, rgba(58,33,84,0) 60%),
-    radial-gradient(90% 60% at 50% 110%, #2A1140 0%, rgba(42,17,64,0) 55%),
-    var(--ground);
+  background:var(--ground);
   color:var(--ink);font-family:var(--sans);line-height:1.45;
   padding:clamp(10px,2vw,22px);min-height:100vh;
 }
 .wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 
 /* ---------------- masthead ---------------- */
-.mast{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mast{display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative;padding:6px 10px;
+      border-radius:12px;background:radial-gradient(70% 160% at 20% 50%,rgba(0,0,0,.45),rgba(0,0,0,0) 70%)}
 .logo{font-weight:900;font-size:clamp(18px,3.2vw,27px);letter-spacing:.14em;
       text-transform:uppercase;line-height:1;
       background:linear-gradient(180deg,var(--gold-3),var(--gold) 45%,var(--gold-2));
@@ -42,7 +47,7 @@ body{
       filter:drop-shadow(0 2px 0 rgba(0,0,0,.55))}
 .games{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .tab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-     background:linear-gradient(180deg,#2E1C44,#1B1028);color:var(--muted);
+     background:linear-gradient(180deg,var(--panel),var(--panel-2));color:var(--muted);
      border:1px solid var(--line);border-radius:7px;padding:8px 12px;cursor:pointer;
      transition:color .15s,border-color .15s,transform .1s}
 .tab:hover{color:var(--ink);border-color:var(--gold-2)}
@@ -54,6 +59,7 @@ body{
 /* ---------------- cabinet ---------------- */
 .cabinet{position:relative;border-radius:16px;padding:clamp(9px,1.6vw,15px);
   background:linear-gradient(180deg,var(--cab-1),var(--cab-2));
+  backdrop-filter:blur(3px);
   border:1px solid var(--line);
   box-shadow:0 0 0 1px rgba(243,195,74,.16), 0 24px 60px -24px #000,
              inset 0 1px 0 rgba(255,255,255,.06)}
@@ -67,7 +73,7 @@ body{
 
 .screen{position:relative;border-radius:10px;overflow:hidden;
   background:linear-gradient(180deg,var(--reel-1),var(--reel-2));
-  border:1px solid #3A2452;
+  border:1px solid var(--screen-edge);
   box-shadow:inset 0 10px 26px -12px #000, inset 0 -10px 26px -12px #000}
 .reels{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:2px}
 .reel{position:relative;overflow:hidden;height:calc(var(--cell)*4);
@@ -111,14 +117,14 @@ body{
   background:rgba(8,5,14,.86);padding:14px}
 .modal.on{display:flex}
 .modal .sheet{max-width:520px;width:100%;max-height:100%;overflow-y:auto;
-  background:linear-gradient(180deg,#241636,#170E22);border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
   border-radius:12px;padding:16px}
 .modal h4{margin:0 0 10px;font-family:var(--mono);font-size:12px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--gold)}
 .modal #infoRules{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;margin:10px 0}
 .modal #infoRules b{color:var(--ink)}
 .autopanel{display:none;gap:14px;flex-wrap:wrap;padding:9px 12px;margin-bottom:8px;
-  background:#1B1028;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
   font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em}
 .autopanel.on{display:flex}
 .autopanel select{background:#241636;color:var(--ink);border:1px solid var(--line);
@@ -152,7 +158,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 /* meter strip above reels */
 .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
         font-family:var(--mono);font-size:11px;color:var(--muted)}
-.chip{background:#1B1028;border:1px solid var(--line);border-radius:999px;
+.chip{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;
       padding:4px 11px;letter-spacing:.08em;text-transform:uppercase}
 .chip b{color:var(--gold);font-variant-numeric:tabular-nums}
 .chip.live{border-color:var(--gold);color:var(--gold-3);
@@ -164,7 +170,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 
 /* ---------------- controls ---------------- */
 .deck{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
-      background:linear-gradient(180deg,#1E1230,#150C20);border:1px solid var(--line);
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
       border-radius:12px;padding:11px 13px}
 @media(max-width:700px){.deck{grid-template-columns:1fr 1fr;gap:10px}
   .deck .spinwrap{grid-column:1/-1;order:9}}
@@ -185,7 +191,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .spin:focus-visible{outline:3px solid var(--data);outline-offset:3px}
 .mini{display:flex;flex-direction:column;gap:6px}
 .btn{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
-     background:#26173A;color:var(--ink);border:1px solid var(--line);border-radius:7px;
+     background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;
      padding:8px 11px;cursor:pointer;transition:border-color .15s,background .15s;white-space:nowrap}
 .btn:hover:not(:disabled){border-color:var(--gold-2);background:#31204A}
 .btn[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold),var(--gold-2));
@@ -193,7 +199,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn:focus-visible{outline:2px solid var(--data);outline-offset:2px}
 .betrow{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted)}
-.betrow select{background:#26173A;color:var(--ink);border:1px solid var(--line);
+.betrow select{background:var(--panel);color:var(--ink);border:1px solid var(--line);
   border-radius:7px;padding:8px 9px;font-family:var(--mono);font-size:12px;font-weight:700}
 
 /* ---------------- hi/lo ---------------- */
@@ -212,13 +218,13 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
 .hlcard .portrait.flip img{animation:flip .42s ease-out}
 .hlcard .portrait .back{width:76%;height:76%;border-radius:12px;
-  background:linear-gradient(150deg,#2E1C44,#180E26);border:1px solid var(--line);
+  background:linear-gradient(150deg,var(--panel),var(--panel-2));border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;color:var(--muted);
   font-family:var(--mono);font-size:26px}
 .hlcard .of{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
 .hlhist{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:10px;min-height:34px}
 .hlhist .h{display:flex;flex-direction:column;align-items:center;gap:1px;
-  background:#1B1028;border:1px solid var(--line);border-radius:6px;padding:3px 5px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:3px 5px;
   font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1.1}
 .hlhist .h img{width:22px;height:22px;object-fit:contain}
 .hlhist .h.up{border-color:var(--win);color:var(--win)}
@@ -227,7 +233,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .hlextra .btn small{display:block;font-size:9px;color:var(--gold);letter-spacing:0;text-transform:none}
 .hlbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .hlbtns .big{display:flex;flex-direction:column;align-items:center;gap:3px;padding:15px 8px;
-  border-radius:11px;border:1px solid var(--line);background:linear-gradient(180deg,#2A1940,#1A1028);
+  border-radius:11px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--panel-2));
   color:var(--ink);cursor:pointer;font-family:var(--mono);font-size:13px;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;transition:border-color .15s,transform .08s}
 .hlbtns .big:hover:not(:disabled){border-color:var(--gold);transform:translateY(-2px)}
@@ -236,7 +242,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .hlbtns .big:disabled small{color:var(--hot)}
 
 /* ---------------- bench drawer ---------------- */
-details.bench{background:#150D20;border:1px solid var(--line);border-radius:12px;padding:0}
+details.bench{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:0}
 details.bench>summary{cursor:pointer;padding:11px 14px;font-family:var(--mono);font-size:11px;
   letter-spacing:.12em;text-transform:uppercase;color:var(--muted);list-style:none}
 details.bench>summary::-webkit-details-marker{display:none}
@@ -244,11 +250,11 @@ details.bench>summary::before{content:"▸ ";color:var(--gold)}
 details.bench[open]>summary::before{content:"▾ "}
 .benchbody{padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:760px){.benchbody{grid-template-columns:1fr}}
-.card{background:#1B1028;border:1px solid var(--line);border-radius:9px;padding:12px}
+.card{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:12px}
 .card h3{margin:0 0 9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--muted);font-weight:600}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.st{background:#241636;border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+.st{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
 .st .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .st .v{font-family:var(--mono);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px}
 .log{font-family:var(--mono);font-size:10px;max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
@@ -256,7 +262,7 @@ details.bench[open]>summary::before{content:"▾ "}
 .log .w{color:var(--win)} .log .l{color:var(--muted)}
 .fair{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;display:flex;flex-direction:column;gap:6px}
 .fair b{display:block;color:var(--ink);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
-.fair input{width:100%;background:#241636;color:var(--ink);border:1px solid var(--line);
+.fair input{width:100%;background:var(--panel);color:var(--ink);border:1px solid var(--line);
   border-radius:6px;padding:6px;font-family:var(--mono);font-size:10px}
 table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px}
 th,td{text-align:right;padding:3px 4px;border-bottom:1px solid #241636}
@@ -267,12 +273,18 @@ td{font-variant-numeric:tabular-nums}
 .note{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6;
   border-left:2px solid var(--gold-2);padding-left:9px;margin:9px 0 0}
 .note b{color:var(--gold)}
+/* The footer is the one block of body text sitting directly on the backdrop,
+   so it carries its own ground -- on the pool and beach themes the sky behind
+   it is bright and unpainted text disappears into it. */
 footer{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;
-  border-top:1px solid var(--line);padding-top:12px}
+  border:1px solid var(--line);border-radius:12px;padding:12px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  box-shadow:0 10px 30px -14px #000}
 footer b{color:var(--hot)}
 .hidden{display:none!important}
 </style>
 
+<canvas id="bg" aria-hidden="true"></canvas>
 <div class="wrap">
   <div class="mast">
     <div class="logo">Lazy Arcade</div>
@@ -1266,6 +1278,229 @@ function stopMusic(){
   setTimeout(()=>{ try{ m.voices.forEach(v=>v.stop()); m.lfo.stop(); }catch(e){} },700);
 }
 
+/* ============================== backdrop ================================ */
+/* Per-game scenery. Canvas rather than images: the CSP blocks external assets
+   and a gradient alone cannot do moving water. Rendered at half resolution and
+   throttled -- it is ambient, and the reels need the frame budget. */
+const THEMES={
+  pride:{      // Lazy Lions: beach at golden hour
+    ground:"#0E1420", cab1:"#1C2A3A", cab2:"#101A26", line:"#33506B",
+    panel:"#16283A", panel2:"#0E1B28",
+    reel1:"#132A3D", reel2:"#0A1724", edge:"#2C4A66",
+    sky:["#FFCE7A","#FF9E5E","#E4653F"], water:["#1E7FA8","#0E4F73"],
+    sand:"#E8C489", sun:"#FFF0B8", scene:"beach"},
+  cubcluster:{ // Lazy Cubs: pool
+    ground:"#08161C", cab1:"#123443", cab2:"#0A2029", line:"#2C6E85",
+    panel:"#0F2E3B", panel2:"#081C24",
+    reel1:"#0C2E3D", reel2:"#05161F", edge:"#1E5A70",
+    sky:["#BFEFF5","#7FD8E8","#3FB3CC"], water:["#37C6DE","#0E7C99"],
+    sand:"#DCE9EC", sun:"#FFF3B8", scene:"pool"},   // warm: white on pale cyan reads as a grey blob
+  traitvault:{ // warm villa interior, gold light
+    ground:"#17110A", cab1:"#33240F", cab2:"#1B1308", line:"#6B4C1C",
+    panel:"#2B1E0C", panel2:"#170F06",
+    reel1:"#2A1D08", reel2:"#150E04", edge:"#5C4116",
+    sky:["#FFD98A","#E0A244","#8A5A16"], water:["#7A4E15","#3A2409"],
+    sand:"#C79A4E", sun:"#FFF3CF", scene:"vault"},
+  hilo:{       // night beach club
+    ground:"#0A0A18", cab1:"#1B1B38", cab2:"#0D0D1E", line:"#3B3B72",
+    panel:"#17173A", panel2:"#0C0C1E",
+    reel1:"#15153A", reel2:"#09091B", edge:"#33336B",
+    sky:["#2A2A64","#3D2E6E","#120F26"], water:["#1B2A63","#0A1230"],
+    sand:"#2A2748", sun:"#DDE6FF", scene:"night"}
+};
+const bgc=document.getElementById("bg"), bgx=bgc.getContext("2d");
+let bgTheme="pride", bgW=0, bgH=0, bgT=0, bgLast=0;
+const reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function bgResize(){
+  const d=Math.min(window.devicePixelRatio||1,2)*0.5;   // half-res: it is a blur anyway
+  bgW=Math.max(2,Math.round(window.innerWidth*d));
+  bgH=Math.max(2,Math.round(window.innerHeight*d));
+  bgc.width=bgW; bgc.height=bgH;
+}
+function vgrad(y0,y1,stops){
+  const g=bgx.createLinearGradient(0,y0,0,y1);
+  stops.forEach((c,i)=>g.addColorStop(i/(stops.length-1),c));
+  return g;
+}
+function drawBackdrop(t){
+  const th=THEMES[bgTheme]||THEMES.pride, W=bgW, H=bgH;
+  const horizon = th.scene==="vault" ? H*0.72 : H*0.52;
+
+  bgx.fillStyle=vgrad(0,horizon,th.sky); bgx.fillRect(0,0,W,horizon);
+
+  if(th.scene!=="vault"){
+    // sun / moon with a soft bloom
+    // Hard left: the cabinet is centred and near-full-width, so anything past
+    // ~8% is hidden behind it. Only the bloom is meant to spill under it.
+    const sx=W*0.055, sy=horizon-H*0.13, r=Math.min(W,H)*0.075;
+    const glow=bgx.createRadialGradient(sx,sy,0,sx,sy,r*4.2);
+    glow.addColorStop(0,th.sun); glow.addColorStop(0.18,th.sun);
+    glow.addColorStop(1,"rgba(255,255,255,0)");
+    bgx.globalAlpha=0.55; bgx.fillStyle=glow;
+    bgx.beginPath(); bgx.arc(sx,sy,r*4.2,0,6.283); bgx.fill();
+    bgx.globalAlpha=1; bgx.fillStyle=th.sun;
+    bgx.beginPath(); bgx.arc(sx,sy,r,0,6.283); bgx.fill();
+  }
+  if(th.scene==="night"){
+    bgx.fillStyle="rgba(255,255,255,.75)";
+    for(let i=0;i<70;i++){
+      const x=(i*137.5)%W, y=(i*71.3)%(horizon*0.85);
+      const tw=0.4+0.6*Math.abs(Math.sin(t*0.0007+i));
+      bgx.globalAlpha=tw*0.7; bgx.fillRect(x,y,1.4,1.4);
+    }
+    bgx.globalAlpha=1;
+  }
+
+  // water / floor
+  bgx.fillStyle=vgrad(horizon,H,th.water); bgx.fillRect(0,horizon,W,H-horizon);
+
+  if(th.scene==="pool"){
+    const deck=H*0.88;                       // water runs horizon -> deck
+    // Caustics as a crossing lattice rather than stacked horizontals: parallel
+    // lines at one angle read as stripes, two families that intersect read as
+    // the cell network light actually makes on a pool floor.
+    bgx.save();
+    bgx.beginPath(); bgx.rect(0,horizon,W,deck-horizon); bgx.clip();
+    bgx.globalCompositeOperation="lighter";
+    const span=W+ (deck-horizon);
+    for(let dir=-1;dir<=1;dir+=2){
+      bgx.strokeStyle = dir<0 ? "rgba(190,250,255,.11)" : "rgba(255,255,255,.13)";
+      bgx.lineWidth=Math.max(1,H*0.0035);
+      for(let i=0;i<30;i++){
+        const off=-(deck-horizon)+ (i/30)*span*1.1;
+        bgx.beginPath();
+        for(let s=0;s<=span;s+=14){
+          const x = dir>0 ? off+s : W-off-s;
+          const y = horizon+s*0.55
+                  + Math.sin(s*0.010 + t*0.0012*dir + i*0.9)*H*0.016
+                  + Math.sin(s*0.027 - t*0.0008*dir)*H*0.007;
+          if(y>deck) break;
+          s?bgx.lineTo(x,y):bgx.moveTo(x,y);
+        }
+        bgx.stroke();
+      }
+    }
+    bgx.globalCompositeOperation="source-over";
+    bgx.restore();
+    // Coping, then the tile band that sits just under it — the two together are
+    // what makes it read "pool" and not "sea".
+    bgx.fillStyle="rgba(20,110,140,.55)"; bgx.fillRect(0,horizon,W,H*0.022);
+    for(let x=0;x<W;x+=Math.max(8,W*0.022)){
+      bgx.fillStyle="rgba(255,255,255,.10)";
+      bgx.fillRect(x+1,horizon+H*0.003,Math.max(5,W*0.015),H*0.016);
+    }
+    bgx.fillStyle=th.sand; bgx.fillRect(0,horizon-H*0.020,W,H*0.020);
+    // Deck, with a ring float bobbing at the near edge.
+    bgx.fillStyle=th.sand; bgx.fillRect(0,deck,W,H-deck);
+    bgx.fillStyle="rgba(0,0,0,.10)"; bgx.fillRect(0,deck,W,H*0.004);
+    const fx=W*0.055, fy=deck-H*0.05+Math.sin(t*0.0009)*H*0.008, fr=H*0.055;
+    // Stroked, not filled-and-punched: an erase would cut a hole clean through
+    // the water to the page behind it.
+    bgx.save(); bgx.translate(fx,fy); bgx.scale(1,0.42);
+    bgx.lineWidth=fr*0.52;
+    for(let q=0;q<4;q++){
+      bgx.strokeStyle = q%2 ? "rgba(255,255,255,.88)" : "rgba(226,74,74,.88)";
+      bgx.beginPath(); bgx.arc(0,0,fr*0.72,q*1.5708,(q+1)*1.5708); bgx.stroke();
+    }
+    bgx.restore();
+  }
+  if(th.scene==="beach"){
+    // sun glitter path + rolling surf lines
+    bgx.globalCompositeOperation="lighter";
+    bgx.fillStyle="rgba(255,236,180,.10)";
+    for(let i=0;i<40;i++){
+      const y=horizon+(i/40)*(H-horizon)*0.85;
+      const w=W*0.13*(1-i/50)*(0.6+0.4*Math.sin(t*0.002+i));
+      bgx.fillRect(W*0.055-w/2,y,w,Math.max(1,H*0.004));   // tracks the sun above
+    }
+    bgx.globalCompositeOperation="source-over";
+    bgx.strokeStyle="rgba(255,255,255,.22)"; bgx.lineWidth=Math.max(1,H*0.003);
+    for(let i=0;i<7;i++){
+      const y=horizon+(i/7)*(H-horizon)*0.8;
+      bgx.beginPath();
+      for(let x=0;x<=W;x+=14){
+        const yy=y+Math.sin(x*0.009+t*0.0013+i)*H*0.008;
+        x?bgx.lineTo(x,yy):bgx.moveTo(x,yy);
+      }
+      bgx.stroke();
+    }
+    // sand
+    bgx.fillStyle=th.sand; bgx.beginPath();
+    bgx.moveTo(0,H); bgx.lineTo(0,H*0.86);
+    for(let x=0;x<=W;x+=20) bgx.lineTo(x,H*0.86+Math.sin(x*0.006+t*0.0004)*H*0.012);
+    bgx.lineTo(W,H); bgx.closePath(); bgx.fill();
+    // palm silhouettes
+    bgx.fillStyle="rgba(10,20,14,.72)";
+    for(const px of [W*0.08,W*0.93]){
+      const base=H*0.88, top=base-H*0.34, lean=px<W/2?1:-1;
+      bgx.beginPath(); bgx.moveTo(px-H*0.008,base);
+      bgx.quadraticCurveTo(px+lean*H*0.02,base-H*0.18,px+lean*H*0.05,top);
+      bgx.lineTo(px+lean*H*0.05+H*0.008,top);
+      bgx.quadraticCurveTo(px+lean*H*0.02+H*0.006,base-H*0.18,px+H*0.008,base);
+      bgx.closePath(); bgx.fill();
+      for(let f=0;f<6;f++){
+        const a=(-0.35+f*0.42)*(lean>0?1:-1)-0.35, L=H*0.14;
+        const ox=px+lean*H*0.05, oy=top;
+        bgx.beginPath(); bgx.moveTo(ox,oy);
+        bgx.quadraticCurveTo(ox+Math.cos(a)*L*0.6,oy+Math.sin(a)*L*0.6-L*0.25,
+                             ox+Math.cos(a)*L,oy+Math.sin(a)*L);
+        bgx.quadraticCurveTo(ox+Math.cos(a)*L*0.6,oy+Math.sin(a)*L*0.6+L*0.10,ox,oy);
+        bgx.closePath(); bgx.fill();
+      }
+    }
+  }
+  if(th.scene==="vault"){
+    // warm light shafts from above
+    bgx.globalCompositeOperation="lighter";
+    for(let i=0;i<7;i++){
+      const x=W*(0.1+i*0.13)+Math.sin(t*0.0004+i)*W*0.01;
+      const g=bgx.createLinearGradient(x,0,x+W*0.05,horizon);
+      g.addColorStop(0,"rgba(255,224,150,.16)"); g.addColorStop(1,"rgba(255,200,120,0)");
+      bgx.fillStyle=g; bgx.beginPath();
+      bgx.moveTo(x,0); bgx.lineTo(x+W*0.05,0);
+      bgx.lineTo(x+W*0.13,horizon); bgx.lineTo(x-W*0.02,horizon);
+      bgx.closePath(); bgx.fill();
+    }
+    bgx.globalCompositeOperation="source-over";
+  }
+
+  // vignette keeps the cabinet the brightest thing on screen
+  const vig=bgx.createRadialGradient(W/2,H*0.45,Math.min(W,H)*0.25,W/2,H*0.5,Math.max(W,H)*0.75);
+  vig.addColorStop(0,"rgba(0,0,0,0)"); vig.addColorStop(1,"rgba(0,0,0,.5)");
+  bgx.fillStyle=vig; bgx.fillRect(0,0,W,H);
+  // On a phone the cabinet stops well short of the fold, leaving a tall band of
+  // bare scene under it. Weighting the bottom dark keeps that band quiet
+  // instead of a slab of bright water competing with the reels.
+  const fade=bgx.createLinearGradient(0,H*0.48,0,H);
+  fade.addColorStop(0,"rgba(0,0,0,0)"); fade.addColorStop(0.55,"rgba(0,0,0,.34)");
+  fade.addColorStop(1,"rgba(0,0,0,.60)");
+  bgx.fillStyle=fade; bgx.fillRect(0,Math.floor(H*0.48),W,H);
+}
+function bgFrame(now){
+  if(now-bgLast>42){ bgLast=now; bgT=now; drawBackdrop(now); }   // ~24fps, ambient
+  if(!reduceMotion) requestAnimationFrame(bgFrame);
+}
+function setTheme(game){
+  bgTheme = THEMES[game] ? game : "pride";
+  const th=THEMES[bgTheme], root=document.documentElement.style;
+  root.setProperty("--ground",th.ground);
+  root.setProperty("--cab-1",th.cab1);
+  root.setProperty("--cab-2",th.cab2);
+  root.setProperty("--line",th.line);
+  root.setProperty("--panel",th.panel);
+  root.setProperty("--panel-2",th.panel2);
+  // The reel field is themed too. Left purple it read as a hole punched through
+  // the cabinet, which is exactly what the backdrop was meant to stop.
+  root.setProperty("--reel-1",th.reel1);
+  root.setProperty("--reel-2",th.reel2);
+  root.setProperty("--screen-edge",th.edge);
+  drawBackdrop(performance.now());
+}
+window.addEventListener("resize",()=>{ bgResize(); drawBackdrop(performance.now()); });
+bgResize();
+if(reduceMotion) drawBackdrop(0); else requestAnimationFrame(bgFrame);
+
 /* ============================== particles =============================== */
 const fx=document.getElementById("fx"), fxc=fx.getContext("2d");
 let parts=[], fxRunning=false;
@@ -1788,6 +2023,7 @@ function renderPaytable(){
 /* =============================== wiring ================================= */
 function selectGame(g){
   game=g; stopAuto=true; autoLeft=0;
+  setTheme(g);
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.game===g)));
   const isHilo=g==="hilo";
   $("reels").classList.toggle("hidden",isHilo);
