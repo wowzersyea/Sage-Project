@@ -1,5 +1,5 @@
 {
-  "note": "Symbol -> art source map. Every entry sourced from Lazy Lions or Lazy Cubs art MUST name a token or trait the operator actually holds; tools/atlas-build/check-licensing.py enforces this in CI (spec Sec. 5.3).",
+  "note": "Symbol -> art source map. Every entry sourced from Lazy Lions, Lazy Cubs or Lazy Drinks art MUST name a token or trait the operator actually holds; tools/atlas-build/check-licensing.py enforces this in CI (spec Sec. 5.3).",
   "rarityMethod": "statistical rarity: sum of 1/r_t across a token's traits, r_t = count_t / 10078",
   "symbols": [
     {
@@ -17,42 +17,142 @@
       "status": "OK",
       "reason": "The $LAZY coin is project branding, not a collection trait."
     },
-
-    { "id": "P1", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 2038, "status": "OK" },
-    { "id": "P2", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 1466, "status": "OK" },
-    { "id": "P3", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 1506, "status": "OK" },
-    { "id": "P4", "tier": "premium", "source": "OWNED_TOKEN", "tokenId": 3273, "status": "OK" },
-
-    { "id": "M1", "tier": "mid", "source": "TRAIT", "trait": "Headgear::Spinner Hat", "status": "OK" },
-    { "id": "M2", "tier": "mid", "source": "TRAIT", "trait": "Bodygear::Gold Chain", "status": "OK" },
-    { "id": "M3", "tier": "mid", "source": "TRAIT", "trait": "Eyes::Shades", "status": "OK" },
-    { "id": "M4", "tier": "mid", "source": "TRAIT", "trait": "Mouth::Big Smile", "status": "OK" },
-
-    { "id": "L1", "tier": "low", "source": "TRAIT", "trait": "Headgear::Crown", "status": "OK", "note": "highest-paying low symbol, by request" },
-    { "id": "L2", "tier": "low", "source": "TRAIT", "trait": "Bodygear::Hawaiian Shirt", "status": "OK" },
-    { "id": "L3", "tier": "low", "source": "TRAIT", "trait": "Mouth::Cigar", "status": "OK" },
-    { "id": "L4", "tier": "low", "source": "TRAIT", "trait": "Headgear::LAZY Hat", "status": "OK" },
-
-    { "id": "CUB:P1", "tier": "premium", "game": "cubcluster", "source": "OWNED_CUB", "tokenId": 21095, "status": "OK" },
-    { "id": "CUB:P2", "tier": "premium", "game": "cubcluster", "source": "OWNED_CUB", "tokenId": 3097, "status": "OK" },
-    { "id": "CUB:M1", "tier": "mid", "game": "cubcluster", "source": "CUB_TRAIT", "trait": "Headgear::LAZY Hat", "status": "OK" },
-    { "id": "CUB:M2", "tier": "mid", "game": "cubcluster", "source": "CUB_TRAIT", "trait": "Mouth::Money Mouth", "status": "OK" },
+    {
+      "id": "P1",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 2038,
+      "status": "OK"
+    },
+    {
+      "id": "P2",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1466,
+      "status": "OK"
+    },
+    {
+      "id": "P3",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1506,
+      "status": "OK"
+    },
+    {
+      "id": "P4",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 3273,
+      "status": "OK"
+    },
+    {
+      "id": "M1",
+      "tier": "mid",
+      "source": "TRAIT",
+      "trait": "Headgear::Spinner Hat",
+      "status": "OK"
+    },
+    {
+      "id": "M2",
+      "tier": "mid",
+      "source": "TRAIT",
+      "trait": "Bodygear::Gold Chain",
+      "status": "OK"
+    },
+    {
+      "id": "M3",
+      "tier": "mid",
+      "source": "TRAIT",
+      "trait": "Eyes::Shades",
+      "status": "OK"
+    },
+    {
+      "id": "M4",
+      "tier": "mid",
+      "source": "TRAIT",
+      "trait": "Mouth::Big Smile",
+      "status": "OK"
+    },
+    {
+      "id": "L1",
+      "tier": "low",
+      "source": "TRAIT",
+      "trait": "Headgear::Crown",
+      "status": "OK",
+      "note": "highest-paying low symbol, by request"
+    },
+    {
+      "id": "L2",
+      "tier": "low",
+      "source": "TRAIT",
+      "trait": "Bodygear::Hawaiian Shirt",
+      "status": "OK"
+    },
+    {
+      "id": "L3",
+      "tier": "low",
+      "source": "TRAIT",
+      "trait": "Mouth::Cigar",
+      "status": "OK"
+    },
+    {
+      "id": "L4",
+      "tier": "low",
+      "source": "TRAIT",
+      "trait": "Headgear::LAZY Hat",
+      "status": "OK"
+    },
+    {
+      "id": "CUB:P1",
+      "tier": "premium",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 21095,
+      "status": "OK"
+    },
+    {
+      "id": "CUB:P2",
+      "tier": "premium",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 3097,
+      "status": "OK"
+    },
+    {
+      "id": "CUB:M1",
+      "tier": "mid",
+      "game": "cubcluster",
+      "source": "CUB_TRAIT",
+      "trait": "Headgear::LAZY Hat",
+      "status": "OK"
+    },
+    {
+      "id": "CUB:M2",
+      "tier": "mid",
+      "game": "cubcluster",
+      "source": "CUB_TRAIT",
+      "trait": "Mouth::Money Mouth",
+      "status": "OK"
+    },
     {
       "id": "CUB:L1",
       "tier": "low",
       "game": "cubcluster",
       "source": "COMMISSIONED",
-      "status": "OK",
-      "reason": "Lazy Milk. Canon in the collection's lore -- a Cub is created from a Lion drinking Milk, Juice or a Lazy Special -- but it is not a trait on any token, so this is original art with no licensing dependency.",
-      "note": "highest-paying low symbol in Cub Cluster, by request"
+      "status": "BLOCKED_PENDING_ART",
+      "reason": "Lazy Milk. The Lazy Drinks collection (0x65f9f7f4...1cbc, ERC-1155) holds the real art at token id 1, but the operator owns ZERO Milk and zero Special -- only 11 Juice (id 0). Milk art is therefore not licensed to this project, exactly like WILD. Acquiring a single Lazy Milk unlocks it and the builder picks it up automatically.",
+      "note": "highest-paying low symbol in Cub Cluster, by request",
+      "brief": "Original milk carton in Lazy house style until a Lazy Milk is held."
     },
     {
       "id": "CUB:L2",
       "tier": "low",
       "game": "cubcluster",
-      "source": "COMMISSIONED",
+      "source": "OWNED_DRINK",
       "status": "OK",
-      "reason": "Lazy Juice. Same lore basis as Lazy Milk; original art."
+      "reason": "Lazy Juice, real NFT art. Operator holds 11 of token id 0.",
+      "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
+      "tokenId": 0
     }
   ]
 }

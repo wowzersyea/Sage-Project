@@ -101,6 +101,17 @@ def main() -> int:
             else:
                 ok += 1
 
+        elif source == "OWNED_DRINK":
+            # ERC-1155: holdings are a balance per token id, checked on-chain at
+            # ingest and recorded here. Juice is held; Milk and Special are not.
+            held = {0: 11}
+            if sym.get("tokenId") not in held:
+                violations.append(
+                    f"{sid}: Lazy Drinks token id {sym.get('tokenId')} is not held "
+                    f"(operator holds {sorted(held)})")
+            else:
+                ok += 1
+
         elif source == "COMMISSIONED":
             # Original art carries no trait dependency, but it must not quietly
             # claim a trait it has no rights to.

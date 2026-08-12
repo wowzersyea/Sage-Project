@@ -1053,16 +1053,23 @@ function symbolHTML(s,g){
   if(ART.has(key)) return ART.get(key);
   const id=SYM[s].id;
   let html;
-  // Real NFT art wins over the drawn placeholder wherever we have it. Lazy
-  // Juice is the operator's own Drinks NFT; Lazy Milk stays drawn because the
-  // operator holds none, and the licensing gate will not pass art we do not own.
-  const art=(SYMBOL_ART[g]&&SYMBOL_ART[g][id])||(SYMBOL_ART.default&&SYMBOL_ART.default[id]);
-  if(art) html=`<img src="${art.uri}" alt="${symName(s,g)}" draggable="false">`;
+  // Resolution order matters. Game-specific art wins; then the game's OWN
+  // drawn fallbacks; only then the shared default set.
+  //
+  // Falling through to the default was a real bug: Cub Cluster has no art for
+  // L1 (Lazy Milk, which the operator does not own), so it inherited the Lion
+  // Crown and put a crown on the Cub reels.
+  const gameArt=SYMBOL_ART[g]&&SYMBOL_ART[g][id];
+  if(gameArt) html=`<img src="${gameArt.uri}" alt="${symName(s,g)}" draggable="false">`;
   else if(g==="cubcluster"&&id==="L1") html=svgMilk();
   else if(g==="cubcluster"&&id==="L2") html=svgJuice();
-  else if(id==="WILD") html=svgWild();
-  else if(id==="SCAT") html=svgScatter();
-  else html=svgGem(id);
+  else{
+    const art=SYMBOL_ART.default&&SYMBOL_ART.default[id];
+    if(art) html=`<img src="${art.uri}" alt="${symName(s,g)}" draggable="false">`;
+    else if(id==="WILD") html=svgWild();
+    else if(id==="SCAT") html=svgScatter();
+    else html=svgGem(id);
+  }
   ART.set(key,html);
   return html;
 }
