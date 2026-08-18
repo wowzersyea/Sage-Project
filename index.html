@@ -482,6 +482,7 @@
         .tool-card.assessment { --card-accent: var(--sage-500); --card-accent-end: var(--sage-600); }
         .tool-card.medstudent { --card-accent: var(--accent-sky); --card-accent-end: #6a9eb3; }
         .tool-card.antimicrobial { --card-accent: var(--accent-coral); --card-accent-end: #c96a52; }
+        .tool-card.education { --card-accent: var(--sage-600); --card-accent-end: var(--sage-400); }
 
         .tool-icon {
             width: 56px;
@@ -507,6 +508,7 @@
         .tool-card.assessment .tool-icon { background: linear-gradient(135deg, rgba(127, 168, 130, 0.15), rgba(127, 168, 130, 0.25)); color: var(--sage-500); }
         .tool-card.medstudent .tool-icon { background: linear-gradient(135deg, rgba(129, 176, 196, 0.15), rgba(129, 176, 196, 0.25)); color: var(--accent-sky); }
         .tool-card.antimicrobial .tool-icon { background: linear-gradient(135deg, rgba(224, 122, 95, 0.15), rgba(224, 122, 95, 0.25)); color: var(--accent-coral); }
+        .tool-card.education .tool-icon { background: linear-gradient(135deg, rgba(143, 191, 146, 0.15), rgba(143, 191, 146, 0.25)); color: var(--sage-600); }
 
         .tool-card h3 {
             font-size: 1.25rem;
@@ -1529,6 +1531,29 @@
                     </div>
                     <div class="tool-action">
                         Start Assessment
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="discussant-draw/" class="tool-card education" style="text-decoration: none;">
+                    <div class="tool-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 3v9l6.4 6.4"/>
+                            <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    <h3>Discussant Draw</h3>
+                    <p>Two spinning wheels for morning report &mdash; one PGY-1 discussant, one senior. Drawn names are struck off so the same resident doesn&#39;t come up twice in a cycle.</p>
+                    <div class="tool-features">
+                        <span class="tool-feature">PGY-1 &amp; Senior Wheels</span>
+                        <span class="tool-feature">No-Repeat Cycle</span>
+                        <span class="tool-feature">Editable Roster</span>
+                    </div>
+                    <div class="tool-action">
+                        Spin the Wheel
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
