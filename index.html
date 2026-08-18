@@ -1712,6 +1712,8 @@
                   icon:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>' },
                 { label:'Antimicrobial Selection', href:'antimicrobial-selection/', color:'var(--accent-coral)',
                   icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
+                { label:'MR Wheel', href:'discussant-draw/', color:'#b8c46a',
+                  icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5.64" y1="5.64" x2="18.36" y2="18.36"/><line x1="18.36" y1="5.64" x2="5.64" y2="18.36"/>' },
                 { label:'Podcast', href:'#podcast', color:'#9d8cb8',
                   icon:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>' },
                 { label:'Mentee LC', href:'#mentee-lc', color:'#d48fa5',
@@ -1733,7 +1735,25 @@
             // Position the beads responsively: a wide staggered fan on desktop,
             // a compact 2-column grid on phones. Re-run on resize/orientation change.
             function layoutBeads(){
-                const narrow = window.matchMedia('(max-width: 880px)').matches;
+                const rows = Math.ceil(n / 2);
+                // Work out how wide the fan can be. Beads extend rightward from the
+                // origin, so the room on that side is short by one bead width. Without
+                // this the fixed 140px step walks the outermost beads off-screen once
+                // there are enough of them, and the body clips overflow-x.
+                const beadW = (beadEls[0] && beadEls[0].offsetWidth) || 128;
+                const beadH = (beadEls[0] && beadEls[0].offsetHeight) || 106;
+                const originX = beadsEl.getBoundingClientRect().left;
+                const room = Math.min(originX, window.innerWidth - originX - beadW) - 8;
+                const step = Math.min(140, room / Math.max(mid, 0.5));
+                // Phones — and any width where the fan would collide with itself — get
+                // the stacked grid instead.
+                const narrow = window.matchMedia('(max-width: 880px)').matches || step < 96;
+                // The grid stacks two per row; grow the capsule when the rows outrun
+                // the 620px height the stylesheet gives it, so the last row doesn't
+                // spill past the capsule and onto the section below.
+                const originY = beadsEl.getBoundingClientRect().top - nav.getBoundingClientRect().top;
+                if (narrow) nav.style.height = Math.max(620, originY + 60 + (rows - 1) * 118 + beadH + 8) + 'px';
+                else nav.style.removeProperty('height');
                 beadEls.forEach(function(a,i){
                     let tx, ty;
                     if (narrow){
@@ -1742,7 +1762,7 @@
                         tx = col * 84;
                         ty = 60 + row * 118;
                     } else {
-                        tx = (i - mid) * 140;
+                        tx = (i - mid) * step;
                         ty = 70 + (i % 2 === 1 ? 90 : 0);     // stagger odd beads downward
                     }
                     a.style.setProperty('--tx', tx.toFixed(1)+'px');
