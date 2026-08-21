@@ -312,6 +312,56 @@ console.log("\nAnticipation");
   await ctx.close();
 }
 
+/* ---------------------------------------------------------- win roll-up */
+// The roll-up ran for a flat 520ms whatever it was counting, so a 2x win and a
+// 500x win were celebrated for exactly the same length of time. Its DURATION is
+// how a slot tells you how much you won before you have read a digit.
+console.log("\nWin roll-up");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(async () => {
+    const el = document.getElementById("winOut");
+    const time = async (mult) => {
+      const t0 = performance.now();
+      await countUp(100 * mult, mult, 0);
+      return performance.now() - t0;
+    };
+    muted = true;
+    turbo = false;
+    const small = await time(2), mid = await time(50), big = await time(500);
+
+    // Skipping must land on the exact total, not wherever the ease had got to.
+    const t0 = performance.now();
+    const pending = countUp(4321, 500, 3);
+    await new Promise((r) => setTimeout(r, 120));
+    skipRollup = true;
+    await pending;
+    const skipped = performance.now() - t0;
+    const landed = el.textContent;
+
+    // Turbo has to stay short, or autoplay inherits a three-second roll-up.
+    turbo = true;
+    const turboBig = await time(500);
+    turbo = false;
+    return { small, mid, big, skipped, landed, turboBig, want: fmt(4321) };
+  });
+  check("a bigger win rolls up for longer", r.small < r.mid && r.mid < r.big,
+        `2x ${Math.round(r.small)}ms < 50x ${Math.round(r.mid)}ms < 500x ${Math.round(r.big)}ms`);
+  check("a big win gets a celebration, not a blink", r.big > 900, `${Math.round(r.big)}ms`);
+  // The curve must not saturate early. A small win is the one the player sees
+  // hundreds of times a session, and it has to get out of the way.
+  check("a small win gets out of the way", r.small < 800, `2x took ${Math.round(r.small)}ms`);
+  check("a big win is clearly longer than a mid one", r.big > r.mid * 1.25,
+        `500x ${Math.round(r.big)}ms vs 50x ${Math.round(r.mid)}ms`);
+  check("the roll-up is capped so a max win cannot stall the game", r.big <= 3400,
+        `${Math.round(r.big)}ms`);
+  check("a roll-up can be skipped", r.skipped < 400, `took ${Math.round(r.skipped)}ms`);
+  check("skipping lands on the exact total", r.landed === r.want,
+        `showed ${r.landed}, owed ${r.want}`);
+  check("turbo keeps the roll-up short", r.turboBig < 500, `${Math.round(r.turboBig)}ms`);
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- reel curve */
 console.log("\nReel curve");
 {

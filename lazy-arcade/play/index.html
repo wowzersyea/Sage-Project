@@ -3023,16 +3023,55 @@ async function showBanner(kind,amount,sub){
   await sleep(turbo?150:620);
   b.classList.remove("on");
 }
-async function countUp(target){
-  const el=$("winOut"), dur=turbo?180:520, t0=performance.now();
+/* The win roll-up.
+ *
+ * This ran for a flat 520ms no matter what it was counting, so a 2x win and a
+ * 500x win were counted in exactly the same breath -- the biggest moment in the
+ * game given no more room than the smallest. The roll-up IS the celebration in
+ * every machine worth copying; its LENGTH is how the machine tells you how much
+ * you won, before you have read a single digit.
+ *
+ * So the duration scales with the multiplier, log-shaped because wins are, and
+ * capped so a max win cannot hold the game hostage. It also eases out instead of
+ * running linear, which lets the final digits land rather than stop dead, and it
+ * carries the win tier into the tick pitch -- counterTick has always accepted a
+ * tier and always been passed zero.
+ *
+ * And it is skippable. An unskippable three-second roll-up is a fine thing once
+ * and an infuriating one on spin 400 of an autoplay, which is why every machine
+ * in this class lets you slam it to the total.
+ */
+let skipRollup=false;
+/* Roll-up length in ms, from the win multiplier.
+ *
+ * Tuned by measuring, not by taste. The first shape ran log10 at 1500ms/decade
+ * off a 340ms floor, which put a 2x win at 1.1 SECONDS and a 50x at nearly
+ * three -- it saturated so early that a modest win got almost the whole
+ * celebration a max win did, which defeats the entire point of scaling it.
+ *
+ * This lands roughly: 2x 0.6s, 15x (the first banner) 1.3s, 50x 1.8s,
+ * 250x 2.4s, 1000x+ at the 3.2s cap.
+ */
+function rollupMs(mult){
+  const decades=Math.log10(1+Math.max(0,mult));
+  if(turbo) return Math.min(380,120+decades*230);
+  return Math.min(3200,150+decades*950);
+}
+async function countUp(target,mult,tier){
+  const el=$("winOut"), dur=rollupMs(mult||0), t0=performance.now();
+  skipRollup=false;
   await new Promise(done=>{
     (function tick(now){
+      if(skipRollup) return done();
       const k=Math.min(1,(now-t0)/dur);
-      el.textContent=fmt(target*k);
-      if(k<1){ counterTick(k,0); requestAnimationFrame(tick); } else done();
+      // Ease out: the count sprints away and settles onto the total.
+      const e=1-Math.pow(1-k,2.2);
+      el.textContent=fmt(target*e);
+      if(k<1){ counterTick(k,tier||0); requestAnimationFrame(tick); } else done();
     })(t0);
   });
   el.textContent=fmt(target);
+  skipRollup=false;
 }
 
 /* ============================== play loop =============================== */
@@ -3154,7 +3193,8 @@ async function doSpin(){
     if(tier){ coins(tier==="Epic win"?120:tier==="Super mega win"?85:tier==="Mega win"?55:30,1.25);
               await showBanner(tier,win,`${winMult.toFixed(1)}× your bet`); }
     else winChime(Math.min(3,1+Math.floor(winMult)));
-    await countUp(win);
+    await countUp(win,winMult,
+      tier==="Epic win"?3:tier==="Super mega win"?2:tier==="Mega win"?1:0);
     if(winMult>=5) coins(18,.9);
     // Then walk the lines, so the player learns what paid rather than only that
     // something did. Base-game wins only: during a feature the frames are
@@ -3293,7 +3333,7 @@ async function hlCash(){
   if(!hl.live) return;
   const won=hl.risk*hl.mult;
   balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,hl.mult);
-  coins(26,1); await countUp(won);
+  coins(26,1); await countUp(won,hl.mult,hl.mult>=40?1:0);
   flash(`Cashed out +${fmt(won)}`);
   hl.live=false; hl.risk=0; hl.mult=1;
   hlRender(); updateHud();
@@ -3598,6 +3638,10 @@ $("fReveal").addEventListener("click",()=>{
    paytable fired a real spin under the dialog. */
 function openModal(){ return document.querySelector(".modal.on"); }
 let modalOpener=null;
+// Tapping the screen slams the roll-up too -- on a phone there is no space bar,
+// and the counter is the thing the player is already looking at.
+$("screen").addEventListener("pointerdown",()=>{ if(busy) skipRollup=true; });
+
 document.addEventListener("keydown",e=>{
   const open=openModal();
   if(e.key==="Escape"&&open){
@@ -3607,6 +3651,13 @@ document.addEventListener("keydown",e=>{
     if(modalOpener&&modalOpener.isConnected) modalOpener.focus();
     modalOpener=null;
     return;
+  }
+  // A long roll-up is skippable: the same key that starts a spin slams the
+  // counter to the total first. Without this, SPACE is dead for up to three
+  // seconds after a big win and the machine feels like it has stopped
+  // listening -- which is precisely when the player is most engaged.
+  if(e.code==="Space"&&!open&&game!=="hilo"&&busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
+    e.preventDefault(); skipRollup=true; return;
   }
   if(e.code==="Space"&&!open&&game!=="hilo"&&!busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
     e.preventDefault(); ac(); doSpin();
