@@ -112,9 +112,19 @@ body{
 @keyframes burst{to{transform:scale(1.5);opacity:0;filter:brightness(2)}}
 .sym.drop{animation:drop .34s cubic-bezier(.34,1.4,.5,1) both}
 @keyframes drop{from{transform:translateY(calc(var(--cell)*-1.4));opacity:.2}to{transform:none;opacity:1}}
+/* Landing settle. The reel strip stops as one rigid block, which reads as a
+   sprite sheet sliding to a halt rather than as weighted objects coming to
+   rest. A short per-symbol squash, staggered down the reel, gives the stop
+   some mass without moving where anything actually lands. */
+@keyframes settle{
+  0%{transform:translateY(-7%) scaleY(1.07) scaleX(.97)}
+  55%{transform:translateY(2%) scaleY(.95) scaleX(1.03)}
+  100%{transform:none}
+}
+.sym.settle{animation:settle .26s cubic-bezier(.3,1.3,.5,1) both}
 .blur .strip{filter:blur(2.2px) brightness(1.06)}
 @media(prefers-reduced-motion:reduce){
-  .sym.pop,.sym.drop,.sym.burst,.reel.anticipate{animation:none}
+  .sym.pop,.sym.drop,.sym.burst,.sym.settle,.reel.anticipate{animation:none}
   .blur .strip{filter:none}
 }
 .modal{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;
@@ -621,7 +631,12 @@ const LINES=paylines40();
    round; the price is that EV / 0.97 so buying returns exactly what spinning
    for it returns. Under-price this and it is an arbitrage on the bankroll --
    the same failure mode as an underpriced sacrifice package, minus the NFT. */
-const BUY_PRICE={pride:18.3073, traitvault:1.6350};
+/* EV-neutral: buying returns the same 0.97 as spinning for it. Measured with
+   `mathsim buyprice --game <g> --weights <file>` against the calibrated
+   paytable -- the price moves whenever the pay scale does.
+   Trait Vault was 1.6350x when the feature was a Hold and Win worth about one
+   and a half bets. Lion's Share is worth 16.5x a bet, so the price follows. */
+const BUY_PRICE={pride:18.3073, traitvault:17.0243};
 
 /* Ante tiers come from `mathsim ante`. Scatter weight is an integer, so +1 per
    reel is the smallest ante this strip length can express; the stake is solved
@@ -904,7 +919,7 @@ function spinCluster(rng){
    evaluation. Reordering these calls would still produce a valid game and a
    totally different one from the Rust the RTP was measured on. */
 const MULT_V=[2,3,4,6,10,20], MULT_W=[400,290,180,90,32,8];
-const ROW_MULT_CAP=60, FREE_SPINS=10, SCATTERS_TO_TRIGGER=3;
+const ROW_MULT_CAP=25, FREE_SPINS=10, SCATTERS_TO_TRIGGER=3;
 
 /* Line evaluation with sticky row multipliers. A win takes the HIGHEST
    multiplier among the rows its winning cells occupy -- not the sum. Summing
@@ -1413,11 +1428,32 @@ function startMusic(){
   bus.gain.linearRampToValueAtTime(0.026,c.currentTime+3.5);
   music={bus,voices,lfo};
 }
+/* Free-spin bed. A cabinet does not play the same loop through the feature --
+   the change of key is most of how a player knows the round has started, and
+   how they know when it has ended. Same drone, lifted a fifth with the filter
+   opened and a faster sweep under it. */
+let musicIntense=false;
+function setMusicIntensity(on){
+  if(!music||musicIntense===!!on) return;
+  musicIntense=!!on;
+  const c=ac(), t=c.currentTime;
+  const ratio=on?1.5:1/1.5;
+  music.voices.forEach(v=>{
+    v.frequency.cancelScheduledValues(t);
+    v.frequency.setValueAtTime(v.frequency.value,t);
+    v.frequency.exponentialRampToValueAtTime(v.frequency.value*ratio,t+0.7);
+  });
+  music.lfo.frequency.cancelScheduledValues(t);
+  music.lfo.frequency.linearRampToValueAtTime(on?0.16:0.045,t+0.7);
+  music.bus.gain.cancelScheduledValues(t);
+  music.bus.gain.setValueAtTime(Math.max(music.bus.gain.value,0.0002),t);
+  music.bus.gain.linearRampToValueAtTime(on?0.042:0.026,t+0.7);
+}
 function stopMusic(){
   if(!music) return;
   const c=ac();
   music.bus.gain.linearRampToValueAtTime(0.0001,c.currentTime+0.5);
-  const m=music; music=null;
+  const m=music; music=null; musicIntense=false;
   setTimeout(()=>{ try{ m.voices.forEach(v=>v.stop()); m.lfo.stop(); }catch(e){} },700);
 }
 
@@ -1763,7 +1799,19 @@ function spinReel(reelEl,finalCol,reelIdx,duration,delay){
        {transform:"translateY(0)"}],
       {duration,delay,easing:"cubic-bezier(.22,.62,.24,1)",fill:"both"});
     setTimeout(()=>reelEl.classList.remove("blur"),delay+duration*0.72);
-    anim.onfinish=()=>{ strip.style.transform="translateY(0)"; thud(reelIdx); resolve(); };
+    anim.onfinish=()=>{
+      strip.style.transform="translateY(0)";
+      thud(reelIdx);
+      if(!turbo&&!reduceMotion){
+        const cells=strip.querySelectorAll(".sym");
+        for(let i=0;i<ROWS&&i<cells.length;i++){
+          const c=cells[i];
+          c.style.animationDelay=(i*22)+"ms";
+          c.classList.add("settle");
+        }
+      }
+      resolve();
+    };
   });
 }
 
@@ -1959,7 +2007,7 @@ async function doSpin(){
                      0, game==="pride"?"every wild carries ×2"
                                       :"10 free spins · row multipliers stick and build");
   }
-  if(frames.length>1){ featTotal=0; $("chipFeat").classList.remove("hidden"); }
+  if(frames.length>1){ featTotal=0; $("chipFeat").classList.remove("hidden"); setMusicIntensity(true); }
   if(game==="traitvault"&&frames.length>1){
     paintMultRail([0,0,0,0],null);
     $("chipFS").classList.remove("hidden");
@@ -1993,6 +2041,7 @@ async function doSpin(){
   if(frames.length>1){
     $("chipMode").classList.remove("live"); $("chipMode").textContent="Base game";
     $("chipFS").classList.add("hidden");
+    setMusicIntensity(false);
     $("featTotal").textContent=fmt(out.feature*bet);
     if(out.fs && game!=="cubcluster" && out.feature>0){
       coins(40,1.05);

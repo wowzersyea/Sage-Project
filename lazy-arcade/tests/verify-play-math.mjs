@@ -38,6 +38,8 @@ const exported = [
   "CONF", "PAYS", "LINES", "SYM", "prideEval", "clusterFind",
   "payout", "pRarer", "pCommoner", "MIN_P", "HOUSE",
   "swapFee", "buyFeature", "BUY_PRICE", "ANTE", "anteStrips",
+  "vaultFreeSpins", "vaultLines", "MULT_V", "MULT_W", "ROW_MULT_CAP",
+  "FREE_SPINS", "SCATTERS_TO_TRIGGER",
 ];
 const M = new Function(`${mathOnly}\nreturn {${exported.join(",")}};`)();
 
@@ -72,7 +74,7 @@ console.log("\nRNG vs Rust golden vectors");
 /* -------------------------------------------------------- 2. structural */
 console.log("\nStructural pay rules");
 {
-  const WILD = 0, P1 = 2, L4 = 13;
+  const WILD = 0, SCAT = 1, P1 = 2, L4 = 13;
   const full = Array.from({ length: 5 }, () => Array(4).fill(P1));
   const ways = M.prideEval(full, false, M.PAYS.pride, null);
   const expect = 1024 * M.PAYS.pride[P1][5];
@@ -95,6 +97,61 @@ console.log("\nStructural pay rules");
   check("Pride wild absent from reels 1 and 5", wildOnOuter);
   check("Trait Vault wild absent from reels 1 and 5",
         M.CONF.traitvault.w[0][WILD] === 0 && M.CONF.traitvault.w[4][WILD] === 0);
+  check("Trait Vault carries scatters on every reel",
+        M.CONF.traitvault.w.every((r) => r[SCAT] > 0),
+        M.CONF.traitvault.w.map((r) => r[SCAT]).join("/"));
+
+  /* --- Lion's Share row multipliers ---
+     These constants are the ones crates/mathsim was calibrated against. Pinning
+     them here is what makes the port checkable: the RTP convergence test below
+     is far too loose to notice a changed ceiling, and the JS copy of
+     ROW_MULT_CAP did in fact sit at 60 against the Rust's 25 while every other
+     check passed. If mathsim changes, change these deliberately. */
+  check("row multiplier constants match the calibrated maths",
+        M.ROW_MULT_CAP === 25 && M.FREE_SPINS === 10 && M.SCATTERS_TO_TRIGGER === 3 &&
+        M.MULT_V.join(",") === "2,3,4,6,10,20" &&
+        M.MULT_W.join(",") === "400,290,180,90,32,8",
+        `cap ${M.ROW_MULT_CAP}, ${M.FREE_SPINS} spins, orbs ${M.MULT_V.join("/")}`);
+
+  {
+    // A uniform board multiplier must scale the board by EXACTLY that much.
+    // This is the property that makes the badge beside a row honest, and it is
+    // what ruled out summing multipliers across the rows a line touches:
+    // summing paid 7.4x on a uniform 3x board because only 4 of 40 lines are flat.
+    const full = Array.from({ length: 5 }, () => new Array(4).fill(P1));
+    const onlyP1 = M.PAYS.traitvault.map((row, i) =>
+      i === P1 ? row : row.map(() => 0));
+    const plain = M.vaultLines(full, onlyP1, [0, 0, 0, 0], null);
+    const tripled = M.vaultLines(full, onlyP1, [3, 3, 3, 3], null);
+    check("a uniform row multiplier scales the board by exactly that much",
+          plain > 0 && Math.abs(tripled - plain * 3) < 1e-9,
+          `${tripled.toFixed(4)} vs ${(plain * 3).toFixed(4)}`);
+
+    // and a line takes the HIGHEST row it crosses, never the sum
+    const two = M.vaultLines(full, onlyP1, [2, 3, 0, 0], null);
+    const hi = M.vaultLines(full, onlyP1, [0, 3, 0, 0], null);
+    const lo = M.vaultLines(full, onlyP1, [2, 0, 0, 0], null);
+    check("row multipliers take the max across a line, not the sum",
+          two <= hi + lo - plain + 1e-9 && two > lo,
+          `both ${two.toFixed(3)}, hi ${hi.toFixed(3)}, lo ${lo.toFixed(3)}`);
+  }
+
+  {
+    // No row may ever exceed the ceiling, over enough rounds to see one build.
+    const seed = new Uint8Array(32).map((_, i) => (i * 31 + 7) & 0xff);
+    let worst = 0, orbs = 0, rounds = 600;
+    for (let n = 0; n < rounds; n++) {
+      const res = M.vaultFreeSpins(M.makeRng(seed, "c", n, "traitvault"));
+      for (const f of res.frames) {
+        orbs += f.orbs ? f.orbs.length : 0;
+        worst = Math.max(worst, ...f.rowMult);
+      }
+    }
+    check("no row exceeds the multiplier ceiling", worst <= M.ROW_MULT_CAP,
+          `worst row ×${worst} vs ceiling ×${M.ROW_MULT_CAP}`);
+    check("orbs actually land during the feature", orbs > rounds,
+          `${(orbs / rounds).toFixed(2)} orbs per round`);
+  }
 
   for (const g of ["pride", "cubcluster", "traitvault"]) {
     const lens = M.CONF[g].strips.map((s) => s.length);
