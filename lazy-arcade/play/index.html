@@ -318,6 +318,21 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .sym .shine{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   pointer-events:none}
 
+/* Touch targets.
+   Every control sat between 25 and 31px tall -- fine under a mouse, under the
+   44px that finger targets want. Raised only where the pointer is COARSE, so
+   desktop keeps its density and a phone gets something hittable. */
+@media (pointer: coarse){
+  .chip, .btn, .tab{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  #fClient, #fReveal{min-height:44px}
+  /* a <select> ignores min-height in some engines; height forces it */
+  #bet{height:44px;min-height:44px}
+}
+/* and a visible focus ring everywhere, not just where it was remembered */
+.tab:focus-visible, .btn:focus-visible, .chip:focus-visible, .spin:focus-visible,
+#fClient:focus-visible, select:focus-visible, .buycard button:focus-visible{
+  outline:2px solid var(--gold-3); outline-offset:2px}
+
 /* ---- buy menu ----
    The reference presents its buys as priced cards you choose between, each
    stating what it awards. Ours were two toggle chips that armed the NEXT spin,
@@ -597,9 +612,9 @@ footer b{color:var(--hot)}
           <div class="hlhist" id="hlHist" aria-label="Card history"></div>
         </div>
         <canvas id="fx"></canvas>
-        <div class="modal" id="buyMenu">
+        <div class="modal" id="buyMenu" role="dialog" aria-modal="true" aria-labelledby="buyMenuTitle">
           <div class="sheet">
-            <h4>Buy a feature</h4>
+            <h4 id="buyMenuTitle">Buy a feature</h4>
             <div class="buycards" id="buyCards"></div>
             <p class="buynote">Every price is EV-neutral: buying returns the same 0.97 as
               spinning for it. Measured with <code>mathsim buyprice</code> against the
@@ -607,7 +622,7 @@ footer b{color:var(--hot)}
             <button class="btn" id="buyClose">Close</button>
           </div>
         </div>
-        <div class="modal" id="info">
+        <div class="modal" id="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
           <div class="sheet">
             <h4 id="infoTitle">Pride</h4>
             <div class="scroll"><table id="infoPay"></table></div>
@@ -644,7 +659,7 @@ footer b{color:var(--hot)}
       <div class="deck">
         <div class="readout">
           <div class="ro"><span class="k">Balance</span><span class="v gold" id="bal">100,000</span></div>
-          <div class="ro"><span class="k">Win</span><span class="v win" id="winOut">0</span></div>
+          <div class="ro"><span class="k">Win</span><span class="v win" id="winOut" role="status" aria-live="polite" aria-atomic="true">0</span></div>
           <div class="ro" id="riskRo" style="display:none">
             <span class="k">At risk</span><span class="v" id="hlRisk">0</span></div>
           <div class="ro" id="multRo" style="display:none">
@@ -704,7 +719,7 @@ footer b{color:var(--hot)}
         <h3>Provably fair</h3>
         <div class="fair">
           <div><b>Server seed hash (committed)</b><span id="fHash">—</span></div>
-          <div><b>Client seed</b><input id="fClient" value="player-1" spellcheck="false"></div>
+          <div><b><label for="fClient">Client seed</label></b><input id="fClient" value="player-1" spellcheck="false" aria-label="Client seed used in the provably fair derivation"></div>
           <div><b>Nonce</b><span id="fNonce">0</span></div>
           <button class="btn" id="fReveal">Reveal &amp; rotate seed</button>
           <div id="fRevWrap" class="hidden"><b>Revealed seed</b><span id="fSeed"></span></div>
@@ -3485,7 +3500,7 @@ function openInfo(){
      <b>Max win</b> ${game==="hilo"?"5,000×":fmt(MAXWIN[game])+"×"}. Play money only.`;
   $("info").classList.add("on");
 }
-$("infoBtn").addEventListener("click",openInfo);
+$("infoBtn").addEventListener("click",()=>{ modalOpener=$("infoBtn"); openInfo(); });
 $("infoClose").addEventListener("click",()=>$("info").classList.remove("on"));
 $("info").addEventListener("click",e=>{ if(e.target.id==="info") $("info").classList.remove("on"); });
 $("autoCfg").addEventListener("click",()=>$("autoPanel").classList.toggle("on"));
@@ -3496,7 +3511,7 @@ $("ante").addEventListener("click",()=>{
   anteOn=!anteOn; $("ante").setAttribute("aria-pressed",String(anteOn));
   refreshCostLabels();
 });
-$("buy").addEventListener("click",()=>{ ac(); openBuyMenu(); });
+$("buy").addEventListener("click",()=>{ ac(); modalOpener=$("buy"); openBuyMenu(); });
 $("buyClose").addEventListener("click",()=>$("buyMenu").classList.remove("on"));
 $("bet").addEventListener("change",refreshCostLabels);
 $("turbo").addEventListener("click",()=>{turbo=!turbo;$("turbo").setAttribute("aria-pressed",String(turbo));});
@@ -3546,8 +3561,22 @@ $("fReveal").addEventListener("click",()=>{
   serverSeed=crypto.getRandomValues(new Uint8Array(32));
   nonce=0; refreshHash(); updateHud();
 });
+/* Which modal, if any, is up. Two things depend on knowing: Escape has to close
+   it, and Space must NOT spin behind it -- pressing space while reading the
+   paytable fired a real spin under the dialog. */
+function openModal(){ return document.querySelector(".modal.on"); }
+let modalOpener=null;
 document.addEventListener("keydown",e=>{
-  if(e.code==="Space"&&game!=="hilo"&&!busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
+  const open=openModal();
+  if(e.key==="Escape"&&open){
+    e.preventDefault();
+    open.classList.remove("on");
+    // send focus back where it came from, or the dialog's trigger is lost
+    if(modalOpener&&modalOpener.isConnected) modalOpener.focus();
+    modalOpener=null;
+    return;
+  }
+  if(e.code==="Space"&&!open&&game!=="hilo"&&!busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
     e.preventDefault(); ac(); doSpin();
   }
 });
