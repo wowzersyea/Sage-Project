@@ -101,7 +101,7 @@ EV / 0.97, so buying returns exactly what spinning for it returns.
 | Game | Feature EV per trigger | EV-neutral price | Verified return |
 |---|---|---|---|
 | Pride | 17.758x | **18.3073x** total bet | 0.97000 |
-| Trait Vault | 1.586x | **1.6350x** total bet | 0.97000 |
+| Trait Vault | 17.317x | **17.8525x** total bet | 0.97000 |
 
 Two things fall out of this that are worth stating plainly:
 
@@ -110,15 +110,24 @@ Two things fall out of this that are worth stating plainly:
   low-variance free-spin round simply is not worth much, so the buy button
   cannot feel like a big decision. This is the clearest single illustration of
   Sec. 0's tension.
-- **Trait Vault's buy price of 1.635x is faintly absurd** — a "buy the feature"
-  button for 1.6x on something that already fires every 7 spins. It is further
-  evidence that the 40-count Mane Meter is a base-game mechanic wearing a
-  meter's clothes (see PHASE-0-1-FINDINGS.md §5.2).
+- **Trait Vault's buy price was 1.635x, which was faintly absurd** — a "buy the
+  feature" button for 1.6x on something that already fired every 7 spins. That
+  was never a pricing problem; the price was correct for the feature it priced.
+  The Mane Meter has since been replaced by **Lion's Share** (see
+  PHASE-0-1-FINDINGS.md §5.2), which fires 1 spin in 57 and is worth **17.3x** a
+  bet, so the button now costs 17.85x and represents a real decision. The
+  measured RTP after the rework is **0.97000 ±0.00044 over 600M spins**.
+- **The gap to Pragmatic narrowed for one game, and the reason is instructive.**
+  Trait Vault's feature went from 1.6x to 17.3x without breaking the 97% budget
+  or the volatility ceiling, because the return was moved rather than created:
+  a rare round carrying sticky row multipliers concentrates the same money into
+  a moment. Pride is still a 17.8x feature against Pragmatic's ~97x, and that
+  gap is still the volatility ceiling in the shop window.
 
 Both prices are asserted EV-neutral by test, and the bought round is *literally
-the same code path* as the spun one — the free-spin loop and the Hold & Win are
-shared functions, so a bought feature cannot silently diverge from the feature
-whose EV set the price.
+the same code path* as the spun one — `prideFreeSpins` and `vaultFreeSpins` are
+shared between the trigger and the button, so a bought feature cannot silently
+diverge from the feature whose EV set the price.
 
 Buy-bonus mechanics are prohibited in several regulated markets (the UK among
 them). Ship behind a jurisdiction flag.

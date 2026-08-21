@@ -85,6 +85,12 @@ body{
 .reel.anticipate{box-shadow:inset 0 0 0 2px var(--gold),0 0 22px -6px var(--gold);
                  animation:antic .5s ease-in-out infinite alternate}
 @keyframes antic{from{filter:brightness(1)}to{filter:brightness(1.28)}}
+/* Anticipation is a whole-cabinet moment, not a property of one reel. The reels
+   already settled go quiet so the one still running is the only thing moving. */
+.reels.anticipating .reel:not(.anticipate){filter:brightness(.62) saturate(.7);
+  transition:filter .35s ease}
+.reels.anticipating{animation:anticPulse 1.05s ease-in-out infinite}
+@keyframes anticPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
 .strip{display:flex;flex-direction:column;will-change:transform}
 .sym{height:var(--cell);display:flex;align-items:center;justify-content:center;
      position:relative;padding:4px}
@@ -124,7 +130,8 @@ body{
 .sym.settle{animation:settle .26s cubic-bezier(.3,1.3,.5,1) both}
 .blur .strip{filter:blur(2.2px) brightness(1.06)}
 @media(prefers-reduced-motion:reduce){
-  .sym.pop,.sym.drop,.sym.burst,.sym.settle,.reel.anticipate{animation:none}
+  .sym.pop,.sym.drop,.sym.burst,.sym.settle,.reel.anticipate,
+  .reels.anticipating{animation:none}
   .blur .strip{filter:none}
 }
 .modal{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;
@@ -184,6 +191,23 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
    reels size from, so the badges stay aligned to their rows at every breakpoint
    without a resize listener. */
 .reelwrap{display:flex;align-items:flex-start;gap:0;justify-content:center}
+/* Sits just below the grid rather than over the top row: at top:16% it landed
+   across the first row of symbols and the amount was unreadable against a lion.
+   Given its own plate so it never has to compete with the artwork. */
+.spinwin{position:absolute;left:50%;bottom:6px;z-index:7;pointer-events:none;
+  font-family:var(--mono);font-weight:700;font-size:clamp(18px,2.6vw,26px);
+  color:var(--gold-3);white-space:nowrap;
+  padding:5px 14px;border-radius:999px;
+  background:rgba(10,7,16,.82);border:1px solid var(--gold-2);
+  box-shadow:0 0 26px -6px var(--gold),0 3px 10px rgba(0,0,0,.5);
+  transform:translate(-50%,0)}
+
+/* paytable rows show the lion, not just its name */
+.ptsym{display:flex;align-items:center;gap:9px}
+.ptsym .sym,.ptsym>:first-child{width:34px;height:34px;flex:0 0 34px;position:relative}
+.ptsym img,.ptsym svg{width:100%;height:100%;object-fit:contain;display:block}
+.ptsym>span{white-space:nowrap}
+
 .multrail{display:flex;flex-direction:column;gap:0;flex:0 0 auto;
           padding-right:4px;align-self:flex-start}
 .multrail .mrow{height:var(--cell);display:flex;align-items:center;justify-content:flex-end;
@@ -197,13 +221,20 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
              box-shadow:0 0 16px -3px var(--gold),0 1px 0 rgba(0,0,0,.4)}
 .mbadge.bump{animation:mbump .42s cubic-bezier(.2,1.5,.4,1)}
 @keyframes mbump{0%{transform:scale(1)}38%{transform:scale(1.42)}100%{transform:scale(1)}}
+/* fires when THIS row's multiplier is the one that paid */
+.mbadge.paid{animation:mpaid .6s ease-out}
+@keyframes mpaid{
+  0%{box-shadow:0 0 0 0 var(--gold),0 0 16px -3px var(--gold)}
+  55%{box-shadow:0 0 0 7px rgba(255,205,92,0),0 0 30px 0 var(--gold)}
+  100%{box-shadow:0 0 0 0 rgba(255,205,92,0),0 0 16px -3px var(--gold)}
+}
 /* the orb flying from the cell it landed in to its row badge */
 .orb{position:absolute;z-index:6;pointer-events:none;font-family:var(--mono);
      font-size:13px;font-weight:700;color:#1A1206;padding:3px 7px;border-radius:6px;
      background:linear-gradient(180deg,#FFE9A8,var(--gold-2));
      box-shadow:0 0 18px -2px var(--gold);will-change:transform,opacity}
 @media (prefers-reduced-motion: reduce){
-  .mbadge.bump{animation:none}
+  .mbadge.bump,.mbadge.paid{animation:none}
   .orb{display:none}
 }
 
@@ -553,12 +584,12 @@ const CONF={
        [14,0,18,20,0,0,26,27,0,0,32,34,0,0]]
   },
   traitvault:{
-    scale:25.96181056656965, cap:5000, orbP:0.011151821360983053,
-    w:[[0,5,5,6,12,7,13,12,13,13,13,16,19,19],
-       [5,5,5,6,7,8,10,12,13,14,19,19,11,18],
+    scale:19.43207669953556, cap:5000, orbP:0.012776368911262477,
+    w:[[0,5,5,6,7,7,13,12,18,12,15,16,23,19],
+       [5,5,5,6,7,7,11,12,13,15,17,17,11,18],
        [10,5,5,6,6,8,11,12,13,14,17,17,18,18],
-       [9,5,3,6,7,8,6,12,13,14,19,17,21,18],
-       [0,5,1,6,7,8,10,9,13,14,18,18,19,19]]
+       [9,5,5,6,7,7,11,12,13,14,24,17,19,18],
+       [0,5,1,6,7,8,11,7,11,14,18,18,19,19]]
   }
 };
 
@@ -601,8 +632,12 @@ function clusterPays(){
 function vaultPays(){
   const p=Array.from({length:NSYM},()=>[0,0,0,0,0,0]);
   const set=(s,two,v)=>{p[s][2]=two;p[s][3]=v[0];p[s][4]=v[1];p[s][5]=v[2];};
-  set(P1,.5,[5,25,125]); set(P2,.4,[4,20,100]); set(P3,0,[3,15,75]); set(P4,0,[2.5,12,60]);
-  set(M1,0,[1.5,6,30]);  set(M2,0,[1.2,5,25]);  set(M3,0,[1,4,20]);  set(M4,0,[.8,3,15]);
+  /* Two-of-a-kind runs down through the mids. Hit frequency is paytable SHAPE,
+     not strip weights -- see crates/mathsim/src/tables.rs::vault_pays. Lows stay
+     at zero on purpose: paying them too would push the hit rate past 0.6 with
+     almost every added win paying less than the stake. */
+  set(P1,.5,[5,25,125]); set(P2,.4,[4,20,100]); set(P3,.35,[3,15,75]); set(P4,.3,[2.5,12,60]);
+  set(M1,.25,[1.5,6,30]);set(M2,.2,[1.2,5,25]); set(M3,.18,[1,4,20]); set(M4,.15,[.8,3,15]);
   set(L1,0,[.5,2,10]);   set(L2,0,[.4,1.6,8]);  set(L3,0,[.35,1.4,7]); set(L4,0,[.3,1.2,6]);
   return p.map(r=>r.map(v=>v*CONF.traitvault.scale));
 }
@@ -636,7 +671,7 @@ const LINES=paylines40();
    paytable -- the price moves whenever the pay scale does.
    Trait Vault was 1.6350x when the feature was a Hold and Win worth about one
    and a half bets. Lion's Share is worth 16.5x a bet, so the price follows. */
-const BUY_PRICE={pride:18.3073, traitvault:17.0243};
+const BUY_PRICE={pride:18.3073, traitvault:17.8525};
 
 /* Ante tiers come from `mathsim ante`. Scatter weight is an integer, so +1 per
    reel is the smallest ante this strip length can express; the stake is solved
@@ -926,7 +961,7 @@ const ROW_MULT_CAP=25, FREE_SPINS=10, SCATTERS_TO_TRIGGER=3;
    was tried and measured: only 4 of 40 lines are flat, so a stepped line
    collected a multiplier per row it wandered through and a uniform x3 board
    paid 7.4x. The badge on the row has to mean what it says. */
-function vaultLines(grid,pays,rowMult,marks){
+function vaultLines(grid,pays,rowMult,marks,paidRows){
   let lineUnits=0;
   for(const line of LINES){
     const s=grid[0][line[0]];
@@ -938,10 +973,16 @@ function vaultLines(grid,pays,rowMult,marks){
     }
     const pay=pays[s][n];
     if(!pay) continue;
-    let m=0;
-    for(let r=0;r<n;r++) m=Math.max(m,rowMult[line[r]]);
+    let m=0, mRow=-1;
+    for(let r=0;r<n;r++){
+      if(rowMult[line[r]]>m){ m=rowMult[line[r]]; mRow=line[r]; }
+    }
     lineUnits+=pay*(m===0?1:m);
     if(marks) for(let r=0;r<n;r++) marks.add(r+":"+line[r]);
+    // Presentation only -- which row's badge actually multiplied this win. The
+    // connection between a lit badge and a bigger number is the whole mechanic;
+    // leaving the player to infer it wastes the feature.
+    if(paidRows&&mRow>=0&&m>0) paidRows.add(mRow);
   }
   return lineUnits/40;
 }
@@ -969,11 +1010,12 @@ function vaultFreeSpins(rng){
         landed.push({reel:r,row,val});
       }
     }
-    const marks=new Set();
-    const win=vaultLines(grid,pays,rowMult,marks);
+    const marks=new Set(), paidRows=new Set();
+    const win=vaultLines(grid,pays,rowMult,marks,paidRows);
     feature+=win;
-    frames.push({grid,marks,label:`lion's share · free spin ${spin+1}/${FREE_SPINS}`,
-                 rowMult:rowMult.slice(),orbs:landed,spinWin:win});
+    frames.push({grid,marks,label:"lion's share",
+                 rowMult:rowMult.slice(),orbs:landed,spinWin:win,paidRows,
+                 spinNo:spin+1});
   }
   return {feature,frames};
 }
@@ -982,7 +1024,7 @@ function spinVault(rng,state){
   const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
   const grid=drawGrid(strips,rng);
   const marks=new Set();
-  const base=vaultLines(grid,pays,[0,0,0,0],marks);
+  const base=vaultLines(grid,pays,[0,0,0,0],marks,null);
 
   let scat=0;
   const scatMarks=new Set();
@@ -1332,6 +1374,24 @@ function scatterLand(index){
     o.frequency.setValueAtTime(f*mult,t);
     const g=env(o,lvl,0.004,0.42,t); g.connect(busGain); g.connect(verbSend);
     o.start(t); o.stop(t+0.5);
+  }
+}
+
+/* Heartbeat under an anticipation. The riser alone is a rising tone; the pulse
+   is what makes the wait feel like a wait. Tempo climbs across the drag. */
+function heartbeat(seconds){
+  if(muted) return;
+  const c=ac(), t0=c.currentTime;
+  let t=t0, gap=0.42;
+  while(t<t0+seconds){
+    for(const off of [0,0.15]){
+      const o=c.createOscillator(); o.type="sine";
+      o.frequency.setValueAtTime(78,t+off);
+      o.frequency.exponentialRampToValueAtTime(42,t+off+0.13);
+      const g=env(o,off?0.09:0.14,0.006,0.16,t+off); g.connect(busGain);
+      o.start(t+off); o.stop(t+off+0.24);
+    }
+    t+=gap; gap=Math.max(0.2,gap*0.86);
   }
 }
 
@@ -1827,20 +1887,43 @@ async function animateSpin(grid,scatterCount){
     let extra=0;
     if(!turbo && r>=2 && scatterCount>=2 && countScatUpTo(grid,r)>=2){
       extra=700; reels[r].classList.add("anticipate");
-      riser(0.75);
+      host.classList.add("anticipating");
+      riser(0.75); heartbeat(0.8);
     }
     jobs.push(spinReel(reels[r],grid[r],r,base+extra,r*step).then(()=>{
       reels[r].classList.remove("anticipate");
+      if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
     }));
     if(!turbo) setTimeout(()=>blip(760+r*40,.04,"square",.025),r*step);
   }
   await Promise.all(jobs);
+  host.classList.remove("anticipating");
   stopReelLoop();
 }
 function countScatUpTo(grid,upto){
   let n=0;
   for(let r=0;r<upto;r++) for(let row=0;row<ROWS;row++) if(grid[r][row]===SCAT) n++;
   return n;
+}
+
+/* A free spin that pays needs to say so at the moment it pays. Without it the
+   round reads as ten boards flicking past with a number quietly climbing in the
+   chrome, and the player never learns which spin did the work -- which is the
+   whole point of a multiplier that sticks to a row. */
+function spinWinPop(amount){
+  if(amount<=0||turbo) return;
+  const screen=$("screen");
+  const el=document.createElement("div");
+  el.className="spinwin"; el.textContent="+"+fmt(amount);
+  screen.appendChild(el);
+  if(reduceMotion){ setTimeout(()=>el.remove(),700); return; }
+  const a=el.animate([
+    {transform:"translate(-50%,10px) scale(.82)",opacity:0},
+    {transform:"translate(-50%,0) scale(1.05)",opacity:1,offset:.25},
+    {transform:"translate(-50%,-6px) scale(1)",opacity:1,offset:.74},
+    {transform:"translate(-50%,-20px) scale(.97)",opacity:0}
+  ],{duration:1100,easing:"cubic-bezier(.25,.6,.3,1)",fill:"forwards"});
+  a.onfinish=()=>el.remove();
 }
 
 /* ---- row multiplier rail -------------------------------------------------
@@ -1854,7 +1937,7 @@ function buildMultRail(){
     d.appendChild(b); rail.appendChild(d);
   }
 }
-function paintMultRail(rowMult,bumped){
+function paintMultRail(rowMult,bumped,paidRows){
   const badges=$("multRail").querySelectorAll(".mbadge");
   for(let row=0;row<ROWS;row++){
     const b=badges[row]; if(!b) continue;
@@ -1865,6 +1948,8 @@ function paintMultRail(rowMult,bumped){
       // restart the animation even if it is already applied
       b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump");
     }
+    b.classList.remove("paid");
+    if(paidRows&&paidRows.has(row)){ void b.offsetWidth; b.classList.add("paid"); }
   }
 }
 /* An orb has to visibly travel from the cell it landed in to the row it
@@ -2029,11 +2114,12 @@ async function doSpin(){
     paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,f.coins,null);
     if(f.coins) coinTick();
     if(game==="traitvault"&&f.rowMult){
-      $("fsN").textContent=i;
+      $("fsN").textContent=f.spinNo!=null?f.spinNo:i;
       await flyOrbs(f.orbs);
       const bumped=new Set((f.orbs||[]).map(o=>o.row));
-      paintMultRail(f.rowMult,bumped);
+      paintMultRail(f.rowMult,bumped,f.paidRows);
       if(f.orbs&&f.orbs.length) orbLand(f.orbs.length,Math.max(...f.orbs.map(o=>o.val)));
+      if(f.spinWin>0){ spinWinPop(f.spinWin*bet); winChime(Math.min(4,1+Math.floor(f.spinWin))); }
     }
     if(!turbo) await sleep(game==="cubcluster"?260:300);
     else await sleep(35);
@@ -2296,7 +2382,7 @@ function renderPaytable(){
   for(let s=SCAT;s<NSYM;s++){
     if(game==="traitvault"&&s===SCAT) continue;
     if(!pays[s].some(v=>v>0)) continue;
-    h+=`<tr><td>${symName(s,game)}</td>`;
+    h+=`<tr><td class="ptsym">${symbolHTML(s)}<span>${symName(s,game)}</span></td>`;
     for(const n of [2,3,4,5]) h+=`<td>${pays[s][n]?pays[s][n].toFixed(2):"—"}</td>`;
     h+="</tr>";
   }
@@ -2356,7 +2442,7 @@ function openInfo(){
       Three or more <b>$LAZY scatters</b> anywhere award <b>10 Lion&#39;s Share free spins</b>.
       During the round, <b>multiplier orbs</b> land on the grid and stamp their value onto the
       <b>whole row</b>. Row multipliers <b>stick for the round and add up</b> as more orbs land in
-      the same row, to a ceiling of ×60. A winning line takes the <b>highest</b> multiplier among
+      the same row, to a ceiling of ×25. A winning line takes the <b>highest</b> multiplier among
       the rows it runs through — so the badge beside a row is exactly what that row pays.
       No retrigger; the round caps at 5,000×.`,
     hilo:`<b>Rarity duel.</b> Bet whether the next NFT is rarer or commoner than the current one.
@@ -2364,8 +2450,19 @@ function openInfo(){
       below 5% probability is <b>disabled rather than capped</b> — capping would silently break
       the stated return. Multipliers compound; the round caps at 5,000×.`
   }[game];
+  // Per game, because the games are not verified to the same depth and a single
+  // blanket sentence quietly promotes the least-verified one to the standard of
+  // the best. Trait Vault's maths was rebuilt for Lion's Share and its figure is
+  // the measurement, with its error bar, rather than a claim of the target.
+  const rtpLine = {
+    pride:      "<b>RTP</b> 0.97009 measured over 250M spins on the production rng.",
+    cubcluster: "<b>RTP</b> 0.97023 measured over 250M spins on the production rng.",
+    traitvault: "<b>RTP</b> 0.97000 &plusmn;0.00044 measured over 600M spins on the " +
+                "production rng, after the Lion&#39;s Share rework.",
+    hilo:       "<b>RTP</b> exactly 0.97 by construction &mdash; proven analytically, not sampled."
+  }[game];
   $("infoRules").innerHTML=rules+
-    `<br><br><b>RTP</b> 97.00% verified over 250M–600M spins on the production rng.
+    `<br><br>${rtpLine}
      <b>Max win</b> ${game==="hilo"?"5,000×":fmt(MAXWIN[game])+"×"}. Play money only.`;
   $("info").classList.add("on");
 }

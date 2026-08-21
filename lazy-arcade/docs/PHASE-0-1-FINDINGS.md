@@ -248,6 +248,41 @@ specific M-tier symbol instead of all four. Either keeps the spec's stated
 mechanic while making the meter behave like a meter. A feature that fires every
 6 spins is a base-game mechanic wearing a meter's clothes.
 
+> **RESOLVED — the meter was removed rather than retuned.**
+>
+> Neither recommendation was taken. Raising the target would have fixed the
+> frequency and left the second, larger problem in place: the meter persisted
+> across spins, so spins were not independent, every simulation had to run
+> sequentially through `GameState`, and the feature could not be priced on its
+> own at all.
+>
+> Trait Vault is now **Lion's Share**: three $LAZY scatters award 10 free spins
+> in which multiplier orbs stamp their value onto a whole ROW, sticky for the
+> round and additive within a row, with a winning line taking the highest row it
+> crosses. Spins are independent and `free_spins()` is directly callable.
+>
+> Measured over 600M spins on the production RNG:
+> trigger **1 in 57**, feature share **30.2%**, volatility **5.52**,
+> hit frequency **0.349**, max win observed **3008x** against a 5000x cap.
+>
+> Three sub-findings came out of the rework and are worth keeping:
+>
+> * **Combination rule matters more than the values.** Summing multipliers
+>   across the rows a line touches was implemented first, and a uniform x3 board
+>   paid 7.4x — only 4 of the 40 lines are flat, so stepped lines collected a
+>   multiplier per row they wandered through. Taking the max makes the badge
+>   beside a row true for every line.
+> * **Volatility was fixed by paytable shape, not by the orb table.** Retuning
+>   orbs (x50 -> x20) and clipping the row ceiling (60 -> 25) only reached 6.65.
+>   Extending two-of-a-kind down through the mid symbols lifted hit frequency
+>   0.17 -> 0.35 and pulled volatility to 5.52 by moving return out of the tail.
+>   This is the same conclusion as §5.4: hit frequency and volatility are
+>   properties of paytable SHAPE and cannot be reached from strip weights.
+> * **The trigger rate, not the feature parameter, sets the split.** At scatter
+>   weight 8 the feature fired 1 spin in 16; ten free spins that often carried
+>   58% of the return before a single orb landed, and no orb probability could
+>   bring it back to a third.
+
 ### 5.3 The max-win figures were aspirational, not enforced
 
 Spec Sec. 6.4 states a max win per game (2,000x / 2,500x / 1,000x). Nothing in

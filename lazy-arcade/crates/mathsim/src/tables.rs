@@ -149,14 +149,26 @@ pub fn vault_pays() -> PayTable {
         p[s as usize][4] = v[1];
         p[s as usize][5] = v[2];
     };
-    set(&mut p, P1, 0.5, [5.0, 25.0, 125.0]);
-    set(&mut p, P2, 0.4, [4.0, 20.0, 100.0]);
-    set(&mut p, P3, 0.0, [3.0, 15.0, 75.0]);
-    set(&mut p, P4, 0.0, [2.5, 12.0, 60.0]);
-    set(&mut p, M1, 0.0, [1.5, 6.0, 30.0]);
-    set(&mut p, M2, 0.0, [1.2, 5.0, 25.0]);
-    set(&mut p, M3, 0.0, [1.0, 4.0, 20.0]);
-    set(&mut p, M4, 0.0, [0.8, 3.0, 15.0]);
+    // Two-of-a-kind runs down through the mids, not just the top two.
+    //
+    // Hit frequency is a property of paytable SHAPE -- which symbols pay at
+    // which count -- and cannot be reached by moving strip weights, which is
+    // why the optimiser kept landing at 0.17 against a 0.44 target however long
+    // it searched. Paying two-of-a-kind on the eight higher symbols is the lever
+    // that actually moves it.
+    //
+    // The lows deliberately stay at zero. Extending it to them as well would
+    // push hit frequency past 0.6, and nearly all of the added "wins" would pay
+    // less than the stake -- a loss dressed as a win, which is a dark pattern
+    // and not something this game needs to feel generous.
+    set(&mut p, P1, 0.50, [5.0, 25.0, 125.0]);
+    set(&mut p, P2, 0.40, [4.0, 20.0, 100.0]);
+    set(&mut p, P3, 0.35, [3.0, 15.0, 75.0]);
+    set(&mut p, P4, 0.30, [2.5, 12.0, 60.0]);
+    set(&mut p, M1, 0.25, [1.5, 6.0, 30.0]);
+    set(&mut p, M2, 0.20, [1.2, 5.0, 25.0]);
+    set(&mut p, M3, 0.18, [1.0, 4.0, 20.0]);
+    set(&mut p, M4, 0.15, [0.8, 3.0, 15.0]);
     set(&mut p, L1, 0.0, [0.5, 2.0, 10.0]);
     set(&mut p, L2, 0.0, [0.4, 1.6, 8.0]);
     set(&mut p, L3, 0.0, [0.35, 1.4, 7.0]);

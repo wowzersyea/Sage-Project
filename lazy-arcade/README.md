@@ -80,13 +80,27 @@ RTP within noise, which is what licenses the substitution.
 `optimize` searches at a few hundred thousand spins, so its winner is fitted to
 that sample. Pride came out of the search at 0.96995 and measured **0.97280**
 over 100M spins on the production RNG — a real 4-sigma miss, not noise. Rather
-than nudge numbers by hand, `calibrate` measures RTP at two pay scales, fits the
-line through them, and solves for 0.97. The fit is linear but not proportional:
-Trait Vault's Hold and Win pays coin values that do not scale with the paytable,
-so RTP carries a constant term. The two-point fit recovers both terms without
-needing to know which game has one. (Pride's fitted intercept came out at
-~0.000000, exactly as its structure predicts — a useful sanity check on the
-model.)
+than nudge numbers by hand, `calibrate` measures RTP against pay scale and
+solves for 0.97.
+
+Every current feature pays through the **scaled** paytable, so RTP is strictly
+proportional to pay scale and the fit has no constant term. That was not always
+true, and the exception is worth remembering: Trait Vault's old Hold and Win
+paid fixed coin values the paytable never touched, which genuinely did give it a
+constant term. The special case outlived the mechanic — after the Lion's Share
+rework, `calibrate` was still solving the scale as though the feature would stay
+put while the base game tripled, and produced a build measuring **1.62** RTP
+with the feature carrying 96.8% of the return. If a future feature pays values
+the paytable cannot reach — a fixed jackpot, a coin round — the constant term
+needs to come back deliberately rather than be inherited.
+
+Trait Vault also needs a second axis, because orb probability sets how the
+return splits between base and feature while pay scale sets the total. That
+solve works on the scale-invariant **share**, not on an absolute feature RTP,
+and it fails loudly rather than clamping when the target is out of reach: the
+share cannot be pushed below whatever ten free spins are worth at the current
+trigger rate, and when that happens the lever is the scatter weight, not the
+orb table.
 
 ## Provable fairness
 

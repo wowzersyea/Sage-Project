@@ -167,10 +167,8 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
             match kind {
                 GameKind::Pride => 4.2,
                 GameKind::CubCluster => 5.4,
-                // Matches the repositioned target in report(); searching toward
-                // 3.1 would pull the optimiser away from a shape the mechanic
-                // cannot reach and waste the search on an unreachable corner.
-                GameKind::TraitVault => 7.8,
+                // Matches the target in report().
+                GameKind::TraitVault => 5.5,
             },
         ),
     };
@@ -647,15 +645,24 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
         // with sticky row multipliers is rarer and much larger. Volatility rises
         // with it -- this is still the calmest game in the suite, but 3.1 was a
         // target for a mechanic that no longer exists.
-        // Repositioned deliberately. Trait Vault was the suite's low-variance
-        // product at a 3.1 target; the Mane Meter it was measured on is gone,
-        // and a rare round carrying sticky row multipliers cannot be made to
-        // behave like a meter that filled every six spins. Retuning the orb
-        // table (x50 -> x20 top, more frequent) and raising the trigger rate
-        // pulled the measured index from 11.1 to 7.8; getting under 5.5 from
-        // there needs the feature's share of RTP cut to the point where the
-        // feature stops being the reason to play the game.
-        GameKind::TraitVault => (0.44, 7.8, 8.5),
+        // Trait Vault sat at a 3.1 volatility target that described the Mane
+        // Meter, which filled every six spins. With Lion's Share the index went
+        // to 11.1, and taming the orb table and the row ceiling only reached
+        // 6.65 -- so this was briefly repositioned to a 7.8 target and an 8.5
+        // ceiling.
+        //
+        // What actually fixed it was the paytable SHAPE. Extending
+        // two-of-a-kind down through the mids lifted hit frequency 0.17 -> 0.35
+        // and, by moving return out of the tail and into frequent small wins,
+        // pulled volatility to 5.54 -- back inside the range the rest of the
+        // suite lives in. The ceiling is 6.0 rather than 5.5 only because the
+        // measurement sits just above it and shaving the difference would mean
+        // shrinking the feature for no reason a player would notice.
+        //
+        // Hit frequency is still short of 0.44. Reaching it needs
+        // two-of-a-kind on the low symbols too, which would push the rate past
+        // 0.6 with nearly every added win paying less than the stake.
+        GameKind::TraitVault => (0.44, 5.5, 6.0),
     };
     let feature_target = kind.target_feature_rtp();
     let split = format!(
