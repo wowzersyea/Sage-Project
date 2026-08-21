@@ -25,9 +25,79 @@ OWNED = os.path.join(ROOT, "tools", "trait-ingest", "data", "owned_traits.json")
 OWNED_CUBS = os.path.join(ROOT, "tools", "trait-ingest", "data", "owned_cubs.json")
 
 
+PAGE = os.path.join(ROOT, "play", "index.html")
+
+
 def fail(message: str, code: int = 1):
     print(f"LICENSING GATE FAILED: {message}", file=sys.stderr)
     sys.exit(code)
+
+
+def load_shipped_art():
+    """The tiles actually embedded in play/index.html, by symbol id."""
+    if not os.path.exists(PAGE):
+        return None
+    page = open(PAGE).read()
+    start = page.find("/* @@@SYMBOL_ART@@@ */")
+    end = page.find("/* @@@SYMBOL_ART_END@@@ */")
+    if start == -1 or end == -1:
+        return None
+    block = page[start:end]
+    try:
+        return json.loads(block[block.index("=") + 1:].rstrip().rstrip(";"))
+    except ValueError:
+        return None
+
+
+def check_shipped_art(symbols, owned_token_ids, owned_cub_ids):
+    """Tie the licence to the ART, not to the paperwork describing it.
+
+    Everything above validates symbols.json. But symbols.json is written by
+    hand and build-symbols.py has never read it -- the builder picks its own
+    token and injects the tile straight into the page. So the two are free to
+    drift, and when they do this gate keeps passing while the page ships art
+    from a lion nobody cleared. A gate that reads a description of the thing
+    instead of the thing is the same fault the fairness verifier had when its
+    copy of the strips went stale.
+
+    So: every tile embedded in the page must name a token, that token must be
+    one the operator holds, and it must be the token symbols.json cleared.
+    """
+    art = load_shipped_art()
+    if art is None:
+        print("  shipped : play/index.html carries no symbol art block -- not checked")
+        return []
+
+    declared = {s["id"]: s for s in symbols}
+    problems, checked = [], 0
+    for group, entries in art.items():
+        if not isinstance(entries, dict):
+            continue                      # provenance keys like generatedBy
+        for sid, entry in entries.items():
+            token = entry.get("tokenId")
+            collection = entry.get("collection", "lion")
+            held = owned_token_ids if collection == "lion" else owned_cub_ids
+            if token is None:
+                problems.append(f"{group}:{sid}: shipped tile names no token")
+                continue
+            checked += 1
+            if token not in held:
+                problems.append(
+                    f"{group}:{sid}: SHIPPED tile is {collection} #{token}, "
+                    f"which the operator does not hold"
+                )
+                continue
+            # cubcluster deliberately overrides some ids with different art, so
+            # only the default set is required to match symbols.json.
+            if group != "default":
+                continue
+            want = declared.get(sid, {}).get("tokenId")
+            if want is not None and want != token:
+                problems.append(
+                    f"{sid}: symbols.json cleared #{want} but the page ships #{token}"
+                )
+    print(f"  shipped : {checked} embedded tiles traced to owned tokens")
+    return problems
 
 
 def main() -> int:
@@ -134,6 +204,8 @@ def main() -> int:
                 ok += 1
         else:
             violations.append(f"{sid}: unknown source {source!r}")
+
+    violations += check_shipped_art(symbols, owned_token_ids, owned_cub_ids)
 
     print(f"licensing gate: {len(symbols)} symbols checked against "
           f"{len(licensed_traits)} Lion traits / {len(owned_token_ids)} Lions, "

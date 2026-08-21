@@ -41,6 +41,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 INGEST = os.path.join(ROOT, "tools", "trait-ingest", "data")
 CACHE = os.path.join(HERE, "cache")
 PAGE = os.path.join(ROOT, "play", "index.html")
+SYMBOLS = os.path.join(ROOT, "packages", "assets", "symbols.json")
 GATEWAYS = ["https://ipfs.io/ipfs", "https://dweb.link/ipfs", "https://gateway.pinata.cloud/ipfs"]
 
 TILE = 240
@@ -306,8 +307,25 @@ def to_uri(tile):
     return "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def licensed_traits():
+    """symbol id -> the trait symbols.json says the symbol stands for.
+
+    A symbol is named for its TRAIT -- Crown, Shades, Bucket Hat -- and the
+    lion wearing it is merely what gets drawn. The manifest used to fall back
+    to the lion's MANE whenever the tile was picked by explicit token id,
+    which is every entry in the Lion set, so it recorded P2 as "Red" and P3 as
+    "Purple" while the page showed the player "LAZY Hat" and "Shades". Two
+    names for one symbol, and the recorded one was the wrong one.
+    """
+    if not os.path.exists(SYMBOLS):
+        return {}
+    return {s["id"]: s["identifiesTrait"]
+            for s in json.load(open(SYMBOLS))["symbols"] if s.get("identifiesTrait")}
+
+
 def build_set(manifest, lions, cubs, label):
     out, total = {}, 0
+    named = licensed_traits()
     print(f"\n{label}")
     for sym, collection, region, trait, explicit, note in manifest:
         pool = lions if collection == "lion" else cubs
@@ -320,9 +338,10 @@ def build_set(manifest, lions, cubs, label):
         tile, bg = build_tile(path, region, collection)
         uri = to_uri(tile)
         total += len(uri)
-        name = trait.split("::", 1)[1] if trait else meta["traits"].get("Mane", f"#{token_id}")
+        mane = meta["traits"].get("Mane", f"#{token_id}")
+        name = (trait.split("::", 1)[1] if trait else None) or named.get(sym) or mane
         out[sym] = {"tokenId": token_id, "collection": collection, "region": region,
-                    "trait": trait, "name": name, "uri": uri, "bg": bg}
+                    "trait": trait, "name": name, "mane": mane, "uri": uri, "bg": bg}
         print(f"  {sym:<3} {collection:<4} #{token_id:<6} {region:<10} "
               f"{(trait or note):<28} {len(uri)//1024:>4} KB")
     return out, total
