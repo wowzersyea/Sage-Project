@@ -1,38 +1,128 @@
 {
   "_source": "Morning_Report_Role_Cards.pdf. This file is the single source of truth for the role cards: the web pages at /morning-report/roles/*, their print views, and the run-of-show card are all rendered from it. Change a timing here and every surface follows. Do not restate any of it in HTML.",
-
   "format": {
     "title": "Pediatric Morning Report",
     "tagline": "25 minutes  ·  one case  ·  post at both sites",
     "minutes": 25,
-    "handoffs": [7, 16, 22],
+    "handoffs": [
+      7,
+      16,
+      22
+    ],
     "handoff_note": "The facilitator calls the time out loud at 0:07, 0:16 and 0:22."
   },
-
   "_timing_model": "run_of_show durations are the baseline (the Jul–Sep block). The senior's block shrinks across the year; the minutes it gives up go to the intern's first pass, so the three called handoffs at 0:07, 0:16 and 0:22 hold all year and the total stays 25. Edit blocks[].senior_minutes to change it.",
-
   "run_of_show": [
-    { "start": 0,  "minutes": 1, "segment": "Launch",          "what": "Roles named, one objective stated.",                   "driver": "Facilitator" },
-    { "start": 1,  "minutes": 2, "segment": "The hook",        "what": "One-liner + one provocative datum. Then stop.",         "driver": "Presenter" },
-    { "start": 3,  "minutes": 4, "segment": "History & exam",  "what": "One screen. No labs, no imaging yet.",                  "driver": "Presenter → Scribe" },
-    { "start": 7,  "minutes": 4, "segment": "First pass",      "what": "Problem representation, 3–4 diagnoses, can't-miss.",    "driver": "PGY-1", "absorbs_senior_slack": true },
-    { "start": 11, "minutes": 5, "segment": "Second pass",     "what": "Framework, pruning, the discriminating test.",          "driver": "Senior", "minutes_from_block": true },
-    { "start": 16, "minutes": 3, "segment": "Labs & imaging",  "what": "Scribe strikes refuted items in red.",                  "driver": "Presenter → Scribe" },
-    { "start": 19, "minutes": 3, "segment": "Converge",        "what": "Plan stated. Faculty enters here.",                     "driver": "All + Faculty" },
-    { "start": 22, "minutes": 2, "segment": "Reveal",          "what": "Diagnosis, what was missed, and why.",                  "driver": "Presenter" },
-    { "start": 24, "minutes": 1, "segment": "Close",           "what": "2–3 big-picture points. Board exported.",               "driver": "Facilitator" }
+    {
+      "start": 0,
+      "minutes": 1,
+      "segment": "Launch",
+      "what": "Roles named, one objective stated.",
+      "driver": "Facilitator"
+    },
+    {
+      "start": 1,
+      "minutes": 2,
+      "segment": "The hook",
+      "what": "One-liner + one provocative datum. Then stop.",
+      "driver": "Presenter"
+    },
+    {
+      "start": 3,
+      "minutes": 4,
+      "segment": "History & exam",
+      "what": "One screen. No labs, no imaging yet.",
+      "driver": "Presenter → Scribe"
+    },
+    {
+      "start": 7,
+      "minutes": 4,
+      "segment": "First pass",
+      "what": "Problem representation, 3–4 diagnoses, can't-miss.",
+      "driver": "PGY-1",
+      "absorbs_senior_slack": true
+    },
+    {
+      "start": 11,
+      "minutes": 5,
+      "segment": "Second pass",
+      "what": "Framework, pruning, the discriminating test.",
+      "driver": "Senior",
+      "minutes_from_block": true
+    },
+    {
+      "start": 16,
+      "minutes": 3,
+      "segment": "Labs & imaging",
+      "what": "Scribe strikes refuted items in red.",
+      "driver": "Presenter → Scribe"
+    },
+    {
+      "start": 19,
+      "minutes": 3,
+      "segment": "Converge",
+      "what": "Plan stated. Faculty enters here.",
+      "driver": "All + Faculty"
+    },
+    {
+      "start": 22,
+      "minutes": 2,
+      "segment": "Reveal",
+      "what": "Diagnosis, what was missed, and why.",
+      "driver": "Presenter"
+    },
+    {
+      "start": 24,
+      "minutes": 1,
+      "segment": "Close",
+      "what": "2–3 big-picture points. Board exported.",
+      "driver": "Facilitator"
+    }
   ],
-
   "strip": [
-    { "key": "hook",    "label": "Hook",         "start": 1,  "end": 3 },
-    { "key": "history", "label": "Hx + exam",    "start": 3,  "end": 7 },
-    { "key": "pgy1",    "label": "First pass",   "start": 7,  "end": 11 },
-    { "key": "senior",  "label": "Second pass",  "start": 11, "end": 16 },
-    { "key": "labs",    "label": "Labs",         "start": 16, "end": 19 },
-    { "key": "converge","label": "Converge",     "start": 19, "end": 22 },
-    { "key": "reveal",  "label": "Reveal",       "start": 22, "end": 25 }
+    {
+      "key": "hook",
+      "label": "Hook",
+      "start": 1,
+      "end": 3
+    },
+    {
+      "key": "history",
+      "label": "Hx + exam",
+      "start": 3,
+      "end": 7
+    },
+    {
+      "key": "pgy1",
+      "label": "First pass",
+      "start": 7,
+      "end": 11
+    },
+    {
+      "key": "senior",
+      "label": "Second pass",
+      "start": 11,
+      "end": 16
+    },
+    {
+      "key": "labs",
+      "label": "Labs",
+      "start": 16,
+      "end": 19
+    },
+    {
+      "key": "converge",
+      "label": "Converge",
+      "start": 19,
+      "end": 22
+    },
+    {
+      "key": "reveal",
+      "label": "Reveal",
+      "start": 22,
+      "end": 25
+    }
   ],
-
   "ground_rules": [
     "Cameras on. All of them.",
     "Names, every time — when calling on someone and when crediting an idea.",
@@ -41,22 +131,42 @@
     "Hug the case. Tangents go back to this patient.",
     "No new content in the last three minutes."
   ],
-
   "one_rule": {
     "title": "The one rule that makes the rest work",
     "body": "History and exam come before the first pass — the intern cannot build a problem representation without them. What gets withheld is the diagnostic data: labs, imaging and micro wait until after the intern has committed. That withholding is what makes the commitment worth anything."
   },
-
   "blocks": [
-    { "id": "jul-sep", "label": "Jul–Sep", "ask": "", "summary": "The four deliverables only.", "senior_minutes": 5 },
-    { "id": "oct-dec", "label": "Oct–Dec", "ask": "the test that separates their top two", "summary": "+ the test that separates their top two.", "senior_minutes": 5 },
-    { "id": "jan-mar", "label": "Jan–Mar", "ask": "the framework, named before the list", "summary": "+ the framework, named before the list.", "senior_minutes": 4 },
-    { "id": "apr-jun", "label": "Apr–Jun", "ask": "explicit pruning and the trigger", "summary": "+ explicit pruning and the trigger.", "senior_minutes": 3 }
+    {
+      "id": "jul-sep",
+      "label": "Jul–Sep",
+      "ask": "",
+      "summary": "The four deliverables only.",
+      "senior_minutes": 5
+    },
+    {
+      "id": "oct-dec",
+      "label": "Oct–Dec",
+      "ask": "the test that separates their top two",
+      "summary": "+ the test that separates their top two.",
+      "senior_minutes": 5
+    },
+    {
+      "id": "jan-mar",
+      "label": "Jan–Mar",
+      "ask": "the framework, named before the list",
+      "summary": "+ the framework, named before the list.",
+      "senior_minutes": 4
+    },
+    {
+      "id": "apr-jun",
+      "label": "Apr–Jun",
+      "ask": "explicit pruning and the trigger",
+      "summary": "+ explicit pruning and the trigger.",
+      "senior_minutes": 3
+    }
   ],
-
   "escalation_note": "The one sign it is going wrong: the intern's list gets longer after you escalate. That is covering, not committing — reaching for breadth to avoid being pinned to a choice. Back off one rung and say plainly that four with reasons beats eight without.",
   "escalation_rule": "Escalate in the pre-report email, never on camera. Ambushing someone in front of the group costs you the safe-to-be-wrong contract.",
-
   "roles": [
     {
       "slug": "run-of-show",
@@ -65,11 +175,22 @@
       "strip_key": null,
       "lede": "Post this by the workstation at both sites. The facilitator calls the time out loud at 0:07, 0:16 and 0:22.",
       "is_run_of_show": true,
-      "assignments": ["Date", "Site", "Presenter", "Whiteboard scribe", "PGY-1 discussant", "Senior discussant", "Faculty", "Facilitator"],
-      "prep": { "title": "Objective for today", "lines": 1 },
+      "assignments": [
+        "Date",
+        "Site",
+        "Presenter",
+        "Whiteboard scribe",
+        "PGY-1 discussant",
+        "Senior discussant",
+        "Faculty",
+        "Facilitator"
+      ],
+      "prep": {
+        "title": "Objective for today",
+        "lines": 1
+      },
       "footer": "Run of show · give one copy to every participant"
     },
-
     {
       "slug": "presenter",
       "name": "Case Presenter",
@@ -93,6 +214,7 @@
       ],
       "sections": [
         {
+          "anchor": "script-0",
           "kind": "script",
           "title": "The hook, said out loud",
           "body": "“[Age] [sex] with [relevant background] presents with [chief complaint] for [duration]. [One provocative datum — the vital sign, the exam finding, or the image that made this case worth 25 minutes.]” — then stop talking."
@@ -100,9 +222,11 @@
       ],
       "does_not": "Narrate the whole case front to back. Correct the discussants. Reveal the diagnosis early because the room went quiet.",
       "after": "Post the slides and the exported board to the residency channel within 24 hours.",
-      "prep": { "title": "Notes", "lines": 6 }
+      "prep": {
+        "title": "Notes",
+        "lines": 6
+      }
     },
-
     {
       "slug": "scribe",
       "name": "Whiteboard Scribe",
@@ -116,29 +240,77 @@
       ],
       "sections": [
         {
+          "anchor": "zones",
           "kind": "zones",
           "title": "The zones",
           "header": "CASE ID  |  DATE  |  OBJECTIVE",
           "pr": "PROBLEM REPRESENTATION  (PGY-1, one sentence, out loud)",
           "pr_line": "____-year-old with ____________ presenting with ____________ over ____________",
           "columns": [
-            { "title": "KEY DATA", "colour": "black", "lines": ["Hx · exposures", "· birth, immunizations", "Exam · vitals, growth", "· pertinent pos / neg", "Labs + imaging · block 2"] },
-            { "title": "DIFFERENTIAL", "colour": "blue → red", "lines": ["Framework: ____________", "1. ____________", "2. ____________", "3. ____________", "Struck items stay visible."] },
-            { "title": "DISCRIMINATORS", "colour": "green", "lines": ["Next test: ___________", "If pos → __________", "If neg → __________", "Pending: __________", "Bias watch: ________"] }
+            {
+              "title": "KEY DATA",
+              "colour": "black",
+              "lines": [
+                "Hx · exposures",
+                "· birth, immunizations",
+                "Exam · vitals, growth",
+                "· pertinent pos / neg",
+                "Labs + imaging · block 2"
+              ]
+            },
+            {
+              "title": "DIFFERENTIAL",
+              "colour": "blue → red",
+              "lines": [
+                "Framework: ____________",
+                "1. ____________",
+                "2. ____________",
+                "3. ____________",
+                "Struck items stay visible."
+              ]
+            },
+            {
+              "title": "DISCRIMINATORS",
+              "colour": "green",
+              "lines": [
+                "Next test: ___________",
+                "If pos → __________",
+                "If neg → __________",
+                "Pending: __________",
+                "Bias watch: ________"
+              ]
+            }
           ]
         },
         {
+          "anchor": "colour-code",
           "kind": "table",
           "title": "The colour code",
           "rows": [
-            ["Black", "Objective case data, as the presenter releases it"],
-            ["Blue",  "Live differential — anything said aloud by anyone"],
-            ["Red",   "Struck through when refuted, with the refuting feature written beside it"],
-            ["Green", "Plan, pending data, discriminating tests"],
-            ["Amber", "Teaching points and anything faculty adds after 0:19"]
+            [
+              "Black",
+              "Objective case data, as the presenter releases it"
+            ],
+            [
+              "Blue",
+              "Live differential — anything said aloud by anyone"
+            ],
+            [
+              "Red",
+              "Struck through when refuted, with the refuting feature written beside it"
+            ],
+            [
+              "Green",
+              "Plan, pending data, discriminating tests"
+            ],
+            [
+              "Amber",
+              "Teaching points and anything faculty adds after 0:19"
+            ]
           ]
         },
         {
+          "anchor": "habits",
           "kind": "note",
           "title": "Three habits",
           "body": "Never erase — a crossed-off diagnosis with the reason beside it is the most useful thing on the board. Write it the way they said it; if the phrasing is vague, ask them to sharpen it rather than sharpening it yourself. Draw a line across the board when block 2 lands — everything above it was reasoning without those results."
@@ -146,9 +318,11 @@
       ],
       "does_not": "Add items nobody said. Tidy up sloppy reasoning into clean reasoning. Argue the case — the scribe is not a discussant.",
       "after": "Export the board as a PNG at 0:24 and post it before leaving the call. The board is the artifact of the session, not the slides.",
-      "prep": { "title": "Scratch — draft the zones here before you open the board", "lines": 6 }
+      "prep": {
+        "title": "Scratch — draft the zones here before you open the board",
+        "lines": 6
+      }
     },
-
     {
       "slug": "pgy1",
       "name": "PGY-1 Discussant",
@@ -163,6 +337,7 @@
       ],
       "sections": [
         {
+          "anchor": "deliverables",
           "kind": "numbered",
           "title": "Your four deliverables, in order",
           "items": [
@@ -173,11 +348,13 @@
           ]
         },
         {
+          "anchor": "strong",
           "kind": "script",
           "title": "What a strong first pass sounds like",
           "body": "“Three-year-old, previously healthy, two days of fever and refusal to bear weight, holding the hip flexed and externally rotated. I think this is septic arthritis of the hip until proven otherwise — the positioning plus the CRP is what worries me. Transient synovitis is my main competitor and I can't separate them on exam. Osteomyelitis is possible. My can't-miss is septic arthritis because of the joint-destruction clock. What I most want is the hip ultrasound.”"
         },
         {
+          "anchor": "weak",
           "kind": "script",
           "variant": "bad",
           "title": "What a weak first pass sounds like",
@@ -186,9 +363,11 @@
       ],
       "does_not": "List every diagnosis you can think of. Breadth is avoidance, not thoroughness. Saying “I don't know” out loud is expected and is never penalised.",
       "after": "Nobody interrupts, corrects or rescues you during these four minutes. That is the deal.",
-      "prep": { "title": "Prep — write your four deliverables here before report", "lines": 6 }
+      "prep": {
+        "title": "Prep — write your four deliverables here before report",
+        "lines": 6
+      }
     },
-
     {
       "slug": "senior",
       "name": "Senior Discussant",
@@ -203,22 +382,40 @@
       ],
       "sections": [
         {
+          "anchor": "moves",
           "kind": "moves",
           "title": "Your five moves, in order",
           "items": [
-            { "move": "Organise into a framework", "script": "“Let me take this by layer, because that's what the imaging will sort out. Skin and soft tissue — no cellulitis, off. Joint — septic arthritis and transient synovitis, both live. Bone — proximal femoral osteomyelitis, live. Referred — off; he localises.”" },
-            { "move": "Prune out loud, with the reason", "script": "“Febrile at 38.6, CRP 8.4, refusing to bear weight — three of four Kocher criteria, past the point where I keep trying to talk myself out of it.”" },
-            { "move": "Apply the illness script", "script": "“Classic transient synovitis follows a viral illness, the child is afebrile or low-grade, and they'll usually weight-bear if you coax them. That is not this kid.”" },
-            { "move": "Name the discriminating test", "script": "“Hip ultrasound, with aspiration if there's an effusion. Effusion plus that CRP and I'm calling ortho tonight. No effusion pushes me to MRI, not back to synovitis.”" },
-            { "move": "State confidence, trigger and bias", "script": "“Septic arthritis, about 70%. What would change my mind is a dry tap with a normal-looking joint — then I'm in bone, not joint. I'm watching myself for premature closure: I anchored on hip the second I heard the positioning, and nobody has looked at the smear.”" }
+            {
+              "move": "Organise into a framework",
+              "script": "“Let me take this by layer, because that's what the imaging will sort out. Skin and soft tissue — no cellulitis, off. Joint — septic arthritis and transient synovitis, both live. Bone — proximal femoral osteomyelitis, live. Referred — off; he localises.”"
+            },
+            {
+              "move": "Prune out loud, with the reason",
+              "script": "“Febrile at 38.6, CRP 8.4, refusing to bear weight — three of four Kocher criteria, past the point where I keep trying to talk myself out of it.”"
+            },
+            {
+              "move": "Apply the illness script",
+              "script": "“Classic transient synovitis follows a viral illness, the child is afebrile or low-grade, and they'll usually weight-bear if you coax them. That is not this kid.”"
+            },
+            {
+              "move": "Name the discriminating test",
+              "script": "“Hip ultrasound, with aspiration if there's an effusion. Effusion plus that CRP and I'm calling ortho tonight. No effusion pushes me to MRI, not back to synovitis.”"
+            },
+            {
+              "move": "State confidence, trigger and bias",
+              "script": "“Septic arthritis, about 70%. What would change my mind is a dry tap with a normal-looking joint — then I'm in bone, not joint. I'm watching myself for premature closure: I anchored on hip the second I heard the positioning, and nobody has looked at the smear.”"
+            }
           ]
         }
       ],
       "does_not": "Skip straight to the answer. Treat the intern's list as a first draft to be discarded rather than organised. Every move above is a claim the group can push back on — that is the point.",
       "after": "Ask the intern the question rather than correcting them: “You said hepatitis. Which one, and what would you send?”",
-      "prep": { "title": "Prep — the framework you plan to offer", "lines": 6 }
+      "prep": {
+        "title": "Prep — the framework you plan to offer",
+        "lines": 6
+      }
     },
-
     {
       "slug": "faculty",
       "name": "Faculty",
@@ -239,20 +436,24 @@
       ],
       "sections": [
         {
+          "anchor": "clock",
           "kind": "note",
           "title": "Why the clock matters",
           "body": "Well-meaning attending input, delivered early, ends the discussion it was meant to enrich. The six minutes you hold back are what allow an intern to be visibly wrong and a senior to correct course in public. At 0:19 the room has already done the work, and your contribution lands on prepared ground rather than replacing the preparation."
         },
         {
+          "anchor": "across-the-year",
           "kind": "note",
           "title": "Across the year",
           "body": "Expect the intern's block to get more demanding as the year goes on — by spring they are naming a framework, pruning explicitly and stating what would change their mind. As that happens the senior's block shrinks from five minutes to three. If you find yourself with less to add in June than in October, the format is working."
         }
       ],
       "does_not": "Answer a question the facilitator posed to a resident. Correct a learner in a way that ends participation. Take over the case.",
-      "prep": { "title": "The one pearl you plan to add", "lines": 5 }
+      "prep": {
+        "title": "The one pearl you plan to add",
+        "lines": 5
+      }
     },
-
     {
       "slug": "facilitator",
       "name": "Facilitator",
@@ -277,31 +478,75 @@
       "during_title": "During report — what you actually do",
       "sections": [
         {
+          "anchor": "three-lines",
           "kind": "script",
           "title": "Three lines worth having ready",
           "body": "“Hold that — let's let [name] finish the first pass.”   “Good question. What does the group think before we ask Dr. [name]?”   “We're at 0:16 — labs and imaging now, please.”"
         },
-        { "kind": "ladder", "title": "Escalating the intern across the year" },
         {
+          "anchor": "ladder",
+          "kind": "ladder",
+          "title": "Escalating the intern across the year"
+        },
+        {
+          "anchor": "going-wrong",
           "kind": "note",
           "title": "The one sign it is going wrong",
           "body": "The intern's list gets longer after you escalate. That is covering, not committing — reaching for breadth to avoid being pinned to a choice. Back off one rung and say plainly that four with reasons beats eight without."
         }
       ],
       "after": "Escalate in the pre-report email, never on camera. Ambushing someone in front of the group costs you the safe-to-be-wrong contract.",
-      "prep": { "title": "Notes", "lines": 5 }
+      "prep": {
+        "title": "Notes",
+        "lines": 5
+      }
     }
   ],
-
   "handouts": [
-    { "file": "Morning_Report_Role_Cards.pdf",         "name": "Role cards",              "note": "All seven cards as printed, one page each." },
-    { "file": "Morning_Report_Scorecard.pdf",          "name": "Strike-out scorecard",    "note": "The sixteen items and the four automatic fails, on one page." },
-    { "file": "Cognitive_Bias_Card.pdf",               "name": "Cognitive bias card",     "note": "Fourteen biases with the question that interrupts each one. Keep it by the board." },
-    { "file": "Morning_Report_Role_Evaluations.pdf",   "name": "Role evaluation forms",   "note": "Six formative forms. They stay with the resident — never filed, never reported." },
-    { "file": "Morning_Report_Presenter_Template.pptx","name": "Presenter slide template","note": "Eight slides or fewer. Six is better." },
-    { "file": "Morning_Report_Zoom_Format.pptx",       "name": "Zoom format deck",        "note": "How the session runs on Zoom, for onboarding a new site." },
-    { "file": "Discussant_Wheels.pptx",                "name": "Discussant wheels",       "note": "The printable wheels, for when the web draw is not to hand." },
-    { "file": "OneNote_Board_Template.docx",           "name": "OneNote board template",  "note": "The board zones for programs running it in OneNote instead of Zoom Whiteboard." },
-    { "file": "OneNote_Tags_Setup.pdf",                "name": "OneNote tags setup",      "note": "The colour code as OneNote tags." }
+    {
+      "file": "Morning_Report_Role_Cards.pdf",
+      "name": "Role cards",
+      "note": "All seven cards as printed, one page each."
+    },
+    {
+      "file": "Morning_Report_Scorecard.pdf",
+      "name": "Strike-out scorecard",
+      "note": "The sixteen items and the four automatic fails, on one page."
+    },
+    {
+      "file": "Cognitive_Bias_Card.pdf",
+      "name": "Cognitive bias card",
+      "note": "Fourteen biases with the question that interrupts each one. Keep it by the board."
+    },
+    {
+      "file": "Morning_Report_Role_Evaluations.pdf",
+      "name": "Role evaluation forms",
+      "note": "Six formative forms. They stay with the resident — never filed, never reported."
+    },
+    {
+      "file": "Morning_Report_Presenter_Template.pptx",
+      "name": "Presenter slide template",
+      "note": "Eight slides or fewer. Six is better."
+    },
+    {
+      "file": "Morning_Report_Zoom_Format.pptx",
+      "name": "Zoom format deck",
+      "note": "How the session runs on Zoom, for onboarding a new site."
+    },
+    {
+      "file": "Discussant_Wheels.pptx",
+      "name": "Discussant wheels",
+      "note": "The printable wheels, for when the web draw is not to hand."
+    },
+    {
+      "file": "OneNote_Board_Template.docx",
+      "name": "OneNote board template",
+      "note": "The board zones for programs running it in OneNote instead of Zoom Whiteboard."
+    },
+    {
+      "file": "OneNote_Tags_Setup.pdf",
+      "name": "OneNote tags setup",
+      "note": "The colour code as OneNote tags."
+    }
   ]
 }

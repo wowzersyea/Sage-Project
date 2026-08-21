@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Role card | Morning Report</title>
+<meta name="description" content="One role card for pediatric morning report — what this role does before and during the 25 minutes.">
+<link rel="stylesheet" href="../../assets/mr.css">
+<link rel="stylesheet" href="../../assets/rolecard.css">
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<div class="card-mast">
+  <div class="wrap">
+    <p class="fmt"></p>
+    <p class="tag"></p>
+  </div>
+</div>
+
+<main class="wrap" id="card"></main>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — Morning Report. This card is rendered from <code>content/roles.json</code>; the printed set is under <a href="../#handouts">handouts</a>.</p>
+  </div>
+</footer>
+
+<script src="../../assets/store.js"></script>
+<script src="../../assets/roster.js"></script>
+<script src="../../assets/content.js"></script>
+<script src="../../assets/rolecard.js"></script>
+<script>MRCard.boot("facilitator");</script>
+</body>
+</html>
