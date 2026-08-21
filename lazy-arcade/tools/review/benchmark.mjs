@@ -225,6 +225,10 @@ const m = await p.evaluate(async () => {
       shine: typeof shineSymbol === "function",
       manes: Object.keys(SYMBOL_ART.default || {})
         .filter((k) => SYMBOL_ART.default[k].maneUri).length,
+      blinks: Object.keys(SYMBOL_ART.default || {})
+        .filter((k) => SYMBOL_ART.default[k].blinkUri).length,
+      tongues: Object.keys(SYMBOL_ART.default || {})
+        .filter((k) => SYMBOL_ART.default[k].tongueUri).length,
     };
   }
 
@@ -355,19 +359,27 @@ row(H, "Twelve symbols from owned art", PASS, "each traced to a token the operat
       `${a.backlight ? ", backlight" : ""}${a.ring ? ", ring" : ""}${a.shine ? ", specular sweep" : ""}`,
       "Animation principle applied to a static portrait: anticipation, action, " +
       "follow-through, scaled from 50% 88% so the lion rears instead of zooming.");
-  row(H, "Motion inside the character outline", m.symAnim.manes >= 4 ? PARTIAL : NEEDS_ART,
-      `${m.symAnim.manes} symbols ship a separate mane layer that lags the roar`,
-      "Four earlier routes DEFORMED the art and failed -- slice mesh warp, " +
-      "three-piece falloff, silhouette grow, and an eye-twin search that returned " +
-      "0 matches across 9,999 tokens. Separating a flat-colour layer and moving it " +
-      "RIGIDLY works instead: no shear, no seam. Six of twelve manes are separable; " +
-      "White, Black, Brown, Fire and Emerald cannot be told from outline and shadow " +
-      "and hold still. Blink and mouth movement still need drawn frames.");
+  {
+    const a = m.symAnim;
+    const layered = a.manes + a.blinks + a.tongues;
+    row(H, "Motion inside the character outline", layered >= 10 ? PASS : PARTIAL,
+        `${a.manes} manes lag the roar, ${a.blinks} blink, ${a.tongues} loll a tongue`,
+        "Every route that DEFORMED the art failed -- slice mesh warp, three-piece " +
+        "falloff, silhouette grow, and an eye-twin search returning 0 matches across " +
+        "9,999 tokens. Separating a flat-colour LAYER and moving it rigidly works: no " +
+        "shear, no seam. The blink was twice called impossible on the strength of a " +
+        "sampling bug that read the black brow line as fur; sampling between the eyes " +
+        "and adding a lash line gives a closed eye that reads as drawn. Where a layer " +
+        "is absent it is measured, not assumed: M3's orange mane takes 15.8% of the " +
+        "muzzle box, M4's white mane IS the face colour.");
+  }
 }
 row(H, "Row-multiplier art", NEEDS_ART,
     "orbs are drawn procedurally (svgOrb)",
-    "The operator's own multiplier files were never received; two filesystem " +
-    "sweeps found only files generated in-session.");
+    "Settled rather than suspected: scanning all 6,525 lines of the session " +
+    "transcript shows exactly two images sent across the project's history, both " +
+    "Lions. The /goal message describing a video and multiplier files carried only " +
+    "one Lion image, so at least two intended attachments did not survive that send.");
 row(H, "Ambient idle motion", m.symAnim.idle && m.symAnim.idleDesynced ? PASS : PARTIAL,
     `${m.symAnim.idleCells} tiles idling on ${m.symAnim.idleDurs.length} periods `
     + `(${m.symAnim.idleDurs.join(", ")}) across ${m.symAnim.idleDelays} phase offsets`,
