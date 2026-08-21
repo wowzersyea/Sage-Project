@@ -212,10 +212,22 @@ amount of further engineering changes that. This was tested rather than assumed:
   before being reverted. A continuous mesh needs many columns with smoothly
   varying offsets, and tile-based warping seams regardless without WebGL and a
   real mesh.
+* **A silhouette "breathe" was tried and rejected.** Compositing a slightly
+  enlarged copy of the sprite BEHIND the original leaves the face untouched and
+  lets only the outer edge peek out, which on a lion is mostly mane -- no
+  isolation needed, no shearing possible. It reads correctly where the silhouette
+  is fur and fails wherever it is hardware: on the Crown lion the halo emerges as
+  a second gold rim above the first, and the same doubling appears on hats, horns
+  and ears. The effect cannot tell fur from object, and half this cast is wearing
+  something.
 * **What DID work is anatomy-free.** A specular band travelling across the
   symbol, clipped by `source-atop` to its own alpha, changes the artwork's
   appearance over time without displacing a pixel. That shipped. Anything
   anatomy-AWARE cannot be applied uniformly, for a reason specific to this cast.
+
+Three techniques were tried against the static art. One shipped. The two that
+failed did so for the same underlying reason: an effect applied uniformly to a
+flat composite cannot distinguish the parts of a lion from each other.
 
 ### Why a blink cannot simply be switched on
 
