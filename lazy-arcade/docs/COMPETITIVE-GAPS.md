@@ -38,6 +38,54 @@ verification run.
 
 ---
 
+## 0.5 The reference game was misread, and it is not Dead or Alive
+
+The `/goal` brief says: *"here is wanted dead or alive
+https://www.youtube.com/watch?v=RgwClSrW8y0 review it and get our animation to
+this level."*
+
+That was read as "here is [what I] wanted: Dead or Alive" — NetEnt's 2009
+western — and every animation and audio note in this project since was written
+against that game. It is the wrong game. The linked video is titled **"How to
+Play Wanted Dead or Wild Slots and WIN BIG"**. The operator was naming the
+game: Hacksaw Gaming's **Wanted Dead or a Wild** (2021). "Wanted" is the first
+word of the title, not a verb.
+
+This matters beyond a citation, because the two games want opposite things:
+
+| | Dead or Alive (NetEnt, 2009) | Wanted Dead or a Wild (Hacksaw, 2021) |
+|---|---|---|
+| Era | pre-mobile, 9 lines | modern, 12,500x max win |
+| Signature | sticky wilds in free spins | whole REELS turning wild, and DUEL/RAILROAD/DEAD modes |
+| Multiplier shape | fixed 2x-3x per sticky wild | multipliers stacked into a running total |
+| Read across a room | subdued sepia | saturated red columns, deliberately loud |
+| Audio | period western stems | modern produced stems, heavy sub, hard transients |
+
+**What was checked against the actual reference.** Ninety-five frames were
+extracted from the linked video. Its multiplied reels are a saturated red block
+readable at a glance from across a room. Ours were `#5A2408` into near-black — a
+dark desaturated brown — and, worse, they were *binary*: a x2 row was painted
+identically to a x25 row, so the number in the rail was annotating the grid
+rather than describing it. The heat now scales with the multiplier on a log
+curve, and a screenshot-reading test holds it there.
+
+**What is still open, and it is a mechanic question rather than a paint
+question.** The reference's identity is columns — a whole reel goes wild and
+sticks. Ours is rows — a horizontal band takes a multiplier. Matching the
+reference's *feel* by adjusting colour is the cheap half; whether the mechanic
+itself should be reconsidered is the operator's call, not a rendering decision,
+and it is a maths change (new strips, fresh RTP verification) rather than a
+front-end one.
+
+**The pattern this belongs to.** Three faulty instruments are recorded further
+down this file — the mane, the IPFS fetch, the blink fur sample — each one a
+measurement mistaken for a property of the world. This is the same class of
+error one level up: a misparsed sentence taken as a settled premise and never
+re-checked against the artefact it pointed at. The link was in the brief the
+whole time.
+
+---
+
 ## 1. Slots vs Pragmatic Play
 
 ### Presentation — closable without touching the maths

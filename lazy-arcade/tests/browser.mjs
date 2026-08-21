@@ -47,6 +47,68 @@
 
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
+import { inflateSync } from "node:zlib";
+
+/* Read the pixels a screenshot actually contains.
+ *
+ * Every visual check in this file until now asked the DOM what it intended to
+ * draw -- a class name, a computed style. That is one step short of the thing
+ * it is guarding: a rule can resolve to a perfectly good colour and still be
+ * painted under something else, or clipped, or overridden by a later rule. For
+ * the row-multiplier heat the whole claim is "the grid is visibly hotter", so
+ * the check has to look at the picture.
+ *
+ * Chromium's screenshots are 8-bit, non-interlaced, colour type 2 or 6, which
+ * is the entire surface this needs to handle. */
+function pngPixels(buf) {
+  if (buf.readUInt32BE(0) !== 0x89504e47) throw new Error("not a PNG");
+  let off = 8, w = 0, h = 0, channels = 0;
+  const idat = [];
+  while (off < buf.length) {
+    const len = buf.readUInt32BE(off), type = buf.toString("ascii", off + 4, off + 8);
+    const data = buf.subarray(off + 8, off + 8 + len);
+    if (type === "IHDR") {
+      w = data.readUInt32BE(0); h = data.readUInt32BE(4);
+      const depth = data[8], colour = data[9], interlace = data[12];
+      if (depth !== 8 || interlace !== 0 || (colour !== 2 && colour !== 6))
+        throw new Error(`unsupported PNG: depth ${depth} colour ${colour} interlace ${interlace}`);
+      channels = colour === 6 ? 4 : 3;
+    } else if (type === "IDAT") idat.push(Buffer.from(data));
+    else if (type === "IEND") break;
+    off += 12 + len;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  const stride = w * channels, out = Buffer.alloc(h * stride);
+  const paeth = (a, b, c) => {
+    const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+    return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+  };
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (stride + 1)], src = y * (stride + 1) + 1, dst = y * stride;
+    for (let x = 0; x < stride; x++) {
+      const a = x >= channels ? out[dst + x - channels] : 0;
+      const b = y > 0 ? out[dst - stride + x] : 0;
+      const c = x >= channels && y > 0 ? out[dst - stride + x - channels] : 0;
+      const v = raw[src + x];
+      out[dst + x] = (v + (f === 1 ? a : f === 2 ? b : f === 3 ? ((a + b) >> 1)
+                            : f === 4 ? paeth(a, b, c) : 0)) & 0xff;
+    }
+  }
+  return { w, h, channels, data: out };
+}
+
+/* How red-hot a picture reads, averaged over every pixel: red minus the other
+ * two channels. Neutral art scores near zero however bright it is, so this
+ * measures the plate's colour rather than its exposure. */
+function warmth(png) {
+  const { w, h, channels, data } = png;
+  let sum = 0;
+  for (let i = 0; i < w * h; i++) {
+    const p = i * channels;
+    sum += data[p] - (data[p + 1] + data[p + 2]) / 2;
+  }
+  return sum / (w * h);
+}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -1278,6 +1340,76 @@ console.log("\nSecondary motion (mane)");
         r.composed && r.drawnOpaque > r.baseOpaque * 1.1,
         `composed covers ${r.drawnOpaque}px vs a bare base's ${r.baseOpaque}px`);
   check("no runtime errors around the mane layer", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* ------------------------------------------------- row multiplier heat */
+/* The rail says x25 and the grid has to say it too. This was binary before --
+   a x2 row and a x25 row were painted identically -- which made the rail an
+   annotation rather than a description of something visible.
+
+   Proven falsifiable by two separate corruptions, and the second is the whole
+   reason these checks read a screenshot:
+
+     heat pinned to 1 in paintMultRail   3 red: the scale check, the resolved
+                                         style check, and the pixel comparison
+                                         (x25 69.7 vs x2 70.1 -- identical)
+     CSS reverted to the flat plate      2 red: resolved style and pixels. Every
+                                         DOM-side check stayed GREEN, reporting a
+                                         perfectly correct --heat of 0.215 -> 1
+                                         that nothing was painting with.
+
+   A check that had only asked the DOM what it intended to draw would have passed
+   the second one, which is a build where the feature is entirely absent from the
+   screen. */
+console.log("\nRow multiplier heat");
+{
+  const { p, ctx, errs } = await page();
+  const setup = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    document.querySelector('[data-game="traitvault"]').click();
+    await sleep(450);
+    const rng = makeRng(new Uint8Array(32).map((_, i) => (i * 5 + 1) & 0xff), "c", 3, "traitvault");
+    await animateSpin(drawGrid(CONF.traitvault.strips, rng), 0);
+    // row 0 plain, row 1 at the smallest multiplier, row 3 at the ceiling
+    paintMultRail([0, 2, 0, ROW_MULT_CAP], null, null);
+    await sleep(120);
+    const cells = [...document.getElementById("reels").children[2].querySelectorAll(".sym")];
+    const read = (row) => {
+      const cs = getComputedStyle(cells[row], "::before");
+      return {
+        hot: cells[row].classList.contains("hotrow"),
+        heat: +getComputedStyle(cells[row]).getPropertyValue("--heat"),
+        border: cs.borderColor,
+        // Computed box-shadow puts the colour first and the outer glow last, so
+        // rather than pattern-match a shadow list, take the widest length in it:
+        // the outer blur is the largest by construction (16..38px vs an 18px inset).
+        blur: Math.max(...[...cs.boxShadow.matchAll(/(-?[\d.]+)px/g)].map((m) => +m[1])),
+      };
+    };
+    for (let r = 0; r < 4; r++) cells[r].dataset.heatProbe = r;
+    return { cap: ROW_MULT_CAP, plain: read(0), low: read(1), top: read(3) };
+  });
+
+  const shot = async (row) =>
+    warmth(pngPixels(await p.locator(`[data-heat-probe="${row}"]`).screenshot({ type: "png" })));
+  const wPlain = await shot(0), wLow = await shot(1), wTop = await shot(3);
+
+  check("a multiplied row is marked hot and a plain one is not",
+        setup.low.hot && setup.top.hot && !setup.plain.hot);
+  check("heat rises with the multiplier",
+        setup.top.heat > setup.low.heat + 0.2 && setup.low.heat > 0,
+        `x2 -> ${setup.low.heat}, x${setup.cap} -> ${setup.top.heat}`);
+  check("the ceiling row tops the scale out", Math.abs(setup.top.heat - 1) < 1e-6,
+        `${setup.top.heat}`);
+  check("the plate and glow resolve differently at the two multipliers",
+        setup.low.border !== setup.top.border && setup.top.blur > setup.low.blur,
+        `${setup.low.border} @${setup.low.blur}px vs ${setup.top.border} @${setup.top.blur}px`);
+  check("a multiplied row is visibly hotter than a plain one",
+        wLow > wPlain + 8, `x2 reads ${wLow.toFixed(1)} vs plain ${wPlain.toFixed(1)}`);
+  check("the ceiling row is visibly hotter than the smallest multiplier",
+        wTop > wLow + 8, `x${setup.cap} reads ${wTop.toFixed(1)} vs x2 ${wLow.toFixed(1)}`);
+  check("no runtime errors painting the rail", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }
 

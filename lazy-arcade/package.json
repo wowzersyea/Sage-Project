@@ -16,6 +16,7 @@
     "verify:play": "node tests/verify-play-math.mjs",
     "verify:browser": "node tests/browser.mjs",
     "verify:audio": "node tests/audio-levels.mjs",
-    "review:benchmark": "node tools/review/benchmark.mjs"
+    "review:benchmark": "node tools/review/benchmark.mjs",
+    "review:render": "node tools/review/render-benchmark.mjs"
   }
 }

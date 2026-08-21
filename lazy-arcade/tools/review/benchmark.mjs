@@ -252,6 +252,23 @@ const m = await p.evaluate(async () => {
 const reducedMotion = await p.evaluate(() =>
   [...document.querySelectorAll("style")].some((s) => /prefers-reduced-motion/.test(s.textContent)));
 
+/* Does a multiplied row read hotter the bigger the multiplier is? Resolved at
+   runtime rather than pattern-matched, because the question is what the browser
+   ends up painting, not what the stylesheet asks for. */
+const heatScale = await p.evaluate(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  document.querySelector('[data-game="traitvault"]').click();
+  await sleep(450);
+  const rng = makeRng(new Uint8Array(32).map((_, i) => (i * 5 + 1) & 0xff), "c", 3, "traitvault");
+  await animateSpin(drawGrid(CONF.traitvault.strips, rng), 0);
+  paintMultRail([0, 2, 0, ROW_MULT_CAP], null, null);
+  await sleep(120);
+  const cells = [...document.getElementById("reels").children[2].querySelectorAll(".sym")];
+  const plate = (row) => getComputedStyle(cells[row], "::before").backgroundImage;
+  return { cap: ROW_MULT_CAP, low: plate(1), top: plate(3), plain: plate(0),
+           hot: cells[1].classList.contains("hotrow") && !cells[0].classList.contains("hotrow") };
+});
+
 /* ---------------------------------------------------------------- scoring */
 const A = "Reel motion", B = "Win presentation", C = "Audio",
       D = "Controls & session", E = "Provable fairness", F = "Accessibility",
@@ -302,8 +319,10 @@ row(C, "Anticipation riser", m.audio.riser ? PASS : ABSENT, "riser(seconds), len
 row(C, "Mute control", m.audio.muteControl ? PASS : ABSENT, "");
 row(C, "Recorded/produced audio assets", NEEDS_HUMAN,
     "everything above is synthesised in WebAudio",
-    "Dead or Alive uses recorded stems. Synthesis gets the STRUCTURE right -- " +
-    "ducking, limiting, escalation, tempo -- but not the timbre of produced audio.");
+    "Wanted Dead or a Wild -- the reference actually linked in the brief, see " +
+    "COMPETITIVE-GAPS Sec. 0.5 -- runs on produced stems with heavy sub and hard " +
+    "transients. Synthesis gets the STRUCTURE right (ducking, limiting, escalation, " +
+    "tempo) but not the timbre of produced audio.");
 
 row(D, "Autoplay", m.controls.autoplay ? PASS : ABSENT, "");
 row(D, "Autoplay loss limit enforced", m.autoEnforced.loss ? PASS : ABSENT,
@@ -380,6 +399,18 @@ row(H, "Row-multiplier art", NEEDS_ART,
     "transcript shows exactly two images sent across the project's history, both " +
     "Lions. The /goal message describing a video and multiplier files carried only " +
     "one Lion image, so at least two intended attachments did not survive that send.");
+row(H, "Multiplied rows read hot, and the heat scales",
+    heatScale.hot && heatScale.low !== heatScale.plain && heatScale.top !== heatScale.low
+      ? PASS : PARTIAL,
+    heatScale.top !== heatScale.low
+      ? `x2 and x${heatScale.cap} resolve to different plates`
+      : `x2 and x${heatScale.cap} paint identically`,
+    "Measured against the reference the brief actually links -- Wanted Dead or a " +
+    "Wild, whose multiplied reels are a saturated red block readable across a room " +
+    "(COMPETITIVE-GAPS Sec. 0.5). Ours was a dark brown, and binary: the ceiling " +
+    "multiplier lit exactly like the smallest one, so the rail annotated the grid " +
+    "instead of describing it. The heat now rides a log curve of the multiplier, " +
+    "and browser.mjs holds it there by reading the screenshot rather than the CSS.");
 row(H, "Ambient idle motion", m.symAnim.idle && m.symAnim.idleDesynced ? PASS : PARTIAL,
     `${m.symAnim.idleCells} tiles idling on ${m.symAnim.idleDurs.length} periods `
     + `(${m.symAnim.idleDurs.join(", ")}) across ${m.symAnim.idleDelays} phase offsets`,
