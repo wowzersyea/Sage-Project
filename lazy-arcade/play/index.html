@@ -1296,6 +1296,16 @@ function noiseBuffer(seconds){
   for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
   return b;
 }
+/* The rhythm bed fires two of these a beat, forever. Building a fresh buffer
+   each time meant allocating and filling ~6 KB of random samples several times a
+   second for the entire session, to produce noise indistinguishable from noise
+   generated once. One buffer, reused: a BufferSource is single-use but the
+   buffer behind it is not. */
+let noiseCache=null;
+function sharedNoise(){
+  if(!noiseCache) noiseCache=noiseBuffer(1.0);
+  return noiseCache;
+}
 function blip(freq,dur,type="square",gain=.05,slideTo){
   if(muted) return;
   const c=ac(), o=c.createOscillator();
@@ -1605,12 +1615,13 @@ function startRhythm(){
   const c=ac();
   rhythm={bpm:RHYTHM_BASE_BPM, target:RHYTHM_BASE_BPM, next:c.currentTime+0.08, step:0, timer:null};
   const chuff=(t,accent)=>{
-    const src=c.createBufferSource(); src.buffer=noiseBuffer(0.14);
+    const src=c.createBufferSource(); src.buffer=sharedNoise();
+    src.loop=true;
     const bp=c.createBiquadFilter(); bp.type="bandpass";
     bp.frequency.value=accent?520:900; bp.Q.value=accent?0.8:1.6;
     src.connect(bp);
     const g=env(bp,accent?0.05:0.022,0.004,accent?0.16:0.08,t); g.connect(busGain);
-    src.start(t);
+    src.start(t); src.stop(t+(accent?0.2:0.1));
     if(accent){
       const o=c.createOscillator(); o.type="sine";
       o.frequency.setValueAtTime(96,t);
