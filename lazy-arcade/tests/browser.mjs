@@ -430,6 +430,85 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* ------------------------------------------- leaving hi/lo mid-round */
+// Switching away from Hi/Lo with money on the table stranded it. hl.live stayed
+// true, hlRender consulted only hl.live so the cash-out button stayed visible
+// on the SLOT deck, and pressing it paid 101.04 out while the player was on
+// Pride -- a control from one game, working in another, moving money. A player
+// who never went back had a live stake nobody could reach.
+console.log("\nLeaving Hi/Lo mid-round");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    document.querySelector('[data-game="hilo"]').click();
+    await sleep(450);
+    let t = 0;
+    while (!hl.live && t++ < 300) { await hlPick("rarer"); await sleep(8); }
+    if (!hl.live) return { err: "no live round" };
+    const owed = hl.risk * hl.mult, before = balance;
+
+    document.querySelector('[data-game="pride"]').click();
+    await sleep(500);
+    const settled = +(balance - before).toFixed(4);
+    const visible = getComputedStyle(document.getElementById("cash")).display !== "none";
+
+    // press the stranded control anyway
+    const b2 = balance;
+    document.getElementById("cash").click();
+    await sleep(600);
+    return { owed: +owed.toFixed(4), settled, visible, live: hl.live, risk: hl.risk,
+             paidOnPride: +(balance - b2).toFixed(4) };
+  });
+  check("leaving Hi/Lo settles the round", r.live === false && r.risk === 0,
+        `live=${r.live} risk=${r.risk}`);
+  check("the player is paid what the round was worth",
+        Math.abs(r.settled - r.owed) < 1e-6, `settled ${r.settled} against ${r.owed} owed`);
+  check("the cash-out control does not follow into a slot game", !r.visible);
+  check("pressing it in a slot game pays nothing", r.paidOnPride === 0,
+        `paid ${r.paidOnPride}`);
+  check("no runtime errors leaving Hi/Lo", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* --------------------------------------------------- hi/lo draw model */
+// The cabinet described Hi/Lo as "without replacement", left over from the old
+// full-collection card deck. hlDraw excludes only the rank currently showing,
+// so every rank already seen stays drawable. The odds on screen are computed
+// for that model, so the label was the one part disagreeing with the game --
+// and a player reading it would mis-reason about what can come next.
+console.log("\nHi/Lo draw model");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(async () => {
+    document.querySelector('[data-game="hilo"]').click();
+    await new Promise((r) => setTimeout(r, 400));
+    const seen = new Map();
+    let prev = null, adjacent = 0;
+    for (let i = 0; i < 400; i++) {
+      const c = hlDraw(prev);
+      seen.set(c, (seen.get(c) || 0) + 1);
+      if (prev !== null && c === prev) adjacent++;
+      prev = c;
+    }
+    const most = Math.max(...seen.values());
+    return { draws: 400, distinct: seen.size, most, adjacent,
+             ranks: RARITY_RANKS,
+             desc: document.getElementById("gDesc").textContent.toLowerCase() };
+  });
+  // With replacement, 400 draws over 101 ranks must repeat heavily. Without
+  // replacement they could not repeat at all, and the deck would be gone at 101.
+  check("ranks recur across draws, so the deck is not exhausted",
+        r.most > 1 && r.distinct < r.draws,
+        `${r.distinct} distinct in ${r.draws} draws, most-seen ${r.most}x`);
+  check("the rank showing is never drawn again immediately", r.adjacent === 0,
+        `${r.adjacent} adjacent repeats`);
+  check("the cabinet does not claim to draw without replacement",
+        !/without replacement/.test(r.desc), r.desc);
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- paytable */
 // A regression I introduced and would have shipped. Splitting the maned Lions
 // into a body plus a mane layer made symbolHTML return TWO elements, and the

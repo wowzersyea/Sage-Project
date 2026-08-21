@@ -3472,7 +3472,7 @@ function hlRender(flip){
   // Show what cashing out actually banks -- a bare "Cash out" makes the player
   // do the arithmetic mid-round.
   $("cash").textContent = hl.live ? `Cash out ${fmt(hl.risk*hl.mult)}` : "Cash out";
-  $("cash").style.display=hl.live?"":"none";
+  $("cash").style.display=(hl.live&&game==="hilo")?"":"none";
   $("cash").disabled=!hl.live;
   const fee=hl.card?swapFee(hl.n,hl.card):0;
   $("hlSwapFee").textContent = fee<=0 ? "free — zero EV" : fmt(fee*(+$("bet").value));
@@ -3524,6 +3524,19 @@ async function hlPick(dir){
   }
   hlRender(); updateHud(); busy=false;
 }
+/* Pay out a live round and close it.
+   Split out of hlCash so the same settlement runs when the player LEAVES the
+   game. Switching away mid-round used to strand the stake: hl.live stayed true,
+   the cash-out button stayed visible on the slot games because hlRender only
+   ever consulted hl.live, and pressing it paid 101.04 out while the player was
+   sitting on Pride. A control from one game, working in another. */
+function hlSettle(){
+  if(!hl.live) return 0;
+  const mult=hl.mult, won=hl.risk*mult;
+  hl.live=false; hl.risk=0; hl.mult=1;
+  balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,mult);
+  return won;
+}
 async function hlCash(){
   // SETTLE FIRST, CELEBRATE AFTER.
   //
@@ -3537,9 +3550,7 @@ async function hlCash(){
   // The round is now closed before anything can yield, which is the same rule
   // doSpin follows when it debits the stake before its first await.
   if(busy||!hl.live) return;
-  const mult=hl.mult, won=hl.risk*mult;
-  hl.live=false; hl.risk=0; hl.mult=1;
-  balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,mult);
+  const mult=hl.mult, won=hlSettle();
   hlRender(); updateHud();
   busy=true;
   try{
@@ -3752,6 +3763,13 @@ function renderPaytable(){
 
 /* =============================== wiring ================================= */
 function selectGame(g){
+  // Leaving Hi/Lo with money on the table settles it rather than abandoning it.
+  // The alternative is a live stake nobody can reach and a pay button loose in
+  // another game.
+  if(game==="hilo" && g!=="hilo" && hl.live){
+    const won=hlSettle();
+    setTimeout(()=>flash(`Hi/Lo round settled · +${fmt(won)}`),40);
+  }
   game=g; stopAuto=true; autoLeft=0;
   setTheme(g);
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.game===g)));
@@ -3760,6 +3778,10 @@ function selectGame(g){
   $("hlCard").classList.toggle("hidden",!isHilo);
   $("hlBtns").classList.toggle("hidden",!isHilo);
   $("hlExtra").classList.toggle("hidden",!isHilo);
+  // Belongs with the other Hi/Lo controls. hlRender also guards it, but that
+  // only runs on a Hi/Lo redraw, so on the way OUT nothing was hiding it and it
+  // sat on the slot deck showing a stale amount.
+  $("cash").style.display=(isHilo&&hl.live)?"":"none";
   $("spin").style.display=isHilo?"none":"";
   $("turbo").style.display=isHilo?"none":"";
   $("auto").style.display=isHilo?"none":"";
@@ -3775,7 +3797,15 @@ function selectGame(g){
   $("multRo").style.display=isHilo?"":"none";
   $("gName").textContent = isHilo?"Rarity Hi/Lo"
     : g==="pride"?"Pride" : g==="cubcluster"?"Cub Cluster":"Trait Vault";
-  $("gDesc").textContent = isHilo?"card duel · without replacement"
+  // "without replacement" was left over from the old full-collection card deck
+  // and is not what this game does. hlDraw excludes ONLY the rank currently
+  // showing and then draws uniformly from the rest, so every rank already seen
+  // stays available: 400 draws produce about 100 distinct ranks with one
+  // appearing ten times, where a real 101-card deck would exhaust after 101 and
+  // never repeat. The displayed odds are computed for exactly that model -- at
+  // rank 92, "rarer 8.00%" is 8 ranks out of the 100 still drawable -- so the
+  // label was the only part disagreeing with the game.
+  $("gDesc").textContent = isHilo?"rarity duel · fresh rank each turn"
     : g==="pride"?"1024 ways · 5×4 · 10 free spins"
     : g==="cubcluster"?"cluster pays · tumbles ×1→×8":"40 lines · row multipliers";
   $("chipMode").textContent=isHilo?"Card duel":"Base game";
