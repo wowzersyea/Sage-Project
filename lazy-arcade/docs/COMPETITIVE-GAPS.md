@@ -267,6 +267,39 @@ for any of the twelve symbols -- the trait space is combinatorial enough that an
 exact match on the other seven categories essentially never occurs. The frames
 have to be drawn.
 
+### The multiplier files were never received, and here is the proof
+
+This was reported for many rounds as "not on this machine", which was true but
+weak: absence from a filesystem does not prove absence from the conversation,
+and the operator's own images arrive as message attachments rather than as files
+on disk. Two filesystem sweeps were the wrong instrument for the question.
+
+The right instrument is the session transcript, which records every attachment
+as base64. Scanning all 6,525 lines of it, from 2026-08-11 to 2026-08-21, the
+operator sent exactly **two distinct images** in the entire project history:
+
+| what | when | used as |
+|---|---|---|
+| Lion #5216, "Lazy Butt" full-body render | attached to the `/goal` command | P2, the LAZY Hat symbol |
+| Lion #4230, the Crown lion | sent three times, 04:42 / 05:24 / 12:16 | P1, the top symbol |
+
+No video. No multiplier art. No document, archive or non-image upload of any
+kind -- the only `type=file` attachments in the transcript are project files
+already in this repo.
+
+Two details are worth keeping. The `/goal` message states "I have attached a
+video" and "i have also inputed files to be used for the multiplier", and
+**only the single Lion image accompanied it** -- so at least two intended
+attachments did not survive that send. And the Crown image was sent three
+separate times, byte-identical on each (md5 554600f2...), which is what
+re-sending looks like when someone believes an attachment has not landed.
+
+So the multiplier art is not lost, mislaid, or somewhere this session cannot
+reach. It never arrived. The row-multiplier mechanic is built, calibrated to
+0.97 RTP and covered by tests; it draws procedural orbs (`svgOrb`) purely
+because there is no supplied art to draw instead. Re-sending the files -- ideally
+one per message, given the evidence above -- is all that is needed.
+
 ### Cub Cluster's trait crops, and a blocker I invented
 
 Found by screenshotting the board rather than testing around it, the same way
