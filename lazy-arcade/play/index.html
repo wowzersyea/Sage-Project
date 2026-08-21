@@ -1,3 +1,12 @@
+<meta charset="utf-8">
+<!-- Without this a phone renders the cabinet in a 980px virtual viewport and
+     scales the whole thing down to fit, so every control is roughly a third of
+     the size it was designed at and the readouts need pinch-zoom to read. It
+     also quietly invalidated the touch-target check: 44 CSS px inside a 980px
+     viewport is about 17 physical px on a 393px-wide phone, so the check passed
+     while the buttons were too small to hit. The verifier page has always had
+     this tag; the cabinet never did. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lazy Arcade — Pride, Cub Cluster, Trait Vault, Rarity Hi/Lo</title>
 <style>
 /* Single-theme by intent: this is a lit cabinet, not a document. Every colour
@@ -564,6 +573,53 @@ details.bench>summary::before{content:"▸ ";color:var(--gold)}
 details.bench[open]>summary::before{content:"▾ "}
 .benchbody{padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:760px){.benchbody{grid-template-columns:1fr}}
+
+/* PORTRAIT PHONES.
+   Measured before this existed, on a 320x568 screen: masthead 138, title 45,
+   topbar 98, reels 202, deck 300 -- about 800px of cabinet in a 568px viewport,
+   with the SPIN BUTTON 155px below the fold. A slot you have to scroll to play
+   is not a slot. (The whole thing was invisible until the viewport meta tag was
+   added; before that a phone rendered everything in a 980px virtual viewport and
+   scaled it down, so the layout "fit" by being too small to read.)
+
+   Nothing here is hidden. The chrome is compacted -- smaller masthead, tabs on
+   one scrolling row, readouts two-up instead of stacked -- so the reels and the
+   spin button are on screen together, which is the only part that has to be. */
+@media (max-width: 520px){
+  .wrap{padding:6px}
+  .mast{gap:8px;padding:4px 8px}
+  .logo{font-size:16px;letter-spacing:.1em}
+  /* Tabs wrapped onto three rows and cost 94px. One scrolling row costs 38. */
+  .games{margin-left:0;flex-wrap:nowrap;overflow-x:auto;width:100%;
+         scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .games::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:9px 10px;font-size:10px}
+  .title{font-size:10px;gap:6px}
+  .title b{font-size:11px}
+  .topbar{gap:6px;font-size:10px}
+  .chip{padding:3px 8px}
+  /* Two columns of readouts rather than four stacked rows. */
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+  .ro .v{font-size:15px}
+  .deck{gap:8px}
+  .betrow{gap:6px}
+}
+/* Short screens -- a small phone in portrait, or any phone in landscape -- have
+   the opposite problem: enough width, almost no height. Trim vertical furniture.
+   620px catches a 320x568 handset, where the compaction above still left the
+   spin button 45px past the fold, and clears a Pixel 5 (727) and an iPhone 12
+   (664) untouched. */
+@media (max-height: 620px){
+  .mast{padding:2px 8px}
+  .logo{font-size:15px}
+  .title{display:none}          /* the game name is already on its selected tab */
+  .topbar{font-size:10px;gap:4px}
+  .chip{padding:2px 7px}
+  .tab{padding:8px 9px}
+  .deck{gap:6px}
+  .readout{gap:4px 10px}
+  .ro .v{font-size:14px}
+}
 .card{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:12px}
 .card h3{margin:0 0 9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--muted);font-weight:600}

@@ -430,6 +430,98 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* ------------------------------------------------------------ phone layout */
+// play/index.html shipped with NO meta tags at all -- no charset, no viewport --
+// while the verifier page next to it has always had them. A phone therefore laid
+// the cabinet out in a 980px virtual viewport and scaled the result down, so
+// everything was about a third of its designed size and the readouts needed
+// pinch-zoom. It also made the touch-target check pass for the wrong reason: 44
+// CSS px inside a 980px viewport is roughly 17 physical px on a 393px phone.
+//
+// With the viewport corrected the real layout problem appeared: 800px of cabinet
+// in a 568px screen, with the spin button 155px below the fold. A slot you have
+// to scroll to play is not a slot.
+console.log("\nPhone layout");
+{
+  const PHONES = [
+    ["Pixel 5", devices["Pixel 5"]],
+    ["iPhone 12", devices["iPhone 12"]],
+    ["320x568", { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true,
+                  deviceScaleFactor: 2, userAgent: devices["iPhone 12"].userAgent }],
+  ];
+  for (const [name, prof] of PHONES) {
+    const { p, ctx } = await page(prof);
+    const r = await p.evaluate(() => {
+      const vw = innerWidth, vh = innerHeight;
+      const R = (s) => document.querySelector(s).getBoundingClientRect();
+      const spin = R("#spin"), reels = R("#reels");
+      const games = document.querySelector(".games");
+      return {
+        vw, vh,
+        scaled: vw > 900,                       // the 980px fallback viewport
+        reelsFully: reels.top >= 0 && reels.bottom <= vh,
+        spinFully: spin.top >= 0 && spin.bottom <= vh,
+        hOverflow: document.body.scrollWidth > vw + 1,
+        tabsReachable: games.scrollWidth <= games.clientWidth + 1 || games.scrollWidth > 0,
+        smallTabs: [...document.querySelectorAll(".tab")]
+          .filter((t) => t.getBoundingClientRect().height < 40).length,
+      };
+    });
+    check(`${name}: renders at device width, not a scaled-down 980px page`,
+          !r.scaled, `viewport reported as ${r.vw}px wide`);
+    check(`${name}: the reels and the spin button are on screen together`,
+          r.reelsFully && r.spinFully,
+          `reels=${r.reelsFully} spin=${r.spinFully} in ${r.vw}x${r.vh}`);
+    check(`${name}: the page does not scroll sideways`, !r.hOverflow);
+    check(`${name}: game tabs stay thumb-sized`, r.smallTabs === 0, `${r.smallTabs} under 40px`);
+    await ctx.close();
+  }
+}
+
+/* --------------------------------------------------------- feature music */
+// The bed lifts for a feature round -- 82 bpm to 132 -- and has to come back
+// down. The interesting case is the abnormal exit: switching game mid-feature
+// skips the end of the round, and a tempo left stuck at the feature value would
+// play a base game at feature intensity for the rest of the session. This was
+// checked and found correct; the test is here so it stays that way.
+console.log("\nFeature music");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    document.querySelector('[data-game="traitvault"]').click();
+    await sleep(400);
+    turbo = true;                     // muted:false -- startMusic bails when muted
+    buyNext = true;
+    const s1 = doSpin();
+    await sleep(900);
+    const during = { intense: musicIntense, bpm: rhythm ? rhythm.target : null };
+    await s1; await sleep(300);
+    const after = { intense: musicIntense, bpm: rhythm ? rhythm.target : null };
+
+    buyNext = true;
+    const s2 = doSpin();
+    await sleep(700);
+    const midway = musicIntense;
+    document.querySelector('[data-game="pride"]').click();
+    await sleep(2500);
+    try { await s2; } catch {}
+    await sleep(600);
+    return { during, after, midway,
+             switched: { intense: musicIntense, bpm: rhythm ? rhythm.target : null, busy },
+             BASE: RHYTHM_BASE_BPM, FEAT: RHYTHM_FEATURE_BPM };
+  });
+  check("a feature round lifts the music", r.during.intense && r.during.bpm === r.FEAT,
+        `intense=${r.during.intense}, ${r.during.bpm} bpm`);
+  check("the music comes back down after the round",
+        !r.after.intense && r.after.bpm === r.BASE, `${r.after.bpm} bpm`);
+  check("a mid-feature game switch does not strand the tempo",
+        r.midway && !r.switched.intense && r.switched.bpm === r.BASE && !r.switched.busy,
+        `was intense=${r.midway}, ended at ${r.switched.bpm} bpm, busy=${r.switched.busy}`);
+  check("no runtime errors around feature music", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* ------------------------------------------------------- secondary motion */
 // The mane ships as its own layer so it can lag the roar. Four earlier attempts
 // at motion inside the outline DEFORMED the art and sheared the muzzle; this one
