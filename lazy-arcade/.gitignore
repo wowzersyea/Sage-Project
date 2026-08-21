@@ -1,7 +1,7 @@
 # Rust build output
 crates/mathsim/target/
-# Node
-node_modules/
+# Node (no trailing slash: a symlinked node_modules must be ignored too)
+node_modules
 # Ingest logs (data/ IS committed -- it is the licensing gate's input)
 tools/trait-ingest/*.log
 # Source NFT images (large, refetchable via tools/atlas-build/fetch-deck.py).

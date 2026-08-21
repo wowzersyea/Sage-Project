@@ -12,7 +12,8 @@
     "gate:licensing": "python3 tools/atlas-build/check-licensing.py",
     "math:test": "cd crates/mathsim && cargo test --release",
     "math:build": "cd crates/mathsim && cargo build --release",
-    "check": "npm run math:test && npm run verify:golden && npm run verify:play && npm run gate:licensing",
-    "verify:play": "node tests/verify-play-math.mjs"
+    "check": "npm run math:test && npm run verify:golden && npm run verify:play && npm run verify:browser && npm run gate:licensing",
+    "verify:play": "node tests/verify-play-math.mjs",
+    "verify:browser": "node tests/browser.mjs"
   }
 }

@@ -24,22 +24,34 @@ tools/
   atlas-build/     licensing gate (CI)
 tests/
   golden/          10,000 cross-implementation RNG fixtures
+  browser.mjs      headless gate for play/index.html
 verify/            standalone provably-fair verifier (static page)
 ```
 
 ## Verifying the build
 
 ```sh
-npm run check       # Rust tests + golden vectors + licensing gate
+npm run check       # everything below, in order
 ```
 
 Individually:
 
 ```sh
-npm run math:test        # 45 Rust tests, incl. RFC 4231 HMAC vectors
+npm run math:test        # 53 Rust tests, incl. RFC 4231 HMAC vectors
 npm run verify:golden    # TypeScript RNG must match Rust bit-for-bit
+npm run verify:play      # the page's odds, and the verifier's copy of the strips
+npm run verify:browser   # the page itself, in a headless browser
 npm run gate:licensing   # no symbol may use art the operator does not own
 ```
+
+`verify:browser` needs `npm i -D playwright`; without it the script skips and
+exits 0, so a checkout that only wants the math gates is never blocked. If the
+browser lives outside the package, point at it with `CHROMIUM_PATH`.
+
+The split matters: `verify:play` extracts the page's math and checks the odds,
+which leaves the entire renderer, money handling, keyboard and accessibility
+unproven. `verify:browser` covers that half, and each of its checks was proven
+to fail by breaking the page on purpose before the check was trusted.
 
 ## The math harness
 
