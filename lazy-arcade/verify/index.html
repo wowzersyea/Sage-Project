@@ -109,10 +109,18 @@
 <script>
 // Strip lengths per reel, matching packages/engine/src/paytables/weights/*.weights.
 // Hi/Lo draws a single card ordinal instead of reel stops.
+//
+// These are duplicated here ON PURPOSE: this page has to verify a spin without
+// loading anything from the game, or it is not an independent check. The cost of
+// that independence is that the numbers can drift, and they did -- Trait Vault
+// was left at the pre-Lion's-Share lengths [160,158,165,163,153] after the
+// weights were re-solved, so this page derived reel stops the game never used
+// and would have told an honest player their spin did not reproduce.
+// tests/verify-play-math.mjs now asserts this table against the live strips.
 const STRIPS = {
   pride:      [152, 164, 156, 164, 165],
   cubcluster: [159, 166, 168, 166, 171],
-  traitvault: [160, 158, 165, 163, 153],
+  traitvault: [158, 149, 160, 167, 144],
   hilo:       [10078]
 };
 

@@ -97,6 +97,29 @@ console.log("\nStructural pay rules");
   check("Pride wild absent from reels 1 and 5", wildOnOuter);
   check("Trait Vault wild absent from reels 1 and 5",
         M.CONF.traitvault.w[0][WILD] === 0 && M.CONF.traitvault.w[4][WILD] === 0);
+  {
+    // The verifier page duplicates strip lengths deliberately -- it must check a
+    // spin without loading the game -- so nothing but a test can stop the two
+    // drifting. They HAD drifted: Trait Vault sat at its pre-Lion's-Share
+    // lengths, which would have made the fairness page derive stops the game
+    // never produced and accuse an honest spin of not reproducing.
+    const vhtml = readFileSync(join(root, "verify", "index.html"), "utf8");
+    const m = vhtml.match(/const STRIPS = \{([\s\S]*?)\};/);
+    const published = {};
+    if (m) for (const line of m[1].split("\n")) {
+      const g = line.match(/(\w+):\s*\[([\d,\s]+)\]/);
+      if (g) published[g[1]] = g[2].split(",").map((n) => +n.trim());
+    }
+    let mismatch = [];
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      const live = M.CONF[g].strips.map((s) => s.length);
+      if (JSON.stringify(live) !== JSON.stringify(published[g] || []))
+        mismatch.push(`${g}: page ${JSON.stringify(live)} vs verifier ${JSON.stringify(published[g])}`);
+    }
+    check("verifier page strip lengths match the live strips", mismatch.length === 0,
+          mismatch.join(" | ") || "pride/cubcluster/traitvault all agree");
+  }
+
   check("Trait Vault carries scatters on every reel",
         M.CONF.traitvault.w.every((r) => r[SCAT] > 0),
         M.CONF.traitvault.w.map((r) => r[SCAT]).join("/"));
