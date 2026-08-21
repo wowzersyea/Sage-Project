@@ -430,6 +430,60 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* ------------------------------------------------------- commit and reveal */
+// The whole "provably fair" claim rests on this loop and nothing exercised it
+// end to end -- the pieces had been read, never run. A commitment that does not
+// hash the seed actually in play, a seed that does not rotate, or a nonce that
+// keeps climbing across seeds would each break the guarantee silently, because
+// every individual spin still looks perfectly random.
+console.log("\nCommit, reveal, rotate");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true; turbo = true;
+    document.querySelector("details").open = true;
+    await sleep(200);
+
+    const committed = document.getElementById("fHash").textContent.trim();
+    const seedInPlay = hex(serverSeed);
+    const commitIsOfSeedInPlay = committed === hex(sha256(serverSeed));
+
+    for (let i = 0; i < 4; i++) await doSpin();
+    const rec = history[history.length - 1];
+    const nonceBefore = nonce;
+
+    document.getElementById("fReveal").click();
+    await sleep(400);
+    const revealed = document.getElementById("fSeed").textContent.trim();
+    const bytes = Uint8Array.from(revealed.match(/../g).map((h) => parseInt(h, 16)));
+    const out = rederiveRound(rec);
+
+    return {
+      commitIsOfSeedInPlay,
+      revealedIsTheSeedPlayed: revealed === seedInPlay,
+      revealedHashesToCommitment: hex(sha256(bytes)) === committed,
+      rotated: hex(serverSeed) !== seedInPlay,
+      newCommitMatchesNewSeed:
+        document.getElementById("fHash").textContent.trim() === hex(sha256(serverSeed)),
+      nonceReset: nonce === 0,
+      nonceBefore,
+      pastRoundStillVerifies: Math.abs((out.base + out.feature) - rec.mult) < 1e-9,
+    };
+  });
+  check("the published commitment hashes the seed actually in play", r.commitIsOfSeedInPlay);
+  check("revealing hands back the seed those spins used", r.revealedIsTheSeedPlayed);
+  check("the revealed seed hashes to what was committed", r.revealedHashesToCommitment);
+  check("revealing rotates to a fresh seed", r.rotated);
+  check("the new commitment matches the new seed", r.newCommitMatchesNewSeed);
+  check("the nonce restarts with the new seed", r.nonceReset,
+        `was ${r.nonceBefore}, now ${r.nonceReset ? 0 : "not 0"}`);
+  check("a round played before the reveal still verifies after it",
+        r.pastRoundStillVerifies);
+  check("no runtime errors in the fairness flow", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* ------------------------------------------- leaving hi/lo mid-round */
 // Switching away from Hi/Lo with money on the table stranded it. hl.live stayed
 // true, hlRender consulted only hl.live so the cash-out button stayed visible
