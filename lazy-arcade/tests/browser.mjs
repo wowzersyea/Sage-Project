@@ -430,6 +430,57 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* ------------------------------------------------------------ round replay */
+// Clicking a spin in the log re-derives it from (seed, client, nonce). That is
+// a fairness feature, so a replay that disagrees with what was paid is worse
+// than no replay at all. It reached for the plain spin function regardless of
+// how the round had actually been played, and the history record stored no mode
+// -- so anything bought or ante-loaded replayed as a different round. Measured
+// before the fix: a bought Pride round that paid 5.0971x replayed as 0.1811x,
+// and an ante round that paid nothing replayed as 1.4231x.
+console.log("\nRound replay");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true; turbo = true;
+    const runs = [];
+    const play = async (g, opts) => {
+      document.querySelector(`[data-game="${g}"]`).click();
+      await sleep(350);
+      anteOn = !!opts.ante; buyNext = !!opts.buy;
+      await doSpin();
+      const rec = history[history.length - 1];
+      // The page's OWN derivation, not a copy of it kept here.
+      const out = rederiveRound(rec);
+      runs.push({ kind: opts.label, real: rec.mult, again: out.base + out.feature,
+                  buy: !!rec.buy, ante: !!rec.ante });
+      anteOn = false; buyNext = false;
+    };
+    for (let i = 0; i < 6; i++) {
+      await play("pride", { label: "pride" });
+      await play("pride", { label: "pride+ante", ante: true });
+      await play("pride", { label: "pride buy", buy: true });
+      await play("traitvault", { label: "traitvault" });
+      await play("traitvault", { label: "traitvault buy", buy: true });
+      await play("cubcluster", { label: "cubcluster" });
+    }
+    const bad = runs.filter((x) => Math.abs(x.real - x.again) > 1e-9);
+    const modes = new Set(runs.map((x) => x.kind));
+    return { total: runs.length, bad: bad.length, modes: modes.size,
+             sample: bad[0] || null,
+             recordsMode: runs.some((x) => x.buy) && runs.some((x) => x.ante) };
+  });
+  check("every recorded round replays to what it paid", r.bad === 0,
+        r.sample ? `${r.sample.kind}: paid ${r.sample.real}, replayed ${r.sample.again}`
+                 : `${r.total} rounds across ${r.modes} modes`);
+  check("the history records how a round was played", r.recordsMode,
+        "buy and ante flags present");
+  check("enough modes were exercised to mean anything", r.modes >= 5, `${r.modes} modes`);
+  check("no runtime errors while replaying", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* --------------------------------------------------------------- hi/lo money */
 // hlCash credited the balance, awaited the count-up, and only closed the round
 // AFTER the animation finished -- so for the whole length of it the round still

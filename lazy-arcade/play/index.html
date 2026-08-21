@@ -3367,8 +3367,14 @@ async function doSpin(){
     // already advancing on their own clock.
     if(game==="traitvault" && out.base>0) await showWinLines(first.wins,bet);
   }
+  // The MODE the round was played in, not just its seed. A replay that reaches
+  // for the plain spin function reproduces a different round for anything
+  // bought or ante-loaded: measured, a bought Pride round that paid 5.0971x
+  // replayed as 0.1811x, and an ante round that paid nothing replayed as
+  // 1.4231x. A player checking a win against a figure that does not match is
+  // the exact opposite of what a fairness feature is for.
   history.push({nonce,game,client:$("fClient").value,bet:stake,win,mult:winMult,
-                seed:hex(serverSeed)});
+                seed:hex(serverSeed),buy:!!buying,ante:!!useAnte});
   if(history.length>200) history.shift();
   logSpin(win,win/stake);
   updateHud();
@@ -3649,15 +3655,24 @@ function logSpin(win,mult){
    Pragmatic's game history shows you a picture of the round; this re-derives
    it, which is only possible because the outcome is a pure function of the
    seed triple. */
-function replay(rec){
-  if(!rec||busy||rec.game!==game) return;
+/* Re-derive a recorded round from (seed, client, nonce) and the mode it was
+   played in. Split out of replay() so there is ONE derivation: a test that
+   keeps its own copy of this branch checks its copy rather than the page, and
+   goes on passing while the page diverges. */
+function rederiveRound(rec){
   const seed=Uint8Array.from(rec.seed.match(/../g).map(h=>parseInt(h,16)));
   const rng=makeRng(seed,rec.client,rec.nonce,rec.game);
-  const out = rec.game==="pride" ? spinPride(rng)
-            : rec.game==="cubcluster" ? spinCluster(rng) : spinVault(rng,{});
+  return rec.buy  ? buyFeature(rng,rec.game)
+       : rec.game==="pride" ? spinPride(rng, rec.ante ? anteStrips() : null)
+       : rec.game==="cubcluster" ? spinCluster(rng) : spinVault(rng,{});
+}
+function replay(rec){
+  if(!rec||busy||rec.game!==game) return;
+  const out=rederiveRound(rec);
   const f=out.frames[0];
   paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
-  flash(`Replay #${rec.nonce} · ${(out.base+out.feature).toFixed(2)}×`);
+  const mode = rec.buy ? " · bought" : rec.ante ? " · ante" : "";
+  flash(`Replay #${rec.nonce}${mode} · ${(out.base+out.feature).toFixed(2)}×`);
 }
 function blankGrid(){
   const g=[]; for(let r=0;r<REELS;r++){const c=[];
