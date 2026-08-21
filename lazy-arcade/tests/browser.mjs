@@ -430,6 +430,51 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* -------------------------------------------------------------- paytable */
+// A regression I introduced and would have shipped. Splitting the maned Lions
+// into a body plus a mane layer made symbolHTML return TWO elements, and the
+// paytable sized ":first-child" -- correct only while a symbol was one element.
+// The mane fell through to a width:100% rule and rendered at the width of the
+// whole cell: a giant floating mane across the dialog with the symbol names
+// driven into the pay columns behind it. Every check I had ran against
+// "#reels .sym" and none of them looked at the paytable, so all 107 stayed green.
+console.log("\nPaytable");
+{
+  const { p, ctx, errs } = await page();
+  for (const g of ["pride", "cubcluster", "traitvault"]) {
+    const r = await p.evaluate(async (g) => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector(`[data-game="${g}"]`).click();
+      await sleep(400);
+      openInfo();
+      await sleep(250);
+      const modal = document.querySelector(".modal.on").getBoundingClientRect();
+      const cells = [...document.querySelectorAll(".ptsym")];
+      const imgs = [...document.querySelectorAll(".ptsym img")];
+      const boxes = imgs.map((i) => i.getBoundingClientRect());
+      const out = {
+        rows: cells.length,
+        imgs: imgs.length,
+        oversized: boxes.filter((b) => b.width > 60 || b.height > 60).length,
+        biggest: Math.round(Math.max(0, ...boxes.map((b) => b.width))),
+        spilling: cells.filter((c) => c.getBoundingClientRect().right > modal.right + 2).length,
+        named: cells.filter((c) => (c.querySelector("span:not(.ptart)") || {}).textContent).length,
+      };
+      document.querySelector(".modal.on").classList.remove("on");
+      return out;
+    }, g);
+    check(`${g}: the paytable lists its symbols`, r.rows > 0, `${r.rows} rows`);
+    check(`${g}: paytable art is thumbnail-sized`, r.oversized === 0 && r.biggest <= 48,
+          `${r.imgs} images, biggest ${r.biggest}px`);
+    check(`${g}: no paytable row spills out of the dialog`, r.spilling === 0,
+          `${r.spilling} spilling`);
+    check(`${g}: every paytable row is named`, r.named === r.rows,
+          `${r.named}/${r.rows} named`);
+  }
+  check("no runtime errors in the paytable", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* ------------------------------------------------------- playfield centring */
 // Trait Vault puts a multiplier rail beside the grid. As a flex item it pushed
 // the grid sideways: at 1280 wide Pride sat 183/183 and Trait Vault 221/145, so

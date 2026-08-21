@@ -440,8 +440,17 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 
 /* paytable rows show the lion, not just its name */
 .ptsym{display:flex;align-items:center;gap:9px}
-.ptsym .sym,.ptsym>:first-child{width:34px;height:34px;flex:0 0 34px;position:relative}
-.ptsym img,.ptsym svg{width:100%;height:100%;object-fit:contain;display:block}
+/* The art goes in its own box, and the box is what gets sized.
+   These rules used to size ":first-child", which worked only while a symbol was
+   a SINGLE element. Splitting the maned Lions into a body plus a mane layer
+   made the mane the second child, so it fell through to the 100% rule below and
+   rendered at the width of the whole cell -- a giant floating mane across the
+   paytable, with the symbol names driven into the pay columns behind it. */
+.ptsym .ptart{width:34px;height:34px;flex:0 0 34px;position:relative;display:block}
+.ptsym .ptart img,.ptsym .ptart svg{position:absolute;inset:0;
+  width:100%;height:100%;object-fit:contain;display:block}
+.ptsym .ptart img.mane{z-index:0}
+.ptsym .ptart img:not(.mane){z-index:1}
 .ptsym>span{white-space:nowrap}
 
 .multrail{display:flex;flex-direction:column;gap:0;flex:0 0 auto;
@@ -3717,7 +3726,11 @@ function renderPaytable(){
     $("ptTitle").textContent="Cluster size × bet";
     let h="<tr><th>Symbol</th><th>5</th><th>7</th><th>9</th><th>12</th><th>16</th><th>20</th></tr>";
     for(const s of [P1,P2,M1,M2,L1,L2]){
-      h+=`<tr><td>${symName(s,"cubcluster")}</td>`;
+      // Show the Cub, the same as the other two games. It was names only --
+      // and now that every Cub symbol is a whole character rather than a trait
+      // crop, there is something worth showing.
+      h+=`<tr><td class="ptsym"><span class="ptart">${symbolHTML(s,"cubcluster")}</span>`
+        +`<span>${symName(s,"cubcluster")}</span></td>`;
       for(const n of [5,7,9,12,16,20]) h+=`<td>${PAYS.cubcluster[s][n].toFixed(2)}</td>`;
       h+="</tr>";
     }
@@ -3729,7 +3742,8 @@ function renderPaytable(){
   for(let s=SCAT;s<NSYM;s++){
     if(game==="traitvault"&&s===SCAT) continue;
     if(!pays[s].some(v=>v>0)) continue;
-    h+=`<tr><td class="ptsym">${symbolHTML(s)}<span>${symName(s,game)}</span></td>`;
+    h+=`<tr><td class="ptsym"><span class="ptart">${symbolHTML(s)}</span>`
+      +`<span>${symName(s,game)}</span></td>`;
     for(const n of [2,3,4,5]) h+=`<td>${pays[s][n]?pays[s][n].toFixed(2):"—"}</td>`;
     h+="</tr>";
   }
