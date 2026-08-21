@@ -3484,10 +3484,14 @@ async function hlPick(dir){
   if(correct){
     hl.mult*=mult; winChime(2); coins(10,.7);
     if(hl.mult>=5000){
-      hl.mult=5000; const won=hl.risk*hl.mult;
-      balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,hl.mult);
+      // Close the round before the banner, for the reason spelled out in
+      // hlCash: anything that yields while the round still reads as live is a
+      // second payout waiting to happen.
+      const capped=5000, won=hl.risk*capped;
+      hl.mult=1; hl.live=false; hl.risk=0;
+      balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,capped);
+      updateHud();
       await showBanner("Epic win",won,"round cap — forced cash out");
-      hl.live=false; hl.risk=0; hl.mult=1;
     } else flash(`Correct · ${hl.mult.toFixed(2)}× banked`);
   } else {
     blip(190,.34,"sawtooth",.07,80); flash("Wrong — stake lost");
@@ -3496,13 +3500,27 @@ async function hlPick(dir){
   hlRender(); updateHud(); busy=false;
 }
 async function hlCash(){
-  if(!hl.live) return;
-  const won=hl.risk*hl.mult;
-  balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,hl.mult);
-  coins(26,1); await countUp(won,hl.mult,hl.mult>=40?1:0);
-  flash(`Cashed out +${fmt(won)}`);
+  // SETTLE FIRST, CELEBRATE AFTER.
+  //
+  // This credited the balance, then awaited the count-up, and only cleared the
+  // round once the animation had finished -- so for the whole length of that
+  // animation `hl.live` was still true and the guard above still let callers
+  // through. Every one of them paid out again on the same round. Measured: two
+  // clicks paid 245.57 against 122.78 owed, and ten paid 970 against 97. It
+  // scales with however many clicks fit in the window.
+  //
+  // The round is now closed before anything can yield, which is the same rule
+  // doSpin follows when it debits the stake before its first await.
+  if(busy||!hl.live) return;
+  const mult=hl.mult, won=hl.risk*mult;
   hl.live=false; hl.risk=0; hl.mult=1;
+  balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,mult);
   hlRender(); updateHud();
+  busy=true;
+  try{
+    coins(26,1); await countUp(won,mult,mult>=40?1:0);
+    flash(`Cashed out +${fmt(won)}`);
+  } finally { busy=false; }
 }
 
 /* =============================== hud ==================================== */

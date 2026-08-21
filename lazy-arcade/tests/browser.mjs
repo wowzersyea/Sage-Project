@@ -430,6 +430,73 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* --------------------------------------------------------------- hi/lo money */
+// hlCash credited the balance, awaited the count-up, and only closed the round
+// AFTER the animation finished -- so for the whole length of it the round still
+// read as live and every further call paid out again on the same stake. Two
+// clicks paid 245.57 against 122.78 owed; ten paid 970 against 97. It scales
+// with however many clicks fit in the window.
+console.log("\nHi/Lo money");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    document.querySelector('[data-game="hilo"]').click();
+    await sleep(500);
+    muted = true;
+
+    const cashOut = async (clicks) => {
+      let tries = 0;
+      while (!hl.live && tries++ < 300) { await hlPick("rarer"); await sleep(10); }
+      if (!hl.live) return null;
+      const owed = hl.risk * hl.mult, before = balance;
+      await Promise.all(Array.from({ length: clicks }, () => hlCash()));
+      await sleep(400);
+      return { owed: +owed.toFixed(4), paid: +(balance - before).toFixed(4) };
+    };
+    const two = await cashOut(2);
+    const ten = await cashOut(10);
+
+    // Every offered bet must return exactly the house figure -- that is the
+    // claim the rules text makes, and it is checkable rather than a promise.
+    const n = RARITY_RANKS;
+    let evWorst = 0, offered = 0;
+    for (let card = 1; card <= n; card++) for (const d of ["rarer", "commoner"]) {
+      const m = payout(n, card, d);
+      if (m == null) continue;
+      offered++;
+      const q = d === "rarer" ? pRarer(n, card) : pCommoner(n, card);
+      evWorst = Math.max(evWorst, Math.abs(q * m - HOUSE));
+    }
+    // Pinned against what the PLAYER is told, not against itself. Comparing
+    // q*payout with HOUSE only proves the formula is consistent with its own
+    // constant: changing HOUSE to 0.94 moves both sides and the check stays
+    // green while the rules text goes on promising 97%. So read the number out
+    // of the rules the player actually sees and require the two to agree.
+    openInfo();                       // render the rules the player is shown
+    const rules = document.getElementById("infoRules").textContent || "";
+    document.getElementById("info").classList.remove("on");
+    const quoted = rules.match(/returns exactly\s*(\d+(?:\.\d+)?)\s*%/);
+    const stated = quoted ? +quoted[1] / 100 : null;
+    return { two, ten, evWorst, offered, HOUSE, live: hl.live, stated,
+             rulesSnippet: rules.slice(0, 90) };
+  });
+  check("a double cash-out pays once", r.two && r.two.paid <= r.two.owed + 0.001,
+        r.two ? `paid ${r.two.paid} against ${r.two.owed} owed` : "no live round");
+  check("ten cash-outs pay once", r.ten && r.ten.paid <= r.ten.owed + 0.001,
+        r.ten ? `paid ${r.ten.paid} against ${r.ten.owed} owed` : "no live round");
+  check("the round is closed after cashing out", !r.live);
+  check("every offered bet returns exactly the house figure", r.evWorst < 1e-12,
+        `${r.offered} offered bets, worst deviation ${r.evWorst.toExponential(2)} from ${r.HOUSE}`);
+  check("the house figure is the one the rules promise the player",
+        r.stated !== null && Math.abs(r.stated - r.HOUSE) < 1e-9,
+        `rules say ${r.stated === null ? "nothing" : (r.stated * 100).toFixed(0) + "%"}, `
+        + `code pays ${(r.HOUSE * 100).toFixed(0)}%`);
+  check("no runtime errors in the hi/lo money path", errs.length === 0,
+        errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* --------------------------------------------------- running feature total */
 // The total shown during a tumble chain or a free-spin round was interpolated
 // from the frame index: out.feature * (i / (frames.length - 1)). That is a
