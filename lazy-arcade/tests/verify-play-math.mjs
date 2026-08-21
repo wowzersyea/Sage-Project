@@ -181,12 +181,17 @@ console.log("\nHi/Lo exactness");
 console.log("\nRTP convergence (loose -- catches porting errors, not calibration)");
 {
   const seed = new Uint8Array(32).map((_, i) => (i * 37 + 11) & 0xff);
+  // Caps are read from the page's own CONF rather than restated here. They were
+  // restated, and when Trait Vault's ceiling moved to 5000x this test kept
+  // asserting 1000x -- failing a correct build, which is the same drift in the
+  // opposite direction.
   const runs = [
-    ["pride", 400000, M.spinPride, 2000],
-    ["traitvault", 400000, M.spinVault, 1000],
-    ["cubcluster", 150000, M.spinCluster, 2500],
+    ["pride", 400000, M.spinPride],
+    ["traitvault", 400000, M.spinVault],
+    ["cubcluster", 150000, M.spinCluster],
   ];
-  for (const [game, spins, fn, cap] of runs) {
+  for (const [game, spins, fn] of runs) {
+    const cap = M.CONF[game].cap;
     const state = { mane: 0 };
     let sum = 0, sumSq = 0, maxWin = 0;
     for (let n = 0; n < spins; n++) {

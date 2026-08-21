@@ -158,7 +158,7 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
             match kind {
                 GameKind::Pride => 0.38,
                 GameKind::CubCluster => 0.44,
-                GameKind::TraitVault => 0.48,
+                GameKind::TraitVault => 0.44,
             },
         ),
         volatility: flag(
@@ -167,7 +167,10 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
             match kind {
                 GameKind::Pride => 4.2,
                 GameKind::CubCluster => 5.4,
-                GameKind::TraitVault => 3.1,
+                // Matches the repositioned target in report(); searching toward
+                // 3.1 would pull the optimiser away from a shape the mechanic
+                // cannot reach and waste the search on an unreachable corner.
+                GameKind::TraitVault => 7.8,
             },
         ),
     };
@@ -228,10 +231,15 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
 /// and measured 0.97280 over 100M. Rather than nudge numbers by hand, measure
 /// RTP at two pay scales, fit the line through them, and solve for the target.
 ///
-/// The relationship is linear but NOT proportional: Trait Vault's Hold and Win
-/// pays in coin values that do not scale with the paytable, so RTP has a
-/// constant term. A two-point fit recovers both terms without needing to know
-/// which game has one.
+/// Every current feature pays through the SCALED paytable, so RTP is strictly
+/// proportional to pay scale and the fit has no constant term.
+///
+/// This was not always true. Trait Vault's Hold and Win paid fixed coin values
+/// that ignored the paytable, which made its feature a constant term -- and the
+/// special case for it survived the Lion's Share rework, where it is wrong.
+/// Solving the scale as though the feature would stay put while the base game
+/// tripled produced a measured RTP of 1.62 against a 0.97 target, with the
+/// feature carrying 96.8% of the return instead of a third.
 fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
     let kind = require_game(flags);
     let spins: u64 = flag(flags, "spins", 20_000_000);
@@ -250,12 +258,16 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
 
     println!("calibrating {} at {spins} spins per point (production HMAC rng)", kind.id());
 
-    // Trait Vault needs two axes, not one. Its Hold and Win pays coin values
-    // that are independent of the paytable, so pay scale moves only the base
-    // game. Solve the feature first (via coin probability), then the base.
+    // Trait Vault still needs two axes, but the first one is a SHARE, not an
+    // absolute RTP. Orb probability sets how the return divides between base and
+    // feature; pay scale then sets the total. Solving orb probability against an
+    // absolute feature RTP only worked while the feature ignored the paytable --
+    // now that it pays through it, the absolute figure moves the moment the
+    // scale does, and the split it was solved for evaporates.
     let mut coin_probability = coin_probability;
     if kind == GameKind::TraitVault {
-        let target_feature: f64 = flag(flags, "target-feature-rtp", 0.23);
+        let target_feature: f64 = flag(flags, "target-feature-rtp", kind.target_feature_rtp());
+        let target_share = target_feature / target;
         let measure_coin = |coin: f64, scale: f64| -> Stats {
             run(&RunConfig {
                 kind,
@@ -269,20 +281,47 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
                 stake_mult: 1.0,
             })
         };
+        let share_at = |coin: f64| -> f64 {
+            let st = measure_coin(coin, scale0);
+            let total = st.base_rtp() + st.feature_rtp();
+            if total > 1e-12 { st.feature_rtp() / total } else { 0.0 }
+        };
         let coin_a = coin_probability;
         let coin_b = coin_probability * 0.5;
-        let fa = measure_coin(coin_a, scale0).feature_rtp();
-        let fb = measure_coin(coin_b, scale0).feature_rtp();
-        println!("  coin_p {coin_a:.6} -> feature RTP {fa:.5}");
-        println!("  coin_p {coin_b:.6} -> feature RTP {fb:.5}");
-        let slope = (fa - fb) / (coin_a - coin_b);
-        let intercept = fa - slope * coin_a;
+        let sa = share_at(coin_a);
+        let sb = share_at(coin_b);
+        println!("  orb_p {coin_a:.6} -> feature share {sa:.4}");
+        println!("  orb_p {coin_b:.6} -> feature share {sb:.4}");
+        let slope = (sa - sb) / (coin_a - coin_b);
+        let intercept = sa - slope * coin_a;
         if slope.is_finite() && slope > 1e-9 {
-            let solved_coin = ((target_feature - intercept) / slope).clamp(0.00005, 0.5);
-            println!("  solved coin_probability for feature RTP {target_feature:.3}: {solved_coin:.6}");
+            let raw = (target_share - intercept) / slope;
+            // The share is NOT linear in orb probability down to zero: with no
+            // orbs at all the feature still carries whatever share ten free
+            // spins are worth at the current trigger rate. Clamping an
+            // out-of-range solve hides that -- it returns a floor value and
+            // reports success, and the run afterwards misses by a mile with
+            // nothing pointing at why.
+            let floor_share = intercept.min(sa).min(sb);
+            if raw <= 0.0 {
+                eprintln!(
+                    "  CANNOT HIT THE SPLIT: feature share bottoms out near {floor_share:.3} \
+                     as orb probability goes to zero, but the target is {target_share:.3}.\n\
+                     \x20       Ten free spins at this trigger rate are already worth more than \
+                     the target share.\n\
+                     \x20       Lower the scatter weight (fewer triggers) or shorten the round \
+                     -- orb probability cannot fix it."
+                );
+                return 1;
+            }
+            let solved_coin = raw.clamp(0.00005, 0.5);
+            if (solved_coin - raw).abs() > 1e-9 {
+                eprintln!("  WARNING: solved orb probability {raw:.6} was clamped to {solved_coin:.6}");
+            }
+            println!("  solved orb_probability for feature share {target_share:.4}: {solved_coin:.6}");
             coin_probability = solved_coin;
         } else {
-            eprintln!("  WARNING: feature RTP does not respond to coin probability; leaving it alone");
+            eprintln!("  WARNING: feature share does not respond to orb probability; leaving it alone");
         }
     }
 
@@ -321,15 +360,12 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
     // than two runs pin the line.
     let base0 = stats0.base_rtp();
     let feat0 = stats0.feature_rtp();
-    let (alpha, beta) = if kind == GameKind::TraitVault {
-        // Hold and Win pays coin values that do not scale with the paytable,
-        // so the feature is a constant term.
-        (base0 / scale0, feat0)
-    } else {
-        // Pride's free spins and Cub Cluster's tumbles both pay from the
-        // scaled paytable, so everything rides the slope.
-        ((base0 + feat0) / scale0, 0.0)
-    };
+    // Pride's free spins, Cub Cluster's tumbles and now Trait Vault's Lion's
+    // Share all pay from the scaled paytable, so everything rides the slope and
+    // there is no constant term for any game. If a future feature pays values
+    // the paytable does not reach -- a fixed jackpot, a coin round -- it needs a
+    // constant term back, and it needs it deliberately rather than inherited.
+    let (alpha, beta) = ((base0 + feat0) / scale0, 0.0);
 
     // Proportionality holds only while the max-win cap is not biting; if it
     // is, the relationship bends and this solve would overshoot.
@@ -592,11 +628,41 @@ fn cmd_golden(flags: &HashMap<String, String>) -> i32 {
 /* ------------------------------------------------------------------ */
 
 fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time::Duration) {
-    let (target_hit, target_vol, target_max, split) = match kind {
-        GameKind::Pride => (0.38, 4.2, 2_000.0, "68 / 29"),
-        GameKind::CubCluster => (0.44, 5.4, 2_500.0, "71 / 26"),
-        GameKind::TraitVault => (0.48, 3.1, 1_000.0, "74 / 23"),
+    // The cap comes from GameKind::max_win() rather than being restated here.
+    // It was restated, and the two drifted the moment Trait Vault's ceiling
+    // moved: the simulator enforced 5000x while this report still printed
+    // "design cap 1000x", so a run that behaved correctly would have been read
+    // as a run against the old design.
+    let target_max = kind.max_win();
+    // The volatility ceiling is PER GAME. A single 5.5 for the suite was a
+    // reasonable default while all three games sat under it, but it is a
+    // property of a game's mechanic, not of the cabinet: Lion's Share is a
+    // scatter-triggered round with sticky multipliers and simply does not live
+    // in the same range as a tumble game.
+    let (target_hit, target_vol, vol_ceiling) = match kind {
+        GameKind::Pride => (0.38, 4.2, 5.5),
+        GameKind::CubCluster => (0.44, 5.4, 5.5),
+        // Lion's Share shifts weight into the feature: the Mane Meter paid out
+        // in small, frequent Hold and Win coins, while a scatter-triggered round
+        // with sticky row multipliers is rarer and much larger. Volatility rises
+        // with it -- this is still the calmest game in the suite, but 3.1 was a
+        // target for a mechanic that no longer exists.
+        // Repositioned deliberately. Trait Vault was the suite's low-variance
+        // product at a 3.1 target; the Mane Meter it was measured on is gone,
+        // and a rare round carrying sticky row multipliers cannot be made to
+        // behave like a meter that filled every six spins. Retuning the orb
+        // table (x50 -> x20 top, more frequent) and raising the trigger rate
+        // pulled the measured index from 11.1 to 7.8; getting under 5.5 from
+        // there needs the feature's share of RTP cut to the point where the
+        // feature stops being the reason to play the game.
+        GameKind::TraitVault => (0.44, 7.8, 8.5),
     };
+    let feature_target = kind.target_feature_rtp();
+    let split = format!(
+        "{:.0} / {:.0}",
+        (0.97 - feature_target) * 100.0,
+        feature_target * 100.0
+    );
 
     println!("=== {} ===", kind.id().to_uppercase());
     println!("  rng                    : {mode:?}");
@@ -607,7 +673,7 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
     println!("  RTP                    : {:.5}   (target 0.97000)", s.rtp());
     println!("  95% CI on RTP          : +/- {:.5}", s.rtp_ci95());
     println!("  hit frequency          : {:.4}    (target {target_hit:.2})", s.hit_frequency());
-    println!("  volatility index       : {:.3}     (target {target_vol:.1}, ceiling 5.5)", s.volatility());
+    println!("  volatility index       : {:.3}     (target {target_vol:.1}, ceiling {vol_ceiling:.1})", s.volatility());
     println!("  max win observed       : {:.1}x    (design cap {target_max:.0}x)", s.max_win);
     println!(
         "  RTP split base/feature : {:.1} / {:.1}   (target {split})",
@@ -635,8 +701,8 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
         }
     }
 
-    if s.volatility() > 5.5 {
-        println!("\n  WARNING: volatility index exceeds the 5.5 ceiling (spec Sec. 1).");
+    if s.volatility() > vol_ceiling {
+        println!("\n  WARNING: volatility index {:.2} exceeds this game's {vol_ceiling:.1} ceiling.", s.volatility());
     }
     if s.max_win > target_max {
         println!("\n  WARNING: observed max win {:.0}x exceeds the {target_max:.0}x design cap.", s.max_win);

@@ -116,15 +116,25 @@ pub fn cluster_pays() -> ClusterPays {
 /* ------------------------------------------------------------------ */
 
 pub fn vault_strips() -> StripSpec {
+    // SCAT appears on every reel now. The Mane Meter needed no scatter -- it
+    // counted M-tier symbols instead -- so these strips carried none at all.
+    // Lion's Share is scatter-triggered, and a scatter-triggered feature with
+    // zero scatter weight simply never fires.
+    //
+    // Weight 8 was tried and triggered 1 spin in 16. Ten free spins that often
+    // means most spins played are free spins, and the feature carried 58% of
+    // the return before a single multiplier orb landed -- there was no orb
+    // probability that could bring the split back to a third. The trigger rate,
+    // not the orb table, is the lever for that.
     let outer = weights_from(&[
-        (P1, 5), (P2, 6), (P3, 7), (P4, 8),
+        (SCAT, 5), (P1, 5), (P2, 6), (P3, 7), (P4, 8),
         (M1, 11), (M2, 12), (M3, 13), (M4, 14),
-        (L1, 20), (L2, 20), (L3, 21), (L4, 21),
+        (L1, 18), (L2, 18), (L3, 19), (L4, 19),
     ]);
     let inner = weights_from(&[
-        (WILD, 5), (P1, 5), (P2, 6), (P3, 7), (P4, 8),
+        (WILD, 5), (SCAT, 5), (P1, 5), (P2, 6), (P3, 7), (P4, 8),
         (M1, 11), (M2, 12), (M3, 13), (M4, 14),
-        (L1, 19), (L2, 19), (L3, 20), (L4, 20),
+        (L1, 17), (L2, 17), (L3, 18), (L4, 18),
     ]);
     StripSpec { weights: [outer, inner, inner, inner, outer] }
 }

@@ -75,7 +75,11 @@ body{
   background:linear-gradient(180deg,var(--reel-1),var(--reel-2));
   border:1px solid var(--screen-edge);
   box-shadow:inset 0 10px 26px -12px #000, inset 0 -10px 26px -12px #000}
-.reels{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:2px}
+/* Columns are sized FROM --cell, not from the container. As a flex item beside
+   the multiplier rail the old `1fr` grid shrank to its content, and cellPx()
+   measured that collapsed width to compute --cell -- a loop that settled on
+   cells about 40% smaller than the screen could carry. */
+.reels{display:grid;grid-template-columns:repeat(5,var(--cell));gap:2px;padding:2px}
 .reel{position:relative;overflow:hidden;height:calc(var(--cell)*4);
       background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.18))}
 .reel.anticipate{box-shadow:inset 0 0 0 2px var(--gold),0 0 22px -6px var(--gold);
@@ -163,10 +167,35 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .chip b{color:var(--gold);font-variant-numeric:tabular-nums}
 .chip.live{border-color:var(--gold);color:var(--gold-3);
            box-shadow:0 0 14px -4px var(--gold)}
-.manebar{flex:1;min-width:120px;height:7px;border-radius:999px;background:#1B1028;
-         border:1px solid var(--line);overflow:hidden}
-.manebar i{display:block;height:100%;width:0;border-radius:999px;
-           background:linear-gradient(90deg,var(--gold-2),var(--gold-3));transition:width .3s}
+
+/* ---- row multiplier rail (Lion's Share) ----
+   Sits flush against the reels so a badge reads as belonging to its ROW rather
+   than floating in the chrome. Height is driven by --cell, the same variable the
+   reels size from, so the badges stay aligned to their rows at every breakpoint
+   without a resize listener. */
+.reelwrap{display:flex;align-items:flex-start;gap:0;justify-content:center}
+.multrail{display:flex;flex-direction:column;gap:0;flex:0 0 auto;
+          padding-right:4px;align-self:flex-start}
+.multrail .mrow{height:var(--cell);display:flex;align-items:center;justify-content:flex-end;
+                min-width:44px}
+.mbadge{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.02em;
+        padding:3px 7px;border-radius:6px;line-height:1;
+        border:1px solid var(--line);color:var(--muted);background:var(--panel-2);
+        opacity:.35;transition:opacity .2s,transform .2s,color .2s,border-color .2s}
+.mbadge.live{opacity:1;color:#1A1206;border-color:var(--gold-3);
+             background:linear-gradient(180deg,var(--gold-3),var(--gold-2));
+             box-shadow:0 0 16px -3px var(--gold),0 1px 0 rgba(0,0,0,.4)}
+.mbadge.bump{animation:mbump .42s cubic-bezier(.2,1.5,.4,1)}
+@keyframes mbump{0%{transform:scale(1)}38%{transform:scale(1.42)}100%{transform:scale(1)}}
+/* the orb flying from the cell it landed in to its row badge */
+.orb{position:absolute;z-index:6;pointer-events:none;font-family:var(--mono);
+     font-size:13px;font-weight:700;color:#1A1206;padding:3px 7px;border-radius:6px;
+     background:linear-gradient(180deg,#FFE9A8,var(--gold-2));
+     box-shadow:0 0 18px -2px var(--gold);will-change:transform,opacity}
+@media (prefers-reduced-motion: reduce){
+  .mbadge.bump{animation:none}
+  .orb{display:none}
+}
 
 /* ---------------- controls ---------------- */
 .deck{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
@@ -302,15 +331,17 @@ footer b{color:var(--hot)}
 
       <div class="topbar">
         <span class="chip" id="chipMode">Base game</span>
-        <span class="chip hidden" id="chipMane">Mane <b><span id="maneN">0</span>/40</b></span>
-        <div class="manebar hidden" id="maneBar"><i id="maneFill"></i></div>
+        <span class="chip hidden" id="chipFS">Free spin <b><span id="fsN">0</span>/10</b></span>
         <span class="chip hidden" id="chipFeat">Feature <b id="featTotal">0</b></span>
         <span class="chip" id="chipMax">Max win <b id="maxWinLbl">2,000×</b></span>
         <button class="chip" id="infoBtn" style="cursor:pointer">Info</button>
       </div>
 
       <div class="screen" id="screen">
-        <div class="reels" id="reels"></div>
+        <div class="reelwrap">
+          <div class="multrail hidden" id="multRail" aria-label="Row multipliers"></div>
+          <div class="reels" id="reels"></div>
+        </div>
         <div class="hlcard hidden" id="hlCard">
           <div class="portrait" id="hlArt"></div>
           <div class="rank" id="hlRank">—</div>
@@ -432,10 +463,12 @@ footer b{color:var(--hot)}
   </details>
 
   <footer>
-    <b style="color:var(--gold)">Pride &amp; Trait Vault</b> use Lazy Lions the operator holds:
-    whole characters <b>#2038 #1466 #1506 #3273</b> for premiums, and real trait close-ups for the
-    rest — Spinner Hat, Gold Chain, Shades, Big Smile, then <b>Crown</b> (top low symbol),
-    Hawaiian Shirt, Cigar and LAZY Hat.<br>
+    <b style="color:var(--gold)">Pride &amp; Trait Vault</b> use Lazy Lions the operator holds —
+    every paying symbol is a whole Lion, named for the trait it wears.
+    Top to bottom: <b>Crown #4230</b>, <b>LAZY Hat #5216</b>, <b>Shades #4522</b> and
+    <b>Leopard Fur Coat #482</b> as premiums; Bucket Hat #4837, Monocle #840, BTC Eyes #5813 and
+    Sheriff #1506 as mids; Police Hat #2038, Horns #1725, Pirate Hat #4117 and Black Cap #5348
+    as lows.<br>
     <b style="color:var(--gold)">Cub Cluster</b> uses Lazy Cubs instead: <b>#21095</b> and <b>#3097</b>,
     Cub LAZY Hat and Money Mouth, with the real Lazy Drinks NFTs as the low pair —
     <b>Lazy Milk</b> (higher) and Lazy Juice.<br>
@@ -510,12 +543,12 @@ const CONF={
        [14,0,18,20,0,0,26,27,0,0,32,34,0,0]]
   },
   traitvault:{
-    scale:34.208794, cap:1000, coinP:0.005492868493533963,
-    w:[[0,0,5,6,8,7,11,12,8,14,22,20,26,21],
-       [5,0,5,6,7,8,10,12,13,15,17,20,20,20],
-       [5,0,5,6,7,8,11,12,13,14,24,20,20,20],
-       [9,0,5,6,7,3,11,12,13,14,22,19,22,20],
-       [0,0,1,8,12,8,10,7,11,9,20,20,26,21]]
+    scale:25.96181056656965, cap:5000, orbP:0.011151821360983053,
+    w:[[0,5,5,6,12,7,13,12,13,13,13,16,19,19],
+       [5,5,5,6,7,8,10,12,13,14,19,19,11,18],
+       [10,5,5,6,6,8,11,12,13,14,17,17,18,18],
+       [9,5,3,6,7,8,6,12,13,14,19,17,21,18],
+       [0,5,1,6,7,8,10,9,13,14,18,18,19,19]]
   }
 };
 
@@ -606,8 +639,8 @@ function buyFeature(rng,which){
     const r=prideFreeSpins(rng,CONF.pride.strips,PAYS.pride);
     return capWin({base:0,feature:r.feature,fs:true,marks:new Set(),frames:r.frames},CONF.pride.cap);
   }
-  const hw=vaultHoldAndWin(rng);
-  return capWin({base:0,feature:hw.feature,fs:true,marks:new Set(),frames:hw.frames},CONF.traitvault.cap);
+  const r=vaultFreeSpins(rng);
+  return capWin({base:0,feature:r.feature,fs:true,marks:new Set(),frames:r.frames},CONF.traitvault.cap);
 }
 
 /* ============================ provably fair ============================== */
@@ -865,38 +898,20 @@ function spinCluster(rng){
   return capWin({base,feature,fs:chain>1,marks:new Set(),frames},CONF.cubcluster.cap);
 }
 
-/* ---- TRAIT VAULT: 40 lines + persistent Mane Meter ---- */
-const COIN_V=[1,2,3,5,10,20], COIN_W=[400,300,180,80,30,10];
-/* Hold & Win, shared by the meter trigger and the buy button. */
-function vaultHoldAndWin(rng){
-  const SCALE=1e6, thr=Math.round(CONF.traitvault.coinP*SCALE);
-  const wTot=COIN_W.reduce((a,b)=>a+b,0);
-  const filled=new Array(CELLS).fill(0);
-  let feature=0; const frames=[];
-  for(let spin=0;spin<6;spin++){
-    for(let c=0;c<CELLS;c++){
-      if(filled[c]) continue;
-      if(rng.below(SCALE)<thr){
-        let pick=rng.below(wTot), val=COIN_V[0];
-        for(let i=0;i<COIN_W.length;i++){ if(pick<COIN_W[i]){val=COIN_V[i];break;} pick-=COIN_W[i]; }
-        filled[c]=val; feature+=val;
-      }
-    }
-    const g2=[],m2=new Set();
-    for(let r=0;r<REELS;r++){ const col=[];
-      for(let row=0;row<ROWS;row++){ const idx=r*ROWS+row;
-        col.push(filled[idx]?SCAT:L4);
-        if(filled[idx]) m2.add(r+":"+row);
-      } g2.push(col);
-    }
-    frames.push({grid:g2,marks:m2,label:`hold & win · respin ${spin+1}/6`,coins:filled.slice()});
-  }
-  return {feature,frames};
-}
-function spinVault(rng,state){
-  const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
-  const grid=drawGrid(strips,rng);
-  const marks=new Set();
+/* ---- TRAIT VAULT: 40 lines + Lion's Share free spins ----------------------
+   Ported 1:1 from crates/mathsim/src/games/vault.rs. The RNG DRAW ORDER is part
+   of the port: orbs are drawn reel-major, row-minor, after the grid and before
+   evaluation. Reordering these calls would still produce a valid game and a
+   totally different one from the Rust the RTP was measured on. */
+const MULT_V=[2,3,4,6,10,20], MULT_W=[400,290,180,90,32,8];
+const ROW_MULT_CAP=60, FREE_SPINS=10, SCATTERS_TO_TRIGGER=3;
+
+/* Line evaluation with sticky row multipliers. A win takes the HIGHEST
+   multiplier among the rows its winning cells occupy -- not the sum. Summing
+   was tried and measured: only 4 of 40 lines are flat, so a stepped line
+   collected a multiplier per row it wandered through and a uniform x3 board
+   paid 7.4x. The badge on the row has to mean what it says. */
+function vaultLines(grid,pays,rowMult,marks){
   let lineUnits=0;
   for(const line of LINES){
     const s=grid[0][line[0]];
@@ -907,27 +922,65 @@ function spinVault(rng,state){
       if(c===s||c===WILD) n++; else break;
     }
     const pay=pays[s][n];
-    if(pay){ lineUnits+=pay; for(let r=0;r<n;r++) marks.add(r+":"+line[r]); }
+    if(!pay) continue;
+    let m=0;
+    for(let r=0;r<n;r++) m=Math.max(m,rowMult[line[r]]);
+    lineUnits+=pay*(m===0?1:m);
+    if(marks) for(let r=0;r<n;r++) marks.add(r+":"+line[r]);
   }
-  const base=lineUnits/40;
+  return lineUnits/40;
+}
 
-  // Meter contributions are tracked separately from win marks: lighting a
-  // mane symbol the same gold as a paying line reads as "you won" on a spin
-  // that paid nothing.
-  let mane=0;
-  const maneMarks=new Set();
-  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
-    const c=grid[r][row];
-    if(c>=M1&&c<=M4){ mane++; maneMarks.add(r+":"+row); }
+/* The feature, priced on its own -- shared by the scatter trigger and the buy
+   button, so the buy price is the thing actually being bought. */
+function vaultFreeSpins(rng){
+  const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
+  const SCALE=1e6, thr=Math.round(CONF.traitvault.orbP*SCALE);
+  const wTot=MULT_W.reduce((a,b)=>a+b,0);
+  const rowMult=new Array(ROWS).fill(0);
+  let feature=0; const frames=[];
+
+  for(let spin=0;spin<FREE_SPINS;spin++){
+    const grid=drawGrid(strips,rng);
+    const landed=[];
+    // Orbs apply BEFORE evaluation, so an orb pays on the spin that revealed
+    // it. Being told a x20 starts counting next spin is the most deflating
+    // thing a feature can do.
+    for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
+      if(rng.below(SCALE)<thr){
+        let pick=rng.below(wTot), val=MULT_V[0];
+        for(let i=0;i<MULT_W.length;i++){ if(pick<MULT_W[i]){val=MULT_V[i];break;} pick-=MULT_W[i]; }
+        rowMult[row]=Math.min(rowMult[row]+val,ROW_MULT_CAP);
+        landed.push({reel:r,row,val});
+      }
+    }
+    const marks=new Set();
+    const win=vaultLines(grid,pays,rowMult,marks);
+    feature+=win;
+    frames.push({grid,marks,label:`lion's share · free spin ${spin+1}/${FREE_SPINS}`,
+                 rowMult:rowMult.slice(),orbs:landed,spinWin:win});
   }
-  state.mane+=mane;
-  const frames=[{grid,marks,mane:maneMarks,label:null}];
+  return {feature,frames};
+}
+
+function spinVault(rng,state){
+  const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
+  const grid=drawGrid(strips,rng);
+  const marks=new Set();
+  const base=vaultLines(grid,pays,[0,0,0,0],marks);
+
+  let scat=0;
+  const scatMarks=new Set();
+  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
+    if(grid[r][row]===SCAT){ scat++; scatMarks.add(r+":"+row); }
+  }
+  const frames=[{grid,marks,scatter:scatMarks,label:null}];
 
   let feature=0, fs=false;
-  if(state.mane>=40){
-    state.mane-=40; fs=true;                       // carry the remainder
-    const hw=vaultHoldAndWin(rng);
-    feature=hw.feature; frames.push(...hw.frames);
+  if(scat>=SCATTERS_TO_TRIGGER){
+    fs=true;
+    const r=vaultFreeSpins(rng);
+    feature=r.feature; frames.push(...r.frames);
   }
   return capWin({base,feature,fs,marks,frames},CONF.traitvault.cap);
 }
@@ -1179,6 +1232,92 @@ function coinTick(){
   o.frequency.exponentialRampToValueAtTime(900,t+0.06);
   const g=env(o,0.03,0.002,0.07,t); g.connect(busGain); g.connect(verbSend);
   o.start(t); o.stop(t+0.1);
+}
+
+/* Orb landing: a bright metallic ping whose pitch tracks the multiplier, so a
+   x20 sounds different from a x2 before the player has read either. */
+function orbLand(count,topVal){
+  if(muted) return;
+  const c=ac(), base=880+Math.log2(Math.max(2,topVal||2))*210;
+  for(let i=0;i<Math.min(count,6);i++){
+    const t=c.currentTime+i*0.085;
+    for(const [mult,lvl] of [[1,0.055],[2.01,0.026],[3.02,0.012]]){
+      const o=c.createOscillator(); o.type="triangle";
+      o.frequency.setValueAtTime(base*mult,t);
+      o.frequency.exponentialRampToValueAtTime(base*mult*1.5,t+0.16);
+      const g=env(o,lvl,0.003,0.2,t); g.connect(busGain); g.connect(verbSend);
+      o.start(t); o.stop(t+0.26);
+    }
+  }
+}
+
+/* Reel loop. A cabinet is never silent while the reels move; without it the
+   gap between pressing spin and the first stop is dead air, and the stops read
+   as isolated knocks rather than as a mechanism coming to rest. Filtered noise
+   plus a low tone, started and stopped with the spin. */
+let reelLoopNode=null;
+function startReelLoop(){
+  if(muted||reelLoopNode) return;
+  const c=ac(), t=c.currentTime;
+  const src=c.createBufferSource();
+  src.buffer=noiseBuffer(1.2); src.loop=true;
+  const bp=c.createBiquadFilter(); bp.type="bandpass";
+  bp.frequency.value=1150; bp.Q.value=0.7;
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.035,t+0.09);
+  src.connect(bp).connect(g).connect(busGain);
+  const o=c.createOscillator(); o.type="sawtooth";
+  o.frequency.setValueAtTime(58,t);
+  const og=c.createGain(); og.gain.setValueAtTime(0.0001,t);
+  og.gain.exponentialRampToValueAtTime(0.02,t+0.09);
+  const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=340;
+  o.connect(lp).connect(og).connect(busGain);
+  src.start(t); o.start(t);
+  reelLoopNode={src,o,g,og};
+}
+function stopReelLoop(){
+  if(!reelLoopNode) return;
+  const c=ac(), t=c.currentTime, n=reelLoopNode; reelLoopNode=null;
+  n.g.gain.cancelScheduledValues(t);
+  n.g.gain.setValueAtTime(Math.max(n.g.gain.value,0.0002),t);
+  n.g.gain.exponentialRampToValueAtTime(0.0001,t+0.14);
+  n.og.gain.cancelScheduledValues(t);
+  n.og.gain.setValueAtTime(Math.max(n.og.gain.value,0.0002),t);
+  n.og.gain.exponentialRampToValueAtTime(0.0001,t+0.14);
+  setTimeout(()=>{ try{ n.src.stop(); n.o.stop(); }catch(e){} },220);
+}
+
+/* Count-up ratchet. The rate is driven by the counter's own progress rather
+   than a fixed interval, so the ticks crowd together as the number climbs and
+   thin out as it settles -- that acceleration is most of what makes a big win
+   feel big. */
+let lastTick=0;
+function counterTick(progress,tier){
+  if(muted) return;
+  const now=performance.now();
+  const gap=42+58*progress;            // slows as it approaches the total
+  if(now-lastTick<gap) return;
+  lastTick=now;
+  const c=ac(), t=c.currentTime;
+  const o=c.createOscillator(); o.type="square";
+  o.frequency.setValueAtTime(1250+progress*900+(tier||0)*260,t);
+  const g=env(o,0.022,0.001,0.035,t); g.connect(busGain);
+  o.start(t); o.stop(t+0.06);
+}
+
+/* Scatter landing, escalating by position. The third scatter has to sound like
+   more than the first or a trigger arrives without warning. */
+function scatterLand(index){
+  if(muted) return;
+  const c=ac(), t=c.currentTime;
+  const notes=[523.25,659.25,830.61,1046.5,1318.5];
+  const f=notes[Math.min(index,notes.length-1)];
+  for(const [mult,lvl] of [[1,0.075],[2,0.03],[3,0.014]]){
+    const o=c.createOscillator(); o.type="triangle";
+    o.frequency.setValueAtTime(f*mult,t);
+    const g=env(o,lvl,0.004,0.42,t); g.connect(busGain); g.connect(verbSend);
+    o.start(t); o.stop(t+0.5);
+  }
 }
 
 /* Anticipation riser: pitch and filter climb together while a reel drags. */
@@ -1543,7 +1682,11 @@ function fxStep(){
 let game="pride";
 let serverSeed=crypto.getRandomValues(new Uint8Array(32));
 let nonce=0;
-const vaultState={mane:0};
+/* Trait Vault no longer carries state between spins -- the Mane Meter was the
+   only thing that did, and removing it is what makes the game's spins
+   independent (and its feature priceable on its own). The object is kept only
+   because spinVault still takes the shared signature. */
+const vaultState={};
 let balance=100000, busy=false, autoLeft=0, stopAuto=false, turbo=false;
 let featTotal=0, autoBaseline=0, history=[], anteOn=false, buyNext=false;
 const S={spins:0,staked:0,returned:0,hits:0,best:0};
@@ -1552,18 +1695,30 @@ let hl={n:RARITY_RANKS,mode:"rarity",card:null,mult:1,risk:0,live:false,hist:[],
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString("en-US");
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const MAXWIN={pride:2000,cubcluster:2500,traitvault:1000};
+const MAXWIN={pride:2000,cubcluster:2500,traitvault:5000};
 
 /* ============================ reel machinery ============================ */
+const RAIL_PX=52;   // rail min-width plus its gutter; reserved so cells centre
 function cellPx(){
   // Constrained by BOTH axes: width alone gives ~183px cells on a desktop,
   // which pushes the reels past the fold and hides the controls.
-  const w=$("reels").clientWidth;
+  //
+  // Measured from the SCREEN, never from .reels: the reel grid is sized from
+  // --cell, so reading its width here would be reading back the value being
+  // computed.
+  const host=$("screen")||$("reels");
+  const railed=$("multRail") && !$("multRail").classList.contains("hidden");
+  const w=host.clientWidth-(railed?RAIL_PX:0)-14;
   const byWidth=(w-8)/5*0.96;
   const byHeight=(window.innerHeight*0.52)/ROWS;
   return Math.max(44,Math.round(Math.min(byWidth,byHeight,118)));
 }
-function syncCell(){ document.documentElement.style.setProperty("--cell",cellPx()+"px"); }
+function syncCell(){
+  document.documentElement.style.setProperty("--cell",cellPx()+"px");
+  // The rail reads its row height from --cell, so it only needs rebuilding if
+  // it has not been built yet; the badges re-align themselves on resize.
+  if($("multRail") && !$("multRail").children.length) buildMultRail();
+}
 
 function buildReels(grid){
   const host=$("reels"); host.innerHTML="";
@@ -1615,6 +1770,7 @@ function spinReel(reelEl,finalCol,reelIdx,duration,delay){
 async function animateSpin(grid,scatterCount){
   const host=$("reels");
   const reels=[...host.children];
+  startReelLoop();
   const base=turbo?170:520, step=turbo?55:135;
   const jobs=[];
   let running=0;
@@ -1631,11 +1787,65 @@ async function animateSpin(grid,scatterCount){
     if(!turbo) setTimeout(()=>blip(760+r*40,.04,"square",.025),r*step);
   }
   await Promise.all(jobs);
+  stopReelLoop();
 }
 function countScatUpTo(grid,upto){
   let n=0;
   for(let r=0;r<upto;r++) for(let row=0;row<ROWS;row++) if(grid[r][row]===SCAT) n++;
   return n;
+}
+
+/* ---- row multiplier rail -------------------------------------------------
+   The badge for a row must sit level with that row, so the rail is built from
+   the same --cell height the reels use rather than being positioned by hand. */
+function buildMultRail(){
+  const rail=$("multRail"); rail.innerHTML="";
+  for(let row=0;row<ROWS;row++){
+    const d=document.createElement("div"); d.className="mrow";
+    const b=document.createElement("span"); b.className="mbadge"; b.textContent="×1";
+    d.appendChild(b); rail.appendChild(d);
+  }
+}
+function paintMultRail(rowMult,bumped){
+  const badges=$("multRail").querySelectorAll(".mbadge");
+  for(let row=0;row<ROWS;row++){
+    const b=badges[row]; if(!b) continue;
+    const v=rowMult?rowMult[row]:0;
+    b.textContent="×"+(v||1);
+    b.classList.toggle("live",v>0);
+    if(bumped&&bumped.has(row)){
+      // restart the animation even if it is already applied
+      b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump");
+    }
+  }
+}
+/* An orb has to visibly travel from the cell it landed in to the row it
+   upgrades, or the connection between the two is left for the player to infer.
+   Skipped under turbo and reduced-motion, where the rail just updates. */
+async function flyOrbs(orbs){
+  if(!orbs||!orbs.length||turbo||reduceMotion) return;
+  const screen=$("screen"), sRect=screen.getBoundingClientRect();
+  const reels=[...$("reels").children];
+  const badges=$("multRail").querySelectorAll(".mbadge");
+  await Promise.all(orbs.slice(0,8).map((o,i)=>new Promise(done=>{
+    const cell=reels[o.reel]&&reels[o.reel].querySelectorAll(".sym")[o.row];
+    const badge=badges[o.row];
+    if(!cell||!badge){ done(); return; }
+    const c=cell.getBoundingClientRect(), b=badge.getBoundingClientRect();
+    const el=document.createElement("div");
+    el.className="orb"; el.textContent="×"+o.val;
+    el.style.left=(c.left-sRect.left+c.width/2-13)+"px";
+    el.style.top=(c.top-sRect.top+c.height/2-11)+"px";
+    screen.appendChild(el);
+    const dx=(b.left-c.left)+(b.width-c.width)/2;
+    const dy=(b.top-c.top)+(b.height-c.height)/2;
+    const a=el.animate([
+      {transform:"translate(0,0) scale(.5)",opacity:0},
+      {transform:"translate(0,0) scale(1.18)",opacity:1,offset:.22},
+      {transform:`translate(${dx}px,${dy}px) scale(.7)`,opacity:.85}
+    ],{duration:540,delay:i*70,easing:"cubic-bezier(.4,.05,.2,1)",fill:"forwards"});
+    a.onfinish=()=>{ el.remove(); done(); };
+  })));
 }
 
 function paintGrid(grid,marks,coinsArr,maneSet){
@@ -1677,7 +1887,7 @@ async function showBanner(kind,amount,sub){
     (function tick(now){
       const k=Math.min(1,(now-t0)/dur);
       $("bannerAmt").textContent=fmt(amount*(k*k*(3-2*k)));
-      if(k<1) requestAnimationFrame(tick); else done();
+      if(k<1){ counterTick(k,tier); requestAnimationFrame(tick); } else done();
     })(t0);
   });
   $("bannerAmt").textContent=fmt(amount);
@@ -1690,7 +1900,7 @@ async function countUp(target){
     (function tick(now){
       const k=Math.min(1,(now-t0)/dur);
       el.textContent=fmt(target*k);
-      if(k<1) requestAnimationFrame(tick); else done();
+      if(k<1){ counterTick(k,0); requestAnimationFrame(tick); } else done();
     })(t0);
   });
   el.textContent=fmt(target);
@@ -1724,7 +1934,7 @@ async function doSpin(){
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(first.grid[r][row]===SCAT) scat++;
 
   await animateSpin(first.grid,scat);
-  paintGrid(first.grid,first.marks.size?first.marks:null,null,first.mane);
+  paintGrid(first.grid,first.marks.size?first.marks:null,null,null);
 
   const winMult=out.base+out.feature, win=winMult*bet;
 
@@ -1732,17 +1942,28 @@ async function doSpin(){
   // Mark scatters so a trigger is legible before the feature starts.
   if(scat>=1){
     const reels=[...$("reels").children];
+    let seen=0;
     for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++)
-      if(first.grid[r][row]===SCAT) reels[r].querySelectorAll(".sym")[row]?.classList.add("scat");
+      if(first.grid[r][row]===SCAT){
+        reels[r].querySelectorAll(".sym")[row]?.classList.add("scat");
+        // Escalating pitch per scatter: the third has to sound like more than
+        // the first, or the trigger lands with no build behind it.
+        if(!turbo){ const n=seen++; setTimeout(()=>scatterLand(n), n*130); }
+      }
   }
 
   // Feature intro. Pragmatic announces the round, runs it, then reports the
   // total -- without the bookends a free-spin round just looks like fast spins.
   if(out.fs && game!=="cubcluster"){
-    await showBanner(game==="pride"?"10 free spins":"Hold & win",
-                     0, game==="pride"?"every wild carries ×2":"6 respins · $LAZY coins only");
+    await showBanner(game==="pride"?"10 free spins":"Lion's Share",
+                     0, game==="pride"?"every wild carries ×2"
+                                      :"10 free spins · row multipliers stick and build");
   }
   if(frames.length>1){ featTotal=0; $("chipFeat").classList.remove("hidden"); }
+  if(game==="traitvault"&&frames.length>1){
+    paintMultRail([0,0,0,0],null);
+    $("chipFS").classList.remove("hidden");
+  }
   for(let i=1;i<frames.length;i++){
     const f=frames[i];
     $("chipMode").textContent=f.label||"Feature";
@@ -1757,13 +1978,21 @@ async function doSpin(){
       frames[i-1]&&[...document.querySelectorAll(".sym.pop")].forEach(e=>e.classList.add("burst"));
       await sleep(turbo?60:230);
     }
-    paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,f.coins,f.mane);
+    paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,f.coins,null);
     if(f.coins) coinTick();
+    if(game==="traitvault"&&f.rowMult){
+      $("fsN").textContent=i;
+      await flyOrbs(f.orbs);
+      const bumped=new Set((f.orbs||[]).map(o=>o.row));
+      paintMultRail(f.rowMult,bumped);
+      if(f.orbs&&f.orbs.length) orbLand(f.orbs.length,Math.max(...f.orbs.map(o=>o.val)));
+    }
     if(!turbo) await sleep(game==="cubcluster"?260:300);
     else await sleep(35);
   }
   if(frames.length>1){
     $("chipMode").classList.remove("live"); $("chipMode").textContent="Base game";
+    $("chipFS").classList.add("hidden");
     $("featTotal").textContent=fmt(out.feature*bet);
     if(out.fs && game!=="cubcluster" && out.feature>0){
       coins(40,1.05);
@@ -1943,13 +2172,15 @@ function updateHud(){
     $("sHit").textContent=(S.hits/S.spins*100).toFixed(1)+"%";
   }
   $("sBest").textContent=S.best?S.best.toFixed(1)+"×":"—";
+  // The rail is Trait Vault's own furniture; it lives beside the reels only
+  // there. Nothing to sync between spins any more -- there is no meter to carry.
   const isVault=game==="traitvault";
-  $("chipMane").classList.toggle("hidden",!isVault);
-  $("maneBar").classList.toggle("hidden",!isVault);
-  if(isVault){
-    $("maneN").textContent=vaultState.mane;
-    $("maneFill").style.width=Math.min(100,vaultState.mane/40*100)+"%";
-  }
+  const wasRailed=!$("multRail").classList.contains("hidden");
+  $("multRail").classList.toggle("hidden",!isVault);
+  if(!isVault) $("chipFS").classList.add("hidden");
+  // Showing or hiding the rail changes how much width the reels have, so the
+  // cell size has to be recomputed or the grid stays sized for the other game.
+  if(wasRailed!==isVault && !busy) syncCell();
 }
 function logSpin(win,mult){
   const l=$("log");
@@ -1970,11 +2201,10 @@ function replay(rec){
   if(!rec||busy||rec.game!==game) return;
   const seed=Uint8Array.from(rec.seed.match(/../g).map(h=>parseInt(h,16)));
   const rng=makeRng(seed,rec.client,rec.nonce,rec.game);
-  const st={mane:0};
   const out = rec.game==="pride" ? spinPride(rng)
-            : rec.game==="cubcluster" ? spinCluster(rng) : spinVault(rng,st);
+            : rec.game==="cubcluster" ? spinCluster(rng) : spinVault(rng,{});
   const f=out.frames[0];
-  paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,null,f.mane);
+  paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,null,null);
   flash(`Replay #${rec.nonce} · ${(out.base+out.feature).toFixed(2)}×`);
 }
 function blankGrid(){
@@ -2051,7 +2281,7 @@ function selectGame(g){
     : g==="pride"?"Pride" : g==="cubcluster"?"Cub Cluster":"Trait Vault";
   $("gDesc").textContent = isHilo?"card duel · without replacement"
     : g==="pride"?"1024 ways · 5×4 · 10 free spins"
-    : g==="cubcluster"?"cluster pays · tumbles ×1→×8":"40 lines · Mane Meter";
+    : g==="cubcluster"?"cluster pays · tumbles ×1→×8":"40 lines · row multipliers";
   $("chipMode").textContent=isHilo?"Card duel":"Base game";
   $("chipMode").classList.remove("live");
   $("chipMax").innerHTML = isHilo ? 'Round cap <b>5,000×</b>'
@@ -2074,9 +2304,12 @@ function openInfo(){
       Winners vanish, symbols fall, and the grid re-evaluates — the <b>tumble multiplier climbs
       1 · 2 · 3 · 5 · 8</b> and caps at ×8. A wild joins every cluster it touches.`,
     traitvault:`<b>40 fixed lines</b>, left to right from reel 1. Wild on reels 2–4.
-      Every mid-tier symbol landed adds <b>+1 to the Mane Meter</b>, which persists between
-      sessions; at 40 it awards a guaranteed <b>6-respin Hold &amp; Win</b> where only $LAZY coins
-      land, each carrying 1× to 20×.`,
+      Three or more <b>$LAZY scatters</b> anywhere award <b>10 Lion&#39;s Share free spins</b>.
+      During the round, <b>multiplier orbs</b> land on the grid and stamp their value onto the
+      <b>whole row</b>. Row multipliers <b>stick for the round and add up</b> as more orbs land in
+      the same row, to a ceiling of ×60. A winning line takes the <b>highest</b> multiplier among
+      the rows it runs through — so the badge beside a row is exactly what that row pays.
+      No retrigger; the round caps at 5,000×.`,
     hilo:`<b>Rarity duel.</b> Bet whether the next NFT is rarer or commoner than the current one.
       Payout is <b>0.97 ÷ P(direction)</b>, so every offered bet returns exactly 97%. A direction
       below 5% probability is <b>disabled rather than capped</b> — capping would silently break

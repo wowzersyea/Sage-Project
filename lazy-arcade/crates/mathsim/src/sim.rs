@@ -48,7 +48,30 @@ impl GameKind {
         match self {
             GameKind::Pride => 2_000.0,
             GameKind::CubCluster => 2_500.0,
-            GameKind::TraitVault => 1_000.0,
+            // Raised from 1000x with the Lion's Share rework. Sticky row
+            // multipliers that add across a line need somewhere to go; at
+            // 1000x the cap, not the maths, decided the top of the range --
+            // and a cap that binds often is a cap that makes the published
+            // figure a fiction.
+            GameKind::TraitVault => 5_000.0,
+        }
+    }
+
+    /// Share of total RTP the feature is designed to carry, as an absolute RTP
+    /// figure (so 0.32 against a 0.97 target is a third of the return).
+    ///
+    /// Lives here because two places need it and they had drifted: `calibrate`
+    /// solved the feature parameter against a hardcoded 0.23 while `report`
+    /// printed a "74 / 23" split it did not read from anywhere. Changing the
+    /// split in one of them silently left the other calibrating to the old one.
+    pub fn target_feature_rtp(&self) -> f64 {
+        match self {
+            GameKind::Pride => 0.29,
+            GameKind::CubCluster => 0.26,
+            // Lion's Share is the reason to play this game; a feature carrying
+            // less than a third of the return does not justify a round the
+            // player waits ~1 spin in 60 to see.
+            GameKind::TraitVault => 0.32,
         }
     }
 
