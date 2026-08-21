@@ -3235,9 +3235,6 @@ function buyOptions(){
 function openBuyMenu(){
   const host=$("buyCards"); host.innerHTML="";
   const bet=+$("bet").value, opts=buyOptions();
-  if(!opts.length){
-    host.innerHTML='<p class="buynote">This game has nothing to buy — every feature is triggered on the reels.</p>';
-  }
   for(const o of opts){
     const cost=bet*o.mult, afford=balance>=cost;
     const card=document.createElement("div"); card.className="buycard";
@@ -3268,11 +3265,16 @@ function openBuyMenu(){
 function refreshCostLabels(){
   const bet=+$("bet").value;
   // The chip opens the menu now, so it names the cheapest thing on offer rather
-  // than reflecting a toggle state that no longer exists.
+  // than reflecting a toggle state that no longer exists. A game with nothing to
+  // sell hides it outright: a disabled "Buy n/a" advertises a door that is not
+  // there, and Cub Cluster has no purchases by design.
   const opts=buyOptions();
-  const low=opts.length?Math.min(...opts.map(o=>o.mult)):null;
-  $("buy").textContent = low===null ? "Buy n/a" : `Buy from ${fmt(bet*low)}`;
-  $("buy").disabled = !opts.length;
+  $("buy").style.display = opts.length ? "" : "none";
+  if(opts.length){
+    const low=Math.min(...opts.map(o=>o.mult));
+    $("buy").textContent=`Buy from ${fmt(bet*low)}`;
+    $("buy").disabled=false;
+  }
   $("ante").textContent = anteOn ? `Ante ${fmt(bet*ANTE.pride.stake)}` : "Ante";
   $("ante").style.display = game==="pride" ? "" : "none";
 }
