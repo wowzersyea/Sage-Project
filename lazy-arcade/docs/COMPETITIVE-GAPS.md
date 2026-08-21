@@ -229,6 +229,14 @@ Three techniques were tried against the static art. One shipped. The two that
 failed did so for the same underlying reason: an effect applied uniformly to a
 flat composite cannot distinguish the parts of a lion from each other.
 
+A fourth route was checked and closed: **the frames cannot be sourced from the
+collection itself.** If a Lion existed that differed from one of ours in ONLY
+the Eyes trait, it would be a blink frame drawn by the original artist. Across
+all 9,999 collection entries there are **zero** such single-trait eye variants
+for any of the twelve symbols -- the trait space is combinatorial enough that an
+exact match on the other seven categories essentially never occurs. The frames
+have to be drawn.
+
 ### Why a blink cannot simply be switched on
 
 Of the twelve symbols, only half have eyes a lid could close over:
