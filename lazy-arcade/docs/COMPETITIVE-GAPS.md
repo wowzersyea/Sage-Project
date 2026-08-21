@@ -229,6 +229,36 @@ Three techniques were tried against the static art. One shipped. The two that
 failed did so for the same underlying reason: an effect applied uniformly to a
 flat composite cannot distinguish the parts of a lion from each other.
 
+### What eventually worked, and the rule it exposed
+
+A fifth route SHIPPED, and it reframes every failure above: **separate a layer
+and move it rigidly; never deform the composite.**
+
+Lazy Lions render in flat vector colour, so a mane is one RGB value rather than
+a gradient, and it sits BEHIND the head. That makes it liftable. The mane is cut
+out at build time as its own image, grown slightly so it stays tucked under the
+jaw, and shipped alongside a base with a mane-shaped hole. On a win it swings
+about a low pivot, LAGGING the roar rather than matching it -- appendages arrive
+late and leave late, and a mane moving in step with the head is just a bigger
+head. Face, crown, glasses and mouth hold still. No shear, no seam.
+
+Six of twelve ship a mane layer: Crown #4230, LAZY Hat #5216, Shades #4522,
+Leopard Coat #482, Bucket Hat #4837, Pirate Hat #4117. The other six hold still
+on purpose -- White, Black, Brown, Fire and Emerald manes cannot be told apart
+from outline and shadow in flat-shaded art, and a still mane is a far smaller
+defect than a face that moves with it.
+
+The colours are DECLARED, not detected. Detection was built and abandoned: tuned
+one way it read the LAZY lion's cap as its mane; tuned another it merged the
+orange lion's mane with its orange face at 39% coverage; a guard against that
+rejected two good lions and kept the one bad one, because `character` and `bust`
+crops do not frame the face at the same place. Twelve symbols do not need a
+classifier.
+
+**The rule this exposes:** the question is not "is this anatomy-aware" but "is
+there a layer to LIFT". A mane is a large region of its own flat colour, so
+there is. That is the test to apply to any future effect.
+
 A fourth route was checked and closed: **the frames cannot be sourced from the
 collection itself.** If a Lion existed that differed from one of ours in ONLY
 the Eyes trait, it would be a blink frame drawn by the original artist. Across
@@ -238,6 +268,26 @@ exact match on the other seven categories essentially never occurs. The frames
 have to be drawn.
 
 ### Why a blink cannot simply be switched on
+
+The lift-a-layer rule was tested here too, and **it does not carry**. In flat
+cartoon art a lid filled with the face's own fur colour should be
+indistinguishable from fur, so a synthesised lid sliding down over the eye ought
+to read as a blink without any new art. It does not. Rendered on the Pirate lion
+-- the only one of the twelve whose eye whites can be located automatically at
+all -- it reads as REDACTION: two black bars across the face. The fur colour has
+to be sampled from somewhere, and everywhere adjacent to an eye in this art is
+the black outline that rings it.
+
+That is the difference from the mane, and it is the whole difference. A mane is
+a layer that EXISTS and can be lifted. A lid does not exist anywhere in the
+source; it has to be invented -- correct fur colour, correct eye geometry, a
+curved lash line, per lion. Inventing art in a house style is the definition of
+what needs an artist, and no amount of compositing substitutes for it.
+
+Eye detection is also unreliable on its own terms: scanning for eye-white blobs
+finds a clean symmetric pair on exactly one of the twelve. The LAZY lion's
+strongest "eyes" are the letters on its cap; the white lion yields sixteen
+candidate blobs because its whole face is white.
 
 Of the twelve symbols, only half have eyes a lid could close over:
 
