@@ -121,7 +121,13 @@ const STRIPS = {
   pride:      [152, 164, 156, 164, 165],
   cubcluster: [159, 166, 168, 166, 171],
   traitvault: [158, 149, 160, 167, 144],
-  hilo:       [10078]
+  // Hi/Lo draws a RARITY RANK, not a card from the full collection. It sat at
+  // 10078 -- the pre-rarity deck size -- long after the game moved to ranks
+  // 0..100, so this page derived an ordinal out of 10,078 while the game drew
+  // one out of 101. Verifying an honest Hi/Lo round produced a different card
+  // and called it a mismatch: the same failure the note above records for Trait
+  // Vault, in the one game the drift test did not cover.
+  hilo:       [101]
 };
 
 const enc = new TextEncoder();

@@ -39,7 +39,7 @@ const exported = [
   "payout", "pRarer", "pCommoner", "MIN_P", "HOUSE",
   "swapFee", "buyFeature", "BUY_PRICE", "ANTE", "anteStrips",
   "vaultFreeSpins", "vaultLines", "MULT_V", "MULT_W", "ROW_MULT_CAP",
-  "FREE_SPINS", "SCATTERS_TO_TRIGGER",
+  "FREE_SPINS", "SCATTERS_TO_TRIGGER", "RARITY_RANKS",
 ];
 const M = new Function(`${mathOnly}\nreturn {${exported.join(",")}};`)();
 
@@ -116,8 +116,16 @@ console.log("\nStructural pay rules");
       if (JSON.stringify(live) !== JSON.stringify(published[g] || []))
         mismatch.push(`${g}: page ${JSON.stringify(live)} vs verifier ${JSON.stringify(published[g])}`);
     }
-    check("verifier page strip lengths match the live strips", mismatch.length === 0,
-          mismatch.join(" | ") || "pride/cubcluster/traitvault all agree");
+    // Hi/Lo was left OUT of this loop, and that is precisely where the next
+    // drift happened: the verifier went on publishing 10078 -- the pre-rarity
+    // deck size -- for a game that draws a rank out of 101. Its "strip" is the
+    // rank space, so it is checked against RARITY_RANKS.
+    const liveHilo = [M.RARITY_RANKS];
+    if (JSON.stringify(liveHilo) !== JSON.stringify(published.hilo || []))
+      mismatch.push(`hilo: page ${JSON.stringify(liveHilo)} vs verifier ${JSON.stringify(published.hilo)}`);
+    check("verifier page strip lengths match the live strips, Hi/Lo included",
+          mismatch.length === 0,
+          mismatch.join(" | ") || "all four games agree");
   }
 
   check("Trait Vault carries scatters on every reel",
