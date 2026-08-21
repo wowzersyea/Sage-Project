@@ -320,6 +320,32 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .sym .shine{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   pointer-events:none}
 
+/* ---- buy menu ----
+   The reference presents its buys as priced cards you choose between, each
+   stating what it awards. Ours were two toggle chips that armed the NEXT spin,
+   so buying was a two-step with no statement of what you were buying -- press
+   Buy, then press Spin, and hope. */
+.buycards{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:520px){.buycards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}}
+.buycard{border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));display:flex;
+  flex-direction:column}
+/* flex-grow so the buy buttons line up along the bottom whatever length the
+   descriptions run to -- unequal button positions read as unequal offers */
+.buycard .bc-top{padding:12px 13px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.buycard .bc-price{margin-top:auto;padding-top:4px}
+.buycard b{font-size:15px;letter-spacing:-.01em}
+.buycard .bc-what{font-size:12.5px;color:var(--muted);line-height:1.45}
+.buycard .bc-price{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--gold-3);
+  font-variant-numeric:tabular-nums;line-height:1;margin-top:auto;padding-top:6px}
+.buycard .bc-mult{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.buycard button{border:0;padding:11px;font-family:var(--mono);font-size:12px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  background:linear-gradient(180deg,#2E9E52,#17703A);color:#EAFFF1}
+.buycard button:hover{filter:brightness(1.12)}
+.buycard button:disabled{background:#2A2334;color:var(--muted);cursor:not-allowed}
+.buynote{font-size:12px;color:var(--muted);margin:12px 0 10px;line-height:1.5}
+
 /* ---- feature transition ---- */
 .fintro{position:absolute;inset:0;z-index:9;display:grid;place-items:center;
   overflow:hidden;pointer-events:none}
@@ -573,6 +599,16 @@ footer b{color:var(--hot)}
           <div class="hlhist" id="hlHist" aria-label="Card history"></div>
         </div>
         <canvas id="fx"></canvas>
+        <div class="modal" id="buyMenu">
+          <div class="sheet">
+            <h4>Buy a feature</h4>
+            <div class="buycards" id="buyCards"></div>
+            <p class="buynote">Every price is EV-neutral: buying returns the same 0.97 as
+              spinning for it. Measured with <code>mathsim buyprice</code> against the
+              calibrated paytable, and asserted by test.</p>
+            <button class="btn" id="buyClose">Close</button>
+          </div>
+        </div>
         <div class="modal" id="info">
           <div class="sheet">
             <h4 id="infoTitle">Pride</h4>
@@ -3140,12 +3176,65 @@ async function hlCash(){
 }
 
 /* =============================== hud ==================================== */
+/* What each game actually sells. Prices come from BUY_PRICE / ANTE, which are
+   the measured EV-neutral figures -- there is no second table here to drift. */
+function buyOptions(){
+  const out=[];
+  if(game==="pride"){
+    out.push({key:"ante", name:"Ante Bet",
+      what:"Raises the stake and adds an extra $LAZY scatter to every reel, so free spins trigger about twice as often.",
+      mult:ANTE.pride.stake});
+  }
+  if(BUY_PRICE[game]!==undefined){
+    out.push({key:"feature", name: game==="pride"?"Buy Free Spins":"Buy Lion's Share",
+      what: game==="pride"
+        ? "Starts 10 free spins immediately. Every wild carries ×2."
+        : "Starts 10 free spins immediately. Multiplier orbs stamp whole rows, sticky and additive.",
+      mult:BUY_PRICE[game]});
+  }
+  return out;
+}
+function openBuyMenu(){
+  const host=$("buyCards"); host.innerHTML="";
+  const bet=+$("bet").value, opts=buyOptions();
+  if(!opts.length){
+    host.innerHTML='<p class="buynote">This game has nothing to buy — every feature is triggered on the reels.</p>';
+  }
+  for(const o of opts){
+    const cost=bet*o.mult, afford=balance>=cost;
+    const card=document.createElement("div"); card.className="buycard";
+    card.innerHTML=`<div class="bc-top">
+        <b>${o.name}</b>
+        <span class="bc-what">${o.what}</span>
+        <span class="bc-price">${fmt(cost)}</span>
+        <span class="bc-mult">${o.mult.toFixed(4)}× your bet · $LAZY</span>
+      </div>
+      <button ${afford?"":"disabled"}>${afford?"Buy":"Balance too low"}</button>`;
+    card.querySelector("button").addEventListener("click",()=>{
+      if(busy) return;
+      $("buyMenu").classList.remove("on");
+      // Buying now SPINS. Arming a toggle and making the player press spin
+      // afterwards was two steps to express one decision.
+      anteOn = o.key==="ante";
+      buyNext = o.key==="feature";
+      $("ante").setAttribute("aria-pressed",String(anteOn));
+      $("buy").setAttribute("aria-pressed",String(buyNext));
+      refreshCostLabels();
+      doSpin();
+    });
+    host.appendChild(card);
+  }
+  $("buyMenu").classList.add("on");
+}
+
 function refreshCostLabels(){
   const bet=+$("bet").value;
-  const p=BUY_PRICE[game];
-  $("buy").textContent = p===undefined ? "Buy n/a"
-    : buyNext ? `Buy ${fmt(bet*p)}` : `Buy ${p.toFixed(1)}×`;
-  $("buy").disabled = p===undefined;
+  // The chip opens the menu now, so it names the cheapest thing on offer rather
+  // than reflecting a toggle state that no longer exists.
+  const opts=buyOptions();
+  const low=opts.length?Math.min(...opts.map(o=>o.mult)):null;
+  $("buy").textContent = low===null ? "Buy n/a" : `Buy from ${fmt(bet*low)}`;
+  $("buy").disabled = !opts.length;
   $("ante").textContent = anteOn ? `Ante ${fmt(bet*ANTE.pride.stake)}` : "Ante";
   $("ante").style.display = game==="pride" ? "" : "none";
 }
@@ -3328,10 +3417,8 @@ $("ante").addEventListener("click",()=>{
   anteOn=!anteOn; $("ante").setAttribute("aria-pressed",String(anteOn));
   refreshCostLabels();
 });
-$("buy").addEventListener("click",()=>{
-  buyNext=!buyNext; $("buy").setAttribute("aria-pressed",String(buyNext));
-  refreshCostLabels();
-});
+$("buy").addEventListener("click",()=>{ ac(); openBuyMenu(); });
+$("buyClose").addEventListener("click",()=>$("buyMenu").classList.remove("on"));
 $("bet").addEventListener("change",refreshCostLabels);
 $("turbo").addEventListener("click",()=>{turbo=!turbo;$("turbo").setAttribute("aria-pressed",String(turbo));});
 $("sound").addEventListener("click",()=>{
