@@ -100,12 +100,31 @@ body{
 .sym.mane::after{content:"";position:absolute;inset:5px;border-radius:9px;
   border:1.5px solid var(--data);box-shadow:0 0 12px -3px var(--data);opacity:.85}
 .sym.pop{animation:pop .62s ease-out both}
+/* The win "roar".
+   A symbol that simply scales up reads as a zoom. Real character animation has
+   three beats -- anticipation, action, follow-through -- and the origin matters
+   as much as the curve: scaling from the BOTTOM makes the lion look like it
+   rears up, where scaling from the centre just makes it bigger.
+   The lions are static portraits, so this is where their performance has to
+   come from. */
+.sym.pop{transform-origin:50% 88%}
 @keyframes pop{
-  0%{transform:scale(1)}
-  22%{transform:scale(1.22) rotate(-2deg)}
-  46%{transform:scale(.97)}
-  70%{transform:scale(1.1)}
-  100%{transform:scale(1)}
+  0%  {transform:scale(1) rotate(0deg)}
+  12% {transform:scale(.92,.88) rotate(1.5deg)}          /* anticipation: crouch */
+  34% {transform:scale(1.16,1.28) rotate(-3deg)}         /* action: rear up */
+  52% {transform:scale(1.12,1.02) rotate(2deg)}
+  68% {transform:scale(.98,1.04) rotate(-1deg)}          /* follow-through */
+  84% {transform:scale(1.04,.99) rotate(.5deg)}
+  100%{transform:scale(1) rotate(0deg)}
+}
+/* light thrown from behind the symbol as it rears */
+.sym.pop::before{content:"";position:absolute;inset:-14%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,214,110,.55),rgba(255,190,60,0) 68%);
+  animation:roarglow .66s ease-out both;pointer-events:none;z-index:-1}
+@keyframes roarglow{
+  0%{opacity:0;transform:scale(.55)}
+  30%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.35)}
 }
 .sym.pop::after{content:"";position:absolute;inset:2px;border-radius:9px;
   border:2px solid var(--gold);box-shadow:0 0 18px -2px var(--gold),inset 0 0 14px -4px var(--gold);
@@ -155,10 +174,19 @@ body{
   border-radius:6px;padding:4px 6px;font-family:var(--mono);font-size:10px;margin-left:5px}
 .log div{cursor:pointer}
 .log div:hover{background:#241636}
-.sym img{animation:idle 3.6s ease-in-out infinite}
-.sym:nth-child(2n) img{animation-delay:-.9s}
-.sym:nth-child(3n) img{animation-delay:-1.8s}
-@keyframes idle{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.012)}}
+.sym img{animation:idle 3.6s ease-in-out infinite;transform-origin:50% 85%}
+.sym:nth-child(2n) img{animation-delay:-.9s;animation-duration:4.1s}
+.sym:nth-child(3n) img{animation-delay:-1.8s;animation-duration:3.3s}
+.reel:nth-child(2n) .sym img{animation-delay:-2.4s}
+.reel:nth-child(3n) .sym img{animation-delay:-1.2s}
+/* A pure bob has every lion rising and falling in lock-step, which reads as one
+   sheet of paper moving rather than twenty animals. The sway breaks the grid up,
+   and the varied durations stop the rows re-synchronising. */
+@keyframes idle{
+  0%,100%{transform:translateY(0) rotate(0deg) scale(1)}
+  30%{transform:translateY(-2px) rotate(.5deg) scale(1.012)}
+  70%{transform:translateY(-1px) rotate(-.5deg) scale(1.008)}
+}
 @media(prefers-reduced-motion:reduce){.sym img{animation:none}}
 canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
 
@@ -1632,6 +1660,69 @@ function kerching(){
    never when a sound plays. */
 let rhythm=null;
 const RHYTHM_BASE_BPM=82, RHYTHM_FEATURE_BPM=132;
+
+/* ---- the actual composition ---------------------------------------------
+   A drone is not music, it is a held chord. This is a written piece: an
+   Andalusian cadence (Am - G - F - E), which is the harmonic move the whole
+   spaghetti-western idiom is built on -- the bass walking down by step to a
+   major dominant is what makes it sound like that and not like folk.
+   Four bars, eight eighth-notes each. The bass is plucked, the chord answers
+   it off the beat, and a whistled motif sits on top. All of it is scheduled by
+   the same clock as the percussion, so the tempo change into the feature moves
+   the whole arrangement rather than sliding it out of time with itself. */
+const CHORDS=[
+  {root:110.00, tones:[220.00,261.63,329.63]},   // Am
+  {root: 98.00, tones:[196.00,246.94,293.66]},   // G
+  {root: 87.31, tones:[174.61,220.00,261.63]},   // F
+  {root: 82.41, tones:[164.81,207.65,246.94]}    // E  (major: the cadence)
+];
+/* Motif per bar, as eighth-note slots. null = rest. Deliberately sparse: a
+   melody that plays on every eighth competes with the reels for attention. */
+const MOTIF=[
+  [659.25,null,587.33,null,523.25,null,null,null],
+  [587.33,null,523.25,null,493.88,null,null,null],
+  [523.25,null,493.88,null,440.00,null,null,null],
+  [493.88,null,440.00,null,415.30,null,415.30,null]   // G# leading tone on E
+];
+
+/* A whistle: near-sine with vibrato and a breath of noise. */
+function whistle(freq,dur,gain,when){
+  if(muted) return;
+  const c=ac(), t=when==null?c.currentTime:when;
+  const o=c.createOscillator(); o.type="sine";
+  o.frequency.setValueAtTime(freq*0.985,t);
+  o.frequency.exponentialRampToValueAtTime(freq,t+0.06);
+  const vib=c.createOscillator(), vg=c.createGain();
+  vib.frequency.value=5.2; vg.gain.value=freq*0.006;
+  vib.connect(vg).connect(o.frequency); vib.start(t); vib.stop(t+dur+0.1);
+  const g=c.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(gain,t+0.05);
+  g.gain.setValueAtTime(gain,t+dur*0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(busGain); g.connect(verbSend);
+  o.start(t); o.stop(t+dur+0.05);
+  // breath
+  const air=c.createBufferSource(); air.buffer=sharedNoise(); air.loop=true;
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=freq*2; bp.Q.value=9;
+  air.connect(bp);
+  const ag=env(bp,gain*0.22,0.05,dur,t); ag.connect(busGain);
+  air.start(t); air.stop(t+dur+0.05);
+}
+
+/* Chord stab, off the beat, filtered so it sits under everything else. */
+function chordStab(tones,when,gain){
+  if(muted) return;
+  const c=ac();
+  for(const f of tones){
+    const o=c.createOscillator(); o.type="triangle";
+    o.frequency.setValueAtTime(f,when);
+    const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1900;
+    o.connect(lp);
+    const g=env(lp,gain,0.02,0.5,when); g.connect(busGain); g.connect(verbSend);
+    o.start(when); o.stop(when+0.6);
+  }
+}
 function startRhythm(){
   if(rhythm||muted) return;
   const c=ac();
@@ -1658,7 +1749,23 @@ function startRhythm(){
     while(rhythm.next<now+0.2){
       // ease toward the target tempo so a feature does not snap into place
       rhythm.bpm+=(rhythm.target-rhythm.bpm)*0.12;
-      chuff(rhythm.next, rhythm.step%4===0);
+      const t=rhythm.next, step=rhythm.step, slot=step%8, bar=Math.floor(step/8)%4;
+      const ch=CHORDS[bar], hot=musicIntense;
+
+      chuff(t, slot%4===0);
+      if(slot===0){                       // bass on the downbeat
+        pluck(ch.root, hot?0.85:1.1, hot?0.15:0.11, 0.34);
+      }else if(slot===3||slot===6){       // chord answers off the beat
+        chordStab(ch.tones, t, hot?0.030:0.020);
+      }
+      const note=MOTIF[bar][slot];
+      // The motif only enters every other cycle in the base game -- always
+      // hearing it turns a hook into wallpaper. In the feature it plays every
+      // bar, an octave up.
+      if(note && (hot || Math.floor(step/32)%2===1)){
+        whistle(hot?note*2:note, hot?0.30:0.42, hot?0.045:0.034, t);
+      }
+
       rhythm.next+=60/rhythm.bpm/2;      // eighth notes
       rhythm.step++;
     }
@@ -2472,7 +2579,13 @@ function paintGrid(grid,marks,coinsArr,maneSet){
           font-size:11px;font-weight:700;color:#EAF7FF;text-shadow:0 1px 2px #000">${coinsArr[idx]}×</span>`;
       } else c.innerHTML=symbolHTML(grid[r][row]);
       const key=r+":"+row;
-      if(marks){ if(marks.has(key)) c.classList.add("pop"); else c.classList.add("dim"); }
+      if(marks){
+        if(marks.has(key)){
+          c.classList.add("pop");
+          // Left to right, the direction the lines pay in.
+          c.style.animationDelay=(r*55)+"ms";
+        } else c.classList.add("dim");
+      }
       if(maneSet&&maneSet.has(key)&&!(marks&&marks.has(key))) c.classList.add("mane");
       strip.appendChild(c);
     }
