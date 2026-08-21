@@ -117,8 +117,6 @@ body{
 .sym.t-wild{--tile-1:#4A3406;--tile-2:#241800;--tile-edge:#9C7412}
 .sym.t-scat{--tile-1:#10304A;--tile-2:#071B2B;--tile-edge:#1E5C86}
 .sym.dim{filter:grayscale(.75) brightness(.42)}
-.sym.mane::after{content:"";position:absolute;inset:5px;border-radius:9px;
-  border:1.5px solid var(--data);box-shadow:0 0 12px -3px var(--data);opacity:.85}
 .sym.pop{animation:pop .62s ease-out both}
 /* The win "roar".
    A symbol that simply scales up reads as a zoom. Real character animation has
@@ -1548,15 +1546,6 @@ function winChime(steps){
     }
   }
 }
-function coinTick(){
-  if(muted) return;
-  const c=ac(), t=c.currentTime;
-  const o=c.createOscillator(); o.type="square";
-  o.frequency.setValueAtTime(1700+Math.random()*900,t);
-  o.frequency.exponentialRampToValueAtTime(900,t+0.06);
-  const g=env(o,0.03,0.002,0.07,t); g.connect(busGain); g.connect(verbSend);
-  o.start(t); o.stop(t+0.1);
-}
 
 /* Orb landing: a bright metallic ping whose pitch tracks the multiplier, so a
    x20 sounds different from a x2 before the player has read either. */
@@ -2853,18 +2842,17 @@ async function flyOrbs(orbs){
   })));
 }
 
-function paintGrid(grid,marks,coinsArr,maneSet){
+/* `coinsArr` and `maneSet` are gone with the Mane Meter and its Hold and Win.
+   Nothing has produced a frame carrying either since that rework -- every call
+   site was passing null into branches that could no longer fire. */
+function paintGrid(grid,marks){
   const host=$("reels"); const reels=[...host.children];
   for(let r=0;r<REELS;r++){
     const strip=document.createElement("div"); strip.className="strip";
     for(let row=0;row<ROWS;row++){
       const c=document.createElement("div");
       c.className="sym "+(SYM[grid[r][row]]?SYM[grid[r][row]].cls:"");
-      const idx=r*ROWS+row;
-      if(coinsArr&&coinsArr[idx]){
-        c.innerHTML=svgScatter()+`<span style="position:absolute;bottom:2px;font-family:var(--mono);
-          font-size:11px;font-weight:700;color:#EAF7FF;text-shadow:0 1px 2px #000">${coinsArr[idx]}×</span>`;
-      } else c.innerHTML=symbolHTML(grid[r][row]);
+      c.innerHTML=symbolHTML(grid[r][row]);
       const key=r+":"+row;
       if(marks){
         if(marks.has(key)){
@@ -2875,7 +2863,6 @@ function paintGrid(grid,marks,coinsArr,maneSet){
           setTimeout(()=>shineSymbol(c,sym,760),r*55);
         } else c.classList.add("dim");
       }
-      if(maneSet&&maneSet.has(key)&&!(marks&&marks.has(key))) c.classList.add("mane");
       strip.appendChild(c);
     }
     reels[r].innerHTML=""; reels[r].appendChild(strip);
@@ -2990,7 +2977,7 @@ async function doSpin(){
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(first.grid[r][row]===SCAT) scat++;
 
   await animateSpin(first.grid,scat);
-  paintGrid(first.grid,first.marks.size?first.marks:null,null,null);
+  paintGrid(first.grid,first.marks.size?first.marks:null);
 
   const winMult=out.base+out.feature, win=winMult*bet;
 
@@ -3038,8 +3025,7 @@ async function doSpin(){
       frames[i-1]&&[...document.querySelectorAll(".sym.pop")].forEach(e=>e.classList.add("burst"));
       await sleep(turbo?60:230);
     }
-    paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,f.coins,null);
-    if(f.coins) coinTick();
+    paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
     if(game==="traitvault"&&f.rowMult){
       $("fsN").textContent=f.spinNo!=null?f.spinNo:i;
       await flyOrbs(f.orbs);
@@ -3331,7 +3317,7 @@ function replay(rec){
   const out = rec.game==="pride" ? spinPride(rng)
             : rec.game==="cubcluster" ? spinCluster(rng) : spinVault(rng,{});
   const f=out.frames[0];
-  paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null,null,null);
+  paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
   flash(`Replay #${rec.nonce} · ${(out.base+out.feature).toFixed(2)}×`);
 }
 function blankGrid(){
