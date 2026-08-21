@@ -32,6 +32,27 @@
   .addres{display:grid;grid-template-columns:1fr 130px auto;gap:10px;align-items:end;margin-top:14px}
   .logform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
   .rolefields{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+  .eq-wrap{overflow-x:auto}
+  table.eq{min-width:900px}
+  table.eq td.nm{font-weight:600;white-space:nowrap}
+  table.eq td.nm .lv{font-weight:400;color:var(--muted);font-size:11.5px;margin-left:6px}
+  table.eq td.since{white-space:nowrap;font-variant-numeric:tabular-nums}
+  table.eq td.since b{font-family:var(--serif);font-size:15px;color:var(--navy)}
+  table.eq td.since .raw{color:var(--muted);font-size:11px;display:block}
+  table.eq tr.top td{background:#FBF0DE}
+  table.eq tr.top td.nm{box-shadow:inset 3px 0 0 var(--amber)}
+  table.eq tr.away td{opacity:.6}
+  table.eq td.flags{white-space:normal}
+  table.eq td.flags .pill{margin:1px 3px 1px 0;cursor:help}
+  .eq-head{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+  .eq-head > div{flex:0 1 150px}
+  .eq-head .spacer{flex:1 1 auto}
+  .nextup{
+    background:var(--navy);color:#fff;border-radius:7px;padding:16px 20px;margin-bottom:16px;
+  }
+  .nextup .lb{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+  .nextup .nm{font-family:var(--serif);font-size:22px;font-weight:700;margin:0}
+  .nextup .su{color:#9FB4C8;font-size:12.5px;margin:6px 0 0}
   details.year{margin-top:16px}
   details.year summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--navy)}
   .yearbox{margin-top:12px;padding:16px 18px;border:1px solid var(--amber);border-radius:7px;background:#FBF0DE}
@@ -68,6 +89,37 @@
       and none should be added. Be clear-eyed about the limit: anyone holding both files could join
       them on the date, exactly as anyone holding a call schedule and an evaluation file always
       could. The protection is that the tool refuses to do it and never surfaces it.
+    </div>
+
+    <div class="panel">
+      <h2>Equity</h2>
+      <p class="lede">One row per active resident, sorted by how long it has been since they last took
+        a discussant role — with time away taken out, so an away rotation does not read as neglect.
+        The person at the top is who you draw next. That single sort is the whole feature.</p>
+
+      <div class="eq-head">
+        <div>
+          <label class="f" for="overdue">Overdue after</label>
+          <select id="overdue">
+            <option value="4">4 weeks</option>
+            <option value="6">6 weeks</option>
+            <option value="8" selected>8 weeks</option>
+            <option value="10">10 weeks</option>
+            <option value="12">12 weeks</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <div style="flex:0 0 auto"><button class="ghost" id="csv">Export CSV</button></div>
+      </div>
+
+      <div id="nextup"></div>
+      <div class="eq-wrap">
+        <table class="mr eq" id="eqtable">
+          <thead><tr id="eqhead"></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint" id="eqempty" hidden>No active residents yet.</p>
     </div>
 
     <div class="panel">
@@ -176,7 +228,152 @@ function render(){
 
   renderLog();
   renderSites();
+  renderEquity();
 }
+
+/* ---------- equity ---------------------------------------------------- */
+
+function renderEquity(){
+  var weeks = parseInt($("overdue").value, 10);
+  if (!roster.settings) roster.settings = {};
+  roster.settings.overdue_weeks = weeks;
+
+  var e = MRRoster.equity(roster);
+  var head = $("eqhead");
+  head.innerHTML = "";
+  ["Resident"].concat(MRRoster.ROLES.map(function(r){ return r.label; }))
+    .concat(["Last discussant", "Weeks since", "Feedback", "Flags"])
+    .forEach(function(h){
+      var th = document.createElement("th");
+      th.textContent = h;
+      head.appendChild(th);
+    });
+
+  var tb = $("eqtable").querySelector("tbody");
+  tb.innerHTML = "";
+  $("eqempty").hidden = e.rows.length > 0;
+  $("eqtable").hidden = e.rows.length === 0;
+
+  e.rows.forEach(function(row, i){
+    var tr = document.createElement("tr");
+    if (i === 0 && !row.away_now) tr.className = "top";
+    if (row.away_now) tr.className = (tr.className + " away").trim();
+
+    var nm = document.createElement("td");
+    nm.className = "nm";
+    nm.appendChild(document.createTextNode(row.name));
+    var lv = document.createElement("span");
+    lv.className = "lv";
+    lv.textContent = row.level + (row.away_now ? " · away" : "");
+    nm.appendChild(lv);
+    tr.appendChild(nm);
+
+    MRRoster.ROLES.forEach(function(r){
+      var td = document.createElement("td");
+      td.className = "num";
+      td.textContent = row.counts[r.id] || "—";
+      tr.appendChild(td);
+    });
+
+    var last = document.createElement("td");
+    last.style.whiteSpace = "nowrap";
+    last.textContent = row.last_discussant || "never";
+    tr.appendChild(last);
+
+    var since = document.createElement("td");
+    since.className = "since";
+    var b = document.createElement("b");
+    b.textContent = row.active_weeks_since.toFixed(1);
+    since.appendChild(b);
+    if (row.weeks_since !== null && Math.abs(row.weeks_since - row.active_weeks_since) >= 0.5){
+      var raw = document.createElement("span");
+      raw.className = "raw";
+      raw.textContent = row.weeks_since.toFixed(1) + " on the calendar";
+      since.appendChild(raw);
+    }
+    tr.appendChild(since);
+
+    var fb = document.createElement("td");
+    fb.className = "num";
+    fb.textContent = row.feedback_sent + " / " + row.total;
+    if (row.feedback_gap > 0) fb.title = row.feedback_gap + " with no feedback recorded as sent";
+    tr.appendChild(fb);
+
+    var fl = document.createElement("td");
+    fl.className = "flags";
+    row.flags.forEach(function(f){
+      var pill = document.createElement("span");
+      pill.className = "pill " + f.id;
+      pill.textContent = f.label;
+      pill.title = f.why;
+      fl.appendChild(pill);
+    });
+    if (!row.flags.length){
+      var ok = document.createElement("span");
+      ok.className = "pill quiet";
+      ok.textContent = "—";
+      fl.appendChild(ok);
+    }
+    tr.appendChild(fl);
+
+    tb.appendChild(tr);
+  });
+
+  renderNextUp(e);
+}
+
+function renderNextUp(e){
+  var host = $("nextup");
+  host.innerHTML = "";
+  var candidates = e.rows.filter(function(r){ return !r.away_now; });
+  if (!candidates.length) return;
+
+  var never = candidates.filter(function(r){ return r.total === 0; });
+  var pick = never.length ? never[0] : candidates[0];
+
+  var box = document.createElement("div");
+  box.className = "nextup";
+  var lb = document.createElement("div");
+  lb.className = "lb"; lb.textContent = "Who to draw next";
+  var nm = document.createElement("p");
+  nm.className = "nm"; nm.textContent = pick.name + " · " + pick.level;
+  var su = document.createElement("p");
+  su.className = "su";
+  su.textContent = pick.last_discussant
+    ? "Last took a discussant role " + pick.last_discussant + " — " +
+      pick.active_weeks_since.toFixed(1) + " weeks ago, not counting time away."
+    : "Has never taken a discussant role" +
+      (pick.weeks_on_roster ? ", and has been on the roster " + Math.round(pick.weeks_on_roster) + " weeks." : ".");
+  box.appendChild(lb); box.appendChild(nm); box.appendChild(su);
+
+  var note = document.createElement("p");
+  note.className = "su";
+  note.style.marginTop = "9px";
+  note.textContent = "The draw already weights the wheel this way — it draws only from whoever has " +
+    "gone longest without the role. This row is so you can say it out loud in a meeting.";
+  box.appendChild(note);
+
+  host.appendChild(box);
+}
+
+$("overdue").addEventListener("change", function(){
+  /* set it before saving: renderEquity runs after the write, so
+     leaving it to that would persist the previous threshold. */
+  if (!roster.settings) roster.settings = {};
+  roster.settings.overdue_weeks = parseInt($("overdue").value, 10);
+  save();
+});
+
+$("csv").addEventListener("click", function(){
+  var csv = MRRoster.equityCsv(roster);
+  var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "morning-report-equity-" + MRStore.today() + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+});
 
 function residentRow(p){
   var row = document.createElement("div");
@@ -435,6 +632,7 @@ MRStore.whenReady.then(function(){
   return MRRoster.load();
 }).then(function(r){
   roster = r;
+  if (r.settings && r.settings.overdue_weeks) $("overdue").value = String(r.settings.overdue_weeks);
   renderRoleFields();
   render();
 });

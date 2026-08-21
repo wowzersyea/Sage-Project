@@ -281,6 +281,138 @@
     return r;
   }
 
+  /* ---------- the equity view ----------------------------------------
+
+     Counting turns is a scheduling question. Scoring turns is an
+     evaluation question. Only the first is computed here, and nothing
+     below reaches for sessions/ — there is deliberately no way to join
+     a name to a score.
+     -------------------------------------------------------------------- */
+
+  /* When a resident first became available to be drawn. Defaults to
+     the start of the academic year, so "never" does not fire on
+     somebody who joined three weeks ago. */
+  function startedOn(r, res) {
+    if (res.started) return res.started;
+    var y = +String(r.academic_year || "").split("-")[0];
+    return (y ? y : parseDate(MRStore.today()).getFullYear()) + "-07-01";
+  }
+
+  /* Weeks since `from`, with days the resident was away taken out, so
+     an away rotation does not read as neglect. */
+  function activeWeeksSince(res, from, today) {
+    var to = today || MRStore.today();
+    if (!from || parseDate(from) > parseDate(to)) return 0;
+    var days = daysBetween(from, to);
+    return Math.max(0, days - unavailableDaysBetween(res, from, to)) / 7;
+  }
+
+  function median(nums) {
+    if (!nums.length) return 0;
+    var a = nums.slice().sort(function (x, y) { return x - y; });
+    var m = Math.floor(a.length / 2);
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  /* One row per active resident. */
+  function equity(r, today) {
+    var when = today || MRStore.today();
+    var overdueWeeks = (r.settings && r.settings.overdue_weeks) || 8;
+    var active = r.residents.filter(function (p) { return p.active; });
+
+    var rows = active.map(function (p) {
+      var counts = {};
+      ROLES.forEach(function (role) { counts[role.id] = countFor(r, p.id, role.id); });
+
+      var entries = entriesFor(r, p.id);
+      var total = entries.length;
+      var feedback = entries.filter(function (e) { return e.feedback_sent; }).length;
+
+      var lastDisc = lastServed(r, p.id, "discussant");
+      var since = startedOn(r, p);
+
+      return {
+        id: p.id,
+        name: p.name,
+        level: p.level,
+        counts: counts,
+        total: total,
+        feedback_sent: feedback,
+        feedback_gap: total - feedback,
+        last_discussant: lastDisc,
+        weeks_since: lastDisc ? weeksSince(lastDisc, when) : null,
+        active_weeks_since: activeWeeksSince(p, lastDisc || since, when),
+        weeks_on_roster: activeWeeksSince(p, since, when),
+        away_now: isUnavailable(p, when),
+        flags: []
+      };
+    });
+
+    /* over-drawn is relative to the resident's own level */
+    var byLevel = {};
+    rows.forEach(function (row) { (byLevel[row.level] = byLevel[row.level] || []).push(row.total); });
+    var med = {};
+    Object.keys(byLevel).forEach(function (lv) { med[lv] = median(byLevel[lv]); });
+
+    rows.forEach(function (row) {
+      if (row.total === 0 && row.weeks_on_roster > overdueWeeks) {
+        row.flags.push({ id: "never", label: "Never", why:
+          "Active " + Math.round(row.weeks_on_roster) + " weeks with no logged turn at all." });
+      } else if (row.active_weeks_since > overdueWeeks) {
+        row.flags.push({ id: "overdue", label: "Overdue", why:
+          "No discussant role in " + Math.round(row.active_weeks_since) +
+          " weeks, not counting time away." });
+      }
+      if (med[row.level] > 0 && row.total > 2 * med[row.level]) {
+        row.flags.push({ id: "over", label: "Over-drawn", why:
+          row.total + " turns against a median of " + med[row.level] + " for " + row.level + "." });
+      }
+      if (row.feedback_gap > 0) {
+        row.flags.push({ id: "gap", label: "Feedback gap", why:
+          row.feedback_gap + " of " + row.total + " turns with no feedback recorded as sent." });
+      }
+    });
+
+    /* The default sort, and the whole point of the table: whoever has
+       gone longest without a discussant role is at the top, and that
+       is who you draw next. */
+    rows.sort(function (a, b) {
+      if (a.active_weeks_since !== b.active_weeks_since) return b.active_weeks_since - a.active_weeks_since;
+      return a.name.localeCompare(b.name);
+    });
+
+    return { rows: rows, medians: med, overdue_weeks: overdueWeeks };
+  }
+
+  function equityCsv(r, today) {
+    var e = equity(r, today);
+    var head = ["Name", "Level"]
+      .concat(ROLES.map(function (x) { return x.label; }))
+      .concat(["Total", "Last discussant role", "Weeks since", "Weeks since (excl. away)",
+               "Feedback sent", "Feedback gap", "Away today", "Flags"]);
+    var lines = [head];
+    e.rows.forEach(function (row) {
+      lines.push([row.name, row.level]
+        .concat(ROLES.map(function (x) { return row.counts[x.id]; }))
+        .concat([
+          row.total,
+          row.last_discussant || "never",
+          row.weeks_since === null ? "" : row.weeks_since.toFixed(1),
+          row.active_weeks_since.toFixed(1),
+          row.feedback_sent,
+          row.feedback_gap,
+          row.away_now ? "yes" : "no",
+          row.flags.map(function (f) { return f.label; }).join("; ")
+        ]));
+    });
+    return lines.map(function (cols) {
+      return cols.map(function (c) {
+        var v = String(c == null ? "" : c);
+        return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }).join(",");
+    }).join("\n") + "\n";
+  }
+
   /* ---------- year rollover ------------------------------------------
      1 July. Promote every level, archive the year's log, start fresh.
      Nobody should have to hand-edit JSON in July.
@@ -342,6 +474,11 @@
     entriesFor: entriesFor,
     logEntry: logEntry,
     rollYear: rollYear,
+    equity: equity,
+    equityCsv: equityCsv,
+    activeWeeksSince: activeWeeksSince,
+    startedOn: startedOn,
+    median: median,
     weeksSince: weeksSince,
     daysBetween: daysBetween,
     parseDate: parseDate,
