@@ -18,5 +18,8 @@
     "verify:audio": "node tests/audio-levels.mjs",
     "review:benchmark": "node tools/review/benchmark.mjs",
     "review:render": "node tools/review/render-benchmark.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
   }
 }
