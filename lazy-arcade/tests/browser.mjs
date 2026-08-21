@@ -430,6 +430,48 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* ------------------------------------------------------------ rarity swap */
+// The swap button tells the player "free -- zero EV". That is a mathematical
+// promise on screen, the same class of claim as the house edge, and it is only
+// true because payout is 0.97/P(dir) at every position: a redraw cannot move an
+// expectation that is 0.97 wherever the card lands. Change the payout rule and
+// the button starts lying without anything else looking wrong.
+console.log("\nRarity swap");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(async () => {
+    const n = RARITY_RANKS;
+    let worstFee = 0, worstEV = 0, deadRanks = [];
+    for (let ord = 1; ord <= n; ord++) {
+      const f = swapFee(n, ord);
+      if (Math.abs(f) > Math.abs(worstFee)) worstFee = f;
+      const e = bestAvailableEV(n, ord);
+      if (e === 0) deadRanks.push(ord - 1);
+      if (Math.abs(e - HOUSE) > Math.abs(worstEV)) worstEV = e - HOUSE;
+    }
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    document.querySelector('[data-game="hilo"]').click();
+    await sleep(450);
+    const label = document.getElementById("hlSwapFee").textContent.trim().toLowerCase();
+    const card = hl.card, bal = balance;
+    document.getElementById("hlSwap").click();
+    await sleep(400);
+    return { worstFee, worstEV, deadRanks: deadRanks.length, label,
+             changed: hl.card !== card, moved: +(balance - bal).toFixed(9), HOUSE };
+  });
+  check("a swap is free at every rank", Math.abs(r.worstFee) < 1e-12,
+        `worst fee ${r.worstFee}`);
+  check("the best available bet returns the house figure at every rank",
+        Math.abs(r.worstEV) < 1e-12, `worst deviation ${r.worstEV.toExponential(2)} from ${r.HOUSE}`);
+  check("every rank has a playable direction", r.deadRanks === 0,
+        `${r.deadRanks} ranks with no bet on offer`);
+  check("the button's promise matches the maths", /zero ev/.test(r.label), r.label);
+  check("swapping redraws the card", r.changed);
+  check("swapping costs the player nothing", r.moved === 0, `balance moved ${r.moved}`);
+  await ctx.close();
+}
+
 /* ------------------------------------------------------- commit and reveal */
 // The whole "provably fair" claim rests on this loop and nothing exercised it
 // end to end -- the pieces had been read, never run. A commitment that does not
