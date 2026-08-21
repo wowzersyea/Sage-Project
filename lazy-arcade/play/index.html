@@ -223,6 +223,16 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   background:radial-gradient(62% 62% at 50% 50%,rgba(16,6,26,.72),rgba(11,9,16,.40));
   opacity:0;transition:opacity .22s}
 .banner.on{opacity:1}
+/* The reference escalates the top tier with a red blast behind the number, not
+   just a longer word. */
+.banner.epic::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(46% 46% at 50% 50%,rgba(255,96,20,.55),rgba(190,20,0,.22) 55%,transparent 72%);
+  animation:epicblast .9s ease-out both}
+@keyframes epicblast{
+  0%{opacity:0;transform:scale(.45)}
+  35%{opacity:1;transform:scale(1)}
+  100%{opacity:.35;transform:scale(1.18)}
+}
 .banner .big{font-weight:900;letter-spacing:.14em;text-transform:uppercase;
   font-size:clamp(15px,3.1vw,30px);line-height:1;
   background:linear-gradient(180deg,#FFF6DC,var(--gold) 48%,#C4860E);
@@ -1673,7 +1683,7 @@ function jackpotHit(power){
    then a second hit a fifth up so the bigger tiers land harder. */
 function jackpotFanfare(tier){
   if(muted) return;
-  const c=ac(), strikes = tier>=3?3 : tier>=2?2 : 1;
+  const c=ac(), strikes = tier>=4?4 : tier>=3?3 : tier>=2?2 : 1;
   jackpotHit(0.85+0.15*tier);
   if(tier>=2) setTimeout(()=>gunshot(0.9),90);
   const notes=[261.6,392.0,523.3,659.3,784.0,1046.5];
@@ -2826,6 +2836,7 @@ async function featureIntro(title,sub){
 
 async function showBanner(kind,amount,sub){
   const b=$("banner");
+  b.classList.toggle("epic",/epic|super mega/i.test(kind));
   $("bannerBig").textContent=kind;
   $("bannerAmt").textContent="";
   $("bannerSub").textContent=sub||"";
@@ -2833,7 +2844,8 @@ async function showBanner(kind,amount,sub){
   const dur=turbo?420:1500, t0=performance.now();
   // Feature triggers get the same attention-grabbing strike as a big win --
   // landing the free spins IS the moment, and a polite chime undersells it.
-  const tier = kind==="Epic win"?3 : kind==="Mega win"?2 : kind==="Big win"?1 : 0;
+  const tier = kind==="Epic win"?4 : kind==="Super mega win"?3
+             : kind==="Mega win"?2 : kind==="Big win"?1 : 0;
   const isFeature = /free spins|hold & win/i.test(kind);
   if(tier>0) jackpotFanfare(tier);
   else if(isFeature){ riser(0.5); setTimeout(()=>jackpotHit(1.0),480); }
@@ -2971,8 +2983,15 @@ async function doSpin(){
   if(winMult>S.best) S.best=winMult;
 
   if(winMult>0){
-    const tier = winMult>=100?"Epic win":winMult>=50?"Mega win":winMult>=20?"Big win":null;
-    if(tier){ coins(tier==="Epic win"?90:tier==="Mega win"?55:30,1.25);
+    // Four tiers, from the reference's own ladder: BIG -> MEGA -> SUPER MEGA ->
+    // EPIC. We had three and no step between Mega and Epic, so everything from
+    // 50x to a max win arrived wearing the same two labels -- the ladder stopped
+    // escalating exactly where the wins get interesting.
+    const tier = winMult>=250?"Epic win"
+               : winMult>=100?"Super mega win"
+               : winMult>=40 ?"Mega win"
+               : winMult>=15 ?"Big win" : null;
+    if(tier){ coins(tier==="Epic win"?120:tier==="Super mega win"?85:tier==="Mega win"?55:30,1.25);
               await showBanner(tier,win,`${winMult.toFixed(1)}× your bet`); }
     else winChime(Math.min(3,1+Math.floor(winMult)));
     await countUp(win);
