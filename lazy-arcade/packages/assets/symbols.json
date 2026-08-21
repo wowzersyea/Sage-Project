@@ -1,173 +1,179 @@
 {
- "note": "Symbol -> art source map. Every paying symbol is a WHOLE owned Lion, identified by the trait it wears (identifiesTrait) but licensed by tokenId. tools/atlas-build/check-licensing.py enforces ownership in CI (spec Sec. 5.3).",
- "rarityMethod": "statistical rarity: sum of 1/r_t across a token's traits, r_t = count_t / 10078",
- "symbols": [
-  {
-   "id": "WILD",
-   "tier": "wild",
-   "source": "COMMISSIONED",
-   "status": "BLOCKED_PENDING_ART",
-   "reason": "Spec Sec. 6.3 assigns WILD to a Signature Series lion. The operator holds 73 Lions and NONE of them are Signature Series, so no Signature art is licensed to this project. Per Sec. 5.3 the remedy is commissioned original art in the same style, not sourcing the trait elsewhere.",
-   "brief": "Original 'Pride Wild' crest in Lazy Lions house style. Must not reproduce any Signature Series character."
-  },
-  {
-   "id": "SCATTER",
-   "tier": "scatter",
-   "source": "COMMISSIONED",
-   "status": "OK",
-   "reason": "The $LAZY coin is project branding, not a collection trait."
-  },
-  {
-   "id": "P1",
-   "tier": "premium",
-   "source": "OWNED_TOKEN",
-   "tokenId": 4230,
-   "identifiesTrait": "Crown",
-   "status": "OK",
-   "note": "TOP SYMBOL. The big winner, by request."
-  },
-  {
-   "id": "P2",
-   "tier": "premium",
-   "source": "OWNED_TOKEN",
-   "tokenId": 5216,
-   "identifiesTrait": "LAZY Hat",
-   "status": "OK"
-  },
-  {
-   "id": "P3",
-   "tier": "premium",
-   "source": "OWNED_TOKEN",
-   "tokenId": 4522,
-   "identifiesTrait": "Shades",
-   "status": "OK"
-  },
-  {
-   "id": "P4",
-   "tier": "premium",
-   "source": "OWNED_TOKEN",
-   "tokenId": 482,
-   "identifiesTrait": "Leopard Fur Coat",
-   "status": "OK",
-   "note": "Cropped to `bust` so the coat is in shot; a head crop hides the trait the symbol is named for."
-  },
-  {
-   "id": "M1",
-   "tier": "mid",
-   "source": "OWNED_TOKEN",
-   "tokenId": 4837,
-   "identifiesTrait": "Bucket Hat",
-   "status": "OK"
-  },
-  {
-   "id": "M2",
-   "tier": "mid",
-   "source": "OWNED_TOKEN",
-   "tokenId": 840,
-   "identifiesTrait": "Monocle",
-   "status": "OK"
-  },
-  {
-   "id": "M3",
-   "tier": "mid",
-   "source": "OWNED_TOKEN",
-   "tokenId": 5813,
-   "identifiesTrait": "BTC Eyes",
-   "status": "OK"
-  },
-  {
-   "id": "M4",
-   "tier": "mid",
-   "source": "OWNED_TOKEN",
-   "tokenId": 1506,
-   "identifiesTrait": "Sheriff Hat",
-   "status": "OK"
-  },
-  {
-   "id": "L1",
-   "tier": "low",
-   "source": "OWNED_TOKEN",
-   "tokenId": 2038,
-   "identifiesTrait": "Police Hat",
-   "status": "OK"
-  },
-  {
-   "id": "L2",
-   "tier": "low",
-   "source": "OWNED_TOKEN",
-   "tokenId": 1725,
-   "identifiesTrait": "Horns",
-   "status": "OK"
-  },
-  {
-   "id": "L3",
-   "tier": "low",
-   "source": "OWNED_TOKEN",
-   "tokenId": 4117,
-   "identifiesTrait": "Pirate Hat",
-   "status": "OK"
-  },
-  {
-   "id": "L4",
-   "tier": "low",
-   "source": "OWNED_TOKEN",
-   "tokenId": 5348,
-   "identifiesTrait": "Black Cap",
-   "status": "OK"
-  },
-  {
-   "id": "CUB:P1",
-   "tier": "premium",
-   "game": "cubcluster",
-   "source": "OWNED_CUB",
-   "tokenId": 21095,
-   "status": "OK"
-  },
-  {
-   "id": "CUB:P2",
-   "tier": "premium",
-   "game": "cubcluster",
-   "source": "OWNED_CUB",
-   "tokenId": 3097,
-   "status": "OK"
-  },
-  {
-   "id": "CUB:M1",
-   "tier": "mid",
-   "game": "cubcluster",
-   "source": "CUB_TRAIT",
-   "trait": "Headgear::LAZY Hat",
-   "status": "OK"
-  },
-  {
-   "id": "CUB:M2",
-   "tier": "mid",
-   "game": "cubcluster",
-   "source": "CUB_TRAIT",
-   "trait": "Mouth::Money Mouth",
-   "status": "OK"
-  },
-  {
-   "id": "CUB:L1",
-   "tier": "low",
-   "game": "cubcluster",
-   "source": "ASSERTED_PERMISSION",
-   "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
-   "tokenId": 1,
-   "status": "OK",
-   "reason": "Lazy Milk, real Lazy Drinks NFT art. The operator holds ZERO of token id 1 on-chain and has asserted separate permission to use it. Recorded as ASSERTED_PERMISSION rather than OWNED_DRINK so the provenance is not misread later as verified ownership.",
-   "verification": "none on-chain; rests on the operator's statement",
-   "note": "highest-paying low symbol in Cub Cluster, by request"
-  },
-  {
-   "id": "CUB:L2",
-   "tier": "low",
-   "game": "cubcluster",
-   "source": "OWNED_DRINK",
-   "status": "OK",
-   "reason": "Lazy Juice, real NFT art. Operator holds 11 of token id 0.",
-   "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
-   "tokenId": 0
-  }
- ]
+  "note": "Symbol -> art source map. Every paying symbol is a WHOLE owned Lion, identified by the trait it wears (identifiesTrait) but licensed by tokenId. tools/atlas-build/check-licensing.py enforces ownership in CI (spec Sec. 5.3).",
+  "rarityMethod": "statistical rarity: sum of 1/r_t across a token's traits, r_t = count_t / 10078",
+  "symbols": [
+    {
+      "id": "WILD",
+      "tier": "wild",
+      "source": "COMMISSIONED",
+      "status": "BLOCKED_PENDING_ART",
+      "reason": "Spec Sec. 6.3 assigns WILD to a Signature Series lion. The operator holds 73 Lions and NONE of them are Signature Series, so no Signature art is licensed to this project. Per Sec. 5.3 the remedy is commissioned original art in the same style, not sourcing the trait elsewhere.",
+      "brief": "Original 'Pride Wild' crest in Lazy Lions house style. Must not reproduce any Signature Series character."
+    },
+    {
+      "id": "SCATTER",
+      "tier": "scatter",
+      "source": "COMMISSIONED",
+      "status": "OK",
+      "reason": "The $LAZY coin is project branding, not a collection trait."
+    },
+    {
+      "id": "P1",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4230,
+      "identifiesTrait": "Crown",
+      "status": "OK",
+      "note": "TOP SYMBOL. The big winner, by request."
+    },
+    {
+      "id": "P2",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5216,
+      "identifiesTrait": "LAZY Hat",
+      "status": "OK"
+    },
+    {
+      "id": "P3",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4522,
+      "identifiesTrait": "Shades",
+      "status": "OK"
+    },
+    {
+      "id": "P4",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 482,
+      "identifiesTrait": "Leopard Fur Coat",
+      "status": "OK",
+      "note": "Cropped to `bust` so the coat is in shot; a head crop hides the trait the symbol is named for."
+    },
+    {
+      "id": "M1",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4837,
+      "identifiesTrait": "Bucket Hat",
+      "status": "OK"
+    },
+    {
+      "id": "M2",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 840,
+      "identifiesTrait": "Monocle",
+      "status": "OK"
+    },
+    {
+      "id": "M3",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5813,
+      "identifiesTrait": "BTC Eyes",
+      "status": "OK"
+    },
+    {
+      "id": "M4",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1506,
+      "identifiesTrait": "Sheriff Hat",
+      "status": "OK"
+    },
+    {
+      "id": "L1",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 2038,
+      "identifiesTrait": "Police Hat",
+      "status": "OK"
+    },
+    {
+      "id": "L2",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1725,
+      "identifiesTrait": "Horns",
+      "status": "OK"
+    },
+    {
+      "id": "L3",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4117,
+      "identifiesTrait": "Pirate Hat",
+      "status": "OK"
+    },
+    {
+      "id": "L4",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5348,
+      "identifiesTrait": "Black Cap",
+      "status": "OK"
+    },
+    {
+      "id": "CUB:P1",
+      "tier": "premium",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 21095,
+      "status": "OK",
+      "identifiesTrait": "Crown"
+    },
+    {
+      "id": "CUB:P2",
+      "tier": "premium",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 3097,
+      "status": "OK",
+      "identifiesTrait": "LAZY Hat"
+    },
+    {
+      "id": "CUB:M1",
+      "tier": "mid",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 14147,
+      "identifiesTrait": "Bucket Hat",
+      "status": "OK",
+      "note": "Whole Cub, not a trait crop: a cropped hat has no silhouette at reel size."
+    },
+    {
+      "id": "CUB:M2",
+      "tier": "mid",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 1458,
+      "identifiesTrait": "Police Hat",
+      "status": "OK",
+      "note": "Whole Cub, not a trait crop. Emerald mane separates it from the premiums."
+    },
+    {
+      "id": "CUB:L1",
+      "tier": "low",
+      "game": "cubcluster",
+      "source": "ASSERTED_PERMISSION",
+      "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
+      "tokenId": 1,
+      "status": "OK",
+      "reason": "Lazy Milk, real Lazy Drinks NFT art. The operator holds ZERO of token id 1 on-chain and has asserted separate permission to use it. Recorded as ASSERTED_PERMISSION rather than OWNED_DRINK so the provenance is not misread later as verified ownership.",
+      "verification": "none on-chain; rests on the operator's statement",
+      "note": "highest-paying low symbol in Cub Cluster, by request"
+    },
+    {
+      "id": "CUB:L2",
+      "tier": "low",
+      "game": "cubcluster",
+      "source": "OWNED_DRINK",
+      "status": "OK",
+      "reason": "Lazy Juice, real NFT art. Operator holds 11 of token id 0.",
+      "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
+      "tokenId": 0
+    }
+  ]
 }

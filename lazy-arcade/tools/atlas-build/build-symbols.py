@@ -104,11 +104,20 @@ LIONS = [
 
 # Cub Cluster runs a reduced symbol set (wild + 6), all Cub-sourced.
 # L1/L2 are the Lazy drinks and are drawn as SVG in the page, not here.
+# Whole Cubs, for the same reason the Lion set is whole Lions.
+#
+# M1 and M2 were region crops -- Headgear::LAZY Hat and Mouth::Money Mouth --
+# and on the board they read as exactly what the Lion set was re-cast to escape:
+# clip art with no silhouette, the cap's lettering clipped by the tile edge. A
+# symbol has to be recognisable by shape before it is recognisable by detail.
+#
+# Chosen for silhouette and colour separation from the two premiums: neither
+# wears a Crown (P1) or a LAZY Hat (P2), and neither has a red mane (P2).
 CUBS = [
     ("P1", "cub", "character", None, 21095, "Crown, dork glasses"),
     ("P2", "cub", "character", None, 3097, "LAZY hat, red mane"),
-    ("M1", "cub", "headgear", "Headgear::LAZY Hat", None, "cub mid"),
-    ("M2", "cub", "mouth",    "Mouth::Money Mouth", None, "cub mid"),
+    ("M1", "cub", "character", None, 14147, "BUCKET HAT -- water goggles, brown top knot"),
+    ("M2", "cub", "character", None, 1458,  "POLICE HAT -- shades, bubble gum, emerald mane"),
 ]
 
 
@@ -404,7 +413,10 @@ def build_set(manifest, lions, cubs, label):
         uri = to_uri(tile)
         total += len(uri) + (len(mane_uri) if mane_uri else 0)
         mane = meta["traits"].get("Mane", f"#{token_id}")
-        name = (trait.split("::", 1)[1] if trait else None) or named.get(sym) or mane
+        # symbols.json keys Cub entries as "CUB:M2", so a bare "M2" lookup finds
+        # the LION's M2 and records a Cub as a Monocle. Prefix by collection.
+        key = ("CUB:" if collection == "cub" else "") + sym
+        name = (trait.split("::", 1)[1] if trait else None) or named.get(key) or mane
         out[sym] = {"tokenId": token_id, "collection": collection, "region": region,
                     "trait": trait, "name": name, "mane": mane, "uri": uri, "bg": bg}
         if mane_uri:
