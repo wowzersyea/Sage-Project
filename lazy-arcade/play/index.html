@@ -1462,11 +1462,26 @@ function symbolHTML(s,g){
    reads as broken. Everything below is oscillators, noise buffers and filters
    through a small shared bus with a feedback-delay tail, so hits have some air
    around them instead of sounding like a phone alarm. */
-let actx=null, muted=false, busGain=null, verbSend=null;
+let actx=null, muted=false, busGain=null, verbSend=null, masterLimiter=null, musicDuck=null;
 function ac(){
   if(!actx){
     actx=new (window.AudioContext||window.webkitAudioContext)();
-    busGain=actx.createGain(); busGain.gain.value=0.9; busGain.connect(actx.destination);
+    busGain=actx.createGain(); busGain.gain.value=0.9;
+    /* A LIMITER on the master, which was missing entirely.
+       Everything summed straight to the destination, and a top-tier fanfare is
+       not a small sum: five oscillators for the bell (0.415 peak), a sub at 0.3,
+       a noise crack at 0.22, a gunshot adding another ~0.9, plus chords, the
+       rhythm bed and the coin ticks -- comfortably past 1.0. Past 1.0 the
+       browser clips, and digital clipping is the single most amateur-sounding
+       fault audio can have. High ratio, low knee, fast attack: this is a safety
+       net on peaks, not a compressor doing tone. */
+    masterLimiter=actx.createDynamicsCompressor();
+    masterLimiter.threshold.value=-2.0;
+    masterLimiter.knee.value=0.0;
+    masterLimiter.ratio.value=20.0;
+    masterLimiter.attack.value=0.002;
+    masterLimiter.release.value=0.18;
+    busGain.connect(masterLimiter).connect(actx.destination);
     // Cheap stereo-ish tail: two feedback delays at prime-ish times. Not a
     // convolver, but enough that big hits ring instead of stopping dead.
     verbSend=actx.createGain(); verbSend.gain.value=0.0;
@@ -1665,6 +1680,21 @@ function riser(seconds){
   o.start(t); o.stop(t+seconds+0.5);
 }
 
+/* Pull the bed down so an event lands on top of it, then let it back up.
+   Depth and hold scale with how big the moment is. */
+function duckMusic(depth,holdMs){
+  if(!musicDuck||muted) return;
+  depth=Math.min(0.75,Math.max(0,depth));    // never below -12dB; the bed stays present
+  const c=ac(), t=c.currentTime, g=musicDuck.gain;
+  const hold=(holdMs||600)/1000;
+  g.cancelScheduledValues(t);
+  g.setValueAtTime(Math.max(g.value,0.0001),t);
+  const to=1-depth;
+  g.linearRampToValueAtTime(to,t+0.05);                       // duck fast
+  g.setValueAtTime(to,t+0.05+hold);
+  g.linearRampToValueAtTime(1,t+0.05+hold+0.55);              // recover slowly
+}
+
 /* THE JACKPOT HIT.
    The Wheel-of-Fortune "DUNG": a hard metallic strike that stops the room.
    Three layers, because one oscillator cannot do this:
@@ -1709,6 +1739,10 @@ function jackpotHit(power){
 function jackpotFanfare(tier){
   if(muted) return;
   const c=ac(), strikes = tier>=4?4 : tier>=3?3 : tier>=2?2 : 1;
+  // 0.44 at Big through 0.71 at Epic -- about -5dB to -11dB. The first version
+  // scaled to 0.95, which is -26dB: that is not ducking the bed, it is muting
+  // it, and the round comes back to silence rather than to music.
+  duckMusic(0.35+0.09*tier, 700+220*tier);
   jackpotHit(0.85+0.15*tier);
   if(tier>=2) setTimeout(()=>gunshot(0.9),90);
   const notes=[261.6,392.0,523.3,659.3,784.0,1046.5];
@@ -1938,7 +1972,11 @@ function startMusic(){
     const g=c.createGain(); g.gain.value=i===3?0.16:0.3;
     o.connect(g).connect(filt); o.start(); return o;
   });
-  filt.connect(bus).connect(busGain);
+  /* The bed goes through its own gain so it can be DUCKED. Without it a fanfare
+     and the music simply sum, and the fanfare -- the thing the player is meant
+     to hear -- competes with a drone instead of landing on top of it. */
+  if(!musicDuck){ musicDuck=c.createGain(); musicDuck.gain.value=1; musicDuck.connect(busGain); }
+  filt.connect(bus).connect(musicDuck);
   bus.gain.linearRampToValueAtTime(0.026,c.currentTime+3.5);
   music={bus,voices,lfo};
 }
@@ -2896,6 +2934,7 @@ async function featureIntro(title,sub){
   $("reels").classList.add("blown");
   if(reduceMotion){ await sleep(900); }
   else{
+    duckMusic(0.7,1800);
     riser(0.62);
     await sleep(120); gunshot(0.75);
     await sleep(320); jackpotHit(1.0);
