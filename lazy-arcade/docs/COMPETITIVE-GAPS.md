@@ -336,6 +336,56 @@ bytes -- a clean 5 MiB, which is a gateway cutting the stream, not an image.
 The builder's `decodes_fully()` caught it and said so rather than shipping a
 half-drawn tile, which is precisely why that check exists.
 
+### What each Lion actually does, and why the rest do not
+
+Every symbol has motion. All twelve idle -- a bob and sway on staggered phases
+and periods -- and all twelve perform the seven-stop squash-and-stretch roar on
+a win. The three layers below are ADDITIONAL, and are the ones the art has to
+cooperate with.
+
+| | mane | blink | tongue |
+|---|---|---|---|
+| P1 Crown #4230 | yes | — | yes |
+| P2 LAZY Hat #5216 | yes | yes | yes |
+| P3 Shades #4522 | yes | — | — |
+| P4 Leopard Coat #482 | yes | — | — |
+| M1 Bucket Hat #4837 | yes | — | — |
+| M2 Monocle #840 | — | — | — |
+| M3 BTC Eyes #5813 | — | — | — |
+| M4 Sheriff #1506 | — | — | — |
+| L1 Police Hat #2038 | — | — | — |
+| L2 Horns #1725 | — | yes | — |
+| L3 Pirate Hat #4117 | yes | yes | — |
+| L4 Black Cap #5348 | — | yes | — |
+
+The two top-paying symbols carry the most, which is where the attention is.
+
+**Why the four bare ones stay bare.** Each was attempted and measured, not
+assumed. The test for a mane is whether its colour takes the muzzle: a mask that
+catches more than about 4% of the muzzle box is taking face, and swinging it
+would drag the mouth along.
+
+* **M2 Monocle** — the Fire mane is a gradient, not a flat colour, and the best
+  single candidate catches **8.9% of the muzzle**.
+* **M3 BTC Eyes** — the orange top knot is very close to the orange face:
+  **15.8% of the muzzle**, which is the same over-capture that showed up as 39%
+  tile coverage during detection.
+* **M4 Sheriff** — a white mane on a white face. The mane candidate IS the face
+  colour. Its blink was also built and rejected: a lid on white fur with heavy
+  dark linework reads as a grey block.
+* **L1 Police Hat** — the Emerald mane is spread over at least three teal shades
+  totalling about 6.5% of the tile, and its darker portions are the same value
+  as its dark face. Even at a tolerance of 120 the mask reaches only 13.3%,
+  below the working floor, and widening further starts taking other things.
+
+Blink and tongue have their own gates: three Lions wear opaque hardware over
+their eyes, two have symbol eyes that should not blink, two sit behind lenses,
+and only the two Money Mouth Lions have a tongue to lift at all.
+
+These are properties of the source art. Nothing in the pipeline fixes a mane
+that is the same colour as the face it sits on -- that needs a different Lion or
+a drawn frame.
+
 ### The blink, and being wrong about it twice
 
 It ships. Four Lions blink: LAZY Hat #5216, Horns #1725, Pirate Hat #4117 and
