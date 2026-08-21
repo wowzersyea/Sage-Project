@@ -34,7 +34,7 @@ function tabNameFor(assessmentType) {
 // ─── Admin read endpoint ─────────────────────────────────────────────────────
 // The admin dashboard fetches all submissions via GET ?key=<ADMIN_KEY>.
 // Change this passcode and keep it private — anyone with it can read all results.
-const ADMIN_KEY = 'sage-faculty-2026';
+const ADMIN_KEY = 'pid';
 
 function doGet(e) {
     if (!e || !e.parameter || e.parameter.key !== ADMIN_KEY) {
