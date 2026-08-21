@@ -267,6 +267,33 @@ for any of the twelve symbols -- the trait space is combinatorial enough that an
 exact match on the other seven categories essentially never occurs. The frames
 have to be drawn.
 
+### Cub Cluster still uses trait crops, and cannot be fixed from here
+
+Found by screenshotting the board rather than testing around it, the same way
+the off-centre playfield was found.
+
+The Lion set was deliberately re-cast as twelve WHOLE Lions because trait crops
+do not work as slot symbols: a floating hat on a background has no silhouette,
+so at reel size the grid stops being scannable at a glance. Cub Cluster never
+got that treatment. Two of its six symbols are still region crops --
+`Headgear::LAZY Hat` and `Mouth::Money Mouth` -- and on the board they read
+exactly as the Lion crops did: clip art, with the cap's lettering clipped by the
+tile edge on several cells.
+
+**This is a real defect and it is not fixable in this environment.** Replacing
+the two crops needs whole-Cub art from the operator's other holdings, and the
+art is fetched from IPFS: every gateway returns 403 through the agent proxy
+(`ipfs.io`, `dweb.link`, `gateway.pinata.cloud`), and `selective: false` on the
+proxy means no gateway is on the allowlist. Only six Cub images are cached
+locally, of which four are usable and two of those wear Crowns -- which would
+clash with CUB:P1, itself a crowned Cub.
+
+To close it, either run `tools/atlas-build/fetch-deck.py` somewhere with IPFS
+access and commit the cache, or nominate two Cub token ids with distinctive
+headgear and they can be built the moment their art is reachable. The symbol
+table then changes from `CUB_TRAIT` to `OWNED_CUB` in
+`packages/assets/symbols.json`, exactly as the Lion set did.
+
 ### Why a blink cannot simply be switched on
 
 The lift-a-layer rule was tested here too, and **it does not carry**. In flat

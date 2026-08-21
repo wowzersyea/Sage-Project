@@ -49,6 +49,47 @@ def load_shipped_art():
         return None
 
 
+def check_deck_art(owned_token_ids):
+    """The Hi/Lo rarity deck, which nothing had ever checked.
+
+    The gate covered symbols.json and then the symbol tiles embedded in the
+    page. It never looked at DECK_ART -- seventy more collection Lions, shipped
+    in the same file, each one a full portrait. That is the largest body of
+    collection art in the build and it sat outside the only thing standing
+    between this project and a licensing problem.
+
+    They all trace clean today. The point is that nothing would have said so if
+    they did not.
+    """
+    if not os.path.exists(PAGE):
+        return []
+    page = open(PAGE).read()
+    start = page.find("/* @@@DECK_ART@@@ */")
+    end = page.find("/* @@@DECK_ART_END@@@ */")
+    if start == -1 or end == -1:
+        print("  deck    : no deck art block -- not checked")
+        return []
+    block = page[start:end]
+    try:
+        deck = json.loads(block[block.index("=") + 1:].rstrip().rstrip(";"))
+    except ValueError:
+        return ["DECK_ART present but unreadable"]
+
+    art = deck.get("rankArt", {})
+    problems, checked = [], 0
+    for rank, entry in sorted(art.items(), key=lambda kv: int(kv[0])):
+        token = entry.get("id")
+        if token is None:
+            problems.append(f"hi/lo rank {rank}: card names no token")
+            continue
+        checked += 1
+        if token not in owned_token_ids:
+            problems.append(
+                f"hi/lo rank {rank}: card is Lion #{token}, which the operator does not hold")
+    print(f"  deck    : {checked} Hi/Lo cards traced to owned tokens")
+    return problems
+
+
 def check_shipped_art(symbols, owned_token_ids, owned_cub_ids):
     """Tie the licence to the ART, not to the paperwork describing it.
 
@@ -206,6 +247,7 @@ def main() -> int:
             violations.append(f"{sid}: unknown source {source!r}")
 
     violations += check_shipped_art(symbols, owned_token_ids, owned_cub_ids)
+    violations += check_deck_art(owned_token_ids)
 
     print(f"licensing gate: {len(symbols)} symbols checked against "
           f"{len(licensed_traits)} Lion traits / {len(owned_token_ids)} Lions, "
