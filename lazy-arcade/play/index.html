@@ -1531,7 +1531,22 @@ let actx=null, muted=false, busGain=null, verbSend=null, masterLimiter=null, mus
 function ac(){
   if(!actx){
     actx=new (window.AudioContext||window.webkitAudioContext)();
-    busGain=actx.createGain(); busGain.gain.value=0.9;
+    /* MASTER LEVEL. Measured, not guessed: rendering the graph through an
+       OfflineAudioContext showed the Epic fanfare peaking at -6.7 dBFS and a
+       reel stop at -28.8. Nothing clipped -- but nothing came near the ceiling
+       either, so the limiter below never engaged once and its headroom sat
+       unused, while the player had to raise system volume for the game and then
+       be deafened by everything else on the machine.
+
+       1.5 was chosen by sweeping and measuring. It puts the loudest realistic
+       moment -- an Epic fanfare with the coin ticks and a kerching over it -- at
+       -2.4 dBFS, which leaves the headroom a mastered mix keeps for inter-sample
+       peaks, and it holds the fanfare LADDER at even steps of roughly 0.9 dB per
+       tier. At 1.8 the peak reaches -1.5 dBFS but the limiter begins compressing
+       the ladder itself and tiers 1 and 2 collapse to 0.3 dB apart, which is the
+       fault the win banners had when everything above 50x wore the same label.
+       Loudness is one of the ways a tier says how big it is. */
+    busGain=actx.createGain(); busGain.gain.value=1.5;
     /* A LIMITER on the master, which was missing entirely.
        Everything summed straight to the destination, and a top-tier fanfare is
        not a small sum: five oscillators for the bell (0.415 peak), a sub at 0.3,
@@ -1606,11 +1621,11 @@ function thud(index){
   const bp=c.createBiquadFilter(); bp.type="bandpass";
   bp.frequency.value=1400+(index||0)*120; bp.Q.value=1.2;
   src.connect(bp);
-  env(bp,0.14,0.002,0.05,t).connect(busGain);
+  env(bp,0.50,0.002,0.05,t).connect(busGain);
   const o=c.createOscillator(); o.type="sine";
   o.frequency.setValueAtTime(200-(index||0)*8,t);
   o.frequency.exponentialRampToValueAtTime(64,t+0.11);
-  env(o,0.19,0.004,0.13,t).connect(busGain);
+  env(o,0.65,0.004,0.13,t).connect(busGain);
   src.start(t); o.start(t); o.stop(t+0.16);
 }
 function winChime(steps){
@@ -1704,7 +1719,7 @@ function scatterLand(index){
   const c=ac(), t=c.currentTime;
   const notes=[523.25,659.25,830.61,1046.5,1318.5];
   const f=notes[Math.min(index,notes.length-1)];
-  for(const [mult,lvl] of [[1,0.075],[2,0.03],[3,0.014]]){
+  for(const [mult,lvl] of [[1,0.13],[2,0.052],[3,0.024]]){
     const o=c.createOscillator(); o.type="triangle";
     o.frequency.setValueAtTime(f*mult,t);
     const g=env(o,lvl,0.004,0.42,t); g.connect(busGain); g.connect(verbSend);
@@ -1741,7 +1756,7 @@ function riser(seconds){
   lp.frequency.setValueAtTime(500,t);
   lp.frequency.exponentialRampToValueAtTime(6000,t+seconds);
   o.connect(lp);
-  const g=env(lp,0.05,seconds*0.7,seconds*0.4,t); g.connect(busGain); g.connect(verbSend);
+  const g=env(lp,0.10,seconds*0.7,seconds*0.4,t); g.connect(busGain); g.connect(verbSend);
   o.start(t); o.stop(t+seconds+0.5);
 }
 
@@ -1864,12 +1879,12 @@ function gunshot(power){
   const crack=c.createBufferSource(); crack.buffer=noiseBuffer(0.09);
   const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
   crack.connect(hp);
-  const cg=env(hp,0.3*p,0.0008,0.07,t); cg.connect(busGain); cg.connect(verbSend);
+  const cg=env(hp,0.62*p,0.0008,0.07,t); cg.connect(busGain); cg.connect(verbSend);
   crack.start(t);
   const body=c.createBufferSource(); body.buffer=noiseBuffer(0.3);
   const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=320; bp.Q.value=0.6;
   body.connect(bp);
-  const bg=env(bp,0.26*p,0.002,0.3,t); bg.connect(busGain); bg.connect(verbSend);
+  const bg=env(bp,0.54*p,0.002,0.3,t); bg.connect(busGain); bg.connect(verbSend);
   body.start(t);
   const sub=c.createOscillator(); sub.type="sine";
   sub.frequency.setValueAtTime(120,t);
@@ -1882,7 +1897,7 @@ function gunshot(power){
 function kerching(){
   if(muted) return;
   const c=ac(), t=c.currentTime;
-  for(const [f,dl,lvl] of [[1760,0,0.075],[2637,0.045,0.055],[3520,0.085,0.035]]){
+  for(const [f,dl,lvl] of [[1760,0,0.19],[2637,0.045,0.14],[3520,0.085,0.09]]){
     const o=c.createOscillator(); o.type="triangle";
     o.frequency.setValueAtTime(f,t+dl);
     const g=env(o,lvl,0.002,0.42,t+dl); g.connect(busGain); g.connect(verbSend);

@@ -41,12 +41,20 @@ npm run math:test        # 53 Rust tests, incl. RFC 4231 HMAC vectors
 npm run verify:golden    # TypeScript RNG must match Rust bit-for-bit
 npm run verify:play      # the page's odds, and the verifier's copy of the strips
 npm run verify:browser   # the page itself, in a headless browser
+npm run verify:audio     # what actually reaches the speakers, in dBFS
 npm run gate:licensing   # no symbol may use art the operator does not own
 ```
 
 `verify:browser` needs `npm i -D playwright`; without it the script skips and
 exits 0, so a checkout that only wants the math gates is never blocked. If the
 browser lives outside the package, point at it with `CHROMIUM_PATH`.
+
+`verify:audio` renders each sound through the page's real audio graph on an
+OfflineAudioContext and checks it lands in a sane band. It exists because the
+limiter had been verified to EXIST while nothing had measured what came out of
+it: the Epic fanfare peaked at -6.7 dBFS and a reel stop at -28.8, so the limiter
+never engaged and the routine sounds sat twelve times quieter in amplitude than
+the big ones.
 
 The split matters: `verify:play` extracts the page's math and checks the odds,
 which leaves the entire renderer, money handling, keyboard and accessibility
