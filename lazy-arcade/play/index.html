@@ -331,7 +331,10 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   filter:drop-shadow(0 0 26px rgba(255,205,92,.75)) drop-shadow(0 6px 10px rgba(0,0,0,.6));
   animation:fiLion 2.1s ease-in-out .5s infinite}
 @keyframes fiLion{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-7px) rotate(1deg)}}
-.fi-text{display:flex;flex-direction:column;gap:6px}
+.fi-text{display:flex;flex-direction:column;gap:5px}
+.fi-text em{font-family:var(--mono);font-style:normal;
+  font-size:clamp(10px,1.5vw,14px);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold-2);opacity:.95}
 .fi-text b{font-family:var(--serif,ui-serif,Georgia,serif);
   font-size:clamp(26px,5.4vw,54px);line-height:1;letter-spacing:-.01em;
   color:var(--gold-3);text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 34px var(--gold)}
@@ -2768,9 +2771,15 @@ async function featureIntro(title,sub){
   card.className="fintro";
   const lion=(SYMBOL_ART.default&&SYMBOL_ART.default.P1)
     ? `<img class="fi-lion" src="${SYMBOL_ART.default.P1.uri}" alt="">` : "";
+  // Structure taken from the reference's own bonus card: a small "you won N
+  // free spins" header states the AWARD, the feature name below states its
+  // IDENTITY, and the body explains the mechanic. Leading with the name alone
+  // tells a first-time player what the round is called but not what they got.
   card.innerHTML=`<div class="fi-wipe"></div>
     <div class="fi-body">${lion}
-      <div class="fi-text"><b>${title}</b><span>${sub||""}</span></div></div>`;
+      <div class="fi-text">
+        <em>You won ${FREE_SPINS} free spins</em>
+        <b>${title}</b><span>${sub||""}</span></div></div>`;
   scr.appendChild(card);
   $("reels").classList.add("blown");
   if(reduceMotion){ await sleep(900); }
@@ -2875,9 +2884,10 @@ async function doSpin(){
   // Feature intro. Pragmatic announces the round, runs it, then reports the
   // total -- without the bookends a free-spin round just looks like fast spins.
   if(out.fs && game!=="cubcluster"){
+    // The header already states the award, so the body states only the mechanic.
     await featureIntro(game==="pride"?"Free Spins":"Lion's Share",
-                       game==="pride"?"10 spins · every wild carries ×2"
-                                    :"10 free spins · row multipliers stick and build");
+                       game==="pride"?"every wild carries ×2"
+                                    :"row multipliers stick and build");
   }
   if(frames.length>1){
     featTotal=0; $("chipFeat").classList.remove("hidden");
