@@ -54,6 +54,12 @@ KEY = (1, 254, 3)
 REGION = {
     "lion": {
         "character": (0.11, 0.02, 0.89, 0.80),
+        # Head and shoulders. `character` stops at 80% height, which is above the
+        # bodygear line -- fine when the trait naming the symbol is worn on the
+        # head, useless when it is a coat. The Leopard Fur Coat lion cropped to
+        # `character` is just a lion in sunglasses; the trait it is named for is
+        # below the cut. `bust` runs to the frame edge so the garment is in shot.
+        "bust":      (0.06, 0.06, 0.94, 1.00),
         "headgear":  (0.18, 0.02, 0.82, 0.36),
         "eyes":      (0.22, 0.32, 0.80, 0.53),
         "mouth":     (0.14, 0.42, 0.92, 0.76),
@@ -70,20 +76,29 @@ REGION = {
 
 # (symbol, collection, region, trait or None, note)
 # `trait` picks an owned token wearing it; None means "any listed token id".
+#
+# Every paying symbol is a WHOLE LION, not a trait crop. Trait crops read as
+# clip art at reel size -- a floating crown on transparency has no silhouette to
+# recognise at a glance, which is exactly what a symbol has to have. Whole
+# characters give each symbol its own colour block and outline, so a player
+# reads the reel by shape before they read it by detail.
+#
+# Each symbol is still IDENTIFIED by a trait: the Crown lion, the LAZY Hat lion.
+# The trait is what names the symbol; the lion wearing it is what gets drawn.
+# Tier order is pay order, so P1 is the top symbol -- the Crown lion, by request.
 LIONS = [
-    ("P1", "lion", "character", None, 2038, "Emerald mane, police hat"),
-    ("P2", "lion", "character", None, 1466, "Orange top knot, police hat"),
-    ("P3", "lion", "character", None, 1506, "White mane, sheriff hat, pipe"),
-    ("P4", "lion", "character", None, 3273, "Brown mane, shades"),
-    ("M1", "lion", "headgear", "Headgear::Spinner Hat", None, "mid"),
-    ("M2", "lion", "bodygear", "Bodygear::Gold Chain", None, "mid"),
-    ("M3", "lion", "eyes",     "Eyes::Shades",          None, "mid"),
-    ("M4", "lion", "mouth",    "Mouth::Big Smile",      None, "mid"),
-    # Low tier: the gems are gone. Crown is the top low symbol by request.
-    ("L1", "lion", "headgear", "Headgear::Crown",          None, "low, highest"),
-    ("L2", "lion", "bodygear", "Bodygear::Hawaiian Shirt", None, "low"),
-    ("L3", "lion", "mouth",    "Mouth::Cigar",             None, "low"),
-    ("L4", "lion", "headgear", "Headgear::LAZY Hat",       None, "low"),
+    ("P1", "lion", "character", None, 4230, "CROWN -- top symbol. Blue mane, dork glasses, money mouth"),
+    ("P2", "lion", "character", None, 5216, "LAZY HAT -- red mane, leopard body, gold chain, money mouth"),
+    ("P3", "lion", "character", None, 4522, "SHADES -- purple mane, referee shirt, big smile"),
+    ("P4", "lion", "bust",      None, 482,  "LEOPARD FUR COAT -- red top knot, shades, bunny ears"),
+    ("M1", "lion", "character", None, 4837, "BUCKET HAT -- orange mane, money eyes, big smile"),
+    ("M2", "lion", "character", None, 840,  "Monocle, roaring, fire mane"),
+    ("M3", "lion", "character", None, 5813, "BTC eyes, gold smile, bunny ears"),
+    ("M4", "lion", "character", None, 1506, "Sheriff hat, white mane, pipe"),
+    ("L1", "lion", "character", None, 2038, "Police hat, emerald mane, water goggles"),
+    ("L2", "lion", "character", None, 1725, "Horns, black mane, party horn"),
+    ("L3", "lion", "character", None, 4117, "Pirate hat, green top knot, purple fur coat"),
+    ("L4", "lion", "character", None, 5348, "Black cap, lab coat, bubble gum"),
 ]
 
 # Cub Cluster runs a reduced symbol set (wild + 6), all Cub-sourced.
@@ -126,18 +141,62 @@ def cache_path(collection, token_id):
     return os.path.join(CACHE, f"{prefix}{token_id}.img")
 
 
+def decodes_fully(path):
+    """True only if every scanline is present.
+
+    A size check cannot answer this. These tokens are 10000x10000 JPEGs, so a
+    gateway that hangs up early still leaves a file far above any plausible size
+    floor -- #4522 cached at 232 KB against a true 2.35 MB and passed a 50 KB
+    guard. PIL then loads it anyway because LOAD_TRUNCATED_IMAGES is on, and the
+    missing scanlines come through as blank. The symbol built from it was an
+    empty tile, with nothing anywhere reporting a failure.
+
+    Decoding under LOAD_TRUNCATED_IMAGES = False is the only check that
+    distinguishes "small because the art is simple" from "small because the
+    download stopped".
+    """
+    prev = ImageFile.LOAD_TRUNCATED_IMAGES
+    ImageFile.LOAD_TRUNCATED_IMAGES = False
+    try:
+        with Image.open(path) as im:
+            im.load()
+        return True
+    except Exception:
+        return False
+    finally:
+        ImageFile.LOAD_TRUNCATED_IMAGES = prev
+
+
 def fetch(collection, token_id, meta):
     os.makedirs(CACHE, exist_ok=True)
     path = cache_path(collection, token_id)
-    if os.path.exists(path) and os.path.getsize(path) > 50_000:
+    if os.path.exists(path) and os.path.getsize(path) > 50_000 and decodes_fully(path):
         return path
     cid = meta["image"].replace("ipfs://", "")
-    for gw in GATEWAYS:
-        subprocess.run(["curl", "-sSL", "--max-time", "150", "-o", path, f"{gw}/{cid}"],
-                       capture_output=True)
-        if os.path.exists(path) and os.path.getsize(path) > 50_000:
-            return path
-    raise RuntimeError(f"could not fetch {collection} #{token_id}")
+    best, best_size = None, 0
+    for attempt in range(2):
+        for gw in GATEWAYS:
+            tmp = path + ".part"
+            subprocess.run(["curl", "-sSL", "--max-time", "180", "-o", tmp, f"{gw}/{cid}"],
+                           capture_output=True)
+            if not os.path.exists(tmp):
+                continue
+            size = os.path.getsize(tmp)
+            if size > 50_000 and decodes_fully(tmp):
+                os.replace(tmp, path)
+                return path
+            # Keep the longest partial as a last resort, but never prefer it.
+            if size > best_size:
+                best, best_size = tmp + f".{gw.count('/')}", size
+                os.replace(tmp, best)
+            elif os.path.exists(tmp):
+                os.remove(tmp)
+    if best and best_size > 50_000:
+        os.replace(best, path)
+        print(f"    WARNING: {collection} #{token_id} never decoded cleanly; "
+              f"using longest partial ({best_size} bytes)", file=sys.stderr)
+        return path
+    raise RuntimeError(f"could not fetch a complete image for {collection} #{token_id}")
 
 
 def square_box(w, h, b):
@@ -178,7 +237,7 @@ def build_tile(path: str, region: str, collection: str):
     # does nothing and leaves grey bars -- which is exactly what it did to the
     # LAZY Hat and the Cub trait tiles. A framed detail is the honest render
     # for a trait anyway: it is a zoom, not a cut-out object.
-    if region != "character":
+    if region not in ("character", "bust"):
         b = REGION[collection][region]
         crop = im.crop((int(b[0]*w), int(b[1]*h), int(b[2]*w), int(b[3]*h))).convert("RGB")
         return fit_transparent(crop).resize((TILE, TILE), Image.LANCZOS), None
@@ -201,16 +260,44 @@ def build_tile(path: str, region: str, collection: str):
     bg = work.getpixel((3, 3))
     if bg == KEY:
         raise RuntimeError("sentinel colour collides with the artwork")
-    for xy in [(0, 0), (799, 0), (0, 799), (799, 799),
-               (400, 0), (400, 799), (0, 400), (799, 400)]:
-        ImageDraw.floodfill(work, xy, KEY, thresh=42)
-    rgba = work.convert("RGBA")
-    px = rgba.load()
-    for y in range(800):
-        for x in range(800):
-            if px[x, y][:3] == KEY:
-                px[x, y] = (0, 0, 0, 0)
-    return rgba.resize((TILE, TILE), Image.LANCZOS), "#%02x%02x%02x" % bg
+
+    # Seed the fill from CORNERS ONLY, and verify the result.
+    #
+    # The old seed list included the edge midpoints (0,400), (799,400). The
+    # character crop is a tall box, so at half height those points sit ON the
+    # lion -- mane, shoulder, fur coat. Seeding there floods outward THROUGH the
+    # artwork at thresh=42 and erases the symbol: #4522 came out a 0 KB fully
+    # transparent tile and #5216 lost everything but a scrap.
+    #
+    # Corners are background for every framed token in this collection, but a
+    # single threshold still is not safe for all of them -- a lion whose fur is
+    # close to its own backdrop bleeds at 42 and survives at 18. So try
+    # progressively tighter thresholds and keep the first result whose opaque
+    # fraction is plausible for a character tile. If none is, the honest answer
+    # is an unkeyed tile, not a silently destroyed one.
+    def keyed(thresh):
+        w2 = work.copy()
+        for xy in [(0, 0), (799, 0), (0, 799), (799, 799)]:
+            ImageDraw.floodfill(w2, xy, KEY, thresh=thresh)
+        rgba = w2.convert("RGBA")
+        px = rgba.load()
+        cleared = 0
+        for y in range(800):
+            for x in range(800):
+                if px[x, y][:3] == KEY:
+                    px[x, y] = (0, 0, 0, 0)
+                    cleared += 1
+        return rgba, 1.0 - cleared / 640000.0
+
+    for thresh in (42, 30, 20, 12, 6):
+        rgba, opaque = keyed(thresh)
+        # A framed character fills roughly a third to four-fifths of its tile.
+        # Below that the fill has eaten the lion; above it, it never caught.
+        if 0.22 <= opaque <= 0.93:
+            return rgba.resize((TILE, TILE), Image.LANCZOS), "#%02x%02x%02x" % bg
+
+    print(f"    background key unreliable -- keeping opaque tile", file=sys.stderr)
+    return work.convert("RGBA").resize((TILE, TILE), Image.LANCZOS), "#%02x%02x%02x" % bg
 
 
 def to_uri(tile):

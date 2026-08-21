@@ -24,10 +24,22 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 PAGE = os.path.join(ROOT, "play", "index.html")
 ISOLATED = os.path.join(HERE, "isolated_traits.json")
 
-# Only symbols whose isolation was inspected and judged clean are swapped in.
-# The rest keep their framed close-up, with the reason recorded here rather
-# than shipping a half-cut asset and hoping nobody looks closely.
-ACCEPTED = {"L1", "L4", "M1", "M3"}
+# SUPERSEDED for the Lion set -- deliberately empty.
+#
+# Isolation answered "can we cut a trait out of the art at all", and it can:
+# the layer recovery works and L1/L4/M1/M3 came out clean. What it could not
+# fix is that a trait cut-out does not function as a slot symbol. A crown alone
+# on transparency has no silhouette, so at reel size four low symbols read as
+# four small shapes and the grid stops being scannable at a glance.
+#
+# The symbol set is now twelve WHOLE owned Lions, each named for the trait it
+# wears (see build-symbols.py LIONS). Running this script with the old ACCEPTED
+# set would swap floating cut-outs back over four of them and quietly undo that,
+# which is exactly the kind of silent regression the rest of this pipeline is
+# built to prevent. The tool and the isolation data are kept -- they are correct
+# work and may serve the Cub set or a paytable panel -- but nothing in the Lion
+# set is overridden by them.
+ACCEPTED: set[str] = set()
 REJECTED = {
     "L2": "Bodygear: the mane covers most of a Hawaiian Shirt, so only slivers "
           "are ever visible across Lions and the recovered layer is a fragment",
