@@ -31,7 +31,7 @@ import os
 import subprocess
 import sys
 
-from PIL import Image, ImageDraw, ImageFile
+from PIL import Image, ImageDraw, ImageFile, ImageFilter
 
 Image.MAX_IMAGE_PIXELS = None
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -307,6 +307,62 @@ def to_uri(tile):
     return "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+
+
+
+# Mane colour per symbol, as data.
+#
+# Auto-detection was tried and abandoned, and the reason is worth keeping: a
+# heuristic that picks the biggest non-face colour in a head band scores well on
+# average and fails unpredictably at the edges. Tuned one way it read the LAZY
+# lion's cap as its mane; tuned another it merged the orange lion's mane with
+# its orange face at 39% coverage; a guard against that then rejected two good
+# lions and kept the one bad one, because `character` and `bust` crops do not
+# frame the face at the same place. Twelve symbols do not need a classifier.
+#
+# These values are sampled from the art and each was checked by rendering the
+# swing and looking at it. Symbols absent from this table keep a still mane --
+# White, Black, Fire and Emerald cannot be told apart from outline and shadow in
+# flat-shaded art, and a still mane is a far smaller defect than a face that
+# moves with it.
+MANE_COLOUR = {
+    "P1": (32, 160, 235),    # Double Tied Up - Blue
+    "P2": (230, 56, 57),     # Red
+    "P3": (113, 1, 210),     # Purple
+    "P4": (230, 56, 57),     # Top Knot - Red
+    "M1": (229, 134, 50),    # Double Tied Up - Orange
+    "L3": (35, 199, 64),     # Top Knot - Green
+}
+
+
+def split_mane(tile, colour):
+    """(tile with the mane lifted out, the mane on its own).
+
+    The mane is grown before it is lifted so that it stays tucked under the face
+    when it swings; the mane sits BEHIND the head in this art, so growing it
+    inward costs nothing and closes the gap that would otherwise open along the
+    jaw. Everything moves rigidly -- this is a separation, not a deformation,
+    which is why it does not shear the muzzle the way four earlier attempts did.
+    """
+    im = tile.convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    mask = Image.new("L", (w, h), 0)
+    mp = mask.load()
+    near = lambda a, b, t=44: all(abs(a[i] - b[i]) < t for i in range(3))
+    for y in range(h):
+        for x in range(w):
+            c = px[x, y]
+            if c[3] > 8 and near(c[:3], colour):
+                mp[x, y] = 255
+    grown = mask.filter(ImageFilter.MaxFilter(7))
+    mane = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    mane.paste(im, (0, 0), grown)
+    base = im.copy()
+    base.putalpha(Image.composite(Image.new("L", (w, h), 0), base.split()[3], mask))
+    return base, mane
+
+
 def licensed_traits():
     """symbol id -> the trait symbols.json says the symbol stands for.
 
@@ -336,14 +392,26 @@ def build_set(manifest, lions, cubs, label):
         meta = pool[str(token_id)]
         path = fetch(collection, token_id, meta)
         tile, bg = build_tile(path, region, collection)
+        # Secondary motion: lift the mane so it can lag behind the roar. Only
+        # the Lion set -- Cub tiles are small and some are trait crops, where a
+        # separated mane has nothing to hang off.
+        mane_uri = None
+        colour = MANE_COLOUR.get(sym) if collection == "lion" else None
+        if colour is not None:
+            base_tile, mane_tile = split_mane(tile, colour)
+            mane_uri = to_uri(mane_tile)
+            tile = base_tile
         uri = to_uri(tile)
-        total += len(uri)
+        total += len(uri) + (len(mane_uri) if mane_uri else 0)
         mane = meta["traits"].get("Mane", f"#{token_id}")
         name = (trait.split("::", 1)[1] if trait else None) or named.get(sym) or mane
         out[sym] = {"tokenId": token_id, "collection": collection, "region": region,
                     "trait": trait, "name": name, "mane": mane, "uri": uri, "bg": bg}
+        if mane_uri:
+            out[sym]["maneUri"] = mane_uri
         print(f"  {sym:<3} {collection:<4} #{token_id:<6} {region:<10} "
-              f"{(trait or note):<28} {len(uri)//1024:>4} KB")
+              f"{(trait or note):<28} {len(uri)//1024:>4} KB"
+              f"{'  +mane ' + str(len(mane_uri)//1024) + ' KB' if mane_uri else ''}")
     return out, total
 
 

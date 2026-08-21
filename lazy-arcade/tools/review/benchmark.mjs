@@ -221,6 +221,8 @@ const m = await p.evaluate(async () => {
       backlight: /\.sym\.pop::before/.test(sheet),
       ring: /\.sym\.pop::after/.test(sheet),
       shine: typeof shineSymbol === "function",
+      manes: Object.keys(SYMBOL_ART.default || {})
+        .filter((k) => SYMBOL_ART.default[k].maneUri).length,
     };
   }
 
@@ -347,12 +349,14 @@ row(H, "Twelve symbols from owned art", PASS, "each traced to a token the operat
       `${a.backlight ? ", backlight" : ""}${a.ring ? ", ring" : ""}${a.shine ? ", specular sweep" : ""}`,
       "Animation principle applied to a static portrait: anticipation, action, " +
       "follow-through, scaled from 50% 88% so the lion rears instead of zooming.");
-  row(H, "Motion INSIDE the character outline", NEEDS_ART,
-      "no blink, mane sway or mouth movement -- the portrait cannot move within itself",
-      "This is the part that genuinely needs drawn frames. Four procedural routes " +
-      "were tested and rejected with rendered evidence: slice mesh warp, three-piece " +
-      "falloff, silhouette grow, and a collection-wide eye-twin search that returned " +
-      "0 matches across 9,999 tokens. Brief in docs/COMPETITIVE-GAPS.md.");
+  row(H, "Motion inside the character outline", m.symAnim.manes >= 4 ? PARTIAL : NEEDS_ART,
+      `${m.symAnim.manes} symbols ship a separate mane layer that lags the roar`,
+      "Four earlier routes DEFORMED the art and failed -- slice mesh warp, " +
+      "three-piece falloff, silhouette grow, and an eye-twin search that returned " +
+      "0 matches across 9,999 tokens. Separating a flat-colour layer and moving it " +
+      "RIGIDLY works instead: no shear, no seam. Six of twelve manes are separable; " +
+      "White, Black, Brown, Fire and Emerald cannot be told from outline and shadow " +
+      "and hold still. Blink and mouth movement still need drawn frames.");
 }
 row(H, "Row-multiplier art", NEEDS_ART,
     "orbs are drawn procedurally (svgOrb)",

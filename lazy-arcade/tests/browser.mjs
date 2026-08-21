@@ -406,6 +406,88 @@ console.log("\nSession clock and net position");
   await ctx.close();
 }
 
+/* ------------------------------------------------------- secondary motion */
+// The mane ships as its own layer so it can lag the roar. Four earlier attempts
+// at motion inside the outline DEFORMED the art and sheared the muzzle; this one
+// separates a layer and moves it rigidly. The things that can go wrong are
+// specific: the mane drawn in front of the face, announced twice to a screen
+// reader, or missing from the spinning reel because the canvas draws one image
+// per cell and the base alone is a lion with its mane cut out.
+console.log("\nSecondary motion (mane)");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    document.querySelector('[data-game="traitvault"]').click();
+    await sleep(400);
+
+    const withMane = Object.keys(SYMBOL_ART.default)
+      .filter((k) => SYMBOL_ART.default[k].maneUri);
+
+    const g = [];
+    for (let a = 0; a < 5; a++) { g.push([]); for (let b = 0; b < 4; b++) g[a].push(P1); }
+    buildReels(g);
+    const cell = document.querySelector("#reels .sym");
+    const mane = cell.querySelector("img.mane");
+    const body = cell.querySelector("img:not(.mane)");
+    cell.classList.add("pop");
+    const cs = getComputedStyle(mane);
+    const seen = [];
+    for (let i = 0; i < 8; i++) { seen.push(getComputedStyle(mane).transform); await sleep(70); }
+
+    // The canvas draws ONE image per cell, so a split symbol must be recomposed
+    // or the reel spins mane-less lions.
+    warmSymbolImages("traitvault");
+    await sleep(900);
+    const composed = symbolImage(P1, "traitvault");
+    // Counting opaque pixels, not just checking that AN image loaded. The first
+    // version of this check asked only whether the returned image had decoded,
+    // which the mane-less base satisfies perfectly -- so it passed while the
+    // reel spun lions with their manes cut out. Compare the composed image
+    // against the base: the mane is roughly a fifth of the tile, so if it is
+    // present the opaque area is materially larger.
+    const opaqueOf = (src) => new Promise((res) => {
+      const im = new Image();
+      im.onload = () => {
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = 120;
+        const cx = cv.getContext("2d");
+        cx.drawImage(im, 0, 0, 120, 120);
+        const d = cx.getImageData(0, 0, 120, 120).data;
+        let n = 0;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 8) n++;
+        res(n);
+      };
+      im.onerror = () => res(-1);
+      im.src = src;
+    });
+    const baseOpaque = await opaqueOf(SYMBOL_ART.default.P1.uri);
+    const drawnOpaque = composed ? await opaqueOf(composed.src) : -1;
+
+    return {
+      count: withMane.length, syms: withMane.join(","),
+      anim: cs.animationName, maneZ: +cs.zIndex, bodyZ: +getComputedStyle(body).zIndex,
+      moves: new Set(seen).size,
+      alt: mane.alt, hidden: mane.getAttribute("aria-hidden"),
+      firstImgIsBody: cell.querySelector("img").alt === symName(P1, "traitvault"),
+      composed: !!(composed && composed.complete && composed.naturalWidth > 0),
+      baseOpaque, drawnOpaque,
+    };
+  });
+  check("some symbols ship a separate mane layer", r.count >= 4, `${r.count}: ${r.syms}`);
+  check("the mane sits behind the body", r.maneZ < r.bodyZ, `mane z${r.maneZ}, body z${r.bodyZ}`);
+  check("the mane swings on a win", r.anim === "maneSwing" && r.moves > 3,
+        `${r.anim}, ${r.moves} distinct transforms`);
+  check("the mane is not announced to screen readers", r.alt === "" && r.hidden === "true");
+  check("the body image still carries the symbol name", r.firstImgIsBody);
+  check("the spinning reel draws a whole lion, not a base with its mane cut out",
+        r.composed && r.drawnOpaque > r.baseOpaque * 1.1,
+        `composed covers ${r.drawnOpaque}px vs a bare base's ${r.baseOpaque}px`);
+  check("no runtime errors around the mane layer", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- reel curve */
 console.log("\nReel curve");
 {
