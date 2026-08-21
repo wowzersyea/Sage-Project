@@ -134,7 +134,7 @@ def test_attestation_is_overridden_by_what_is_in_the_transcript(rubric, man):
 
 1
 00:00:10.000 --> 00:00:20.000
-Mark Murphy: This is the patient with MRN 4417723 seen on 09/03/2026.
+Will Barlow: This is the patient with MRN 4417723 seen on 09/03/2026.
 """)
     boundary = NameBoundary(man.roles)
     out = det.score_a1(man, tx, boundary)

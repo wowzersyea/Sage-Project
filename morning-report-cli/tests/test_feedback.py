@@ -82,7 +82,7 @@ def test_the_prompt_carries_no_name_and_nothing_gradelike(rubric):
     for banned in ("scored", "score of", "out of 16", "struck", "16", "B2", "rubric"):
         assert banned not in user, banned
     # and no participant name
-    for word in ("Mark", "Murphy", "Geetha", "Resident", "Attending"):
+    for word in ("Will", "Barlow", "Nadia", "Haddad", "Resident", "Attending"):
         assert word not in user, word
     # but it does carry the standard and what happened
     assert item.text in user
@@ -122,10 +122,10 @@ def test_drafts_are_written_per_role_and_say_what_they_rest_on(rubric, man):
 
 def test_a_draft_never_leaves_with_a_name_in_the_prompt(rubric, man):
     """The drafting call goes through the same boundary as scoring."""
-    working = {"block": "jul-sep", "objective": "Mark Murphy's case about a toddler",
+    working = {"block": "jul-sep", "objective": "Will Barlow's case about a toddler",
                "roles": man.roles, "items": {"problem_rep": result(True)}, "automatic_fails": {}}
     boundary = NameBoundary(man.roles)
     payload = fb.build_payload("PGY1", None, None, "jul-sep", working["objective"])
     substituted = boundary.substitute(payload["user"])
-    assert "Mark Murphy" not in substituted
+    assert "Will Barlow" not in substituted
     assert boundary.residual_names(substituted) == []

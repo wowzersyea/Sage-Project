@@ -4,7 +4,7 @@ Zoom writes cues as:
 
     1
     00:00:04.120 --> 00:00:09.880
-    Mark Murphy: All right, we've got four roles today...
+    Will Barlow: All right, we've got four roles today...
 
 The speaker name is part of the payload, not metadata, so it has to be
 split out here — and once it is, it never travels any further than the

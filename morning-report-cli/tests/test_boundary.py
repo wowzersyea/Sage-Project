@@ -3,33 +3,33 @@
 import pytest
 
 from morningreport import model
-from morningreport.roles import NameBoundary
+from morningreport.roles import ALSO_A_WORD, NameBoundary
 
 
 def test_full_name_and_parts(boundary):
-    out = boundary.substitute("Mark Murphy: over to you. Mark, take it away.")
+    out = boundary.substitute("Will Barlow: over to you. Will, take it away.")
     assert "[PRESENTER]" in out
-    assert "Mark" not in out and "Murphy" not in out
+    assert "Will" not in out and "Barlow" not in out
 
 
 def test_possessives(boundary):
-    out = boundary.substitute("That was Mark's point and Murphy’s slide.")
-    assert "Mark" not in out and "Murphy" not in out
+    out = boundary.substitute("That was Will's point and Barlow’s slide.")
+    assert "Will" not in out and "Barlow" not in out
     assert out.count("[PRESENTER]") == 2
 
 
 def test_case_insensitive_full_name(boundary):
-    assert "[PRESENTER]" in boundary.substitute("mark murphy said so")
+    assert "[PRESENTER]" in boundary.substitute("will barlow said so")
 
 
 def test_ordinary_words_survive(boundary):
-    """A lone lowercase 'mark' is a word, not the presenter."""
-    text = "The mark on the film is unrelated; we will mark it as pending."
+    """A lone lowercase 'will' is a word, not the presenter."""
+    text = "He will not bear weight, and we will get the ultrasound."
     assert boundary.substitute(text) == text
 
 
 def test_capitalised_first_name_is_still_caught(boundary):
-    assert "[PRESENTER]" in boundary.substitute("Mark, can you share?")
+    assert "[PRESENTER]" in boundary.substitute("Will, can you share?")
 
 
 def test_every_role_is_covered(boundary, man):
@@ -49,7 +49,7 @@ def test_residual_names_is_clean_after_substitution(boundary, load_tx):
 
 
 def test_unmapped_speakers_are_reported(boundary):
-    assert boundary.unmapped_speakers(["Mark Murphy", "E Visitor"]) == ["E Visitor"]
+    assert boundary.unmapped_speakers(["Will Barlow", "E Visitor"]) == ["E Visitor"]
 
 
 def test_unknown_role_is_rejected():
@@ -70,7 +70,7 @@ def test_no_name_survives_into_any_payload(rubric, load_tx, man, boundary):
         for name in man.roles:
             assert name not in payload.user, (item.code, name)
             for part in name.split():
-                if len(part) > 2 and part.lower() not in ("mark",):
+                if len(part) > 2 and part.lower() not in ALSO_A_WORD:
                     assert part not in payload.user, (item.code, part)
     assert checked >= 10
 
@@ -78,7 +78,7 @@ def test_no_name_survives_into_any_payload(rubric, load_tx, man, boundary):
 def test_client_refuses_to_send_a_payload_with_a_name(boundary):
     payload = model.Payload(
         code="B5", model="x", system="s",
-        user="Mark Murphy said something", residual_names=["Mark Murphy"],
+        user="Will Barlow said something", residual_names=["Will Barlow"],
     )
     client = model.Client(api_key="not-used")
     with pytest.raises(model.ModelError, match="refusing to send"):

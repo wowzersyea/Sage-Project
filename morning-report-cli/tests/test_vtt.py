@@ -30,13 +30,13 @@ def test_speaker_split_is_not_fooled_by_colons():
 
 1
 00:00:01.000 --> 00:00:03.000
-Mark Murphy: the ratio was 3:1 today
+Will Barlow: the ratio was 3:1 today
 
 2
 00:00:04.000 --> 00:00:06.000
 38.6: this is not a speaker
 """)
-    assert tx.cues[0].speaker == "Mark Murphy"
+    assert tx.cues[0].speaker == "Will Barlow"
     assert "3:1" in tx.cues[0].text
     assert tx.cues[1].speaker is None
 

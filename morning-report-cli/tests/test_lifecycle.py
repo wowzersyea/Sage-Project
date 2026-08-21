@@ -13,7 +13,7 @@ from morningreport.cli import cli
 from morningreport.store import Store
 
 FIXTURES = Path(__file__).parent / "fixtures"
-NAMES = ["Mark Murphy", "Geetha Ranganathan", "A Resident", "B Resident",
+NAMES = ["Will Barlow", "Nadia Haddad", "A Resident", "B Resident",
          "C Attending", "D Chief"]
 
 
@@ -47,7 +47,7 @@ def test_mark_sent_leaves_no_name_anywhere(folder):
     run(folder, "feedback", "2026-09-03-galveston", "--dry-run")
 
     store = Store(root=folder)
-    assert store.grep("Mark Murphy"), "the working stage should be identified"
+    assert store.grep("Will Barlow"), "the working stage should be identified"
 
     r = run(folder, "mark-sent", "2026-09-03-galveston", "--yes")
     assert r.exit_code == 0, r.output

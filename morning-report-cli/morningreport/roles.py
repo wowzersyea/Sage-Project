@@ -9,11 +9,11 @@ This is the load-bearing piece of the privacy design, so it is
 deliberately paranoid:
 
 * it substitutes full names, and also each name part on its own, because
-  a transcript says "Mark" as often as it says "Mark Murphy";
+  a transcript says "Mark" as often as it says "Will Barlow";
 * it handles possessives and punctuation attached to a name;
 * it is case-insensitive, because Zoom's transcript and the manifest do
   not always agree on capitalisation;
-* it matches longest-first, so "Mark Murphy" cannot be half-replaced by
+* it matches longest-first, so "Will Barlow" cannot be half-replaced by
   a rule for "Mark";
 * and :func:`residual_names` re-checks the output afterwards, so a name
   that slipped through is caught before the call rather than after.
@@ -104,7 +104,7 @@ class NameBoundary:
                     continue
                 variants.append((part, token, name))
 
-        # longest first, so "Mark Murphy" wins over "Mark"
+        # longest first, so "Will Barlow" wins over "Mark"
         variants.sort(key=lambda v: len(v[0]), reverse=True)
         seen: set[str] = set()
         for text, token, source in variants:
