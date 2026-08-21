@@ -202,6 +202,24 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   box-shadow:0 0 26px -6px var(--gold),0 3px 10px rgba(0,0,0,.5);
   transform:translate(-50%,0)}
 
+@keyframes slamlit{
+  0%{filter:none;transform:none}
+  22%{filter:brightness(1.75) saturate(1.25) drop-shadow(0 0 16px var(--gold));
+      transform:scale(1.07)}
+  100%{filter:none;transform:none}
+}
+.sym.slam{animation:slamlit .62s ease-out both}
+@keyframes shakescr{
+  0%,100%{transform:translate(0,0)}
+  15%{transform:translate(-5px,2px)} 30%{transform:translate(5px,-2px)}
+  45%{transform:translate(-4px,-2px)} 60%{transform:translate(4px,2px)}
+  80%{transform:translate(-2px,1px)}
+}
+.screen.shake{animation:shakescr .4s ease-in-out}
+@media (prefers-reduced-motion: reduce){
+  .sym.slam,.screen.shake{animation:none}
+}
+
 /* paytable rows show the lion, not just its name */
 .ptsym{display:flex;align-items:center;gap:9px}
 .ptsym .sym,.ptsym>:first-child{width:34px;height:34px;flex:0 0 34px;position:relative}
@@ -229,10 +247,11 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   100%{box-shadow:0 0 0 0 rgba(255,205,92,0),0 0 16px -3px var(--gold)}
 }
 /* the orb flying from the cell it landed in to its row badge */
-.orb{position:absolute;z-index:6;pointer-events:none;font-family:var(--mono);
-     font-size:13px;font-weight:700;color:#1A1206;padding:3px 7px;border-radius:6px;
-     background:linear-gradient(180deg,#FFE9A8,var(--gold-2));
-     box-shadow:0 0 18px -2px var(--gold);will-change:transform,opacity}
+.orb{position:absolute;z-index:6;pointer-events:none;
+     width:calc(var(--cell)*.62);height:calc(var(--cell)*.62);
+     filter:drop-shadow(0 0 14px rgba(255,205,92,.75)) drop-shadow(0 3px 5px rgba(0,0,0,.5));
+     will-change:transform,opacity}
+.orb svg{width:100%;height:100%;display:block}
 @media (prefers-reduced-motion: reduce){
   .mbadge.bump,.mbadge.paid{animation:none}
   .orb{display:none}
@@ -1119,6 +1138,41 @@ function svgWild(){
     <text x="50" y="63" text-anchor="middle" font-family="ui-sans-serif,system-ui"
       font-size="34" font-weight="900" fill="#4A2F02">W</text></svg>`;
 }
+/* The multiplier orb, drawn in the same house style as WILD and the $LAZY coin.
+   It was a plain gold rounded rectangle with the value typed on it, which reads
+   as a debug label rather than an object the game hands you.
+   A struck medallion: rope-milled rim, sheriff-star field behind the number, and
+   a raised bevel so it catches light while it travels to the rail. */
+function svgOrb(value){
+  const star=Array.from({length:10},(_,i)=>{
+    const a=(i*36-90)*Math.PI/180, r=i%2?15:31;
+    return `${50+Math.cos(a)*r},${50+Math.sin(a)*r}`;
+  }).join(" ");
+  const mill=Array.from({length:36},(_,i)=>{
+    const a=i*10*Math.PI/180;
+    return `<line x1="${50+Math.cos(a)*40}" y1="${50+Math.sin(a)*40}"
+                  x2="${50+Math.cos(a)*45}" y2="${50+Math.sin(a)*45}"
+                  stroke="#6B4405" stroke-width="3" stroke-linecap="round" opacity=".85"/>`;
+  }).join("");
+  const txt=String(value);
+  const size = txt.length>2 ? 30 : txt.length>1 ? 36 : 42;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <defs>
+      <radialGradient id="orbF" cx=".36" cy=".28" r=".85">
+        <stop offset="0" stop-color="#FFF6D6"/><stop offset=".45" stop-color="#F6C948"/>
+        <stop offset="1" stop-color="#9A6408"/></radialGradient>
+      <linearGradient id="orbStar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFE9A6"/><stop offset="1" stop-color="#C98F16"/></linearGradient>
+    </defs>
+    ${mill}
+    <circle cx="50" cy="50" r="40" fill="url(#orbF)" stroke="#4A2F02" stroke-width="3.5"/>
+    <circle cx="50" cy="50" r="33" fill="none" stroke="#5A3A05" stroke-width="1.6" opacity=".55"/>
+    <polygon points="${star}" fill="url(#orbStar)" opacity=".5"/>
+    <text x="50" y="${50+size*0.36}" text-anchor="middle"
+      font-family="ui-monospace,SFMono-Regular,Menlo,monospace"
+      font-size="${size}" font-weight="900" fill="#3E2701">×${txt}</text>
+  </svg>`;
+}
 function svgScatter(){
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
     <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
@@ -1293,19 +1347,18 @@ function coinTick(){
 
 /* Orb landing: a bright metallic ping whose pitch tracks the multiplier, so a
    x20 sounds different from a x2 before the player has read either. */
+/* An orb landing is a guitar note, not a bleep: the pitch climbs the scale with
+   the multiplier's value, so a x20 is audibly further up the neck than a x2
+   before the player has read either number. A x10 or better also draws a shot. */
+const ORB_SCALE=[196.0,246.9,293.7,349.2,440.0,523.3,659.3,784.0,987.8,1174.7];
 function orbLand(count,topVal){
   if(muted) return;
-  const c=ac(), base=880+Math.log2(Math.max(2,topVal||2))*210;
   for(let i=0;i<Math.min(count,6);i++){
-    const t=c.currentTime+i*0.085;
-    for(const [mult,lvl] of [[1,0.055],[2.01,0.026],[3.02,0.012]]){
-      const o=c.createOscillator(); o.type="triangle";
-      o.frequency.setValueAtTime(base*mult,t);
-      o.frequency.exponentialRampToValueAtTime(base*mult*1.5,t+0.16);
-      const g=env(o,lvl,0.003,0.2,t); g.connect(busGain); g.connect(verbSend);
-      o.start(t); o.stop(t+0.26);
-    }
+    const step=Math.min(ORB_SCALE.length-1,
+                        Math.round(Math.log2(Math.max(2,topVal||2))*2.4));
+    setTimeout(()=>pluck(ORB_SCALE[step]*(i?2:1),0.9,0.17,0.62), i*95);
   }
+  if((topVal||0)>=10) setTimeout(()=>gunshot(0.8),120);
 }
 
 /* Reel loop. A cabinet is never silent while the reels move; without it the
@@ -1455,6 +1508,7 @@ function jackpotFanfare(tier){
   if(muted) return;
   const c=ac(), strikes = tier>=3?3 : tier>=2?2 : 1;
   jackpotHit(0.85+0.15*tier);
+  if(tier>=2) setTimeout(()=>gunshot(0.9),90);
   const notes=[261.6,392.0,523.3,659.3,784.0,1046.5];
   for(let i=0;i<notes.length;i++){
     const t=c.currentTime+0.16+i*0.085;
@@ -1467,6 +1521,124 @@ function jackpotFanfare(tier){
   }
   for(let s=1;s<strikes;s++) setTimeout(()=>jackpotHit(0.7+0.2*s), 620*s);
 }
+/* ---- plucked string (Karplus-Strong) --------------------------------------
+   A guitar twang is the one sound in this genre that oscillators cannot fake:
+   the character is in how the harmonics decay at different rates, which is
+   exactly what a filtered feedback delay does and what a sawtooth does not.
+   Rendered straight into a buffer -- for plucks this short that is cheaper and
+   more accurate than wiring a DelayNode feedback loop per note. */
+function pluck(freq,dur,gain,bright){
+  if(muted) return;
+  const c=ac(), sr=c.sampleRate;
+  const n=Math.max(1,Math.floor(sr/freq));            // delay line = one period
+  const len=Math.floor(sr*dur);
+  const buf=c.createBuffer(1,len,sr), d=buf.getChannelData(0);
+  const line=new Float32Array(n);
+  for(let i=0;i<n;i++) line[i]=Math.random()*2-1;     // pluck excitation
+  // Feedback just under 1 sustains; the two-tap average is the lowpass that
+  // makes the top harmonics die first, which is what reads as "string".
+  const damp=bright==null?0.5:bright, fb=0.996;
+  let idx=0, prev=0;
+  for(let i=0;i<len;i++){
+    const cur=line[idx];
+    d[i]=cur;
+    const filtered=damp*cur+(1-damp)*prev;
+    prev=cur;
+    line[idx]=filtered*fb;
+    idx=(idx+1)%n;
+  }
+  const src=c.createBufferSource(); src.buffer=buf;
+  const g=c.createGain();
+  g.gain.setValueAtTime(gain==null?0.2:gain,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+  const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=4600;
+  src.connect(lp).connect(g); g.connect(busGain); g.connect(verbSend);
+  src.start();
+}
+
+/* A gunshot: crack, body, and a tail that decays into the room. */
+function gunshot(power){
+  if(muted) return;
+  const c=ac(), t=c.currentTime, p=power==null?1:power;
+  const crack=c.createBufferSource(); crack.buffer=noiseBuffer(0.09);
+  const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
+  crack.connect(hp);
+  const cg=env(hp,0.3*p,0.0008,0.07,t); cg.connect(busGain); cg.connect(verbSend);
+  crack.start(t);
+  const body=c.createBufferSource(); body.buffer=noiseBuffer(0.3);
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=320; bp.Q.value=0.6;
+  body.connect(bp);
+  const bg=env(bp,0.26*p,0.002,0.3,t); bg.connect(busGain); bg.connect(verbSend);
+  body.start(t);
+  const sub=c.createOscillator(); sub.type="sine";
+  sub.frequency.setValueAtTime(120,t);
+  sub.frequency.exponentialRampToValueAtTime(38,t+0.22);
+  const sg=env(sub,0.34*p,0.003,0.26,t); sg.connect(busGain);
+  sub.start(t); sub.stop(t+0.4);
+}
+
+/* Balance credit -- the ker-ching. Two struck partials a fifth apart. */
+function kerching(){
+  if(muted) return;
+  const c=ac(), t=c.currentTime;
+  for(const [f,dl,lvl] of [[1760,0,0.075],[2637,0.045,0.055],[3520,0.085,0.035]]){
+    const o=c.createOscillator(); o.type="triangle";
+    o.frequency.setValueAtTime(f,t+dl);
+    const g=env(o,lvl,0.002,0.42,t+dl); g.connect(busGain); g.connect(verbSend);
+    o.start(t+dl); o.stop(t+dl+0.5);
+  }
+}
+
+/* ---- the rhythm bed ------------------------------------------------------
+   The reference's most distinctive audio trait is a percussive pulse that reads
+   like a steam train and CHANGES TEMPO with the state of play -- slow through
+   the base game, driving through the feature. A static loop cannot do that, so
+   this is a lookahead scheduler rather than a looping buffer: it queues the next
+   few beats at precise AudioContext times, which keeps the pulse steady while
+   the tempo is being moved underneath it.
+   setTimeout alone would audibly stutter; setTimeout only decides WHEN to queue,
+   never when a sound plays. */
+let rhythm=null;
+const RHYTHM_BASE_BPM=82, RHYTHM_FEATURE_BPM=132;
+function startRhythm(){
+  if(rhythm||muted) return;
+  const c=ac();
+  rhythm={bpm:RHYTHM_BASE_BPM, target:RHYTHM_BASE_BPM, next:c.currentTime+0.08, step:0, timer:null};
+  const chuff=(t,accent)=>{
+    const src=c.createBufferSource(); src.buffer=noiseBuffer(0.14);
+    const bp=c.createBiquadFilter(); bp.type="bandpass";
+    bp.frequency.value=accent?520:900; bp.Q.value=accent?0.8:1.6;
+    src.connect(bp);
+    const g=env(bp,accent?0.05:0.022,0.004,accent?0.16:0.08,t); g.connect(busGain);
+    src.start(t);
+    if(accent){
+      const o=c.createOscillator(); o.type="sine";
+      o.frequency.setValueAtTime(96,t);
+      o.frequency.exponentialRampToValueAtTime(52,t+0.11);
+      const og=env(o,0.075,0.004,0.13,t); og.connect(busGain);
+      o.start(t); o.stop(t+0.2);
+    }
+  };
+  const tick=()=>{
+    if(!rhythm) return;
+    const now=c.currentTime;
+    while(rhythm.next<now+0.2){
+      // ease toward the target tempo so a feature does not snap into place
+      rhythm.bpm+=(rhythm.target-rhythm.bpm)*0.12;
+      chuff(rhythm.next, rhythm.step%4===0);
+      rhythm.next+=60/rhythm.bpm/2;      // eighth notes
+      rhythm.step++;
+    }
+    rhythm.timer=setTimeout(tick,45);
+  };
+  tick();
+}
+function stopRhythm(){
+  if(!rhythm) return;
+  clearTimeout(rhythm.timer); rhythm=null;
+}
+function setRhythmTempo(bpm){ if(rhythm) rhythm.target=bpm; }
+
 /* Ambient bed. Always underneath on a real cabinet; kept well below the
    effect layer so it never competes with a win. */
 let music=null;
@@ -1513,6 +1685,7 @@ function stopMusic(){
   if(!music) return;
   const c=ac();
   music.bus.gain.linearRampToValueAtTime(0.0001,c.currentTime+0.5);
+  stopRhythm();
   const m=music; music=null; musicIntense=false;
   setTimeout(()=>{ try{ m.voices.forEach(v=>v.stop()); m.lfo.stop(); }catch(e){} },700);
 }
@@ -1926,6 +2099,32 @@ function spinWinPop(amount){
   a.onfinish=()=>el.remove();
 }
 
+/* A multiplier lands on a ROW, so the row is what has to react. Without this the
+   only feedback is a badge ticking over in the margin, and the mechanic's whole
+   claim -- that this row is now worth more -- never reaches the grid itself.
+   A light sweep across the row, and a shake of the cabinet for a big one. */
+function slamRow(row,val){
+  if(turbo) return;
+  const host=$("reels"), reels=[...host.children];
+  const cells=reels.map(r=>r.querySelectorAll(".sym")[row]).filter(Boolean);
+  if(!cells.length) return;
+  if(!reduceMotion){
+    cells.forEach((c,i)=>{
+      c.classList.remove("slam"); void c.offsetWidth;
+      c.style.animationDelay=(i*38)+"ms";
+      c.classList.add("slam");
+      setTimeout(()=>{ c.classList.remove("slam"); c.style.animationDelay=""; }, 700+i*38);
+    });
+    if(val>=10){
+      const scr=$("screen");
+      scr.classList.remove("shake"); void scr.offsetWidth; scr.classList.add("shake");
+      setTimeout(()=>scr.classList.remove("shake"),420);
+    }
+  }
+  pluck(ORB_SCALE[Math.min(ORB_SCALE.length-1,Math.round(Math.log2(Math.max(2,val))*2.4))]*2,
+        0.7,0.13,0.7);
+}
+
 /* ---- row multiplier rail -------------------------------------------------
    The badge for a row must sit level with that row, so the rail is built from
    the same --cell height the reels use rather than being positioned by hand. */
@@ -1966,17 +2165,23 @@ async function flyOrbs(orbs){
     if(!cell||!badge){ done(); return; }
     const c=cell.getBoundingClientRect(), b=badge.getBoundingClientRect();
     const el=document.createElement("div");
-    el.className="orb"; el.textContent="×"+o.val;
-    el.style.left=(c.left-sRect.left+c.width/2-13)+"px";
-    el.style.top=(c.top-sRect.top+c.height/2-11)+"px";
+    el.className="orb"; el.innerHTML=svgOrb(o.val);
     screen.appendChild(el);
-    const dx=(b.left-c.left)+(b.width-c.width)/2;
-    const dy=(b.top-c.top)+(b.height-c.height)/2;
+    // Measured after insertion: the orb is sized from --cell, so its box is not
+    // known until it is in the document.
+    const o0=el.getBoundingClientRect();
+    el.style.left=(c.left-sRect.left+(c.width-o0.width)/2)+"px";
+    el.style.top=(c.top-sRect.top+(c.height-o0.height)/2)+"px";
+    const dx=(b.left+b.width/2)-(c.left+c.width/2);
+    const dy=(b.top+b.height/2)-(c.top+c.height/2);
     const a=el.animate([
-      {transform:"translate(0,0) scale(.5)",opacity:0},
-      {transform:"translate(0,0) scale(1.18)",opacity:1,offset:.22},
-      {transform:`translate(${dx}px,${dy}px) scale(.7)`,opacity:.85}
-    ],{duration:540,delay:i*70,easing:"cubic-bezier(.4,.05,.2,1)",fill:"forwards"});
+      {transform:"translate(0,0) scale(.35) rotate(-140deg)",opacity:0},
+      {transform:"translate(0,0) scale(1.22) rotate(0deg)",opacity:1,offset:.26},
+      {transform:"translate(0,0) scale(1.05) rotate(0deg)",opacity:1,offset:.46},
+      {transform:`translate(${dx}px,${dy}px) scale(.34) rotate(24deg)`,opacity:.9}
+    ],{duration:640,delay:i*90,easing:"cubic-bezier(.35,.02,.2,1)",fill:"forwards"});
+    // The row it upgrades reacts as the orb arrives, not when it left.
+    setTimeout(()=>slamRow(o.row,o.val), i*90+560);
     a.onfinish=()=>{ el.remove(); done(); };
   })));
 }
@@ -2092,7 +2297,10 @@ async function doSpin(){
                      0, game==="pride"?"every wild carries ×2"
                                       :"10 free spins · row multipliers stick and build");
   }
-  if(frames.length>1){ featTotal=0; $("chipFeat").classList.remove("hidden"); setMusicIntensity(true); }
+  if(frames.length>1){
+    featTotal=0; $("chipFeat").classList.remove("hidden");
+    setMusicIntensity(true); setRhythmTempo(RHYTHM_FEATURE_BPM);
+  }
   if(game==="traitvault"&&frames.length>1){
     paintMultRail([0,0,0,0],null);
     $("chipFS").classList.remove("hidden");
@@ -2125,9 +2333,10 @@ async function doSpin(){
     else await sleep(35);
   }
   if(frames.length>1){
+    kerching();
     $("chipMode").classList.remove("live"); $("chipMode").textContent="Base game";
     $("chipFS").classList.add("hidden");
-    setMusicIntensity(false);
+    setMusicIntensity(false); setRhythmTempo(RHYTHM_BASE_BPM);
     $("featTotal").textContent=fmt(out.feature*bet);
     if(out.fs && game!=="cubcluster" && out.feature>0){
       coins(40,1.05);
@@ -2471,7 +2680,7 @@ $("infoClose").addEventListener("click",()=>$("info").classList.remove("on"));
 $("info").addEventListener("click",e=>{ if(e.target.id==="info") $("info").classList.remove("on"); });
 $("autoCfg").addEventListener("click",()=>$("autoPanel").classList.toggle("on"));
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>selectGame(t.dataset.game)));
-$("spin").addEventListener("click",()=>{ac();startMusic();doSpin();});
+$("spin").addEventListener("click",()=>{ac();startMusic();startRhythm();doSpin();});
 $("auto").addEventListener("click",()=>{ac();runAuto();});
 $("ante").addEventListener("click",()=>{
   anteOn=!anteOn; $("ante").setAttribute("aria-pressed",String(anteOn));
@@ -2485,9 +2694,9 @@ $("bet").addEventListener("change",refreshCostLabels);
 $("turbo").addEventListener("click",()=>{turbo=!turbo;$("turbo").setAttribute("aria-pressed",String(turbo));});
 $("sound").addEventListener("click",()=>{
   muted=!muted; $("sound").setAttribute("aria-pressed",String(!muted));
-  if(muted) stopMusic(); else { ac(); startMusic(); }
+  if(muted){ stopMusic(); stopRhythm(); } else { ac(); startMusic(); startRhythm(); }
 });
-$("hlHi").addEventListener("click",()=>{ac();startMusic();hlPick("rarer");});
+$("hlHi").addEventListener("click",()=>{ac();startMusic();startRhythm();hlPick("rarer");});
 $("hlLo").addEventListener("click",()=>{ac();hlPick("commoner");});
 $("cash").addEventListener("click",hlCash);
 $("hlSwap").addEventListener("click",()=>{
