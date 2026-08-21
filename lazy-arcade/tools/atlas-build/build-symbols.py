@@ -366,6 +366,58 @@ EYE_BOXES = {
 LASH = (28, 10, 4)
 
 
+# The money tongue, for the two Lions that loll one.
+#
+# Money Mouth is a generative LAYER, so it lands on identical pixels for every
+# Lion wearing it -- P1 and P2 report the same bounding box and the same 1,068
+# pixels, which is a property of the source art rather than a coincidence.
+#
+# ymin keeps the mask below the muzzle. Without it the green match also catches
+# the LAZY Lion's green EYES, which stretched the bounding box across most of
+# the tile and put the pivot in the wrong place. The cavity colour is declared
+# because sampling just above the tongue hits the TEETH on one lion and muzzle
+# fur on the other, and painting the gap in either produced a pale smear.
+TONGUE_GREEN = (23, 157, 50)
+TONGUE = {
+    "P1": {"ymin": 170, "cavity": (74, 32, 30)},
+    "P2": {"ymin": 170, "cavity": (96, 40, 36)},
+}
+
+
+def split_tongue(tile, cfg):
+    """(tile with the tongue lifted and its gap filled, the tongue on its own).
+
+    Unlike the mane, the tongue sits IN FRONT of the head, so lifting it leaves
+    a hole rather than hiding one -- the gap is painted with mouth-cavity colour
+    first, which is what the moving tongue then swings across.
+    """
+    im = tile.convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    near = lambda a, b, t: all(abs(a[i] - b[i]) < t for i in range(3))
+    mask = Image.new("L", (w, h), 0)
+    mp = mask.load()
+    xs, ys = [], []
+    for y in range(cfg["ymin"], h):
+        for x in range(w):
+            c = px[x, y]
+            if c[3] > 8 and near(c[:3], TONGUE_GREEN, 70) \
+               and c[1] > c[0] + 30 and c[1] > c[2] + 30:
+                mp[x, y] = 255
+                xs.append(x); ys.append(y)
+    if not xs:
+        return None, None, None
+    tongue = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    tongue.paste(im, (0, 0), mask)
+    base = im.copy()
+    base.paste(Image.new("RGBA", (w, h), cfg["cavity"] + (255,)), (0, 0),
+               mask.filter(ImageFilter.MaxFilter(5)))
+    # pivot: the middle of the tongue where it leaves the mouth, as a fraction
+    # of the tile so the page can place it without knowing the tile size.
+    pivot = [((min(xs) + max(xs)) / 2) / w, min(ys) / h]
+    return base, tongue, pivot
+
+
 def close_eyes(tile, boxes):
     """A copy of the tile with its eyes shut.
 
@@ -460,6 +512,15 @@ def build_set(manifest, lions, cubs, label):
             base_tile, mane_tile = split_mane(tile, colour)
             mane_uri = to_uri(mane_tile)
             tile = base_tile
+        # The tongue comes off BEFORE the blink is drawn, so the closed-eye copy
+        # does not carry a second static tongue that would ghost behind the
+        # moving one whenever a Lion blinked.
+        tongue_uri, tongue_pivot = None, None
+        tcfg = TONGUE.get(sym) if collection == "lion" else None
+        if tcfg is not None:
+            tb, tt, tp = split_tongue(tile, tcfg)
+            if tb is not None:
+                tongue_uri = to_uri(tt); tongue_pivot = tp; tile = tb
         # The blink is drawn on the BASE, after the mane is lifted, so the three
         # layers stay consistent: mane behind, body, closed-eye body over it.
         blink_uri = None
@@ -479,10 +540,14 @@ def build_set(manifest, lions, cubs, label):
             out[sym]["maneUri"] = mane_uri
         if blink_uri:
             out[sym]["blinkUri"] = blink_uri
+        if tongue_uri:
+            out[sym]["tongueUri"] = tongue_uri
+            out[sym]["tonguePivot"] = tongue_pivot
         print(f"  {sym:<3} {collection:<4} #{token_id:<6} {region:<10} "
               f"{(trait or note):<28} {len(uri)//1024:>4} KB"
               f"{'  +mane ' + str(len(mane_uri)//1024) + ' KB' if mane_uri else ''}"
-              f"{'  +blink ' + str(len(blink_uri)//1024) + ' KB' if blink_uri else ''}")
+              f"{'  +blink ' + str(len(blink_uri)//1024) + ' KB' if blink_uri else ''}"
+              f"{'  +tongue ' + str(len(tongue_uri)//1024) + ' KB' if tongue_uri else ''}")
     return out, total
 
 

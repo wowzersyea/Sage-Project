@@ -998,6 +998,53 @@ console.log("\nFeature music");
   await ctx.close();
 }
 
+/* ----------------------------------------------------------------- tongue */
+// Mouth movement was the last animation I was still calling artist-only, and
+// after being wrong three times about exactly that I tested it instead. The
+// money tongue is a generative LAYER -- P1 and P2 report the same bounding box
+// and the same 1,068 pixels because it is literally the same drawn art -- so it
+// lifts like the mane. Unlike the mane it hangs in FRONT, so the gap it leaves
+// is painted with mouth-cavity colour rather than hidden behind the head.
+console.log("\nMoney tongue");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    const carry = Object.keys(SYMBOL_ART.default).filter((k) => SYMBOL_ART.default[k].tongueUri);
+    // force both onto the board so the check does not depend on a lucky draw
+    const g = [];
+    for (let a = 0; a < 5; a++) { g.push([]); for (let b = 0; b < 4; b++) g[a].push(a % 2 ? P1 : P2); }
+    buildReels(g);
+    await sleep(200);
+    const els = [...document.querySelectorAll("#reels .sym img.tongue")];
+    const seen = new Set();
+    for (let i = 0; i < 10; i++) {
+      els.forEach((e) => seen.add(getComputedStyle(e).transform));
+      await sleep(180);
+    }
+    const phases = new Set(els.map((e) => getComputedStyle(e).animationDelay));
+    const one = els[0], cs = one ? getComputedStyle(one) : null;
+    const body = document.querySelector("#reels .sym img:not(.tongue):not(.mane):not(.blink)");
+    return { carry, onBoard: els.length, moves: seen.size, phases: phases.size,
+             z: cs ? +cs.zIndex : null, bodyZ: body ? +getComputedStyle(body).zIndex : null,
+             anim: cs ? cs.animationName : null,
+             alt: one ? one.alt : null, hidden: one ? one.getAttribute("aria-hidden") : null,
+             pivotSet: !!(one && one.style.transformOrigin) };
+  });
+  check("the top two symbols carry a tongue layer", r.carry.length === 2, r.carry.join(","));
+  check("the tongue moves", r.moves > 3 && r.anim === "loll",
+        `${r.moves} distinct transforms, animation ${r.anim}`);
+  check("the tongue hangs in front of the body", r.z > r.bodyZ,
+        `tongue z${r.z}, body z${r.bodyZ}`);
+  check("it pivots where it leaves the mouth, not the tile centre", r.pivotSet);
+  check("tongues are not all in step", r.phases > 1, `${r.phases} phases across ${r.onBoard} cells`);
+  check("the tongue is not announced to screen readers",
+        r.alt === "" && r.hidden === "true");
+  check("no runtime errors around the tongue", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* ------------------------------------------------------------------ blink */
 // I called this impossible twice before building it. The first attempt filled
 // the lid with "fur" sampled a few pixels above the eye, hit the black brow
