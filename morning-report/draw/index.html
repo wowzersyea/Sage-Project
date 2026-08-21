@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discussant draw | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  body{background:var(--navy)}
+  .masthead{
+    padding:22px 32px 18px;display:flex;align-items:flex-end;justify-content:space-between;
+    gap:24px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.10);
+  }
+  .masthead h1{font-family:var(--serif);font-weight:700;font-size:29px;line-height:1.1;color:#fff;margin:0;letter-spacing:-.01em}
+  .masthead p{margin:0;color:#9FB4C8;font-size:13.5px;max-width:40ch;line-height:1.5}
+
+  .session{
+    background:var(--navy-2);padding:12px 32px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;
+    border-bottom:1px solid rgba(255,255,255,.10);
+  }
+  .session .f{display:flex;flex-direction:column;gap:5px}
+  .session label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9FB4C8}
+  .session input{
+    background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.22);color:#fff;
+    font-size:13.5px;padding:6px 9px;border-radius:4px;width:170px;
+  }
+  .session input:focus{outline:2px solid var(--amber);outline-offset:-1px}
+  .session .blocknote{color:#9FB4C8;font-size:12.5px;margin-left:auto;max-width:34ch;line-height:1.45}
+  .session .blocknote b{color:var(--amber);display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+
+  .stage{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
+  .column{padding:26px 32px 34px;background:var(--paper);display:flex;flex-direction:column;align-items:center}
+  .column + .column{border-left:1px solid var(--line-2)}
+
+  .col-head{width:100%;max-width:430px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+  .col-head h2{font-family:var(--serif);font-size:22px;font-weight:700;margin:0;color:var(--navy)}
+  .slot-time{
+    font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;
+    background:var(--navy);padding:4px 9px;border-radius:3px;white-space:nowrap;
+  }
+  .col-head--senior .slot-time{background:var(--teal)}
+  .col-sub{width:100%;max-width:430px;font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 16px}
+  .col-sub a{color:var(--teal)}
+
+  .wheel-wrap{position:relative;width:100%;max-width:380px;aspect-ratio:1}
+  .pointer{
+    position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;
+    border-left:15px solid transparent;border-right:15px solid transparent;
+    border-top:26px solid var(--navy);z-index:3;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28));
+  }
+  .column--senior .pointer{border-top-color:var(--teal)}
+
+  svg.wheel{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 10px 26px rgba(22,40,60,.20);cursor:pointer}
+  svg.wheel:focus-visible{outline:3px solid var(--amber);outline-offset:5px}
+  .rotor{transition:transform 4.6s cubic-bezier(.12,.72,.12,1)}
+  .seg-label{font-family:var(--sans);font-weight:600;fill:#fff;pointer-events:none;letter-spacing:.005em}
+  .hub{fill:#fff;stroke:var(--line-2);stroke-width:2}
+  .hub-text{font-family:var(--serif);font-weight:700;fill:var(--navy);text-anchor:middle;pointer-events:none}
+
+  .readout{
+    width:100%;max-width:430px;margin-top:20px;background:#fff;border:1px solid var(--line-2);
+    border-radius:6px;padding:15px 18px;min-height:84px;display:flex;flex-direction:column;justify-content:center;
+  }
+  .readout .label{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .readout .name{font-family:var(--serif);font-size:29px;font-weight:700;color:var(--navy);line-height:1.15;word-break:break-word}
+  .readout .name.placeholder{font-family:var(--sans);font-size:15px;font-weight:400;color:var(--muted)}
+  .readout .why{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+  .readout.landed{animation:pop .5s ease-out}
+  @keyframes pop{0%{transform:scale(.985);background:#FBF0DE}100%{transform:scale(1);background:#fff}}
+
+  .controls{width:100%;max-width:430px;display:flex;gap:9px;margin-top:13px;flex-wrap:wrap}
+  .btn-spin{flex:1 1 150px;background:var(--navy);color:#fff;font-size:14.5px;letter-spacing:.03em;border-color:var(--navy)}
+  .column--senior .btn-spin{background:var(--teal);border-color:var(--teal)}
+  .btn-spin:hover:not(:disabled){background:var(--navy-2);border-color:var(--navy-2)}
+  .column--senior .btn-spin:hover:not(:disabled){background:#256b7b;border-color:#256b7b}
+
+  .ledger{width:100%;max-width:430px;margin-top:18px;border-top:1px solid var(--line-2);padding-top:13px}
+  .ledger .label{
+    font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    font-family:var(--sans);font-size:12.5px;font-weight:500;padding:4px 10px;border-radius:20px;
+    background:#fff;border:1px solid var(--line-2);color:var(--muted);cursor:pointer;
+  }
+  .chip:hover{border-color:#9FB0BE;color:var(--ink)}
+  .chip.done{background:var(--navy);border-color:var(--navy);color:#fff;text-decoration:line-through;text-decoration-thickness:1px}
+  .chip.done:hover{color:#fff;opacity:.85}
+  .column--senior .chip.done{background:var(--teal);border-color:var(--teal)}
+  .chip.benched{background:#F7EAEC;border-color:#E3C2C7;color:var(--red);text-decoration:line-through}
+  .chip.next{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber);color:var(--ink)}
+  .ledger .note{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.5}
+
+  .handoff{background:var(--paper);border-top:1px solid var(--line-2);padding:22px 32px 30px}
+  .handoff-in{max-width:900px;margin:0 auto}
+  .handoff h2{margin-bottom:4px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 0}
+  .cardbox{background:#fff;border:1px solid var(--line-2);border-radius:7px;padding:15px 17px}
+  .cardbox .who{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .cardbox .nm{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--navy);margin-bottom:9px}
+  .cardbox .bar{gap:7px}
+  .cardbox .btn{font-size:12.5px;padding:8px 13px}
+  .oneliner{margin-top:16px}
+  .startrow{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+  .empty{
+    background:#fff;border:1px solid var(--line-2);border-radius:7px;padding:18px 20px;
+    max-width:430px;width:100%;font-size:13.5px;color:var(--muted);line-height:1.6;
+  }
+  .empty a{color:var(--teal);font-weight:600}
+
+  @media (max-width:960px){
+    .stage{grid-template-columns:1fr}
+    .column + .column{border-left:none;border-top:1px solid var(--line-2)}
+    .cards{grid-template-columns:1fr}
+    .masthead{padding:20px}
+    .session{padding:12px 20px}
+    .column{padding:24px 20px 30px}
+    .handoff{padding:20px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .rotor{transition:transform .35s ease-out}
+    .readout.landed{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="masthead">
+  <div>
+    <p class="eyebrow">Morning report · 25 minutes, one case</p>
+    <h1>Discussant draw</h1>
+  </div>
+  <p>Two wheels, two roles. Spin at 0:00 while the cover slide is up, or draw the day before so both discussants can prepare from the one-liner.</p>
+</header>
+
+<div class="session">
+  <div class="f"><label for="s-date">Date</label><input type="date" id="s-date"></div>
+  <div class="f"><label for="s-site">Site</label><input type="text" id="s-site" list="sitelist" placeholder="Galveston"><datalist id="sitelist"></datalist></div>
+  <div class="blocknote" id="blocknote"></div>
+</div>
+
+<main class="stage">
+
+  <section class="column column--pgy1" id="col-pgy1" data-role="pgy1_discussant">
+    <div class="col-head">
+      <h2>PGY-1 discussant</h2>
+      <span class="slot-time" data-slot="pgy1">0:07 — 4 min</span>
+    </div>
+    <p class="col-sub">First pass, uninterrupted. Problem representation, three to four diagnoses, the can't-miss. <a href="../roles/pgy1/">Their card →</a></p>
+
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <svg class="wheel" viewBox="0 0 400 400" tabindex="0" role="button" aria-label="Spin the PGY-1 wheel"></svg>
+    </div>
+
+    <div class="readout">
+      <div class="label">Drawn</div>
+      <div class="name placeholder">Spin to draw the first pass.</div>
+      <div class="why"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-spin">Spin</button>
+      <button class="ghost btn-reset-cycle">Put everyone back in</button>
+    </div>
+
+    <div class="ledger">
+      <div class="label">
+        <span>Pool — click a name to bench them</span>
+        <a class="link-btn" href="../roster/">Edit roster</a>
+      </div>
+      <div class="chips"></div>
+      <p class="note"></p>
+    </div>
+  </section>
+
+  <section class="column column--senior" id="col-senior" data-role="senior_discussant">
+    <div class="col-head col-head--senior">
+      <h2>Senior discussant</h2>
+      <span class="slot-time" data-slot="senior">0:11 — 5 min</span>
+    </div>
+    <p class="col-sub">Second pass. Framework, explicit pruning, the discriminating test, and what would change their mind. <a href="../roles/senior/">Their card →</a></p>
+
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <svg class="wheel" viewBox="0 0 400 400" tabindex="0" role="button" aria-label="Spin the senior resident wheel"></svg>
+    </div>
+
+    <div class="readout">
+      <div class="label">Drawn</div>
+      <div class="name placeholder">Spin to draw the second pass.</div>
+      <div class="why"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-spin">Spin</button>
+      <button class="ghost btn-reset-cycle">Put everyone back in</button>
+    </div>
+
+    <div class="ledger">
+      <div class="label">
+        <span>Pool — click a name to bench them</span>
+        <a class="link-btn" href="../roster/">Edit roster</a>
+      </div>
+      <div class="chips"></div>
+      <p class="note"></p>
+    </div>
+  </section>
+
+</main>
+
+<section class="handoff" id="handoff" hidden>
+  <div class="handoff-in">
+    <h2>Send them the case</h2>
+    <p class="lede">The facilitator sends the one-liner 24 hours ahead anyway. Attaching a link to
+      exactly that person's card, and nothing else, is what makes the card get read.</p>
+
+    <div class="field oneliner">
+      <label class="f" for="oneliner">One-liner for the email</label>
+      <input type="text" id="oneliner" placeholder="3-year-old, two days of fever, refusing to bear weight, hip flexed and externally rotated">
+      <p class="hint">Goes into both emails. No identifiers — this leaves the building.</p>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="startrow">
+      <button class="amber" id="startSession">Start session →</button>
+      <span class="hint" style="margin:0">Opens the board with today's date and site already filled in.</span>
+    </div>
+  </div>
+</section>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script src="../assets/content.js"></script>
+<script>
+/* ==================================================================
+   The wheel machinery is the tested one from discussant-draw.html.
+   What changed is where the names come from and what a draw writes:
+   roster.json rather than a hardcoded list, and a log entry plus a
+   cycle mark rather than a variable that dies with the tab.
+   ================================================================== */
+
+var PALETTES = {
+  pgy1_discussant:   ["#16283C", "#24405E", "#2F5479", "#1D3450"],
+  senior_discussant: ["#2E7D8F", "#256B7B", "#3F7D5C", "#347E93"]
+};
+var WINNER_FILL = "#E8A33D";
+var SVG_NS = "http://www.w3.org/2000/svg";
+var CX = 200, CY = 200, R = 196;
+
+var roster = null;
+var wheels = {};
+var els = {
+  date: document.getElementById("s-date"),
+  site: document.getElementById("s-site"),
+  sitelist: document.getElementById("sitelist"),
+  blocknote: document.getElementById("blocknote"),
+  handoff: document.getElementById("handoff"),
+  cards: document.getElementById("cards"),
+  oneliner: document.getElementById("oneliner")
+};
+
+function polar(cx, cy, r, deg){
+  var rad = deg * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+function wedgePath(a, b){
+  var p1 = polar(CX, CY, R, a), p2 = polar(CX, CY, R, b);
+  var large = (b - a) > 180 ? 1 : 0;
+  return "M " + CX + " " + CY + " L " + p1[0].toFixed(2) + " " + p1[1].toFixed(2) +
+         " A " + R + " " + R + " 0 " + large + " 1 " + p2[0].toFixed(2) + " " + p2[1].toFixed(2) + " Z";
+}
+function fitLabel(name, count){
+  var size = 17;
+  if (count > 6) size = 15.5;
+  if (count > 9) size = 14;
+  if (count > 13) size = 12.5;
+  if (count > 18) size = 11;
+  var maxChars = count > 13 ? 15 : 19;
+  var shown = name.length > maxChars ? name.slice(0, maxChars - 1) + "…" : name;
+  return { size: size, shown: shown };
+}
+
+function Wheel(section){
+  this.role = section.dataset.role;
+  this.key = this.role === "pgy1_discussant" ? "pgy1" : "senior";
+  this.el = section;
+  this.svg = section.querySelector("svg.wheel");
+  this.readout = section.querySelector(".readout");
+  this.nameEl = section.querySelector(".readout .name");
+  this.whyEl = section.querySelector(".readout .why");
+  this.chipsEl = section.querySelector(".chips");
+  this.noteEl = section.querySelector(".ledger .note");
+  this.spinBtn = section.querySelector(".btn-spin");
+  this.palette = PALETTES[this.role];
+  this.people = [];
+  this.candidates = [];
+  this.rotation = 0;
+  this.spinning = false;
+  this.winnerIndex = null;
+  this.winner = null;
+  this.bind();
+}
+
+Wheel.prototype.bind = function(){
+  var self = this;
+  this.spinBtn.addEventListener("click", function(){ self.spin(); });
+  this.svg.addEventListener("click", function(){ self.spin(); });
+  this.svg.addEventListener("keydown", function(e){
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); self.spin(); }
+  });
+  this.el.querySelector(".btn-reset-cycle").addEventListener("click", function(){
+    if (!roster) return;
+    MRRoster.resetCycle(roster, self.role);
+    MRRoster.save(roster).then(function(){
+      self.refresh();
+      self.nameEl.classList.add("placeholder");
+      self.nameEl.textContent = "Everyone is back in the pool.";
+      self.whyEl.textContent = "";
+    });
+  });
+};
+
+/* Recompute from the roster. Called on load, after every draw, and
+   whenever the date or site changes. */
+Wheel.prototype.refresh = function(){
+  if (!roster) return;
+  var p = MRRoster.pool(roster, this.role, els.date.value || MRStore.today());
+  this.people = p.eligible;
+  this.candidates = p.candidates;
+  this.poolState = p;
+  this.render();
+  this.renderLedger();
+};
+
+Wheel.prototype.render = function(){
+  var svg = this.svg, self = this;
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  var n = this.people.length;
+
+  if (n === 0){
+    var circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", CX); circle.setAttribute("cy", CY); circle.setAttribute("r", R);
+    circle.setAttribute("fill", "#E3E9EE");
+    svg.appendChild(circle);
+    var t = document.createElementNS(SVG_NS, "text");
+    t.setAttribute("x", CX); t.setAttribute("y", CY + 5);
+    t.setAttribute("class", "hub-text"); t.setAttribute("font-size", "15"); t.setAttribute("fill", "#6B7885");
+    t.textContent = roster && roster.residents.length ? "Nobody eligible today" : "No roster yet";
+    svg.appendChild(t);
+    this.spinBtn.disabled = true;
+    return;
+  }
+  this.spinBtn.disabled = false;
+
+  var rotor = document.createElementNS(SVG_NS, "g");
+  rotor.setAttribute("class", "rotor");
+  rotor.style.transformOrigin = "200px 200px";
+  rotor.style.transform = "rotate(" + this.rotation + "deg)";
+  var step = 360 / n;
+  var cycle = MRRoster.cycleFor(roster, this.role);
+
+  this.people.forEach(function(person, i){
+    var start = i * step - 90, end = start + step, mid = start + step / 2;
+    var isDrawn = cycle.drawn.indexOf(person.id) !== -1 || cycle.benched.indexOf(person.id) !== -1;
+    var isWinner = self.winnerIndex === i;
+
+    var path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", wedgePath(start, end));
+    path.setAttribute("fill", isWinner ? WINNER_FILL : self.palette[i % self.palette.length]);
+    path.setAttribute("stroke", "rgba(255,255,255,.5)");
+    path.setAttribute("stroke-width", "1");
+    if (isDrawn && !isWinner) path.setAttribute("opacity", ".34");
+    rotor.appendChild(path);
+
+    var fit = fitLabel(person.name, n);
+    var text = document.createElementNS(SVG_NS, "text");
+    text.setAttribute("class", "seg-label");
+    text.setAttribute("font-size", fit.size);
+    text.setAttribute("dominant-baseline", "middle");
+    if (isWinner) text.setAttribute("fill", "#16283C");
+    if (isDrawn && !isWinner) text.setAttribute("opacity", ".55");
+
+    var norm = ((mid % 360) + 360) % 360;
+    if (norm > 90 && norm < 270){
+      text.setAttribute("text-anchor", "start");
+      text.setAttribute("transform", "rotate(" + mid + " " + CX + " " + CY + ") translate(" + (CX + R - 16) + " " + CY + ") rotate(180)");
+    } else {
+      text.setAttribute("text-anchor", "end");
+      text.setAttribute("transform", "rotate(" + mid + " " + CX + " " + CY + ") translate(" + (CX + R - 16) + " " + CY + ")");
+    }
+    text.textContent = fit.shown;
+    rotor.appendChild(text);
+  });
+
+  svg.appendChild(rotor);
+
+  var hub = document.createElementNS(SVG_NS, "circle");
+  hub.setAttribute("cx", CX); hub.setAttribute("cy", CY); hub.setAttribute("r", 40);
+  hub.setAttribute("class", "hub");
+  svg.appendChild(hub);
+
+  var hubText = document.createElementNS(SVG_NS, "text");
+  hubText.setAttribute("x", CX); hubText.setAttribute("y", CY + 7);
+  hubText.setAttribute("class", "hub-text"); hubText.setAttribute("font-size", "20");
+  hubText.textContent = this.key === "pgy1" ? "PGY-1" : "SR";
+  svg.appendChild(hubText);
+};
+
+Wheel.prototype.spin = function(){
+  if (this.spinning || !this.people.length) return;
+  var self = this;
+
+  var date = els.date.value || MRStore.today();
+  var p = MRRoster.pool(roster, this.role, date);
+  if (!p.candidates.length) return;
+
+  /* The winner is drawn from the neglect-weighted candidates, but the
+     wheel spins over the whole eligible list — visibly random, and
+     still fair to whoever has been waiting longest. */
+  var winner = p.candidates[Math.floor(Math.random() * p.candidates.length)];
+  var idx = this.people.map(function(x){ return x.id; }).indexOf(winner.id);
+  if (idx === -1) return;
+
+  var lastBefore = MRRoster.lastServed(roster, winner.id, this.role);
+
+  this.spinning = true;
+  this.spinBtn.disabled = true;
+  this.winnerIndex = null;
+  this.render();
+
+  var rotor = this.svg.querySelector(".rotor");
+  var n = this.people.length, step = 360 / n;
+  var mid = idx * step - 90 + step / 2;
+  var jitter = (Math.random() - 0.5) * step * 0.62;
+  var target = 270 - mid - jitter;
+  var delta = (target - (this.rotation % 360) + 360) % 360;
+  this.rotation += delta + 360 * (5 + Math.floor(Math.random() * 3));
+
+  requestAnimationFrame(function(){ rotor.style.transform = "rotate(" + self.rotation + "deg)"; });
+
+  var settled = false;
+  function settle(){
+    if (settled) return;
+    settled = true;
+    self.spinning = false;
+    self.spinBtn.disabled = false;
+    self.winnerIndex = idx;
+    self.winner = winner;
+
+    MRRoster.recordDraw(roster, self.role, winner.id, date, els.site.value.trim());
+    MRRoster.save(roster).then(function(){
+      self.refresh();
+      self.winnerIndex = idx;
+      self.render();
+      self.nameEl.classList.remove("placeholder");
+      self.nameEl.textContent = winner.name;
+      self.whyEl.textContent = lastBefore
+        ? "Last took this role " + lastBefore + " — " + Math.round(MRRoster.weeksSince(lastBefore, date)) + " weeks ago."
+        : "Has not taken this role yet this year.";
+      self.readout.classList.remove("landed");
+      void self.readout.offsetWidth;
+      self.readout.classList.add("landed");
+      renderHandoff();
+    });
+  }
+
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  rotor.addEventListener("transitionend", settle, { once: true });
+  setTimeout(settle, reduce ? 500 : 4900);
+};
+
+Wheel.prototype.renderLedger = function(){
+  var self = this;
+  this.chipsEl.innerHTML = "";
+  if (!roster || !roster.residents.length){
+    this.noteEl.innerHTML = "No roster yet. <a href='../roster/'>Add residents</a> to get started.";
+    return;
+  }
+  if (!this.people.length){
+    this.noteEl.textContent = "Nobody at this level is active and available on " + (els.date.value || MRStore.today()) + ".";
+    return;
+  }
+
+  var cycle = MRRoster.cycleFor(roster, this.role);
+  var date = els.date.value || MRStore.today();
+  var nextIds = this.candidates.map(function(x){ return x.id; });
+
+  this.people.forEach(function(person){
+    var chip = document.createElement("button");
+    chip.type = "button";
+    var benched = cycle.benched.indexOf(person.id) !== -1;
+    var drawn = cycle.drawn.indexOf(person.id) !== -1;
+    chip.className = "chip" + (benched ? " benched" : (drawn ? " done" : (nextIds.indexOf(person.id) !== -1 ? " next" : "")));
+    chip.textContent = person.name;
+    var last = MRRoster.lastServed(roster, person.id, self.role);
+    chip.title = person.name + " — " + (last
+      ? "last took this role " + last
+      : "has not taken this role this year") + (benched ? " · benched" : "");
+    chip.setAttribute("aria-pressed", benched ? "true" : "false");
+    chip.addEventListener("click", function(){
+      if (self.spinning) return;
+      MRRoster.toggleBench(roster, self.role, person.id);
+      MRRoster.save(roster).then(function(){ self.refresh(); });
+    });
+    self.chipsEl.appendChild(chip);
+  });
+
+  var left = this.poolState.remaining.length;
+  var benchedN = cycle.benched.length;
+  var bits = [];
+  if (this.poolState.refilled) bits.push("Everyone has had a turn — the next spin refills the pool.");
+  else bits.push(left + (left === 1 ? " name" : " names") + " still in the cycle.");
+  if (benchedN) bits.push(benchedN + " benched.");
+  if (this.candidates.length && this.candidates.length < this.poolState.remaining.length){
+    bits.push("Weighted to " + this.candidates.length + " who " +
+      (this.candidates.length === 1 ? "has" : "have") + " gone longest without it.");
+  }
+  this.noteEl.textContent = bits.join(" ");
+};
+
+/* ---------- handoff ------------------------------------------------- */
+
+function renderHandoff(){
+  var drawn = [];
+  ["pgy1", "senior"].forEach(function(k){
+    if (wheels[k] && wheels[k].winner) drawn.push({ wheel: wheels[k], person: wheels[k].winner });
+  });
+  if (!drawn.length){ els.handoff.hidden = true; return; }
+  els.handoff.hidden = false;
+
+  els.cards.innerHTML = "";
+  drawn.forEach(function(d){
+    var box = document.createElement("div");
+    box.className = "cardbox";
+    var who = document.createElement("div");
+    who.className = "who";
+    who.textContent = MRRoster.roleLabel(d.wheel.role);
+    var nm = document.createElement("div");
+    nm.className = "nm";
+    nm.textContent = d.person.name;
+    var bar = document.createElement("div");
+    bar.className = "bar";
+
+    var mail = document.createElement("a");
+    mail.className = "btn amber";
+    mail.textContent = "Email their card";
+    mail.href = "#";
+    mail.addEventListener("click", function(e){
+      e.preventDefault();
+      window.location.href = mailtoFor(d.wheel.role, d.person);
+    });
+
+    var view = document.createElement("a");
+    view.className = "btn ghost";
+    view.textContent = "Open the card";
+    view.href = "../roles/" + (d.wheel.key === "pgy1" ? "pgy1" : "senior") + "/";
+    view.target = "_blank";
+    view.rel = "noopener";
+
+    bar.appendChild(mail); bar.appendChild(view);
+    box.appendChild(who); box.appendChild(nm); box.appendChild(bar);
+    els.cards.appendChild(box);
+  });
+}
+
+function cardUrl(role){
+  var slug = role === "pgy1_discussant" ? "pgy1" : "senior";
+  return new URL("../roles/" + slug + "/", location.href).href;
+}
+
+function mailtoFor(role, person){
+  var date = els.date.value || MRStore.today();
+  var site = els.site.value.trim();
+  var one = els.oneliner.value.trim();
+  var label = MRRoster.roleLabel(role);
+  var block = MRRoster.blockFor(date);
+  var ask = MRContent.blockAsk(block.id);
+
+  var subject = "Morning report " + date + (site ? " · " + site : "") + " — you are the " + label.toLowerCase();
+  var body = [
+    "Hi " + person.name.split(" ")[0] + ",",
+    "",
+    "You are the " + label.toLowerCase() + " for morning report on " + date + (site ? " at " + site : "") + ".",
+    "",
+    "The case, in one line:",
+    one ? "  " + one : "  [one-liner]",
+    "",
+    "Your card — this role only, two minutes to read:",
+    "  " + cardUrl(role),
+    ""
+  ];
+  if (role === "pgy1_discussant" && ask){
+    body.push("This block (" + block.label + "): " + ask, "");
+  }
+  body.push(
+    "You get the one-liner only — no chart, no labs. Come ready to think out loud rather than to be right.",
+    "",
+    "Thanks,"
+  );
+  return "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body.join("\n"));
+}
+
+/* Start session hands the board a seeded working file rather than a
+   query string, so the board picks it up the same way it picks up a
+   crash recovery. Names never travel: the board is de-identified. */
+document.getElementById("startSession").addEventListener("click", function(){
+  var date = els.date.value || MRStore.today();
+  var site = els.site.value.trim();
+  MRStore.write("working-board.json", {
+    seeded: true,
+    started: new Date().toISOString(),
+    meta: { caseid: "", date: date, site: site, objective: "" },
+    one_liner: els.oneliner.value.trim()
+  }).then(function(){
+    location.href = "../board/?date=" + encodeURIComponent(date) + "&site=" + encodeURIComponent(site);
+  });
+});
+
+/* ---------- boot ------------------------------------------------------ */
+
+function refreshAll(){
+  Object.keys(wheels).forEach(function(k){ wheels[k].refresh(); });
+  renderBlockNote();
+}
+
+function renderBlockNote(){
+  var date = els.date.value || MRStore.today();
+  var block = MRRoster.blockFor(date);
+  var ask = MRContent.blockAsk(block.id);
+  var senior = MRContent.seniorMinutes(block.id);
+  els.blocknote.innerHTML = "<b>" + MRStore.esc(block.label) + " block</b>" +
+    MRStore.esc(ask ? "PGY-1 also owes: " + ask : "The four deliverables only — nothing extra yet.") +
+    (senior ? MRStore.esc(" Senior block " + senior + " min.") : "");
+  var slot = document.querySelector('[data-slot="senior"]');
+  if (slot && senior) slot.textContent = MRContent.slotLabel("senior", block.id);
+  var slot1 = document.querySelector('[data-slot="pgy1"]');
+  if (slot1) slot1.textContent = MRContent.slotLabel("pgy1", block.id);
+}
+
+els.date.value = MRStore.today();
+els.date.addEventListener("change", refreshAll);
+els.site.addEventListener("change", refreshAll);
+
+Promise.all([MRStore.whenReady, MRContent.load()]).then(function(){
+  MRStore.mountBar("mr-bar");
+  return MRRoster.load();
+}).then(function(r){
+  roster = r;
+  var sites = {};
+  r.log.forEach(function(e){ if (e.site) sites[e.site] = 1; });
+  Object.keys(sites).sort().forEach(function(s){
+    var o = document.createElement("option"); o.value = s; els.sitelist.appendChild(o);
+  });
+  if (!els.site.value && Object.keys(sites).length === 1) els.site.value = Object.keys(sites)[0];
+
+  wheels.pgy1 = new Wheel(document.getElementById("col-pgy1"));
+  wheels.senior = new Wheel(document.getElementById("col-senior"));
+  refreshAll();
+});
+
+MRStore.onChange(function(){
+  MRRoster.load().then(function(r){ roster = r; refreshAll(); });
+});
+</script>
+</body>
+</html>
