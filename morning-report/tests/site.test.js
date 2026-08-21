@@ -1,0 +1,116 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+const BASE = 'http://localhost:8899';
+const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
+
+(async () => {
+  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on('pageerror', e => errs.push('pageerror: ' + e.message));
+  page.on('console', m => { const u=(m.location()&&m.location().url)||''; if (m.type()==='error' && !/googletagmanager|favicon|ERR_CONNECTION_RESET|gtag/.test(m.text()+' '+u)) errs.push('console: ' + m.text()); });
+  await page.addInitScript(fake);
+
+  const out = [];
+  const t = (name, cond, extra) => out.push({ name, pass: !!cond, extra: extra === undefined ? '' : JSON.stringify(extra) });
+
+  // ---- every page in the module loads clean --------------------------------
+  const PAGES = [
+    '/morning-report/', '/morning-report/draw/', '/morning-report/board/',
+    '/morning-report/scorecard/', '/morning-report/capture/', '/morning-report/roster/',
+    '/morning-report/review/', '/morning-report/report/', '/morning-report/roles/',
+    '/morning-report/roles/run-of-show/', '/morning-report/roles/presenter/',
+    '/morning-report/roles/scribe/', '/morning-report/roles/pgy1/',
+    '/morning-report/roles/senior/', '/morning-report/roles/faculty/',
+    '/morning-report/roles/facilitator/', '/morning-report/learn/specificity/'
+  ];
+  for (const p of PAGES) {
+    const before = errs.length;
+    const resp = await page.goto(BASE + p, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(200);
+    t(`${p} loads`, resp.ok(), resp.status());
+    t(`${p} is error-free`, errs.length === before, errs.slice(before));
+  }
+
+  // ---- every internal link resolves ------------------------------------------
+  const seen = new Set();
+  const broken = [];
+  for (const p of PAGES) {
+    await page.goto(BASE + p, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(150);
+    const hrefs = await page.evaluate(() => [...document.querySelectorAll('a[href]')]
+      .map(a => a.href)
+      .filter(h => h.startsWith(location.origin) && !h.includes('#') || (h.startsWith(location.origin) && h.split('#')[0] !== location.href.split('#')[0]))
+      .map(h => h.split('#')[0]));
+    for (const h of new Set(hrefs)) {
+      if (seen.has(h)) continue;
+      seen.add(h);
+      const r = await page.request.get(h);
+      if (!r.ok()) broken.push(h.replace(BASE, '') + ' -> ' + r.status());
+    }
+  }
+  t('every internal link in the module resolves', broken.length === 0, broken);
+
+  // ---- the homepage points at the module ------------------------------------
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+  const home = await page.evaluate(() => ({
+    card: !!document.querySelector('a[href="morning-report/"] h3'),
+    cardTitle: (document.querySelector('a[href="morning-report/"] h3') || {}).textContent,
+    oldCard: !!document.querySelector('a[href="discussant-draw/"]'),
+    navLabels: [...document.querySelectorAll('.capsule-nav a, nav a')].map(a => a.textContent.trim()).filter(Boolean)
+  }));
+  t('the homepage card points at the module', home.card === true, home.cardTitle);
+  t('the card is renamed for what it now is', home.cardTitle === 'Morning Report', home.cardTitle);
+  t('no homepage card still points at the old path', home.oldCard === false);
+  const navSrc = await page.content();
+  t('the capsule nav points at the module',
+     /label:'Morning Report', href:'morning-report\/'/.test(navSrc));
+  t('nothing in the homepage source still links the old path',
+     !/href=['"]discussant-draw\//.test(navSrc) && !/href:'discussant-draw\//.test(navSrc));
+
+  // ---- the old URL still works, and rescues a stranded roster ----------------
+  await page.goto(BASE + '/discussant-draw/', { waitUntil: 'domcontentloaded' });
+  const noRescue = await page.evaluate(() => ({
+    rescueShown: !document.getElementById('rescue').hidden,
+    hasRefresh: !!document.querySelector('meta[http-equiv="refresh"]'),
+    canonical: (document.querySelector('link[rel=canonical]') || {}).href,
+    link: !!document.querySelector('a[href="../morning-report/draw/"]')
+  }));
+  t('the old URL still serves a page', noRescue.link === true);
+  t('with nothing stranded, it redirects on its own', noRescue.hasRefresh === true);
+  t('and declares the new URL canonical', /morning-report\/draw\//.test(noRescue.canonical), noRescue.canonical);
+  t('no rescue box when there is nothing to rescue', noRescue.rescueShown === false);
+
+  // now strand a roster in that browser and reload
+  await page.evaluate(() => {
+    localStorage.setItem('sage.discussant-draw.pgy1', JSON.stringify({ names: ['Aisha Rahman','Ben Ortiz'], drawn: ['Ben Ortiz'] }));
+    localStorage.setItem('sage.discussant-draw.senior', JSON.stringify({ names: ['Priya Menon'], drawn: [] }));
+  });
+  await page.goto(BASE + '/discussant-draw/', { waitUntil: 'domcontentloaded' });
+  const rescue = await page.evaluate(() => ({
+    shown: !document.getElementById('rescue').hidden,
+    names: document.getElementById('names').textContent,
+    refreshRemoved: !document.querySelector('meta[http-equiv="refresh"]')
+  }));
+  t('a stranded roster is surfaced rather than lost', rescue.shown === true);
+  t('and lists both wheels', /Aisha Rahman/.test(rescue.names) && /Priya Menon/.test(rescue.names), rescue.names);
+  t('and stops the auto-redirect so it can be copied', rescue.refreshRemoved === true);
+
+  // ---- the module never writes localStorage ----------------------------------
+  await page.evaluate(() => localStorage.clear());
+  for (const p of ['/morning-report/draw/', '/morning-report/board/', '/morning-report/roster/']) {
+    await page.goto(BASE + p, { waitUntil: 'networkidle' });
+    await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
+    await page.waitForTimeout(300);
+  }
+  const ls = await page.evaluate(() => Object.keys(localStorage).filter(k => !k.startsWith('__fakefs')));
+  t('nothing in the module writes localStorage', ls.length === 0, ls);
+
+  let failed = 0;
+  for (const r of out) { if (!r.pass) failed++; console.log((r.pass?'PASS  ':'FAIL  ') + r.name + (r.extra?'   '+r.extra:'')); }
+  if (errs.length) { console.log('\nERRORS:'); errs.forEach(e => console.log('  ' + e)); }
+  console.log('\n' + (out.length - failed) + '/' + out.length + ' passed');
+  await browser.close();
+  process.exit(failed ? 1 : 0);
+})();

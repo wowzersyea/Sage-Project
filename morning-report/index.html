@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning Report | Sage Project</title>
+<meta name="description" content="The pediatric morning report module: draw, board, scorecard, case bank, role cards and the six-month review game, over one shared data folder.">
+<link rel="stylesheet" href="assets/mr.css">
+<style>
+  .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+  a.tool{
+    display:block;background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:17px 19px;text-decoration:none;color:inherit;
+  }
+  a.tool:hover{border-color:#9FB0BE;box-shadow:0 2px 10px rgba(22,40,60,.06)}
+  a.tool h3{margin:0 0 4px;font-size:17px}
+  a.tool p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  .stage-head{
+    display:flex;align-items:baseline;gap:12px;margin:26px 0 11px;
+  }
+  .stage-head .when{
+    font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:#fff;background:var(--navy);padding:4px 10px;border-radius:3px;
+  }
+  .stage-head.during .when{background:var(--amber);color:var(--navy)}
+  .stage-head.after  .when{background:var(--teal)}
+  .stage-head.later  .when{background:var(--green)}
+  .stage-head .note{font-size:12.5px;color:var(--muted)}
+  .setup{margin-top:30px}
+  .setup ol{margin:0;padding-left:20px;font-size:13.5px;color:#3D4855}
+  .setup li{margin-bottom:7px}
+  .setup code{font-family:var(--mono);background:#F2F6F8;border:1px solid var(--line);
+    padding:1px 5px;border-radius:3px;font-size:12.5px}
+  pre.tree{
+    font-family:var(--mono);font-size:12.5px;line-height:1.55;color:#3D4855;
+    background:#F7F9FB;border:1px solid var(--line);border-radius:6px;
+    padding:14px 16px;margin:12px 0 0;overflow-x:auto;
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3KEGTRRS0Z');
+</script>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Sage Project · Pediatric morning report</p>
+    <h1>Morning Report</h1>
+    <p class="sub">Twenty-five minutes, one case, two sites. Six tools over one shared data folder,
+      so that finishing a session feeds the next thing that needs the data — and nobody retypes
+      what they already typed.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="stage-head before">
+      <span class="when">Before</span>
+      <span class="note">The week ahead, and the 24 hours before report.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="draw/">
+        <h3>Draw discussants</h3>
+        <p>Two wheels, weighted so whoever has gone longest without the role comes up first. Drawn names stay struck off across both sites.</p>
+      </a>
+      <a class="tool" href="roster/">
+        <h3>Roster and equity</h3>
+        <p>Who has served, who has not, and who is away. Sorted by weeks since a discussant role — the top row is who you draw next.</p>
+      </a>
+      <a class="tool" href="roles/">
+        <h3>Role cards</h3>
+        <p>Seven cards, one URL each, so the facilitator can send a resident exactly their card with the one-liner.</p>
+      </a>
+    </div>
+
+    <div class="stage-head during">
+      <span class="when">During</span>
+      <span class="note">Screen-shared from the scribe's seat.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="board/">
+        <h3>Board</h3>
+        <p>The zoned board with the 25-minute clock, forced rationale and the two lab blocks. Autosaves every 20 seconds.</p>
+      </a>
+    </div>
+
+    <div class="stage-head after">
+      <span class="when">After</span>
+      <span class="note">Both open themselves when the board finishes.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="scorecard/">
+        <h3>Scorecard</h3>
+        <p>The sixteen-item strike-out card. What the board already knows is ticked for you, marked, and overridable.</p>
+      </a>
+      <a class="tool" href="capture/">
+        <h3>Capture case</h3>
+        <p>The case bank entry, pre-filled from the board and checked for identifiers. Under sixty seconds or it will not happen.</p>
+      </a>
+    </div>
+
+    <div class="stage-head later">
+      <span class="when">Later</span>
+      <span class="note">Weeks and months out.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="review/">
+        <h3>Review game</h3>
+        <p>Four rounds off the case bank, filtered by date and tag. Round three is backwards and is the one worth keeping.</p>
+      </a>
+      <a class="tool" href="report/">
+        <h3>Group report</h3>
+        <p>Which rubric item the group misses most, over a rolling window. Never a single session, never a person.</p>
+      </a>
+      <a class="tool" href="learn/specificity/">
+        <h3>Learn</h3>
+        <p>How specific a differential item has to be before it earns a place on the board. Three cases to sort.</p>
+      </a>
+      <a class="tool" href="roles/#handouts">
+        <h3>Handouts</h3>
+        <p>The printed collateral: role cards, the bias card, the role evaluation forms.</p>
+      </a>
+    </div>
+
+    <div class="setup panel">
+      <h2>Setting up the data folder</h2>
+      <p class="lede">There is no server and no account. The tools read and write JSON files in a folder
+        you choose. Point that folder at a OneDrive-synced location and both sites share state with
+        nothing in between.</p>
+      <ol>
+        <li>Make a folder called <code>MorningReport</code> somewhere OneDrive syncs.</li>
+        <li>Press <b>Connect data folder</b> in the bar at the top and pick it. Grant read-write.</li>
+        <li>Do the same once on the other site's machine, pointing at the same synced folder.</li>
+      </ol>
+      <pre class="tree">MorningReport/
+  roster.json          names and the participation log — the one file with names in it
+  casebank/            de-identified cases, permanent
+  sessions/            de-identified scorecards, permanent
+  board-archive/       de-identified board contents, permanent
+  working/             identified, ephemeral, CLI only, swept after 7 days</pre>
+      <p class="hint">Folder access needs Chrome or Edge. In any other browser the tools fall back to
+        explicit Download JSON and Load JSON buttons, and the bar says so.</p>
+    </div>
+
+    <div class="privacy setup">
+      <b>What this module will not do</b>
+      Everything in <code>casebank/</code>, <code>sessions/</code> and <code>board-archive/</code> is
+      permanent and de-identified. <code>roster.json</code> records <em>that</em> a resident served a
+      role on a date, for scheduling. Nothing here records how a named person performed, and no view,
+      export or query joins a name to a score. Nothing here is summative, and nothing may be exported
+      as a milestone or evaluation record.
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — clinical tools for pediatric infectious diseases and antimicrobial stewardship.</p>
+    <p>Format adapted from Elisseou S, Holt SR. <em>Effective Strategies for Planning and Facilitating Morning Report.</em> J Grad Med Educ. 2022;14(3):260–264.</p>
+  </div>
+</footer>
+
+<script src="assets/store.js"></script>
+<script>MRStore.mountBar("mr-bar");</script>
+</body>
+</html>

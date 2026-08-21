@@ -14,6 +14,7 @@ __pycache__/
 *.pyc
 .venv/
 node_modules/
+package-lock.json
 
 # OS
 .DS_Store
@@ -25,3 +26,9 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Python packaging
+*.egg-info/
+build/
+dist/
+.pytest_cache/

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roster and participation | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .res-row{
+    display:grid;grid-template-columns:1fr 110px 100px 1fr auto;gap:10px;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .res-row.inactive{opacity:.5}
+  .res-row .nm{font-weight:600;font-size:14px}
+  .res-row .last{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+  .res-row select,.res-row input[type=text]{padding:6px 8px;font-size:13px}
+  .res-row .acts{display:flex;gap:6px;justify-content:flex-end}
+  .res-row .acts button{padding:5px 10px;font-size:12px}
+  .res-head{
+    display:grid;grid-template-columns:1fr 110px 100px 1fr auto;gap:10px;
+    font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--line);
+  }
+  .away{display:flex;flex-wrap:wrap;gap:5px}
+  .away .w{
+    font-size:11.5px;background:#F7EAEC;border:1px solid #E3C2C7;color:var(--red);
+    padding:2px 7px;border-radius:12px;display:flex;gap:5px;align-items:center;
+  }
+  .away .w button{background:none;border:none;color:inherit;cursor:pointer;padding:0;font-size:13px;line-height:1}
+  .away .add{font-size:11.5px;color:var(--teal);background:none;border:none;cursor:pointer;padding:2px 0;font-weight:600}
+  .away .add:hover{text-decoration:underline}
+  .addres{display:grid;grid-template-columns:1fr 130px auto;gap:10px;align-items:end;margin-top:14px}
+  .logform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+  .rolefields{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+  .eq-wrap{overflow-x:auto}
+  table.eq{min-width:900px}
+  table.eq td.nm{font-weight:600;white-space:nowrap}
+  table.eq td.nm .lv{font-weight:400;color:var(--muted);font-size:11.5px;margin-left:6px}
+  table.eq td.since{white-space:nowrap;font-variant-numeric:tabular-nums}
+  table.eq td.since b{font-family:var(--serif);font-size:15px;color:var(--navy)}
+  table.eq td.since .raw{color:var(--muted);font-size:11px;display:block}
+  table.eq tr.top td{background:#FBF0DE}
+  table.eq tr.top td.nm{box-shadow:inset 3px 0 0 var(--amber)}
+  table.eq tr.away td{opacity:.6}
+  table.eq td.flags{white-space:normal}
+  table.eq td.flags .pill{margin:1px 3px 1px 0;cursor:help}
+  .eq-head{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+  .eq-head > div{flex:0 1 150px}
+  .eq-head .spacer{flex:1 1 auto}
+  .nextup{
+    background:var(--navy);color:#fff;border-radius:7px;padding:16px 20px;margin-bottom:16px;
+  }
+  .nextup .lb{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+  .nextup .nm{font-family:var(--serif);font-size:22px;font-weight:700;margin:0}
+  .nextup .su{color:#9FB4C8;font-size:12.5px;margin:6px 0 0}
+  details.year{margin-top:16px}
+  details.year summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--navy)}
+  .yearbox{margin-top:12px;padding:16px 18px;border:1px solid var(--amber);border-radius:7px;background:#FBF0DE}
+  @media (max-width:900px){
+    .res-row,.res-head{grid-template-columns:1fr;gap:6px}
+    .res-head{display:none}
+    .res-row{padding:14px 0}
+    .res-row .acts{justify-content:flex-start}
+    .addres{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report</p>
+    <h1>Roster and participation</h1>
+    <p class="sub">Are we hearing from everyone, and is everyone getting feedback?</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="privacy" style="margin-bottom:22px">
+      <b>This is a scheduling table, not a performance table</b>
+      This file records <em>that</em> a resident served a role on a date. It does not record how the
+      session went — that lives in <code>sessions/</code> with no names in it, and nothing in this
+      module joins the two. There is no view, export or query here that puts a name next to a score,
+      and none should be added. Be clear-eyed about the limit: anyone holding both files could join
+      them on the date, exactly as anyone holding a call schedule and an evaluation file always
+      could. The protection is that the tool refuses to do it and never surfaces it.
+    </div>
+
+    <div class="panel">
+      <h2>Equity</h2>
+      <p class="lede">One row per active resident, sorted by how long it has been since they last took
+        a discussant role — with time away taken out, so an away rotation does not read as neglect.
+        The person at the top is who you draw next. That single sort is the whole feature.</p>
+
+      <div class="eq-head">
+        <div>
+          <label class="f" for="overdue">Overdue after</label>
+          <select id="overdue">
+            <option value="4">4 weeks</option>
+            <option value="6">6 weeks</option>
+            <option value="8" selected>8 weeks</option>
+            <option value="10">10 weeks</option>
+            <option value="12">12 weeks</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <div style="flex:0 0 auto"><button class="ghost" id="csv">Export CSV</button></div>
+      </div>
+
+      <div id="nextup"></div>
+      <div class="eq-wrap">
+        <table class="mr eq" id="eqtable">
+          <thead><tr id="eqhead"></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint" id="eqempty" hidden>No active residents yet.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Residents</h2>
+      <p class="lede" id="yearline"></p>
+
+      <div class="res-head">
+        <span>Name</span><span>Level</span><span>Status</span><span>Unavailable</span><span></span>
+      </div>
+      <div id="residents"></div>
+
+      <div class="addres">
+        <div>
+          <label class="f" for="new-name">Add a resident</label>
+          <input type="text" id="new-name" placeholder="Full name">
+        </div>
+        <div>
+          <label class="f" for="new-level">Level</label>
+          <select id="new-level"></select>
+        </div>
+        <div><button class="primary" id="add">Add</button></div>
+      </div>
+
+      <details class="year">
+        <summary>Roll the academic year</summary>
+        <div class="yearbox">
+          <p style="margin:0 0 10px;font-size:13.5px;color:#5C4415">
+            On 1 July: every level is promoted, PGY-3s are deactivated, the year's log is archived to
+            its own file, away rotations are cleared and a fresh log starts. Nobody should have to
+            hand-edit JSON in July.
+          </p>
+          <div class="bar">
+            <button class="amber" id="roll">Roll to the next academic year</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h2>Log a session's roles</h2>
+      <p class="lede">The draw logs the two discussants by itself. The other three roles are logged
+        here, so the equity view counts every turn rather than only the drawn ones.</p>
+
+      <div class="logform">
+        <div><label class="f" for="log-date">Date</label><input type="date" id="log-date"></div>
+        <div><label class="f" for="log-site">Site</label><input type="text" id="log-site" list="sitelist" placeholder="Galveston"><datalist id="sitelist"></datalist></div>
+      </div>
+      <div class="rolefields" id="rolefields"></div>
+      <div class="bar" style="margin-top:14px">
+        <button class="primary" id="logsave">Log these roles</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Participation log</h2>
+      <p class="lede">Every recorded turn, newest first. Tick a row once that resident's feedback
+        email has gone out — the equity view flags participations that never got one.</p>
+      <div style="overflow-x:auto">
+        <table class="mr" id="logtable">
+          <thead><tr><th>Date</th><th>Site</th><th>Resident</th><th>Role</th><th>Feedback sent</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint" id="logempty" hidden>Nothing logged yet.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project — Morning Report. <code>roster.json</code> is the one file in this module that contains names.</p></div>
+</footer>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script>
+var roster = null;
+var $ = function(id){ return document.getElementById(id); };
+
+function save(){ return MRRoster.save(roster).then(render); }
+
+/* ---------- residents ------------------------------------------------ */
+
+function render(){
+  $("yearline").textContent = "Academic year " + roster.academic_year + " · " +
+    roster.residents.filter(function(p){ return p.active; }).length + " active, " +
+    roster.residents.length + " on the roster.";
+
+  var host = $("residents");
+  host.innerHTML = "";
+
+  if (!roster.residents.length){
+    var e = document.createElement("p");
+    e.className = "hint";
+    e.textContent = "No residents yet. Add them below, or connect the data folder if you already have a roster.json.";
+    host.appendChild(e);
+  }
+
+  roster.residents.slice().sort(function(a,b){
+    if (a.active !== b.active) return a.active ? -1 : 1;
+    if (a.level !== b.level) return MRRoster.LEVELS.indexOf(a.level) - MRRoster.LEVELS.indexOf(b.level);
+    return a.name.localeCompare(b.name);
+  }).forEach(function(p){
+    host.appendChild(residentRow(p));
+  });
+
+  renderLog();
+  renderSites();
+  renderEquity();
+}
+
+/* ---------- equity ---------------------------------------------------- */
+
+function renderEquity(){
+  var weeks = parseInt($("overdue").value, 10);
+  if (!roster.settings) roster.settings = {};
+  roster.settings.overdue_weeks = weeks;
+
+  var e = MRRoster.equity(roster);
+  var head = $("eqhead");
+  head.innerHTML = "";
+  ["Resident"].concat(MRRoster.ROLES.map(function(r){ return r.label; }))
+    .concat(["Last discussant", "Weeks since", "Feedback", "Flags"])
+    .forEach(function(h){
+      var th = document.createElement("th");
+      th.textContent = h;
+      head.appendChild(th);
+    });
+
+  var tb = $("eqtable").querySelector("tbody");
+  tb.innerHTML = "";
+  $("eqempty").hidden = e.rows.length > 0;
+  $("eqtable").hidden = e.rows.length === 0;
+
+  e.rows.forEach(function(row, i){
+    var tr = document.createElement("tr");
+    if (i === 0 && !row.away_now) tr.className = "top";
+    if (row.away_now) tr.className = (tr.className + " away").trim();
+
+    var nm = document.createElement("td");
+    nm.className = "nm";
+    nm.appendChild(document.createTextNode(row.name));
+    var lv = document.createElement("span");
+    lv.className = "lv";
+    lv.textContent = row.level + (row.away_now ? " · away" : "");
+    nm.appendChild(lv);
+    tr.appendChild(nm);
+
+    MRRoster.ROLES.forEach(function(r){
+      var td = document.createElement("td");
+      td.className = "num";
+      td.textContent = row.counts[r.id] || "—";
+      tr.appendChild(td);
+    });
+
+    var last = document.createElement("td");
+    last.style.whiteSpace = "nowrap";
+    last.textContent = row.last_discussant || "never";
+    tr.appendChild(last);
+
+    var since = document.createElement("td");
+    since.className = "since";
+    var b = document.createElement("b");
+    b.textContent = row.active_weeks_since.toFixed(1);
+    since.appendChild(b);
+    if (row.weeks_since !== null && Math.abs(row.weeks_since - row.active_weeks_since) >= 0.5){
+      var raw = document.createElement("span");
+      raw.className = "raw";
+      raw.textContent = row.weeks_since.toFixed(1) + " on the calendar";
+      since.appendChild(raw);
+    }
+    tr.appendChild(since);
+
+    var fb = document.createElement("td");
+    fb.className = "num";
+    fb.textContent = row.feedback_sent + " / " + row.total;
+    if (row.feedback_gap > 0) fb.title = row.feedback_gap + " with no feedback recorded as sent";
+    tr.appendChild(fb);
+
+    var fl = document.createElement("td");
+    fl.className = "flags";
+    row.flags.forEach(function(f){
+      var pill = document.createElement("span");
+      pill.className = "pill " + f.id;
+      pill.textContent = f.label;
+      pill.title = f.why;
+      fl.appendChild(pill);
+    });
+    if (!row.flags.length){
+      var ok = document.createElement("span");
+      ok.className = "pill quiet";
+      ok.textContent = "—";
+      fl.appendChild(ok);
+    }
+    tr.appendChild(fl);
+
+    tb.appendChild(tr);
+  });
+
+  renderNextUp(e);
+}
+
+function renderNextUp(e){
+  var host = $("nextup");
+  host.innerHTML = "";
+  var candidates = e.rows.filter(function(r){ return !r.away_now; });
+  if (!candidates.length) return;
+
+  var never = candidates.filter(function(r){ return r.total === 0; });
+  var pick = never.length ? never[0] : candidates[0];
+
+  var box = document.createElement("div");
+  box.className = "nextup";
+  var lb = document.createElement("div");
+  lb.className = "lb"; lb.textContent = "Who to draw next";
+  var nm = document.createElement("p");
+  nm.className = "nm"; nm.textContent = pick.name + " · " + pick.level;
+  var su = document.createElement("p");
+  su.className = "su";
+  su.textContent = pick.last_discussant
+    ? "Last took a discussant role " + pick.last_discussant + " — " +
+      pick.active_weeks_since.toFixed(1) + " weeks ago, not counting time away."
+    : "Has never taken a discussant role" +
+      (pick.weeks_on_roster ? ", and has been on the roster " + Math.round(pick.weeks_on_roster) + " weeks." : ".");
+  box.appendChild(lb); box.appendChild(nm); box.appendChild(su);
+
+  var note = document.createElement("p");
+  note.className = "su";
+  note.style.marginTop = "9px";
+  note.textContent = "The draw already weights the wheel this way — it draws only from whoever has " +
+    "gone longest without the role. This row is so you can say it out loud in a meeting.";
+  box.appendChild(note);
+
+  host.appendChild(box);
+}
+
+$("overdue").addEventListener("change", function(){
+  /* set it before saving: renderEquity runs after the write, so
+     leaving it to that would persist the previous threshold. */
+  if (!roster.settings) roster.settings = {};
+  roster.settings.overdue_weeks = parseInt($("overdue").value, 10);
+  save();
+});
+
+$("csv").addEventListener("click", function(){
+  var csv = MRRoster.equityCsv(roster);
+  var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "morning-report-equity-" + MRStore.today() + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+});
+
+function residentRow(p){
+  var row = document.createElement("div");
+  row.className = "res-row" + (p.active ? "" : " inactive");
+
+  var left = document.createElement("div");
+  var nm = document.createElement("input");
+  nm.type = "text"; nm.value = p.name; nm.className = "nm";
+  nm.addEventListener("change", function(){ p.name = nm.value.trim(); save(); });
+  var last = document.createElement("div");
+  last.className = "last";
+  last.textContent = lastServedNote(p);
+  left.appendChild(nm); left.appendChild(last);
+
+  var lvl = document.createElement("select");
+  MRRoster.LEVELS.forEach(function(L){
+    var o = document.createElement("option"); o.value = L; o.textContent = L;
+    if (p.level === L) o.selected = true;
+    lvl.appendChild(o);
+  });
+  lvl.addEventListener("change", function(){ p.level = lvl.value; save(); });
+
+  var status = document.createElement("select");
+  [["true","Active"],["false","Inactive"]].forEach(function(pair){
+    var o = document.createElement("option"); o.value = pair[0]; o.textContent = pair[1];
+    if (String(p.active) === pair[0]) o.selected = true;
+    status.appendChild(o);
+  });
+  status.addEventListener("change", function(){ p.active = status.value === "true"; save(); });
+
+  var away = document.createElement("div");
+  away.className = "away";
+  (p.unavailable || []).forEach(function(w, i){
+    var chip = document.createElement("span");
+    chip.className = "w";
+    chip.appendChild(document.createTextNode(
+      (w.from || "…") + " → " + (w.to || "…") + (w.why ? " · " + w.why : "")));
+    var x = document.createElement("button");
+    x.type = "button"; x.textContent = "×"; x.title = "Remove";
+    x.addEventListener("click", function(){ p.unavailable.splice(i,1); save(); });
+    chip.appendChild(x);
+    away.appendChild(chip);
+  });
+  var addAway = document.createElement("button");
+  addAway.type = "button"; addAway.className = "add"; addAway.textContent = "+ away";
+  addAway.addEventListener("click", function(){ promptAway(p); });
+  away.appendChild(addAway);
+
+  var acts = document.createElement("div");
+  acts.className = "acts";
+  var del = document.createElement("button");
+  del.type = "button"; del.className = "danger"; del.textContent = "Remove";
+  del.addEventListener("click", function(){
+    var turns = MRRoster.countFor(roster, p.id);
+    var msg = turns
+      ? "Remove " + p.name + " from the roster? " + turns + " logged " + (turns === 1 ? "turn stays" : "turns stay") +
+        " in the log under their id, so past sessions still count. Deactivating is usually what you want instead."
+      : "Remove " + p.name + " from the roster?";
+    if (!confirm(msg)) return;
+    roster.residents = roster.residents.filter(function(x){ return x.id !== p.id; });
+    save();
+  });
+  acts.appendChild(del);
+
+  row.appendChild(left); row.appendChild(lvl); row.appendChild(status); row.appendChild(away); row.appendChild(acts);
+  return row;
+}
+
+/* The small "last served" note the spec asks for under each name. */
+function lastServedNote(p){
+  var bits = [];
+  MRRoster.ROLES.forEach(function(r){
+    var d = MRRoster.lastServed(roster, p.id, r.id);
+    if (d) bits.push(r.label.toLowerCase() + " " + d);
+  });
+  if (!bits.length) return "No logged turns yet.";
+  var lastAny = MRRoster.lastServed(roster, p.id, "discussant");
+  var head = lastAny
+    ? "Last discussant role " + lastAny + " (" + Math.round(MRRoster.weeksSince(lastAny)) + " weeks ago). "
+    : "Never a discussant. ";
+  return head + "Last: " + bits.join(" · ");
+}
+
+function promptAway(p){
+  var from = prompt("Unavailable from (YYYY-MM-DD):", MRStore.today());
+  if (!from) return;
+  var to = prompt("Unavailable to (YYYY-MM-DD):", from);
+  if (!to) return;
+  var why = prompt("Why? (nights, away rotation, leave)", "away rotation") || "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)){
+    MRStore.notify("err", "Dates must look like 2026-11-02.", true);
+    return;
+  }
+  if (to < from){ MRStore.notify("err", "The end date is before the start date.", true); return; }
+  p.unavailable.push({ from: from, to: to, why: why });
+  save();
+}
+
+$("add").addEventListener("click", function(){
+  var name = $("new-name").value.trim();
+  if (!name){ $("new-name").focus(); return; }
+  roster.residents.push({
+    id: MRRoster.nextId(roster), name: name, level: $("new-level").value,
+    active: true, unavailable: []
+  });
+  $("new-name").value = "";
+  save();
+});
+$("new-name").addEventListener("keydown", function(e){ if (e.key === "Enter") $("add").click(); });
+
+$("roll").addEventListener("click", function(){
+  var r = MRRoster.rollYear(JSON.parse(JSON.stringify(roster)));
+  var msg = "Roll " + roster.academic_year + " → " + r.roster.academic_year + "?\n\n" +
+    "Every level is promoted. " +
+    (r.graduated.length ? r.graduated.length + " PGY-3 " + (r.graduated.length === 1 ? "resident is" : "residents are") + " deactivated. " : "") +
+    "The " + roster.log.length + "-entry log is archived to " + r.archivePath + " and a fresh one starts.\n\nThis cannot be undone from here.";
+  if (!confirm(msg)) return;
+  MRStore.write(r.archivePath, r.archive).then(function(ok){
+    if (!ok){
+      MRStore.notify("err", "The archive did not write, so nothing was rolled. Connect the data folder and try again.", true);
+      return;
+    }
+    roster = r.roster;
+    return MRRoster.save(roster).then(function(){
+      MRStore.notify("ok", "Rolled to " + roster.academic_year + ". Last year is in " + r.archivePath + ".");
+      render();
+    });
+  });
+});
+
+/* ---------- logging the other three roles ----------------------------- */
+
+function renderRoleFields(){
+  var host = $("rolefields");
+  host.innerHTML = "";
+  MRRoster.ROLES.forEach(function(role){
+    var d = document.createElement("div");
+    var l = document.createElement("label");
+    l.className = "f"; l.textContent = role.label;
+    l.setAttribute("for", "log-" + role.id);
+    var s = document.createElement("select");
+    s.id = "log-" + role.id;
+    s.dataset.role = role.id;
+    host.appendChild(d); d.appendChild(l); d.appendChild(s);
+  });
+  fillRoleOptions();
+}
+
+function fillRoleOptions(){
+  var date = $("log-date").value || MRStore.today();
+  MRRoster.ROLES.forEach(function(role){
+    var s = $("log-" + role.id);
+    if (!s) return;
+    var keep = s.value;
+    s.innerHTML = "";
+    var none = document.createElement("option");
+    none.value = ""; none.textContent = "— nobody —";
+    s.appendChild(none);
+    MRRoster.eligible(roster, role.id, date).forEach(function(p){
+      var o = document.createElement("option");
+      o.value = p.id; o.textContent = p.name + " (" + p.level + ")";
+      s.appendChild(o);
+    });
+    if (keep) s.value = keep;
+  });
+}
+
+$("logsave").addEventListener("click", function(){
+  var date = $("log-date").value;
+  if (!date){ MRStore.notify("err", "Pick a date first.", true); return; }
+  var site = $("log-site").value.trim();
+  var added = 0;
+  MRRoster.ROLES.forEach(function(role){
+    var id = $("log-" + role.id).value;
+    if (!id) return;
+    var dupe = roster.log.some(function(e){
+      return e.date === date && e.site === site && e.role === role.id && e.resident_id === id;
+    });
+    if (dupe) return;
+    MRRoster.logEntry(roster, { date: date, site: site, resident_id: id, role: role.id });
+    added++;
+  });
+  if (!added){ MRStore.notify("warn", "Nothing new to log — those turns are already recorded."); return; }
+  save().then(function(){
+    MRStore.notify("ok", added + (added === 1 ? " turn" : " turns") + " logged.");
+    MRRoster.ROLES.forEach(function(role){ $("log-" + role.id).value = ""; });
+  });
+});
+
+/* ---------- the log table ---------------------------------------------- */
+
+function nameOf(id){
+  var p = roster.residents.filter(function(x){ return x.id === id; })[0];
+  return p ? p.name : id + " (not on the roster)";
+}
+
+function renderLog(){
+  var tb = $("logtable").querySelector("tbody");
+  tb.innerHTML = "";
+  var rows = roster.log.map(function(e, i){ return { e: e, i: i }; })
+    .sort(function(a, b){ return a.e.date < b.e.date ? 1 : a.e.date > b.e.date ? -1 : b.i - a.i; });
+
+  $("logempty").hidden = rows.length > 0;
+  $("logtable").hidden = rows.length === 0;
+
+  rows.forEach(function(row){
+    var e = row.e;
+    var tr = document.createElement("tr");
+    [e.date, e.site || "—", nameOf(e.resident_id), MRRoster.roleLabel(e.role)].forEach(function(v){
+      var td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+    });
+    var tdF = document.createElement("td");
+    var cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = !!e.feedback_sent;
+    cb.style.width = "auto";
+    cb.addEventListener("change", function(){ e.feedback_sent = cb.checked; save(); });
+    tdF.appendChild(cb);
+    tr.appendChild(tdF);
+
+    var tdX = document.createElement("td");
+    var x = document.createElement("button");
+    x.type = "button"; x.className = "link-btn"; x.textContent = "Remove";
+    x.addEventListener("click", function(){
+      if (!confirm("Remove this logged turn?")) return;
+      roster.log.splice(row.i, 1);
+      save();
+    });
+    tdX.appendChild(x);
+    tr.appendChild(tdX);
+
+    tb.appendChild(tr);
+  });
+}
+
+function renderSites(){
+  var dl = $("sitelist");
+  dl.innerHTML = "";
+  var seen = {};
+  roster.log.forEach(function(e){ if (e.site) seen[e.site] = 1; });
+  Object.keys(seen).sort().forEach(function(s){
+    var o = document.createElement("option"); o.value = s; dl.appendChild(o);
+  });
+}
+
+/* ---------- boot --------------------------------------------------------- */
+
+MRRoster.LEVELS.forEach(function(L){
+  var o = document.createElement("option"); o.value = L; o.textContent = L;
+  $("new-level").appendChild(o);
+});
+$("log-date").value = MRStore.today();
+$("log-date").addEventListener("change", fillRoleOptions);
+
+MRStore.whenReady.then(function(){
+  MRStore.mountBar("mr-bar");
+  return MRRoster.load();
+}).then(function(r){
+  roster = r;
+  if (r.settings && r.settings.overdue_weeks) $("overdue").value = String(r.settings.overdue_weeks);
+  renderRoleFields();
+  render();
+});
+
+MRStore.onChange(function(){
+  MRRoster.load().then(function(r){ roster = r; fillRoleOptions(); render(); });
+});
+</script>
+</body>
+</html>

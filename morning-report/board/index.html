@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning Report Board</title>
+<style>
+  :root{
+    --navy:#16283C; --navy-2:#24405E; --amber:#E8A33D;
+    --teal:#2E7D8F; --green:#3F7D5C; --red:#B23A48; --black:#111;
+    --paper:#F4F6F8; --line:#D3DCE4; --ink:#1B2733; --muted:#6B7885;
+    --serif:"Cambria","Hoefler Text",Georgia,serif;
+    --sans:"Segoe UI",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.35}
+  input,select,textarea{font-family:var(--sans);color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-offset:-2px}
+
+  .app{display:flex;flex-direction:column;height:100vh}
+
+  .top{background:var(--navy);color:#fff;display:flex;align-items:center;gap:12px;padding:6px 12px;flex:none}
+  .top .brand{font-family:var(--serif);font-weight:700;font-size:14px;white-space:nowrap}
+  .top .brand a{color:#9FB4C8;text-decoration:none;font-weight:400;font-size:12px;font-family:var(--sans)}
+  .top .brand a:hover{color:#fff}
+  .top .sp{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .phase{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    background:var(--navy-2);padding:4px 8px;border-radius:3px;white-space:nowrap}
+  .phase.hand{background:var(--amber);color:var(--navy)}
+  .time{font-family:var(--serif);font-size:17px;font-weight:700;min-width:52px;text-align:center}
+  .top button{font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.25);
+    background:transparent;color:#fff;padding:5px 9px;border-radius:3px;cursor:pointer}
+  .top button:hover{background:rgba(255,255,255,.12)}
+  .top button.solid{background:var(--amber);color:var(--navy);border-color:var(--amber)}
+  .top button.finish{background:var(--green);color:#fff;border-color:var(--green)}
+  .top button.finish:hover{background:#356a4e}
+
+  /* the data folder state, kept small — this is a screen-share tool */
+  .save{display:flex;align-items:center;gap:6px;font-size:11px;color:#9FB4C8;white-space:nowrap}
+  .save .dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex:none}
+  .save .dot.on{background:var(--green)}
+  .save .dot.warn{background:var(--amber)}
+  .save button{padding:3px 7px;font-size:10.5px}
+
+  .meta{display:flex;background:var(--navy);color:#fff;flex:none;border-top:1px solid rgba(255,255,255,.12)}
+  .meta div{padding:4px 12px;display:flex;align-items:center;gap:7px;border-right:1px solid rgba(255,255,255,.12)}
+  .meta div:last-child{border-right:none;flex:1}
+  .meta label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9FB4C8;white-space:nowrap}
+  .meta input{background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.28);
+    color:#fff;font-size:12.5px;padding:2px 3px}
+  .meta div:last-child input{width:100%}
+
+  .pr{background:#FBF0DE;border-bottom:1px solid var(--amber);padding:6px 12px;flex:none;
+    display:flex;gap:10px;align-items:flex-start}
+  .pr .lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:#8A6014;white-space:nowrap;padding-top:5px;width:112px;flex:none;line-height:1.25}
+  .pr textarea{flex:1;border:none;background:transparent;resize:none;height:46px;
+    font-family:var(--serif);font-size:16px;color:#4A3520;padding:2px 0}
+  .pr textarea::placeholder{color:#C0A77C;font-style:italic}
+
+  .cols{flex:1;display:grid;grid-template-columns:23% 49% 28%;min-height:0;border-top:1px solid var(--line)}
+  .col{display:flex;flex-direction:column;min-height:0;background:#fff;border-right:1px solid var(--line)}
+  .col:last-child{border-right:none}
+  .ch{padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:#fff;flex:none;display:flex;justify-content:space-between;gap:6px}
+  .col.data .ch{background:var(--black)}
+  .col.ddx  .ch{background:var(--teal)}
+  .col.disc .ch{background:var(--green)}
+  .ch .sw{font-weight:600;opacity:.75;text-transform:none;letter-spacing:.02em}
+  .ch a{color:#fff;opacity:.8;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.5)}
+  .ch a:hover{opacity:1}
+  .body{flex:1;overflow-y:auto;min-height:0;padding:7px 10px 10px}
+
+  .sub{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);margin:9px 0 4px;border-bottom:1px solid #E6EBEF;padding-bottom:2px}
+  .sub:first-child{margin-top:0}
+
+  .vitals{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:5px}
+  .growth{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  .v{display:flex;flex-direction:column}
+  .v span{font-size:9px;color:var(--muted);font-weight:600}
+  .v input{border:1px solid var(--line);border-radius:3px;padding:2px 3px;font-size:12px;width:100%}
+
+  .line{display:flex;align-items:flex-start;gap:5px;padding:1px 0}
+  .line .t{flex:1;word-break:break-word}
+  .col.data .line .t{color:var(--black)}
+  .col.disc .line .t{color:var(--green)}
+  .line .x{border:none;background:none;color:#C3CED8;cursor:pointer;font-size:13px;padding:0 2px;line-height:1}
+  .line .x:hover{color:var(--red)}
+  .addin{width:100%;border:1px solid var(--line);border-radius:3px;padding:4px 6px;
+    font-size:12.5px;background:#FCFDFE;margin-top:3px}
+
+  .fld{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .fld label{font-size:11.5px;white-space:nowrap;min-width:100px}
+  .fld input{flex:1;border:none;border-bottom:1px solid var(--line);padding:2px;font-size:12.5px;background:transparent}
+  .fld.pos label{color:var(--green);font-weight:600}
+  .fld.neg label{color:var(--red);font-weight:600}
+
+  .fw{display:flex;align-items:center;gap:7px;padding:5px 10px;background:#EDF4F6;
+    border-bottom:1px solid var(--line);flex:none}
+  .fw label{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--teal);white-space:nowrap}
+  .fw select{border:1px solid var(--line);border-radius:3px;padding:3px 5px;font-size:12px;background:#fff}
+  .fw input{flex:1;border:none;border-bottom:1px solid var(--line);font-size:12.5px;padding:2px;background:transparent}
+
+  .split{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+  .side{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+  .side:last-child{border-right:none}
+  .sh{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    padding:4px 9px;background:#F2F6F8;color:var(--navy);border-bottom:1px solid var(--line);
+    flex:none;display:flex;justify-content:space-between}
+  .sh em{font-style:normal;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+  .sh a{color:var(--navy);text-decoration:none;border-bottom:1px dotted #9FB0BE}
+  .sh a:hover{color:var(--teal)}
+  .sbody{flex:1;overflow-y:auto;min-height:0;padding:6px 9px 9px}
+
+  .dx{border-left:3px solid var(--amber);padding:3px 0 3px 7px;margin-bottom:5px;background:#FCFDFE}
+  .dx.ok{border-left-color:var(--teal)}
+  .dx.struck{border-left-color:var(--red)}
+  .dx .name{font-weight:600;color:var(--teal);cursor:pointer;font-size:13px;display:flex;gap:5px;align-items:flex-start}
+  .dx .name span{flex:1}
+  .dx.struck .name span{color:var(--red);text-decoration:line-through;text-decoration-thickness:1.5px}
+  .dx .why,.dx .kill{width:100%;border:none;font-size:11.5px;padding:1px 0;margin-top:2px;
+    background:transparent;font-style:italic}
+  .dx .why{border-bottom:1px dotted #C9D3DC;color:var(--muted)}
+  .dx .why::placeholder{color:#BFA97A}
+  .dx.struck .why{color:var(--red);border-bottom-color:#E3C2C7}
+  .dx .kill{border-bottom:1px dotted #E3C2C7;color:var(--red)}
+  .dx .x{border:none;background:none;color:#C3CED8;cursor:pointer;font-size:13px;line-height:1;padding:0 1px}
+  .dx .x:hover{color:var(--red)}
+  .hint{font-size:10.5px;color:var(--muted);margin-top:4px}
+
+  .bot{display:grid;grid-template-columns:1fr 1fr;flex:none;border-top:1px solid var(--line)}
+  .bx{padding:6px 12px;background:#F7F9FB;border-right:1px solid var(--line)}
+  .bx:last-child{border-right:none;background:#FDF7EC}
+  .bx .lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:3px}
+  .bx:last-child .lbl{color:#8A6014}
+  .bx textarea{width:100%;height:44px;border:none;background:transparent;resize:none;font-size:13px;color:var(--navy);padding:0}
+  .bx:last-child textarea{color:#4A3520}
+
+  /* ---- overlays: recovery, finish, and a loud failure ---- */
+  .veil{
+    position:fixed;inset:0;background:rgba(22,40,60,.72);z-index:200;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .veil[hidden]{display:none}
+  .sheet{
+    background:#fff;border-radius:9px;max-width:560px;width:100%;padding:26px 28px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .sheet h2{font-family:var(--serif);font-size:22px;margin:0 0 8px;color:var(--navy)}
+  .sheet p{margin:0 0 14px;font-size:13.5px;color:#3D4855;line-height:1.6}
+  .sheet .row{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
+  .sheet button,.sheet a.btn{
+    font-family:var(--sans);font-size:13.5px;font-weight:600;padding:10px 16px;
+    border-radius:5px;border:1px solid transparent;cursor:pointer;text-decoration:none;display:inline-block;
+  }
+  .sheet .primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .sheet .amber{background:var(--amber);color:var(--navy);border-color:var(--amber)}
+  .sheet .ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+  .sheet .check{font-size:12.5px;color:var(--muted);margin:0 0 4px}
+  .sheet .check b{color:var(--green)}
+  .sheet .check.no b{color:var(--red)}
+
+  .err{
+    position:fixed;top:0;left:0;right:0;z-index:300;background:var(--red);color:#fff;
+    padding:9px 14px;font-size:13px;font-weight:600;display:flex;gap:12px;align-items:center;
+  }
+  .err[hidden]{display:none}
+  .err button{background:transparent;border:1px solid #fff;color:#fff;font-size:11px;
+    padding:3px 9px;border-radius:3px;cursor:pointer;margin-left:auto}
+
+  @media print{
+    html,body{height:auto;overflow:visible}
+    .top,.addin,.hint,.veil,.err{display:none !important}
+    .app{height:auto}
+    .body,.sbody{overflow:visible}
+    @page{size:landscape;margin:10mm}
+  }
+</style>
+</head>
+<body>
+
+<div class="err" id="err" hidden><span id="errmsg"></span><button type="button" id="errclose">Dismiss</button></div>
+
+<div class="app">
+
+  <div class="top">
+    <span class="brand"><a href="../">← Morning Report</a> &nbsp; Board</span>
+    <div class="save" id="save">
+      <span class="dot" id="savedot"></span><span id="savetext">No data folder</span>
+      <button type="button" id="connect">Connect</button>
+    </div>
+    <div class="sp">
+      <span class="phase" id="phase">Not started</span>
+      <span class="time" id="time">0:00</span>
+      <button id="startBtn">Start</button>
+      <button id="resetBtn">Reset</button>
+      <button id="copyBtn">Copy</button>
+      <button class="solid" id="printBtn">Save board</button>
+      <button class="finish" id="finishBtn">Finish session</button>
+    </div>
+  </div>
+
+  <div class="meta">
+    <div><label>Case</label><input id="caseid" placeholder="PEDS-MR-##" size="11"></div>
+    <div><label>Date</label><input id="date" placeholder="__/__" size="9"></div>
+    <div><label>Site</label><input id="site" size="10"></div>
+    <div><label>Objective</label><input id="objective" placeholder="One objective, read aloud at 0:00"></div>
+  </div>
+
+  <div class="pr">
+    <div class="lbl">Problem<br>representation</div>
+    <textarea id="pr" placeholder="PGY-1, one sentence, out loud"></textarea>
+  </div>
+
+  <div class="cols">
+
+    <section class="col data">
+      <div class="ch"><span>Key data</span><span class="sw"><a href="../roles/scribe/" target="_blank" rel="noopener">scribe card</a> · black</span></div>
+      <div class="body">
+        <div class="sub">Vitals</div>
+        <div class="vitals">
+          <div class="v"><span>T</span><input data-v="t"></div>
+          <div class="v"><span>HR</span><input data-v="hr"></div>
+          <div class="v"><span>RR</span><input data-v="rr"></div>
+          <div class="v"><span>BP</span><input data-v="bp"></div>
+          <div class="v"><span>SpO2</span><input data-v="spo2"></div>
+        </div>
+        <div class="growth">
+          <div class="v"><span>Wt (%)</span><input data-v="wt"></div>
+          <div class="v"><span>Ht (%)</span><input data-v="ht"></div>
+          <div class="v"><span>HC (%)</span><input data-v="hc"></div>
+        </div>
+
+        <div class="sub">History &amp; exposures</div>
+        <div class="items" data-list="hx"></div>
+        <input class="addin" data-add="hx" placeholder="Add&hellip;  (Enter)">
+
+        <div class="sub" style="color:#3F7D5C">Pertinent positives</div>
+        <div class="items" data-list="pos"></div>
+        <input class="addin" data-add="pos" placeholder="Add&hellip;  (Enter)">
+
+        <div class="sub" style="color:#B23A48">Pertinent negatives</div>
+        <div class="items" data-list="neg"></div>
+        <input class="addin" data-add="neg" placeholder="Add&hellip;  (Enter)">
+
+        <div class="sub">Labs &amp; imaging &mdash; block 1</div>
+        <div class="items" data-list="labs1"></div>
+        <input class="addin" data-add="labs1" placeholder="Only what was already back&hellip;  (Enter)">
+        <div class="hint">What the team actually had when they first reasoned.</div>
+
+        <div class="sub" style="color:#2E7D8F">Labs &amp; imaging &mdash; block 2</div>
+        <div class="items" data-list="labs2"></div>
+        <input class="addin" data-add="labs2" placeholder="Released at 0:16&hellip;  (Enter)">
+        <div class="hint">Nothing here until the intern has committed.</div>
+      </div>
+    </section>
+
+    <section class="col ddx">
+      <div class="ch"><span>Differential</span><span class="sw"><a href="../roles/scribe/" target="_blank" rel="noopener">scribe card</a> · click a diagnosis to strike it</span></div>
+
+      <div class="fw">
+        <label>Framework</label>
+        <select id="fwSel">
+          <option value="">&mdash; senior names it before listing &mdash;</option>
+          <option>Anatomic &mdash; by level</option>
+          <option>Anatomic &mdash; by layer</option>
+          <option>Physiologic</option>
+          <option>Pre / intra / post</option>
+          <option>Mechanistic category</option>
+          <option>Age-anchored</option>
+          <option>Tempo</option>
+          <option>Triage-based</option>
+          <option value="__other">Other&hellip;</option>
+        </select>
+        <input id="fwTxt" placeholder="or type it">
+      </div>
+
+      <div class="split">
+        <div class="side">
+          <div class="sh"><span><a href="../roles/pgy1/" target="_blank" rel="noopener">Intern &mdash; first pass</a></span><em id="slot-pgy1">0:07</em></div>
+          <div class="sbody">
+            <div class="items" data-dx="intern"></div>
+            <input class="addin" data-adddx="intern" placeholder="Diagnosis&hellip;  (Enter)">
+            <div class="hint">Three to four. Each one needs a reason.</div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="sh"><span><a href="../roles/senior/" target="_blank" rel="noopener">Senior &mdash; second pass</a></span><em id="slot-senior">0:11</em></div>
+          <div class="sbody">
+            <div class="items" data-dx="senior"></div>
+            <input class="addin" data-adddx="senior" placeholder="Diagnosis&hellip;  (Enter)">
+            <div class="hint">Reorganise the list. Strike with the reason.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="col disc">
+      <div class="ch"><span>Discriminators</span><span class="sw">green</span></div>
+      <div class="body">
+        <div class="sub">The test that separates them</div>
+        <div class="fld"><label>Most useful next test</label><input id="testName"></div>
+        <div class="fld pos"><label>If positive &rarr;</label><input id="testPos"></div>
+        <div class="fld neg"><label>If negative &rarr;</label><input id="testNeg"></div>
+
+        <div class="sub">Pending</div>
+        <div class="items" data-list="pend"></div>
+        <input class="addin" data-add="pend" placeholder="Add&hellip;  (Enter)">
+
+        <div class="sub">Bias watch</div>
+        <div class="items" data-list="bias"></div>
+        <input class="addin" data-add="bias" placeholder="anchoring &middot; availability &middot; premature closure">
+      </div>
+    </section>
+
+  </div>
+
+  <div class="bot">
+    <div class="bx">
+      <div class="lbl">Working diagnosis &middot; confidence &middot; what would change my mind</div>
+      <textarea id="plan"></textarea>
+    </div>
+    <div class="bx">
+      <div class="lbl">Take-home points</div>
+      <textarea id="teach"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<div class="veil" id="recoverVeil" hidden>
+  <div class="sheet">
+    <h2>There is an unfinished board</h2>
+    <p id="recoverWhen"></p>
+    <p>Restoring puts every field, both differential lists and the clock back where they were.</p>
+    <div class="row">
+      <button class="primary" id="doRecover">Restore it</button>
+      <button class="ghost" id="dropRecover">Start a new board</button>
+    </div>
+  </div>
+</div>
+
+<div class="veil" id="finishVeil" hidden>
+  <div class="sheet">
+    <h2 id="finishTitle">Session archived</h2>
+    <p id="finishWhere"></p>
+    <div id="finishChecks"></div>
+    <p style="margin-top:14px">Both of the next two are already filled in from this board. The scribe should not
+      retype anything they have already typed.</p>
+    <div class="row">
+      <a class="amber" id="toCapture" href="#">Capture the case →</a>
+      <a class="primary" id="toScore" href="#" target="_blank" rel="noopener">Score the session →</a>
+      <button class="ghost" id="stayHere">Stay on the board</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script src="../assets/content.js"></script>
+<script>
+/* ==================================================================
+   The board itself is unchanged from morning-report-board.html: the
+   zones, the forced rationale, the intern/senior split, the two lab
+   blocks and the 25-minute clock with its handoff markers.
+
+   What is new is plumbing. The board serialises itself to the data
+   folder every 20 seconds, so a browser that dies at 0:18 does not
+   take the session with it, and Finish session writes the archive
+   and hands the scribe on to the two things that need this data.
+   ================================================================== */
+
+var WORKING = "working-board.json";
+var AUTOSAVE_MS = 20000;
+
+var $ = function(id){ return document.getElementById(id); };
+var dirty = false;
+var finished = false;
+
+/* ---------- loud failure ------------------------------------------- */
+
+function showErr(msg){
+  $("errmsg").textContent = msg;
+  $("err").hidden = false;
+}
+$("errclose").addEventListener("click", function(){ $("err").hidden = true; });
+
+/* ---------- simple lists (unchanged behaviour) ---------------------- */
+
+function addLine(list, text){
+  var row = document.createElement("div");
+  row.className = "line";
+  var t = document.createElement("div");
+  t.className = "t"; t.textContent = text;
+  var x = document.createElement("button");
+  x.className = "x"; x.type = "button"; x.textContent = "×";
+  x.addEventListener("click", function(){ row.remove(); touch(); });
+  row.appendChild(t); row.appendChild(x);
+  list.appendChild(row);
+  touch();
+}
+
+document.querySelectorAll("[data-add]").forEach(function(inp){
+  var list = document.querySelector('[data-list="' + inp.dataset.add + '"]');
+  inp.addEventListener("keydown", function(e){
+    if (e.key !== "Enter" || !inp.value.trim()) return;
+    addLine(list, inp.value.trim());
+    inp.value = "";
+  });
+});
+
+/* ---------- differential (unchanged behaviour) ---------------------- */
+
+function makeDx(list, text, preset){
+  var box = document.createElement("div");
+  box.className = "dx";
+
+  var name = document.createElement("div");
+  name.className = "name";
+  var span = document.createElement("span");
+  span.textContent = text;
+  var x = document.createElement("button");
+  x.className = "x"; x.type = "button"; x.textContent = "×";
+  x.addEventListener("click", function(e){ e.stopPropagation(); box.remove(); touch(); });
+  name.appendChild(span); name.appendChild(x);
+
+  var why = document.createElement("input");
+  why.className = "why";
+  why.placeholder = "why is it on the list?";
+  why.addEventListener("input", function(){
+    box.classList.toggle("ok", why.value.trim().length > 0);
+    touch();
+  });
+
+  box.appendChild(name);
+  box.appendChild(why);
+
+  function strike(on, focusIt){
+    box.classList.toggle("struck", on);
+    var kill = box.querySelector(".kill");
+    if (on){
+      if (!kill){
+        kill = document.createElement("input");
+        kill.className = "kill";
+        kill.placeholder = "what argues against it?";
+        kill.addEventListener("input", touch);
+        box.appendChild(kill);
+      }
+      if (focusIt) kill.focus();
+    } else if (kill && !kill.value.trim()){
+      kill.remove();
+    }
+    touch();
+  }
+
+  span.addEventListener("click", function(){ strike(!box.classList.contains("struck"), true); });
+
+  list.appendChild(box);
+
+  if (preset){
+    why.value = preset.why || "";
+    if (preset.why) box.classList.add("ok");
+    if (preset.struck){
+      strike(true, false);
+      var k = box.querySelector(".kill");
+      if (k) k.value = preset.kill || "";
+    }
+  } else {
+    why.focus();
+    /* the first diagnosis on each side is a fact the scorecard needs:
+       was the framework named before the list started? */
+    var side = list.dataset.dx;
+    if (marks["first_" + side + "_dx"] === null) marks["first_" + side + "_dx"] = secs;
+  }
+  touch();
+  return box;
+}
+
+document.querySelectorAll("[data-adddx]").forEach(function(inp){
+  var list = document.querySelector('[data-dx="' + inp.dataset.adddx + '"]');
+  inp.addEventListener("keydown", function(e){
+    if (e.key === "Enter" && inp.value.trim()){
+      makeDx(list, inp.value.trim());
+      inp.value = "";
+    }
+  });
+});
+
+var fwSel = $("fwSel"), fwTxt = $("fwTxt");
+fwSel.addEventListener("change", function(){
+  if (fwSel.value === "__other") fwTxt.focus();
+  else if (fwSel.value) fwTxt.value = fwSel.value;
+  noteFramework();
+});
+fwTxt.addEventListener("input", noteFramework);
+
+function noteFramework(){
+  if (fwTxt.value.trim() && marks.framework === null) marks.framework = secs;
+  if (!fwTxt.value.trim()) marks.framework = null;
+  touch();
+}
+
+/* ---------- clock (unchanged) --------------------------------------- */
+
+var SEG = [[0,60,"Launch"],[60,180,"Hook"],[180,420,"History + exam"],
+           [420,660,"Intern first pass"],[660,960,"Senior second pass"],
+           [960,1140,"Labs + imaging"],[1140,1320,"Converge · faculty in"],
+           [1320,1440,"Reveal"],[1440,1500,"Close"]];
+var HAND = [420,960,1320];
+var secs = 0, timer = null, maxSecs = 0;
+var marks = { framework: null, first_intern_dx: null, first_senior_dx: null };
+
+var fmt = function(s){ return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
+
+function paintClock(){
+  $("time").textContent = fmt(secs);
+  var seg = SEG.filter(function(s){ return secs >= s[0] && secs < s[1]; })[0];
+  var ph = $("phase");
+  ph.textContent = secs >= 1500 ? "Over time" : (seg ? seg[2] : (secs === 0 ? "Not started" : "Close"));
+  ph.classList.toggle("hand", HAND.some(function(h){ return Math.abs(secs - h) < 8; }) || secs >= 1500);
+}
+
+function tick(){
+  secs++;
+  if (secs > maxSecs) maxSecs = secs;
+  paintClock();
+}
+
+$("startBtn").addEventListener("click", function(e){
+  if (timer){ clearInterval(timer); timer = null; e.target.textContent = "Start"; }
+  else { timer = setInterval(tick, 1000); e.target.textContent = "Pause"; }
+  touch();
+});
+$("resetBtn").addEventListener("click", function(){
+  clearInterval(timer); timer = null; secs = 0; maxSecs = 0;
+  marks = { framework: null, first_intern_dx: null, first_senior_dx: null };
+  $("time").textContent = "0:00";
+  var ph = $("phase");
+  ph.textContent = "Not started"; ph.classList.remove("hand");
+  $("startBtn").textContent = "Start";
+  touch();
+});
+
+/* ---------- export (unchanged) ---------------------------------------- */
+
+function listText(key){
+  var rows = document.querySelectorAll('[data-list="' + key + '"] .line .t');
+  return rows.length ? [].map.call(rows, function(r){ return "    • " + r.textContent; }) : ["    —"];
+}
+function dxText(key){
+  var boxes = document.querySelectorAll('[data-dx="' + key + '"] .dx');
+  if (!boxes.length) return ["    —"];
+  return [].map.call(boxes, function(b){
+    var n = b.querySelector(".name span").textContent;
+    var why = b.querySelector(".why").value.trim();
+    var kill = b.querySelector(".kill");
+    var k = kill && kill.value.trim() ? "   [ruled out: " + kill.value.trim() + "]" : "";
+    var mark = b.classList.contains("struck") ? "x " : "• ";
+    return "    " + mark + n + (why ? " — " + why : " — (no reason given)") + k;
+  });
+}
+function boardText(){
+  var g = function(id){ return ($(id).value || "").trim(); };
+  var v = [].map.call(document.querySelectorAll(".vitals input, .growth input"), function(i){ return i.value.trim(); });
+  var L = [];
+  L.push("MORNING REPORT BOARD");
+  L.push("Case " + (g("caseid") || "—") + "   " + g("date") + "   " + g("site"));
+  L.push("Objective: " + (g("objective") || "—"));
+  L.push("");
+  L.push("PROBLEM REPRESENTATION");
+  L.push("  " + (g("pr") || "—"));
+  L.push("");
+  L.push("KEY DATA");
+  L.push("  Vitals: T " + v[0] + "  HR " + v[1] + "  RR " + v[2] + "  BP " + v[3] + "  SpO2 " + v[4]);
+  L.push("  Growth: Wt " + v[5] + "  Ht " + v[6] + "  HC " + v[7]);
+  L.push("  History & exposures");  L.push.apply(L, listText("hx"));
+  L.push("  Pertinent positives");  L.push.apply(L, listText("pos"));
+  L.push("  Pertinent negatives");  L.push.apply(L, listText("neg"));
+  L.push("  Labs & imaging — block 1"); L.push.apply(L, listText("labs1"));
+  L.push("  Labs & imaging — block 2"); L.push.apply(L, listText("labs2"));
+  L.push("");
+  L.push("FRAMEWORK: " + (g("fwTxt") || "—"));
+  L.push("DIFFERENTIAL — intern first pass"); L.push.apply(L, dxText("intern"));
+  L.push("DIFFERENTIAL — senior second pass"); L.push.apply(L, dxText("senior"));
+  L.push("");
+  L.push("DISCRIMINATORS");
+  L.push("  Most useful next test: " + (g("testName") || "—"));
+  L.push("  If positive → " + g("testPos"));
+  L.push("  If negative → " + g("testNeg"));
+  L.push("  Pending");     L.push.apply(L, listText("pend"));
+  L.push("  Bias watch");  L.push.apply(L, listText("bias"));
+  L.push("");
+  L.push("WORKING DX / PLAN"); L.push("  " + (g("plan") || "—"));
+  L.push("TAKE-HOME POINTS");  L.push("  " + (g("teach") || "—"));
+  return L.join("\n");
+}
+$("copyBtn").addEventListener("click", function(e){
+  var t = boardText();
+  var done = function(){
+    e.target.textContent = "Copied";
+    setTimeout(function(){ e.target.textContent = "Copy"; }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done, function(){ fallbackCopy(t); done(); });
+  } else { fallbackCopy(t); done(); }
+});
+function fallbackCopy(t){
+  var ta = document.createElement("textarea");
+  ta.value = t; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch (err) { /* nothing more to try */ }
+  ta.remove();
+}
+$("printBtn").addEventListener("click", function(){ window.print(); });
+
+/* ---------- serialise / restore ---------------------------------------- */
+
+function readLists(){
+  var out = {};
+  document.querySelectorAll("[data-list]").forEach(function(l){
+    out[l.dataset.list] = [].map.call(l.querySelectorAll(".line .t"), function(t){ return t.textContent; });
+  });
+  return out;
+}
+function readDx(key){
+  return [].map.call(document.querySelectorAll('[data-dx="' + key + '"] .dx'), function(b){
+    var kill = b.querySelector(".kill");
+    return {
+      name: b.querySelector(".name span").textContent,
+      why: b.querySelector(".why").value.trim(),
+      struck: b.classList.contains("struck"),
+      kill: kill ? kill.value.trim() : ""
+    };
+  });
+}
+function readVitals(){
+  var out = {};
+  document.querySelectorAll("[data-v]").forEach(function(i){ out[i.dataset.v] = i.value.trim(); });
+  return out;
+}
+
+function state(){
+  var g = function(id){ return ($(id).value || "").trim(); };
+  return {
+    version: 1,
+    saved: new Date().toISOString(),
+    meta: { caseid: g("caseid"), date: g("date"), site: g("site"), objective: g("objective") },
+    pr: g("pr"),
+    vitals: readVitals(),
+    lists: readLists(),
+    framework: g("fwTxt"),
+    dx: { intern: readDx("intern"), senior: readDx("senior") },
+    test: { name: g("testName"), pos: g("testPos"), neg: g("testNeg") },
+    plan: g("plan"),
+    teach: g("teach"),
+    clock: { secs: secs, max: maxSecs, running: !!timer },
+    marks: marks,
+    one_liner: oneLiner
+  };
+}
+
+function restore(s){
+  if (!s) return;
+  var set = function(id, v){ if ($(id)) $(id).value = v || ""; };
+  set("caseid", s.meta && s.meta.caseid); set("date", s.meta && s.meta.date);
+  set("site", s.meta && s.meta.site);     set("objective", s.meta && s.meta.objective);
+  set("pr", s.pr);
+  set("fwTxt", s.framework);
+  set("testName", s.test && s.test.name); set("testPos", s.test && s.test.pos); set("testNeg", s.test && s.test.neg);
+  set("plan", s.plan); set("teach", s.teach);
+
+  Object.keys(s.vitals || {}).forEach(function(k){
+    var i = document.querySelector('[data-v="' + k + '"]');
+    if (i) i.value = s.vitals[k];
+  });
+
+  Object.keys(s.lists || {}).forEach(function(k){
+    var l = document.querySelector('[data-list="' + k + '"]');
+    if (!l) return;
+    l.innerHTML = "";
+    (s.lists[k] || []).forEach(function(txt){ addLine(l, txt); });
+  });
+
+  ["intern", "senior"].forEach(function(side){
+    var l = document.querySelector('[data-dx="' + side + '"]');
+    l.innerHTML = "";
+    ((s.dx && s.dx[side]) || []).forEach(function(d){ makeDx(l, d.name, d); });
+  });
+
+  if (s.framework && fwSel){
+    var match = [].filter.call(fwSel.options, function(o){ return o.text === s.framework; })[0];
+    if (match) fwSel.value = match.value;
+  }
+
+  secs = (s.clock && s.clock.secs) || 0;
+  maxSecs = (s.clock && s.clock.max) || secs;
+  marks = s.marks || { framework: null, first_intern_dx: null, first_senior_dx: null };
+  oneLiner = s.one_liner || "";
+  paintClock();
+  dirty = false;
+}
+
+/* ---------- autosave ---------------------------------------------------- */
+
+var oneLiner = "";
+var lastSaveOk = true;
+
+function touch(){ dirty = true; }
+
+document.addEventListener("input", touch, true);
+
+function autosave(force){
+  if (finished) return Promise.resolve(true);
+  if (!dirty && !force) return Promise.resolve(true);
+  if (!MRStore.status().ready){ paintSave("nofolder"); return Promise.resolve(false); }
+  return MRStore.write(WORKING, state()).then(function(ok){
+    dirty = !ok;
+    lastSaveOk = ok;
+    paintSave(ok ? "saved" : "failed");
+    if (!ok) showErr("The board did not save. Reconnect the data folder — nothing is being kept right now.");
+    return ok;
+  });
+}
+
+function paintSave(kind){
+  var dot = $("savedot"), txt = $("savetext"), btn = $("connect");
+  var st = MRStore.status();
+  if (kind === "nofolder" || !st.ready){
+    dot.className = "dot";
+    txt.textContent = st.mode === "fallback" ? "No folder access — download the board" : "Not saving";
+    btn.hidden = false;
+    btn.textContent = st.name ? "Reconnect" : "Connect";
+    return;
+  }
+  btn.hidden = true;
+  if (kind === "failed"){ dot.className = "dot warn"; txt.textContent = "Save failed"; return; }
+  dot.className = "dot on";
+  txt.textContent = "Autosaving to " + st.name;
+}
+
+$("connect").addEventListener("click", function(){
+  (MRStore.status().name ? MRStore.reconnect() : MRStore.connect()).then(function(ok){
+    paintSave();
+    if (ok) autosave(true);
+  });
+});
+
+setInterval(function(){ autosave(false); }, AUTOSAVE_MS);
+
+window.addEventListener("beforeunload", function(e){
+  if (dirty && !finished && MRStore.status().ready){
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+/* ---------- what the board knows, for the scorecard -------------------- */
+
+function derive(){
+  var intern = readDx("intern"), senior = readDx("senior");
+  var all = intern.concat(senior);
+  var struck = all.filter(function(d){ return d.struck; });
+  var fw = ($("fwTxt").value || "").trim();
+
+  /* "framework named before the list" means before the senior started
+     listing — the senior's job is to name the scheme, then reorganise
+     into it. If the clock never ran we cannot claim the ordering. */
+  var ordered = null;
+  if (fw && marks.framework !== null){
+    ordered = marks.first_senior_dx === null || marks.framework <= marks.first_senior_dx;
+  } else if (fw) {
+    ordered = null;
+  } else {
+    ordered = false;
+  }
+
+  return {
+    pr_present: ($("pr").value || "").trim().length > 0,
+    intern_count: intern.length,
+    intern_reasoned: intern.length >= 3 && intern.length <= 4 &&
+                     intern.every(function(d){ return d.why.length > 0; }),
+    framework_present: fw.length > 0,
+    framework_before_list: ordered,
+    any_struck: struck.length > 0,
+    struck_with_reason: struck.some(function(d){ return d.kill.length > 0; }),
+    test_named: ($("testName").value || "").trim().length > 0,
+    elapsed_seconds: maxSecs,
+    clock_ran: maxSecs > 0,
+    ran_over: maxSecs > 1500,
+    board_archived: true
+  };
+}
+
+/* ---------- finish ------------------------------------------------------- */
+
+function archiveFrom(s, d){
+  return {
+    id: MRStore.sessionId(s.meta.date || MRStore.today(), s.meta.site),
+    date: s.meta.date || MRStore.today(),
+    site: s.meta.site,
+    case_id: s.meta.caseid,
+    objective: s.meta.objective,
+    problem_representation: s.pr,
+    key_data: {
+      vitals: s.vitals,
+      history: s.lists.hx || [],
+      pertinent_positives: s.lists.pos || [],
+      pertinent_negatives: s.lists.neg || [],
+      labs_block_1: s.lists.labs1 || [],
+      labs_block_2: s.lists.labs2 || []
+    },
+    framework: s.framework,
+    differential: { intern: s.dx.intern, senior: s.dx.senior },
+    discriminators: {
+      next_test: s.test.name,
+      if_positive: s.test.pos,
+      if_negative: s.test.neg,
+      pending: s.lists.pend || [],
+      bias_watch: s.lists.bias || []
+    },
+    plan: s.plan,
+    take_homes: s.teach,
+    derived: d,
+    archived: new Date().toISOString()
+  };
+}
+
+$("finishBtn").addEventListener("click", function(){
+  var s = state();
+  if (!s.meta.date){
+    $("date").value = MRStore.today();
+    s = state();
+  }
+  if (!MRStore.status().ready){
+    var a = archiveFrom(s, derive());
+    MRStore.download("board-archive/" + a.id + ".json", a);
+    showErr("No data folder connected, so the archive was downloaded instead. Put it in board-archive/ by hand.");
+    return;
+  }
+
+  var d = derive();
+  var archive = archiveFrom(s, d);
+  var path = "board-archive/" + archive.id + ".json";
+
+  MRStore.write(path, archive).then(function(ok){
+    if (!ok){
+      showErr("The archive did not write. The board is untouched — fix the folder and press Finish again.");
+      return;
+    }
+    finished = true;
+    return MRStore.remove(WORKING).then(function(){
+      showFinish(archive, path, d);
+    });
+  });
+});
+
+function showFinish(archive, path, d){
+  $("finishWhere").innerHTML = "Written to <code>" + MRStore.esc(path) +
+    "</code> with no participant names in it. The working copy has been deleted.";
+
+  var checks = $("finishChecks");
+  checks.innerHTML = "";
+  [
+    ["Problem representation in one sentence", d.pr_present],
+    ["Three to four diagnoses, each with a reason", d.intern_reasoned],
+    ["A framework named before the list", d.framework_before_list],
+    ["Something struck off, with the reason beside it", d.struck_with_reason],
+    ["The discriminating test named", d.test_named],
+    ["Inside 25 minutes", d.clock_ran ? !d.ran_over : null]
+  ].forEach(function(row){
+    var p = document.createElement("p");
+    p.className = "check" + (row[1] === false ? " no" : "");
+    var mark = row[1] === true ? "✓" : row[1] === false ? "✗" : "?";
+    p.innerHTML = "<b>" + mark + "</b> " + MRStore.esc(row[0]) +
+      (row[1] === null ? " <em>(the clock did not run — you will be asked)</em>" : "");
+    checks.appendChild(p);
+  });
+
+  $("toCapture").href = "../capture/?session=" + encodeURIComponent(archive.id);
+  $("toScore").href = "../scorecard/?session=" + encodeURIComponent(archive.id);
+  $("finishVeil").hidden = false;
+}
+
+$("stayHere").addEventListener("click", function(){
+  $("finishVeil").hidden = true;
+  finished = false;   // keep autosaving if they carry on working
+});
+
+/* ---------- boot ----------------------------------------------------------- */
+
+var params = new URLSearchParams(location.search);
+
+MRStore.whenReady.then(function(){
+  paintSave();
+  return MRContent.load();
+}).then(function(){
+  var block = MRContent.blockForDate($("date").value || MRStore.today());
+  if (block){
+    $("slot-pgy1").textContent = MRContent.fmt(MRContent.runOfShow(block.id).filter(function(r){ return r.segment === "First pass"; })[0].start);
+    $("slot-senior").textContent = MRContent.fmt(MRContent.runOfShow(block.id).filter(function(r){ return r.segment === "Second pass"; })[0].start);
+  }
+  if (!MRStore.status().ready) return null;
+  return MRStore.read(WORKING);
+}).then(function(working){
+  if (!working){
+    if (params.get("date")) $("date").value = params.get("date");
+    if (params.get("site")) $("site").value = params.get("site");
+    dirty = false;
+    return;
+  }
+  /* A seeded file is the draw handing over, not a crash — take it
+     without asking. Anything else means an unfinished board. */
+  if (working.seeded && !hasContent(working)){
+    restore(working);
+    if (params.get("date")) $("date").value = params.get("date");
+    if (params.get("site")) $("site").value = params.get("site");
+    if (!$("date").value) $("date").value = MRStore.today();
+    dirty = false;
+    return;
+  }
+  $("recoverWhen").innerHTML = "Last saved <b>" + MRStore.esc(whenText(working.saved)) +
+    "</b>, at <b>" + MRStore.esc(fmt((working.clock && working.clock.secs) || 0)) + "</b> on the clock.";
+  $("recoverVeil").hidden = false;
+  $("doRecover").addEventListener("click", function(){
+    restore(working);
+    $("recoverVeil").hidden = true;
+  });
+  $("dropRecover").addEventListener("click", function(){
+    $("recoverVeil").hidden = true;
+    if (params.get("date")) $("date").value = params.get("date");
+    if (params.get("site")) $("site").value = params.get("site");
+    if (!$("date").value) $("date").value = MRStore.today();
+    dirty = true;
+    autosave(true);
+  });
+});
+
+function hasContent(s){
+  if (!s) return false;
+  if ((s.pr || "").trim()) return true;
+  if ((s.framework || "").trim()) return true;
+  if (s.dx && ((s.dx.intern || []).length || (s.dx.senior || []).length)) return true;
+  if (s.lists && Object.keys(s.lists).some(function(k){ return (s.lists[k] || []).length; })) return true;
+  if (s.clock && s.clock.secs > 0) return true;
+  return false;
+}
+
+function whenText(iso){
+  if (!iso) return "a moment ago";
+  var d = new Date(iso);
+  var mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "seconds ago";
+  if (mins < 60) return mins + (mins === 1 ? " minute ago" : " minutes ago");
+  return d.toLocaleString();
+}
+
+MRStore.onChange(function(){ paintSave(); });
+</script>
+</body>
+</html>

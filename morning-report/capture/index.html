@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture case | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .from-board{
+    display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    background:#EDF4F6;color:var(--teal);border:1px solid #B6D2DA;padding:1px 6px;border-radius:3px;
+    margin-left:7px;vertical-align:middle;
+  }
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .dxpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .dxpick button{
+    font-size:12.5px;font-weight:500;padding:4px 11px;border-radius:16px;
+    background:#fff;border:1px solid var(--line);color:var(--ink);
+  }
+  .dxpick button:hover{border-color:var(--teal);color:var(--teal)}
+  .takeaway{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .takeaway .n{
+    width:22px;height:22px;flex:none;border-radius:50%;background:var(--navy);color:#fff;
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  }
+  .opt{display:flex;gap:8px;align-items:center;margin-bottom:7px}
+  .opt .letter{
+    width:22px;height:22px;flex:none;border-radius:4px;background:#F2F6F8;border:1px solid var(--line);
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--muted);
+  }
+  .opt input[type=radio]{width:auto;flex:none;accent-color:var(--green)}
+  .opt.correct .letter{background:var(--green);color:#fff;border-color:var(--green)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tag{
+    font-size:12px;padding:3px 9px;border-radius:14px;background:#EDF4F6;color:var(--teal);
+    border:1px solid #B6D2DA;display:flex;gap:6px;align-items:center;
+  }
+  .tag button{background:none;border:none;color:inherit;cursor:pointer;padding:0;font-size:14px;line-height:1}
+
+  .phi{margin-top:16px}
+  .phi[hidden]{display:none}
+  .finding{
+    border:1px solid var(--red);border-left-width:4px;border-radius:6px;background:#FDF6F7;
+    padding:11px 14px;margin-bottom:8px;font-size:13px;
+  }
+  .finding.check{border-color:var(--amber);background:#FBF0DE}
+  .finding .top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .finding .kind{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+  .finding.check .kind{color:#8A6014}
+  .finding .where{font-size:11.5px;color:var(--muted)}
+  .finding code{
+    font-family:var(--mono);background:#fff;border:1px solid var(--line);
+    padding:1px 5px;border-radius:3px;font-size:12.5px;
+  }
+  .finding .why{margin-top:5px;color:#3D4855}
+  .finding .ack{margin-top:8px;font-size:12.5px;display:flex;gap:7px;align-items:center}
+  .finding .ack input{width:auto;flex:none}
+  .savebar{
+    position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+    padding:14px 0;margin-top:22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  }
+  .timer{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+  @media (max-width:820px){ .two,.three{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · after</p>
+    <h1>Capture the case</h1>
+    <p class="sub">Everything the board already knows is filled in. Correct it, add the diagnosis and
+      the board question, and save. This should take under a minute — if it takes longer it will not
+      happen, and a case bank nobody fills is not a case bank.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="panel">
+      <h2>The case</h2>
+
+      <div class="three">
+        <div class="field">
+          <label class="f" for="date">Date</label>
+          <input type="date" id="date">
+        </div>
+        <div class="field">
+          <label class="f" for="site">Site</label>
+          <input type="text" id="site" placeholder="Galveston">
+        </div>
+        <div class="field">
+          <label class="f" for="tagin">Tags</label>
+          <input type="text" id="tagin" placeholder="ortho, ID, toddler — Enter to add">
+        </div>
+      </div>
+      <div class="tags" id="tags"></div>
+
+      <div class="field" style="margin-top:14px">
+        <label class="f" for="objective">Objective <span class="from-board" id="m-objective" hidden>from the board</span></label>
+        <input type="text" id="objective" placeholder="Distinguish septic arthritis from transient synovitis in a febrile toddler">
+      </div>
+
+      <div class="field">
+        <label class="f" for="one_liner">One-liner <span class="from-board" id="m-one_liner" hidden>from the board</span></label>
+        <textarea id="one_liner" rows="2" placeholder="3-year-old, two days of fever, refusing to bear weight, hip flexed and externally rotated"></textarea>
+        <p class="hint">Taken from the problem representation. This is what the review game shows first, so it has to stand alone.</p>
+      </div>
+
+      <div class="two">
+        <div class="field">
+          <label class="f" for="diagnosis">Diagnosis</label>
+          <input type="text" id="diagnosis" placeholder="Septic arthritis of the hip">
+          <div class="dxpick" id="dxpick"></div>
+        </div>
+        <div class="field">
+          <label class="f" for="framework">Framework <span class="from-board" id="m-framework" hidden>from the board</span></label>
+          <input type="text" id="framework" placeholder="Anatomic — by layer">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Takeaways <span class="from-board" id="m-takeaways" hidden>from the board</span></h2>
+      <p class="lede">Three, from the take-home points. These are what round two and round three of the
+        review game are built on.</p>
+      <div id="takeaways"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Board question</h2>
+      <p class="lede">One multiple choice, four options. It becomes the board round in the review game.
+        Leave it blank and the case still saves — it just sits that round out.</p>
+
+      <div class="field">
+        <label class="f" for="stem">Stem</label>
+        <textarea id="stem" rows="2" placeholder="A 4-year-old with fever and hip pain has a normal hip ultrasound. Next best step?"></textarea>
+      </div>
+      <div id="options"></div>
+      <div class="field">
+        <label class="f" for="rationale">Rationale</label>
+        <textarea id="rationale" rows="2" placeholder="A negative effusion pushes toward bone rather than back to synovitis."></textarea>
+      </div>
+    </div>
+
+    <div class="phi panel" id="phi" hidden>
+      <h2>Identifiers</h2>
+      <p class="lede">Case bank entries are permanent and de-identified. These have to be dealt with
+        before this can be saved.</p>
+      <div id="findings"></div>
+    </div>
+
+    <div class="savebar">
+      <button class="amber" id="save">Save to the case bank</button>
+      <a class="btn ghost" href="../scorecard/" id="toScore">Score the session →</a>
+      <span class="hint" style="margin:0" id="savenote"></span>
+      <span class="timer" id="timer"></span>
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project — Morning Report. Case bank entries carry no participant or patient identifiers.</p></div>
+</footer>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script src="../assets/phi.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var tags = [];
+var acked = {};
+var started = Date.now();
+var sessionId = new URLSearchParams(location.search).get("session") || "";
+
+/* ---------- the sixty-second clock, because the spec is a promise ---- */
+setInterval(function(){
+  var s = Math.round((Date.now() - started) / 1000);
+  $("timer").textContent = s < 60 ? s + "s" : Math.floor(s/60) + "m " + (s%60) + "s";
+}, 1000);
+
+/* ---------- takeaways and options ------------------------------------ */
+
+function buildTakeaways(vals){
+  var host = $("takeaways");
+  host.innerHTML = "";
+  for (var i = 0; i < 3; i++){
+    var row = document.createElement("div");
+    row.className = "takeaway";
+    var n = document.createElement("div");
+    n.className = "n"; n.textContent = String(i + 1);
+    var inp = document.createElement("input");
+    inp.type = "text"; inp.id = "take" + i;
+    inp.value = (vals && vals[i]) || "";
+    inp.placeholder = i === 0 ? "Three of four Kocher criteria is past the point of talking yourself out of it" : "";
+    inp.addEventListener("input", revalidate);
+    row.appendChild(n); row.appendChild(inp);
+    host.appendChild(row);
+  }
+}
+
+function buildOptions(){
+  var host = $("options");
+  host.innerHTML = "";
+  for (var i = 0; i < 4; i++){
+    var row = document.createElement("div");
+    row.className = "opt";
+    row.id = "optrow" + i;
+    var letter = document.createElement("div");
+    letter.className = "letter"; letter.textContent = String.fromCharCode(65 + i);
+    var radio = document.createElement("input");
+    radio.type = "radio"; radio.name = "answer"; radio.value = String(i);
+    radio.title = "Mark " + String.fromCharCode(65 + i) + " as the answer";
+    radio.addEventListener("change", paintCorrect);
+    var inp = document.createElement("input");
+    inp.type = "text"; inp.id = "opt" + i;
+    inp.placeholder = "Option " + String.fromCharCode(65 + i);
+    inp.addEventListener("input", revalidate);
+    row.appendChild(letter); row.appendChild(radio); row.appendChild(inp);
+    host.appendChild(row);
+  }
+}
+
+function paintCorrect(){
+  for (var i = 0; i < 4; i++){
+    var r = $("optrow" + i);
+    var checked = document.querySelector('input[name=answer][value="' + i + '"]').checked;
+    r.classList.toggle("correct", checked);
+  }
+}
+
+/* ---------- tags ------------------------------------------------------- */
+
+function renderTags(){
+  var host = $("tags");
+  host.innerHTML = "";
+  tags.forEach(function(tg, i){
+    var el = document.createElement("span");
+    el.className = "tag";
+    el.appendChild(document.createTextNode(tg));
+    var x = document.createElement("button");
+    x.type = "button"; x.textContent = "×";
+    x.addEventListener("click", function(){ tags.splice(i,1); renderTags(); });
+    el.appendChild(x);
+    host.appendChild(el);
+  });
+}
+$("tagin").addEventListener("keydown", function(e){
+  if (e.key !== "Enter" && e.key !== ",") return;
+  e.preventDefault();
+  var v = $("tagin").value.trim().replace(/,$/, "");
+  if (v && tags.indexOf(v) === -1) tags.push(v);
+  $("tagin").value = "";
+  renderTags();
+});
+
+/* ---------- gather ------------------------------------------------------ */
+
+function takeaways(){
+  return [0,1,2].map(function(i){ return ($("take" + i).value || "").trim(); }).filter(Boolean);
+}
+function options(){
+  return [0,1,2,3].map(function(i){ return ($("opt" + i).value || "").trim(); });
+}
+function answerIndex(){
+  var r = document.querySelector('input[name=answer]:checked');
+  return r ? +r.value : -1;
+}
+
+function entry(){
+  var date = $("date").value || MRStore.today();
+  var site = ($("site").value || "").trim();
+  var opts = options().filter(Boolean);
+  var out = {
+    id: MRStore.sessionId(date, site),
+    date: date,
+    site: site,
+    objective: ($("objective").value || "").trim(),
+    one_liner: ($("one_liner").value || "").trim(),
+    diagnosis: ($("diagnosis").value || "").trim(),
+    framework: ($("framework").value || "").trim(),
+    takeaways: takeaways(),
+    tags: tags.slice()
+  };
+  if (($("stem").value || "").trim() && opts.length === 4 && answerIndex() >= 0){
+    out.board_question = {
+      stem: ($("stem").value || "").trim(),
+      options: options(),
+      answer_index: answerIndex(),
+      rationale: ($("rationale").value || "").trim()
+    };
+  }
+  return out;
+}
+
+/* ---------- the identifier check --------------------------------------- */
+
+function fields(){
+  return {
+    "Objective": $("objective").value,
+    "One-liner": $("one_liner").value,
+    "Diagnosis": $("diagnosis").value,
+    "Framework": $("framework").value,
+    "Takeaways": takeaways(),
+    "Stem": $("stem").value,
+    "Options": options(),
+    "Rationale": $("rationale").value,
+    "Tags": tags
+  };
+}
+
+function keyOf(f){ return f.field + "|" + f.kind + "|" + f.match; }
+
+var findings = [];
+
+function revalidate(){
+  findings = MRPhi.scanAll(fields());
+  renderFindings();
+  paintSave();
+}
+
+function renderFindings(){
+  var host = $("findings");
+  host.innerHTML = "";
+  $("phi").hidden = findings.length === 0;
+
+  findings.forEach(function(f){
+    var box = document.createElement("div");
+    box.className = "finding" + (f.severity === "check" ? " check" : "");
+
+    var top = document.createElement("div");
+    top.className = "top";
+    var kind = document.createElement("span");
+    kind.className = "kind"; kind.textContent = f.kind;
+    var code = document.createElement("code");
+    code.textContent = f.match;
+    var where = document.createElement("span");
+    where.className = "where"; where.textContent = "in " + f.field;
+    top.appendChild(kind); top.appendChild(code); top.appendChild(where);
+
+    var why = document.createElement("div");
+    why.className = "why"; why.textContent = f.why;
+
+    box.appendChild(top); box.appendChild(why);
+
+    if (f.severity === "check"){
+      var ack = document.createElement("label");
+      ack.className = "ack";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!acked[keyOf(f)];
+      cb.addEventListener("change", function(){
+        acked[keyOf(f)] = cb.checked;
+        paintSave();
+      });
+      ack.appendChild(cb);
+      ack.appendChild(document.createTextNode("This is clinical, not a person's name."));
+      box.appendChild(ack);
+    }
+
+    host.appendChild(box);
+  });
+}
+
+function unresolved(){
+  var blocks = MRPhi.blocking(findings);
+  var checks = findings.filter(function(f){
+    return f.severity === "check" && !acked[keyOf(f)];
+  });
+  return { blocks: blocks, checks: checks };
+}
+
+function missing(){
+  var m = [];
+  if (!($("one_liner").value || "").trim()) m.push("the one-liner");
+  if (!($("diagnosis").value || "").trim()) m.push("the diagnosis");
+  if (!takeaways().length) m.push("at least one takeaway");
+  return m;
+}
+
+function paintSave(){
+  var u = unresolved();
+  var miss = missing();
+  var btn = $("save");
+  var note = $("savenote");
+
+  if (u.blocks.length){
+    btn.disabled = true;
+    note.textContent = u.blocks.length + (u.blocks.length === 1 ? " identifier has" : " identifiers have") + " to be removed first.";
+    return;
+  }
+  if (u.checks.length){
+    btn.disabled = true;
+    note.textContent = u.checks.length + " possible " + (u.checks.length === 1 ? "name" : "names") + " to confirm or edit.";
+    return;
+  }
+  if (miss.length){
+    btn.disabled = true;
+    note.textContent = "Still needs " + miss.join(", ") + ".";
+    return;
+  }
+  btn.disabled = false;
+  note.textContent = "";
+}
+
+/* ---------- save ---------------------------------------------------------- */
+
+$("save").addEventListener("click", function(){
+  revalidate();
+  var u = unresolved();
+  if (u.blocks.length || u.checks.length || missing().length){ paintSave(); return; }
+
+  var e = entry();
+  var path = "casebank/" + e.id + ".json";
+
+  MRStore.read(path).then(function(existing){
+    if (existing && !confirm("There is already a case saved for " + e.id + ". Overwrite it?")) return null;
+    return MRStore.write(path, e).then(function(ok){
+      if (!ok){
+        MRStore.download(path, e);
+        MRStore.notify("warn", "No folder connected, so the entry was downloaded. Put it in casebank/ by hand.", true);
+        return;
+      }
+      MRStore.notify("ok", "Saved to " + path + " — " + Math.round((Date.now() - started)/1000) + " seconds.");
+      $("save").disabled = true;
+      $("savenote").textContent = "Saved. It is in the review game from now on.";
+    });
+  });
+});
+
+/* ---------- prefill from the board ----------------------------------------- */
+
+function markFrom(id){ var el = $("m-" + id); if (el) el.hidden = false; }
+
+function prefill(a){
+  if (!a) return;
+  if (a.date) $("date").value = a.date;
+  if (a.site) $("site").value = a.site;
+  if (a.objective){ $("objective").value = a.objective; markFrom("objective"); }
+  if (a.problem_representation){ $("one_liner").value = a.problem_representation; markFrom("one_liner"); }
+  if (a.framework){ $("framework").value = a.framework; markFrom("framework"); }
+
+  if (a.take_homes){
+    var lines = String(a.take_homes).split(/\r?\n|(?:\s*[·•]\s*)|(?:\s*;\s*)/)
+      .map(function(s){ return s.replace(/^[\s\-–—*]+/, "").trim(); })
+      .filter(Boolean);
+    if (lines.length){ buildTakeaways(lines.slice(0,3)); markFrom("takeaways"); }
+  }
+
+  /* Candidate diagnoses: whatever survived the pruning. The one still
+     standing at 0:25 is usually the answer, so offer them rather than
+     making the scribe retype it. */
+  var all = ((a.differential && a.differential.intern) || [])
+    .concat((a.differential && a.differential.senior) || []);
+  var alive = all.filter(function(d){ return !d.struck; }).map(function(d){ return d.name; });
+  var seen = {}, uniq = [];
+  alive.forEach(function(n){ if (!seen[n]){ seen[n] = 1; uniq.push(n); } });
+
+  var pick = $("dxpick");
+  pick.innerHTML = "";
+  uniq.forEach(function(n){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = n;
+    b.addEventListener("click", function(){ $("diagnosis").value = n; revalidate(); });
+    pick.appendChild(b);
+  });
+  if (uniq.length){
+    var hint = document.createElement("p");
+    hint.className = "hint";
+    hint.style.width = "100%";
+    hint.textContent = "Still standing at 0:25 — click one.";
+    pick.appendChild(hint);
+  }
+
+  if (a.id) $("toScore").href = "../scorecard/?session=" + encodeURIComponent(a.id);
+}
+
+/* ---------- boot ------------------------------------------------------------- */
+
+buildTakeaways();
+buildOptions();
+$("date").value = MRStore.today();
+["objective","one_liner","diagnosis","framework","stem","rationale","site"].forEach(function(id){
+  $(id).addEventListener("input", revalidate);
+});
+
+MRStore.whenReady.then(function(){
+  MRStore.mountBar("mr-bar");
+  if (!MRStore.status().ready) return null;
+  if (sessionId) return MRStore.read("board-archive/" + sessionId + ".json");
+  /* No session named: fall back to the most recent archive, which is
+     almost always the one that just finished. */
+  return MRStore.list("board-archive").then(function(names){
+    var latest = names.filter(function(n){ return /\.json$/.test(n); }).sort().pop();
+    return latest ? MRStore.read("board-archive/" + latest) : null;
+  });
+}).then(function(a){
+  if (a){
+    prefill(a);
+    started = Date.now();
+  }
+  revalidate();
+});
+</script>
+</body>
+</html>

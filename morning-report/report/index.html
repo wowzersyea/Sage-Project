@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Group report | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .controls{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:6px}
+  .controls > div{flex:0 1 180px}
+
+  .refuse{
+    background:#FBF0DE;border:1px solid var(--amber);border-radius:8px;padding:22px 24px;
+  }
+  .refuse h2{color:#8A6014;margin-bottom:8px}
+  .refuse p{font-size:14px;color:#5C4415;line-height:1.6;margin:0 0 10px;max-width:70ch}
+  .refuse p:last-child{margin-bottom:0}
+  .refuse .n{font-family:var(--serif);font-size:34px;font-weight:700;color:#8A6014;line-height:1}
+
+  .windowline{
+    background:var(--navy);color:#D7E2EC;border-radius:7px;padding:14px 18px;
+    font-size:13.5px;line-height:1.55;margin-bottom:18px;
+  }
+  .windowline b{color:var(--amber)}
+
+  table.rep{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff}
+  table.rep th,table.rep td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  table.rep th{
+    font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);background:#F7F9FB;
+  }
+  table.rep td.item{font-weight:500}
+  table.rep td.col{font-size:11px;color:var(--muted);white-space:nowrap}
+  table.rep td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+  table.rep td.pct{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;width:62px}
+  table.rep tr.teach td{background:#FDF6F7}
+  table.rep tr.teach td.item{box-shadow:inset 3px 0 0 var(--red)}
+  table.rep tr.suppressed td{color:#9FB0BE;background:#FAFBFC}
+
+  .bar-cell{width:140px}
+  .meter{height:9px;background:#EDF1F4;border-radius:5px;overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:5px;background:var(--green)}
+  .meter i.low{background:var(--red)}
+  .meter i.mid{background:var(--amber)}
+
+  .fails-tbl tr.hit td{background:#FDF6F7}
+  .fails-tbl tr.hit td:first-child{box-shadow:inset 3px 0 0 var(--red);font-weight:600}
+
+  .teachbox{
+    background:var(--navy);color:#fff;border-radius:8px;padding:20px 24px;margin-bottom:18px;
+  }
+  .teachbox .lb{
+    font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--amber);margin-bottom:7px;
+  }
+  .teachbox .it{font-family:var(--serif);font-size:23px;font-weight:700;line-height:1.3;margin:0}
+  .teachbox .su{color:#9FB4C8;font-size:13px;margin:8px 0 0}
+
+  .repfoot{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6;max-width:80ch}
+
+  @media print{
+    .mr-bar,.controls,.printbar,footer.mr,header.hero .rule{display:none !important}
+    body{background:#fff}
+    header.hero{background:none;color:var(--ink);padding:0 0 10px;border-bottom:2px solid var(--navy)}
+    header.hero h1{color:var(--navy);font-size:22pt}
+    header.hero .eyebrow{color:var(--navy)}
+    header.hero p.sub{color:var(--muted);font-size:10pt}
+    .band{padding:10px 0}
+    .wrap{max-width:none;padding:0}
+    .windowline{background:none;color:var(--ink);border:1px solid var(--navy)}
+    .windowline b{color:var(--navy)}
+    .teachbox{background:none;color:var(--ink);border:1.5px solid var(--navy)}
+    .teachbox .lb{color:var(--navy)}
+    .teachbox .su{color:var(--muted)}
+    table.rep{font-size:9.5pt}
+    table.rep th,table.rep td{padding:4px 6px}
+    .panel{border:none;padding:0;margin-top:12px}
+    .panel + .panel{margin-top:14px}
+    @page{size:portrait;margin:12mm}
+  }
+  @media (max-width:820px){
+    .bar-cell{display:none}
+    table.rep td.col{display:none}
+    table.rep th:nth-child(2){display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · later</p>
+    <h1>Group report</h1>
+    <p class="sub">Which item the group misses most, across a window of sessions. The one at the top
+      is the next thing to teach.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="panel controls-panel" style="margin-bottom:16px">
+      <div class="controls">
+        <div>
+          <label class="f" for="window">Window</label>
+          <select id="window">
+            <option value="4">Last 4 sessions</option>
+            <option value="6">Last 6 sessions</option>
+            <option value="8" selected>Last 8 sessions</option>
+            <option value="12">Last 12 sessions</option>
+            <option value="0">Every session</option>
+          </select>
+        </div>
+        <div>
+          <label class="f" for="site">Site</label>
+          <select id="site"><option value="">Both sites</option></select>
+        </div>
+        <div class="printbar" style="flex:0 0 auto">
+          <button class="ghost" id="print">Print / save as PDF</button>
+        </div>
+      </div>
+      <p class="hint" id="stock"></p>
+    </div>
+
+    <div id="report"></div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project — Morning Report. Reads <code>sessions/</code>. No session, and no person, is ever named.</p></div>
+</footer>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script>
+/* ==================================================================
+   The group report.
+
+   A single session cannot be de-identified. There is exactly one
+   PGY-1 in the room, so "the PGY-1 did not name the can't-miss" is a
+   named accusation to everyone who was there. Four rules follow, and
+   they are enforced here rather than written down as guidance:
+
+     1. fewer than four sessions in the window and it refuses to render
+     2. an item with fewer than four observations is suppressed rather
+        than shown against a small denominator
+     3. the window is reported; which session did what is not
+     4. nothing is attributed to a person, or to a role within a session
+   ================================================================== */
+
+var MIN_SESSIONS = 4;
+var MIN_OBSERVATIONS = 4;
+
+var $ = function(id){ return document.getElementById(id); };
+var rubric = null;
+var sessions = [];
+
+function itemsIndex(){
+  var out = {};
+  rubric.columns.forEach(function(col){
+    col.items.forEach(function(i){ out[i.id] = { item: i, column: col.title }; });
+  });
+  return out;
+}
+
+function inWindow(){
+  var site = $("site").value;
+  var n = parseInt($("window").value, 10);
+  var rows = sessions
+    .filter(function(s){ return !site || s.site === site; })
+    .sort(function(a, b){ return (a.date || "") < (b.date || "") ? 1 : -1; });
+  return n > 0 ? rows.slice(0, n) : rows;
+}
+
+function render(){
+  /* connecting the folder can fire this before the rubric has
+     arrived; there is nothing to draw until it has. */
+  if (!rubric) return;
+  var host = $("report");
+  host.innerHTML = "";
+  var win = inWindow();
+
+  $("stock").textContent = sessions.length
+    ? sessions.length + (sessions.length === 1 ? " scorecard" : " scorecards") + " in sessions/."
+    : "Nothing in sessions/ yet.";
+
+  if (win.length < MIN_SESSIONS){ host.appendChild(refusal(win.length)); return; }
+
+  var idx = itemsIndex();
+  var rows = [];
+  Object.keys(idx).forEach(function(id){
+    var seen = 0, struck = 0;
+    win.forEach(function(s){
+      var r = s.items && s.items[id];
+      if (!r || typeof r.final_verdict !== "boolean") return;
+      seen++;
+      if (r.final_verdict) struck++;
+    });
+    rows.push({
+      id: id, text: idx[id].item.text, column: idx[id].column,
+      card: idx[id].item.card, anchor: idx[id].item.anchor,
+      seen: seen, struck: struck,
+      pct: seen ? struck / seen : null,
+      suppressed: seen < MIN_OBSERVATIONS
+    });
+  });
+
+  var shown = rows.filter(function(r){ return !r.suppressed; })
+                  .sort(function(a, b){ return a.pct - b.pct || a.text.localeCompare(b.text); });
+  var hidden = rows.filter(function(r){ return r.suppressed; });
+
+  host.appendChild(windowLine(win, hidden.length));
+  if (shown.length) host.appendChild(teachBox(shown[0], win.length));
+  host.appendChild(itemTable(shown, hidden));
+  host.appendChild(failTable(win));
+  host.appendChild(footNote(win, hidden.length));
+}
+
+function refusal(n){
+  var box = document.createElement("div");
+  box.className = "refuse panel";
+  var h = document.createElement("h2");
+  h.textContent = n === 0 ? "Nothing to report on yet" : "Not enough sessions to report on";
+  box.appendChild(h);
+
+  var p1 = document.createElement("p");
+  p1.innerHTML = "<span class='n'>" + n + "</span> of the " + MIN_SESSIONS +
+    " sessions this report needs" + ($("site").value ? " at " + MRStore.esc($("site").value) : "") + ".";
+  box.appendChild(p1);
+
+  var p2 = document.createElement("p");
+  p2.textContent = "A single session cannot be de-identified. There is exactly one PGY-1 in the room, " +
+    "so “the PGY-1 did not name the can't-miss” is a named accusation to everyone who was there — and " +
+    "with two or three sessions the arithmetic is thin enough that the same is true. The report will " +
+    "render once there are " + MIN_SESSIONS + ".";
+  box.appendChild(p2);
+
+  var p3 = document.createElement("p");
+  p3.textContent = "Score sessions on the scorecard after report and they accumulate here.";
+  box.appendChild(p3);
+  return box;
+}
+
+function windowLine(win, hiddenN){
+  var el = document.createElement("div");
+  el.className = "windowline";
+  var sites = {};
+  win.forEach(function(s){ if (s.site) sites[s.site] = 1; });
+  var siteNames = Object.keys(sites).sort();
+  el.innerHTML = "<b>The last " + win.length + " sessions</b>" +
+    (siteNames.length ? " · " + MRStore.esc(siteNames.join(" and ")) : "") +
+    ". Each figure is the share of those sessions in which the item was struck off. " +
+    "Which session was which is deliberately not recorded here" +
+    (hiddenN ? ", and " + hiddenN + " item" + (hiddenN === 1 ? " is" : "s are") +
+      " suppressed for having fewer than " + MIN_OBSERVATIONS + " observations." : ".");
+  return el;
+}
+
+function teachBox(top, n){
+  var el = document.createElement("div");
+  el.className = "teachbox";
+  el.appendChild(mk("div", "lb", "The next thing to teach"));
+  el.appendChild(mk("p", "it", top.text));
+  var sub = mk("p", "su",
+    "Struck in " + top.struck + " of " + top.seen + " sessions in this window — the lowest on the card. " +
+    (top.card ? "" : ""));
+  el.appendChild(sub);
+  if (top.card){
+    var a = document.createElement("a");
+    a.href = "../roles/" + top.card + "/" + (top.anchor ? "#" + top.anchor : "");
+    a.target = "_blank"; a.rel = "noopener";
+    a.style.cssText = "color:var(--amber);font-size:13px;font-weight:600;text-decoration:none;border-bottom:1px dotted";
+    a.textContent = "The standard it comes from →";
+    el.appendChild(a);
+  }
+  return el;
+}
+
+function mk(tag, cls, text){
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function itemTable(shown, hidden){
+  var panel = mk("div", "panel");
+  panel.appendChild(mk("h2", null, "Every item, least often struck first"));
+  panel.appendChild(mk("p", "lede", "Ascending, so the top row is where the group is weakest."));
+
+  var wrapper = mk("div");
+  wrapper.style.overflowX = "auto";
+  var tbl = mk("table", "rep");
+  var head = mk("thead");
+  var hr = mk("tr");
+  ["Item", "Column", "", "Struck", "Share"].forEach(function(h){ hr.appendChild(mk("th", null, h)); });
+  head.appendChild(hr);
+  tbl.appendChild(head);
+
+  var tb = mk("tbody");
+  shown.forEach(function(r, i){
+    var tr = mk("tr");
+    if (i === 0) tr.className = "teach";
+
+    var td = mk("td", "item");
+    var a = document.createElement("a");
+    a.href = "../roles/" + r.card + "/" + (r.anchor ? "#" + r.anchor : "");
+    a.target = "_blank"; a.rel = "noopener";
+    a.style.cssText = "color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)";
+    a.textContent = r.text;
+    a.title = "The standard on the " + r.card + " card";
+    td.appendChild(a);
+    tr.appendChild(td);
+
+    tr.appendChild(mk("td", "col", r.column));
+
+    var bar = mk("td", "bar-cell");
+    var meter = mk("div", "meter");
+    var fill = document.createElement("i");
+    fill.style.width = Math.round(r.pct * 100) + "%";
+    fill.className = r.pct < 0.5 ? "low" : r.pct < 0.8 ? "mid" : "";
+    meter.appendChild(fill);
+    bar.appendChild(meter);
+    tr.appendChild(bar);
+
+    tr.appendChild(mk("td", "n", r.struck + " / " + r.seen));
+    tr.appendChild(mk("td", "pct", Math.round(r.pct * 100) + "%"));
+    tb.appendChild(tr);
+  });
+
+  hidden.forEach(function(r){
+    var tr = mk("tr", "suppressed");
+    tr.appendChild(mk("td", "item", r.text));
+    tr.appendChild(mk("td", "col", r.column));
+    tr.appendChild(mk("td", "bar-cell", ""));
+    var n = mk("td", "n", "—");
+    n.title = "Only " + r.seen + " observation" + (r.seen === 1 ? "" : "s") +
+      ", fewer than the " + MIN_OBSERVATIONS + " this report will show a figure for.";
+    tr.appendChild(n);
+    tr.appendChild(mk("td", "pct", "suppressed"));
+    tb.appendChild(tr);
+  });
+
+  tbl.appendChild(tb);
+  wrapper.appendChild(tbl);
+  panel.appendChild(wrapper);
+  return panel;
+}
+
+function failTable(win){
+  var panel = mk("div", "panel");
+  panel.appendChild(mk("h2", null, "Automatic fails"));
+  panel.appendChild(mk("p", "lede",
+    "How often each was true across the window. Any one of them means the session did not hit the standard."));
+
+  var tbl = mk("table", "rep fails-tbl");
+  var head = mk("thead"), hr = mk("tr");
+  ["", "Sessions", "Share"].forEach(function(h){ hr.appendChild(mk("th", null, h)); });
+  head.appendChild(hr); tbl.appendChild(head);
+
+  var tb = mk("tbody");
+  rubric.automatic_fails.forEach(function(f){
+    var seen = 0, hit = 0;
+    win.forEach(function(s){
+      var r = s.automatic_fails && s.automatic_fails[f.id];
+      if (!r || typeof r.final_verdict !== "boolean") return;
+      seen++;
+      if (r.final_verdict) hit++;
+    });
+    var tr = mk("tr");
+    if (seen >= MIN_OBSERVATIONS && hit > 0) tr.className = "hit";
+    tr.appendChild(mk("td", "item", f.text));
+    if (seen < MIN_OBSERVATIONS){
+      tr.appendChild(mk("td", "n", "—"));
+      tr.appendChild(mk("td", "pct", "suppressed"));
+    } else {
+      tr.appendChild(mk("td", "n", hit + " / " + seen));
+      tr.appendChild(mk("td", "pct", Math.round(hit / seen * 100) + "%"));
+    }
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+  panel.appendChild(tbl);
+  return panel;
+}
+
+function footNote(win, hiddenN){
+  var p = mk("p", "repfoot");
+  p.textContent =
+    "Window: the last " + win.length + " scored sessions" +
+    ($("site").value ? " at " + $("site").value : " across both sites") + ". " +
+    "Items with fewer than " + MIN_OBSERVATIONS + " observations are suppressed rather than shown against a small " +
+    "denominator" + (hiddenN ? " (" + hiddenN + " here)" : "") + ". " +
+    "This report carries no individual attribution, no attribution by role, and no indication of which " +
+    "session produced which result. It is formative: it says what to teach next, not how anyone performed. " +
+    "It is not a milestone, an evaluation record, or an input to one.";
+  return p;
+}
+
+$("print").addEventListener("click", function(){ window.print(); });
+["window", "site"].forEach(function(id){ $(id).addEventListener("change", render); });
+
+function fillSites(){
+  var sel = $("site");
+  var keep = sel.value;
+  sel.innerHTML = "";
+  var all = document.createElement("option");
+  all.value = ""; all.textContent = "Both sites";
+  sel.appendChild(all);
+  var seen = {};
+  sessions.forEach(function(s){ if (s.site) seen[s.site] = 1; });
+  Object.keys(seen).sort().forEach(function(s){
+    var o = document.createElement("option"); o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+  sel.value = keep;
+}
+
+fetch(MRStore.base() + "content/rubric.json", { cache: "no-cache" })
+  .then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then(function(j){ rubric = j; return MRStore.whenReady; })
+  .then(function(){
+    MRStore.mountBar("mr-bar");
+    if (!MRStore.status().ready) return [];
+    return MRStore.readAll("sessions");
+  })
+  .then(function(rows){
+    sessions = rows.map(function(r){ return r.data; }).filter(function(s){ return s && s.items; });
+    fillSites();
+    render();
+  })
+  .catch(function(err){
+    MRStore.notify("err", "Could not build the report — " + (err && err.message ? err.message : err), true);
+  });
+
+MRStore.onChange(function(){
+  if (!MRStore.status().ready) return;
+  MRStore.readAll("sessions").then(function(rows){
+    sessions = rows.map(function(r){ return r.data; }).filter(function(s){ return s && s.items; });
+    fillSites();
+    render();
+  });
+});
+</script>
+</body>
+</html>

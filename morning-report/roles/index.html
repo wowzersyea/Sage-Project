@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Role cards and handouts | Morning Report</title>
+<meta name="description" content="The seven pediatric morning report role cards, one URL each, plus the printed collateral.">
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+  a.rc{
+    display:block;background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:16px 18px;text-decoration:none;color:inherit;
+  }
+  a.rc:hover{border-color:#9FB0BE;box-shadow:0 2px 10px rgba(22,40,60,.06)}
+  a.rc .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+  a.rc h3{margin:0;font-size:17px}
+  a.rc .slot{
+    font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:#fff;background:var(--navy);padding:3px 8px;border-radius:3px;white-space:nowrap;
+  }
+  a.rc p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  a.rc .copy{
+    font-size:11.5px;color:var(--teal);margin-top:9px;display:inline-block;font-weight:600;cursor:pointer;
+  }
+  .dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+  a.file{
+    display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+    border-radius:7px;padding:13px 15px;text-decoration:none;color:inherit;
+  }
+  a.file:hover{border-color:var(--teal)}
+  a.file .ext{
+    font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#fff;background:var(--muted);
+    padding:3px 6px;border-radius:3px;flex:none;margin-top:2px;
+  }
+  a.file .ext.pdf{background:var(--red)}
+  a.file .ext.pptx{background:#B7472A}
+  a.file .ext.docx{background:var(--navy-2)}
+  a.file .nm{font-weight:600;font-size:14px;margin-bottom:2px}
+  a.file .no{font-size:12.5px;color:var(--muted);line-height:1.45}
+  .blockline{
+    background:#FBF0DE;border:1px solid var(--amber);border-radius:7px;padding:14px 17px;
+    font-size:13.5px;color:#5C4415;margin-bottom:20px;line-height:1.55;
+  }
+  .blockline b{color:#8A6014}
+</style>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · before</p>
+    <h1>Role cards</h1>
+    <p class="sub">Seven cards, one URL each. The facilitator sends the one-liner 24 hours ahead
+      anyway — attaching a link to exactly that person's card, and nothing else, is what makes the
+      card get read. A seven-page PDF attachment does not get read.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+    <div class="blockline" id="blockline"></div>
+    <div class="cards" id="cards"></div>
+
+    <h2 style="margin-top:32px" id="handouts">Handouts</h2>
+    <p class="lede">The printed collateral, as it is. Only the role cards get the single-source
+      treatment — they are the ones that get emailed and the ones whose content changes.</p>
+    <div class="dl" id="downloads"></div>
+
+    <div class="panel" style="margin-top:22px">
+      <h2>Printing</h2>
+      <p class="lede" style="margin-bottom:0">Every card page carries print CSS: <b>Print &rarr; Save as PDF</b>
+        reproduces the printed handout on one page, white ground, same layout. There is no separate
+        PDF pipeline to keep in step &mdash; change a timing in <code>content/roles.json</code> and the web
+        page, the print view and the run-of-show table all follow.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project &mdash; Morning Report.</p></div>
+</footer>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script src="../assets/content.js"></script>
+<script>
+Promise.all([MRStore.whenReady, MRContent.load()]).then(function(){
+  MRStore.mountBar("mr-bar");
+  var d = MRContent.get();
+  var blockId = MRRoster.blockFor(MRStore.today()).id;
+  var b = MRContent.block(blockId);
+
+  document.getElementById("blockline").innerHTML =
+    "<b>" + MRStore.esc(b.label) + " block.</b> " +
+    (b.ask
+      ? "The intern also owes " + MRStore.esc(b.ask) + ". "
+      : "The four deliverables only — nothing extra has been introduced yet. ") +
+    "The senior's block runs " + b.senior_minutes + " minutes and the first pass runs " +
+    MRContent.pgy1Minutes(blockId) + ". The cards below already say so.";
+
+  var host = document.getElementById("cards");
+  d.roles.forEach(function(r){
+    var a = document.createElement("a");
+    a.className = "rc";
+    a.href = r.slug + "/";
+
+    var top = document.createElement("div");
+    top.className = "top";
+    var h = document.createElement("h3"); h.textContent = r.name;
+    var slot = document.createElement("span");
+    slot.className = "slot";
+    slot.textContent = MRContent.taglineFor(r.slug, blockId) || r.tagline;
+    top.appendChild(h); top.appendChild(slot);
+
+    var p = document.createElement("p");
+    p.textContent = r.lede;
+
+    var copy = document.createElement("span");
+    copy.className = "copy";
+    copy.textContent = "Copy the link";
+    copy.addEventListener("click", function(e){
+      e.preventDefault(); e.stopPropagation();
+      var url = new URL(r.slug + "/", location.href).href;
+      var done = function(){ copy.textContent = "Copied"; setTimeout(function(){ copy.textContent = "Copy the link"; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+      else { window.prompt("Copy this link:", url); }
+    });
+
+    a.appendChild(top); a.appendChild(p); a.appendChild(copy);
+    host.appendChild(a);
+  });
+
+  var dl = document.getElementById("downloads");
+  (d.handouts || []).forEach(function(f){
+    var ext = (f.file.split(".").pop() || "").toLowerCase();
+    var a = document.createElement("a");
+    a.className = "file";
+    a.href = "../handouts/" + f.file;
+    a.setAttribute("download", "");
+
+    var e = document.createElement("span");
+    e.className = "ext " + ext;
+    e.textContent = ext.toUpperCase();
+
+    var box = document.createElement("span");
+    var nm = document.createElement("span");
+    nm.className = "nm"; nm.textContent = f.name;
+    var no = document.createElement("span");
+    no.className = "no"; no.textContent = f.note;
+    box.appendChild(nm); box.appendChild(document.createElement("br")); box.appendChild(no);
+
+    a.appendChild(e); a.appendChild(box);
+    dl.appendChild(a);
+  });
+});
+</script>
+</body>
+</html>

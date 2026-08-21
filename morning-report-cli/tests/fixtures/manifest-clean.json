@@ -1,0 +1,16 @@
+{
+  "session_date": "2026-09-03",
+  "site": "Galveston",
+  "objective": "Distinguish septic arthritis from transient synovitis in a febrile toddler",
+  "slide_count": 7,
+  "board_exported": true,
+  "deidentified_confirmed": true,
+  "roles": {
+    "Will Barlow": "PRESENTER",
+    "Nadia Haddad": "SCRIBE",
+    "A Resident": "PGY1",
+    "B Resident": "SENIOR",
+    "C Attending": "FACULTY",
+    "D Chief": "FACILITATOR"
+  }
+}
