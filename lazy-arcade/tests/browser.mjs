@@ -998,6 +998,91 @@ console.log("\nFeature music");
   await ctx.close();
 }
 
+/* -------------------------------------------------- turbo and reduced motion */
+// Turbo and reduced-motion must change only what the player SEES. Both skip a
+// lot -- win-line walks, orb flights, the row slam, the specular sweep, the
+// feature intro -- and any of that quietly touching an outcome would be a
+// fairness problem that no individual spin would reveal, because a turbo spin
+// looks perfectly ordinary on its own.
+console.log("\nTurbo and reduced motion");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    const seed = new Uint8Array(32).map((_, i) => (i * 29 + 11) & 0xff);
+    const drift = [], results = {};
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click();
+      await sleep(350);
+      const runs = [];
+      for (const t of [false, true]) {
+        turbo = t;
+        const res = [];
+        for (let n = 1; n <= 25; n++) {
+          const rng = makeRng(seed, "c", n, g);
+          const o = g === "pride" ? spinPride(rng)
+                  : g === "cubcluster" ? spinCluster(rng) : spinVault(rng, {});
+          res.push(+(o.base + o.feature).toFixed(9));
+        }
+        runs.push(JSON.stringify(res));
+      }
+      if (runs[0] !== runs[1]) drift.push(g);
+      results[g] = runs[0];
+    }
+    turbo = false;
+
+    // and end to end, through the real play loop
+    document.querySelector('[data-game="traitvault"]').click();
+    await sleep(350);
+    const paid = {};
+    for (const t of [false, true]) {
+      turbo = t;
+      serverSeed = new Uint8Array(32).map((_, i) => (i * 7 + 3) & 0xff);
+      nonce = 0;
+      const b0 = balance;
+      for (let i = 0; i < 6; i++) await doSpin();
+      paid[t ? "turbo" : "normal"] = +(balance - b0).toFixed(6);
+    }
+    turbo = false;
+    return { drift, paid, results };
+  });
+
+  // reduceMotion is read from the media query at load and is a const, so the
+  // only honest way to exercise it is to load a page that really has it set.
+  const rm = await page({ reducedMotion: "reduce" });
+  const under = await rm.p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const seed = new Uint8Array(32).map((_, i) => (i * 29 + 11) & 0xff);
+    const out = { on: reduceMotion, results: {} };
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click();
+      await sleep(350);
+      const res = [];
+      for (let n = 1; n <= 25; n++) {
+        const rng = makeRng(seed, "c", n, g);
+        const o = g === "pride" ? spinPride(rng)
+                : g === "cubcluster" ? spinCluster(rng) : spinVault(rng, {});
+        res.push(+(o.base + o.feature).toFixed(9));
+      }
+      out.results[g] = JSON.stringify(res);
+    }
+    return out;
+  });
+  await rm.ctx.close();
+  const rmDrift = Object.keys(r.results).filter((g) => r.results[g] !== under.results[g]);
+  check("turbo and reduced motion do not change any outcome", r.drift.length === 0,
+        r.drift.length ? `differs in ${r.drift.join(", ")}` : "25 spins x 3 games identical");
+  check("a turbo session pays exactly what a normal one pays",
+        r.paid.turbo === r.paid.normal,
+        `normal ${r.paid.normal}, turbo ${r.paid.turbo}`);
+  check("the reduced-motion profile really reports reduced motion", under.on);
+  check("reduced motion does not change any outcome either", rmDrift.length === 0,
+        rmDrift.length ? `differs in ${rmDrift.join(", ")}` : "identical across all three games");
+  check("no runtime errors under turbo", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* ----------------------------------------------------------------- tongue */
 // Mouth movement was the last animation I was still calling artist-only, and
 // after being wrong three times about exactly that I tested it instead. The
