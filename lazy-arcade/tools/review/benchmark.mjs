@@ -183,6 +183,47 @@ const m = await p.evaluate(async () => {
     };
   }
 
+  /* --- symbol animation ---------------------------------------------------- */
+  // Measured, because the first version of this file ASSERTED that the symbols
+  // were static and scored two rows against the page on that assumption. They
+  // are not: every tile carries an idle, and a winning tile performs. What a
+  // static portrait genuinely cannot do is move INSIDE its own outline.
+  {
+    const img = document.querySelector("#reels .sym img");
+    const cs = img ? getComputedStyle(img) : null;
+    const imgs = [...document.querySelectorAll("#reels .sym img")];
+    const delays = new Set(imgs.map((i) => getComputedStyle(i).animationDelay));
+    const durs = new Set(imgs.map((i) => getComputedStyle(i).animationDuration));
+    const sheet = [...document.querySelectorAll("style")].map((x) => x.textContent).join("");
+    // Brace-count the block. A regex cannot lift @keyframes out of a stylesheet
+    // -- the body contains nested braces, so /@keyframes pop\{[^}]*\}/ stops at
+    // the FIRST inner "}" and reported a seven-stop ladder as two stops.
+    const popKeys = (() => {
+      const at = sheet.indexOf("@keyframes pop{");
+      if (at === -1) return "";
+      let d = 0;
+      for (let i = sheet.indexOf("{", at); i < sheet.length; i++) {
+        if (sheet[i] === "{") d++;
+        else if (sheet[i] === "}" && --d === 0) return sheet.slice(at, i + 1);
+      }
+      return "";
+    })();
+    out.symAnim = {
+      idle: !!cs && cs.animationName === "idle",
+      idleDurs: [...durs].sort(),
+      idleCells: imgs.length,
+      idleDesynced: delays.size > 1,
+      idleDelays: delays.size,
+      // A "win animation" that is one scale step is a zoom. Count the stops.
+      popStops: (popKeys.match(/\d+%\s*\{/g) || []).length,
+      popOrigin: /\.sym\.pop\{transform-origin:50% 88%\}/.test(sheet.replace(/\s+/g, "")) ||
+                 /transform-origin:50%88%/.test(sheet.replace(/\s+/g, "")),
+      backlight: /\.sym\.pop::before/.test(sheet),
+      ring: /\.sym\.pop::after/.test(sheet),
+      shine: typeof shineSymbol === "function",
+    };
+  }
+
   /* --- responsible play ---------------------------------------------------- */
   out.responsible = {
     lossLimit: !!$("apLoss"),
@@ -298,17 +339,30 @@ row(G, "Net position visible at a glance", m.responsible.netPosition ? PASS : PA
       : "staked and returned exist in the bench, not on the cabinet");
 
 row(H, "Twelve symbols from owned art", PASS, "each traced to a token the operator holds");
-row(H, "Per-symbol win animation", NEEDS_ART,
-    "symbols are static tiles; wins animate the CELL, not the character",
-    "Four procedural routes tested and rejected with rendered evidence: slice " +
-    "mesh warp, three-piece falloff, silhouette grow, and a collection-wide " +
-    "eye-twin search that returned 0 matches across 9,999 tokens. Brief in " +
-    "docs/COMPETITIVE-GAPS.md.");
+{
+  const a = m.symAnim;
+  const performs = a.popStops >= 5 && a.popOrigin && a.backlight && a.ring && a.shine;
+  row(H, "Winning symbols perform, not just highlight", performs ? PASS : PARTIAL,
+      `${a.popStops}-stop squash-and-stretch from a bottom origin` +
+      `${a.backlight ? ", backlight" : ""}${a.ring ? ", ring" : ""}${a.shine ? ", specular sweep" : ""}`,
+      "Animation principle applied to a static portrait: anticipation, action, " +
+      "follow-through, scaled from 50% 88% so the lion rears instead of zooming.");
+  row(H, "Motion INSIDE the character outline", NEEDS_ART,
+      "no blink, mane sway or mouth movement -- the portrait cannot move within itself",
+      "This is the part that genuinely needs drawn frames. Four procedural routes " +
+      "were tested and rejected with rendered evidence: slice mesh warp, three-piece " +
+      "falloff, silhouette grow, and a collection-wide eye-twin search that returned " +
+      "0 matches across 9,999 tokens. Brief in docs/COMPETITIVE-GAPS.md.");
+}
 row(H, "Row-multiplier art", NEEDS_ART,
     "orbs are drawn procedurally (svgOrb)",
     "The operator's own multiplier files were never received; two filesystem " +
     "sweeps found only files generated in-session.");
-row(H, "Character idle / ambient motion", NEEDS_ART, "static tiles between spins");
+row(H, "Ambient idle motion", m.symAnim.idle && m.symAnim.idleDesynced ? PASS : PARTIAL,
+    `${m.symAnim.idleCells} tiles idling on ${m.symAnim.idleDurs.length} periods `
+    + `(${m.symAnim.idleDurs.join(", ")}) across ${m.symAnim.idleDelays} phase offsets`,
+    m.symAnim.idleDesynced ? "" :
+      "Every tile sharing one phase makes the grid breathe as a single sheet.");
 
 /* ------------------------------------------------------------------ report */
 const order = [A, B, C, D, E, F, G, H];
