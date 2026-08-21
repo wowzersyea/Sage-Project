@@ -2431,13 +2431,8 @@ function canvasSpinAll(grid,plan,onLand){
       for(const c of cols){
         if(c.landed) continue;
         const k=Math.max(0,Math.min(1,(t-c.start)/c.dur));
-        // Ease matches the DOM curve it replaces, including the overshoot: the
-        // reel passes its stop and settles back, which is what gives a
-        // mechanical reel its weight.
-        const e=k<1?(1-Math.pow(1-k,3)):1;
-        const over=k>0.86&&k<1 ? Math.sin((k-0.86)/0.14*Math.PI)*0.16 : 0;
         c.prevTop=c.top;
-        c.top=(c.BUF*cell)*(1-e)+over*cell;
+        c.top=(c.BUF*cell)*(1-reelEase(k));
         drawColumn(c,cell);
         if(k>=1){
           c.landed=true;
@@ -2449,6 +2444,63 @@ function canvasSpinAll(grid,plan,onLand){
       else{ reelCtx.clearRect(0,0,cv.width,cv.height); cv.style.opacity="0"; resolve(); }
     })(performance.now());
   });
+}
+
+/* Reel travel as a fraction of the distance, 0 -> 1.
+ *
+ * The curve it replaces was a plain cubic ease-out with an overshoot bolted on,
+ * and measuring its velocity showed two faults that are invisible to the eye
+ * but not to the hand:
+ *
+ *   * Velocity started at MAXIMUM and decayed from the first frame. A reel that
+ *     is already at full speed the instant it is released has no mass; real ones
+ *     accelerate, hold, then slow. There was no cruise at all.
+ *   * The overshoot was inverted and mistimed. At 86% the reel had all but
+ *     stopped, and the term then pushed `top` POSITIVE -- backwards, up the
+ *     ribbon -- lurching a sixth of a cell at near full speed before snapping to
+ *     rest. That is not an overshoot, it is a hitch.
+ *
+ * Three phases now: accelerate to cruise over the first tenth, hold constant
+ * velocity to 72%, then a damped spring that carries the reel PAST its stop and
+ * settles it back. Cruise speed is solved so the phases sum to exactly 1.
+ */
+/* Four phases, and the constants are solved rather than dialled in.
+ *
+ * A damped-cosine spring was tried first and cannot do this. Its overshoot comes
+ * from the sine term, and that same term makes velocity BULGE above cruise just
+ * as deceleration starts -- the reel speeds up at the exact moment it should
+ * begin slowing. Searching its whole constant space, the least bulge that still
+ * overshoots visibly was 1.18x cruise. The form was the problem, not the tuning.
+ *
+ * So: accelerate to cruise, hold, then decelerate MONOTONICALLY past the stop,
+ * and spring back from there. Velocity is matched at every junction and peaks
+ * exactly at cruise -- measured, not assumed.
+ *
+ *   A  end of acceleration        B  end of cruise
+ *   r  share of the settle spent springing back
+ *   ov how far past the stop the reel travels, as a fraction of total travel
+ *
+ * Cruise speed is then solved so the four phases sum to exactly 1:
+ *   V = (1 + ov) / (0.5(1-r)(1-B) + B - 0.5A)
+ */
+const REEL_A=0.10, REEL_B=0.66, REEL_R=0.35, REEL_OV=0.025;
+const REEL_V=(1+REEL_OV)/(0.5*(1-REEL_R)*(1-REEL_B)+REEL_B-0.5*REEL_A);
+const REEL_DA=0.5*REEL_V*REEL_A;
+const REEL_DB=REEL_DA+REEL_V*(REEL_B-REEL_A);
+const REEL_M=REEL_B+(1-REEL_R)*(1-REEL_B);
+function reelEase(k){
+  if(k<=0) return 0;
+  if(k>=1) return 1;
+  if(k<REEL_A) return 0.5*REEL_V*k*k/REEL_A;               // accelerate from rest
+  if(k<REEL_B) return REEL_DA+REEL_V*(k-REEL_A);           // cruise
+  if(k<REEL_M){                                            // decelerate past the stop
+    const s=(k-REEL_B)/(REEL_M-REEL_B);
+    return REEL_DB+(1+REEL_OV-REEL_DB)*(2*s-s*s);
+  }
+  // spring back. cos gives zero velocity at BOTH ends, so it neither jerks on
+  // arrival nor lands moving.
+  const u=(k-REEL_M)/(1-REEL_M);
+  return 1+REEL_OV*(1+Math.cos(Math.PI*u))/2;
 }
 
 function drawColumn(c,cell){
