@@ -25,3 +25,9 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Python packaging
+*.egg-info/
+build/
+dist/
+.pytest_cache/

@@ -1,48 +1,214 @@
 {
   "_source": "Morning_Report_Scorecard.pdf — the printed strike-out card. Sixteen items in two columns plus four automatic fails. The web scorecard and the CLI both read this file; do not restate the items anywhere else.",
-
+  "_codes_note": "`code` is the identifier the printed rubric and the CLI share (A1-A7, B1-B9, F1-F4). `scored_from` says where a verdict can legitimately come from: manifest, transcript, timing, derived, or human-only. An item marked human is never sent to a model.",
+  "_derived_note": "`derived` names a key in the board archive's derived block. Those items arrive pre-ticked and marked, and the facilitator can override any of them. Six are the ones the spec lists; test_named and any_struck are here on the same footing because they are board fields too, not judgements.",
+  "version": 1,
   "title": "Strike it out",
   "lede": "Cross each one off as it happens. What is left standing at 0:25 is the feedback — no debrief required.",
   "footer": "One per session. If the same box survives four weeks running, that is the thing to teach.",
-
-  "_derived_note": "`derived` names a key in the board archive's derived block. Those items arrive pre-ticked and marked, and the facilitator can override any of them. Six are the ones the spec lists; test_named and any_struck are here on the same footing because they are board fields too, not judgements.",
-
   "columns": [
     {
       "id": "presentation",
       "title": "The presentation",
       "items": [
-        { "id": "deidentified",   "text": "De-identified — no MRN, no dates, no burned-in IDs", "card": "presenter",   "anchor": "before" },
-        { "id": "eight_slides",   "text": "Eight slides or fewer",                              "card": "presenter",   "anchor": "before" },
-        { "id": "objective_read", "text": "One objective, read aloud at 0:00",                  "card": "facilitator", "anchor": "during" },
-        { "id": "hook_first",     "text": "Hook first, not demographics",                       "card": "presenter",   "anchor": "script-0" },
-        { "id": "one_block",      "text": "History and exam in one block — no labs yet",        "card": "presenter",   "anchor": "during" },
-        { "id": "let_silence",    "text": "Stopped talking and let the silence run",            "card": "presenter",   "anchor": "during" },
-        { "id": "reveal_missed",  "text": "Reveal named what was missed, and why",              "card": "presenter",   "anchor": "does-not" }
+        {
+          "id": "deidentified",
+          "text": "De-identified — no MRN, no dates, no burned-in IDs",
+          "card": "presenter",
+          "anchor": "before",
+          "code": "A1",
+          "scored_from": "manifest",
+          "evidence": "Facilitator attestation. Also flag if the transcript itself contains an MRN or date-of-service pattern."
+        },
+        {
+          "id": "eight_slides",
+          "text": "Eight slides or fewer",
+          "card": "presenter",
+          "anchor": "before",
+          "code": "A2",
+          "scored_from": "manifest",
+          "evidence": "slide_count <= 8."
+        },
+        {
+          "id": "objective_read",
+          "text": "One objective, read aloud at 0:00",
+          "card": "facilitator",
+          "anchor": "during",
+          "code": "A3",
+          "scored_from": "transcript",
+          "evidence": "An objective stated in the first 90 seconds. Exactly one; two or more is a fail."
+        },
+        {
+          "id": "hook_first",
+          "text": "Hook first, not demographics",
+          "card": "presenter",
+          "anchor": "script-0",
+          "code": "A4",
+          "scored_from": "transcript",
+          "evidence": "The first substantive presenter turn leads with the clinical situation, not a recitation of past history, medications or family history."
+        },
+        {
+          "id": "one_block",
+          "text": "History and exam in one block — no labs yet",
+          "card": "presenter",
+          "anchor": "during",
+          "code": "A5",
+          "scored_from": "transcript",
+          "evidence": "No lab value, imaging result or micro result appears before the first PGY-1 turn."
+        },
+        {
+          "id": "let_silence",
+          "text": "Stopped talking and let the silence run",
+          "card": "presenter",
+          "anchor": "during",
+          "code": "A6",
+          "scored_from": "human",
+          "evidence": "Not scorable from a transcript. Always null, always human."
+        },
+        {
+          "id": "reveal_missed",
+          "text": "Reveal named what was missed, and why",
+          "card": "presenter",
+          "anchor": "does-not",
+          "code": "A7",
+          "scored_from": "transcript",
+          "evidence": "After the reveal the presenter names something the team got wrong or late AND gives a reason. Naming the diagnosis alone does not count."
+        }
       ]
     },
     {
       "id": "reasoning",
       "title": "The reasoning",
       "items": [
-        { "id": "problem_rep",     "text": "Problem representation in one sentence",              "card": "pgy1",        "anchor": "deliverables", "derived": "pr_present" },
-        { "id": "three_to_four",   "text": "Three to four diagnoses, each with a reason",         "card": "pgy1",        "anchor": "deliverables", "derived": "intern_reasoned" },
-        { "id": "cant_miss",       "text": "The can't-miss, named as such",                       "card": "pgy1",        "anchor": "deliverables" },
-        { "id": "uninterrupted",   "text": "First pass finished uninterrupted",                   "card": "facilitator", "anchor": "during" },
-        { "id": "framework_first", "text": "A framework named before the list",                   "card": "senior",      "anchor": "moves-0",      "derived": "framework_before_list" },
-        { "id": "struck_reason",   "text": "Something struck off, with the reason beside it",     "card": "senior",      "anchor": "moves-1",      "derived": "struck_with_reason" },
-        { "id": "discriminator",   "text": "The discriminating test named",                       "card": "senior",      "anchor": "moves-3",      "derived": "test_named" },
-        { "id": "confidence",      "text": "Confidence stated, and what would change my mind",    "card": "senior",      "anchor": "moves-4" },
-        { "id": "board_posted",    "text": "Board exported and posted",                           "card": "scribe",      "anchor": "after",        "derived": "board_archived" }
+        {
+          "id": "problem_rep",
+          "text": "Problem representation in one sentence",
+          "card": "pgy1",
+          "anchor": "deliverables",
+          "derived": "pr_present",
+          "code": "B1",
+          "scored_from": "transcript",
+          "evidence": "One summarising sentence from the PGY-1 with semantic qualifiers — age, tempo, key features. A list of findings is not a problem representation."
+        },
+        {
+          "id": "three_to_four",
+          "text": "Three to four diagnoses, each with a reason",
+          "card": "pgy1",
+          "anchor": "deliverables",
+          "derived": "intern_reasoned",
+          "code": "B2",
+          "scored_from": "transcript",
+          "evidence": "Three or four distinct entity-level diagnoses from the PGY-1, each with a rationale. Categories such as 'infectious' are not items. Fewer than three or more than four is a fail."
+        },
+        {
+          "id": "cant_miss",
+          "text": "The can't-miss, named as such",
+          "card": "pgy1",
+          "anchor": "deliverables",
+          "code": "B3",
+          "scored_from": "transcript",
+          "evidence": "The PGY-1 explicitly labels one diagnosis as the can't-miss, must-not-miss or worst case."
+        },
+        {
+          "id": "uninterrupted",
+          "text": "First pass finished uninterrupted",
+          "card": "facilitator",
+          "anchor": "during",
+          "code": "B4",
+          "scored_from": "timing",
+          "evidence": "No non-PGY-1 turn longer than about five words between the start and end of the first pass, other than the facilitator calling the clock."
+        },
+        {
+          "id": "framework_first",
+          "text": "A framework named before the list",
+          "card": "senior",
+          "anchor": "moves-0",
+          "derived": "framework_before_list",
+          "code": "B5",
+          "scored_from": "transcript",
+          "evidence": "The senior names an organising scheme — anatomic level or layer, physiologic, pre/intra/post, mechanism, age, tempo, triage — BEFORE enumerating diagnoses. Order matters."
+        },
+        {
+          "id": "struck_reason",
+          "text": "Something struck off, with the reason beside it",
+          "card": "senior",
+          "anchor": "moves-1",
+          "derived": "struck_with_reason",
+          "code": "B6",
+          "scored_from": "transcript",
+          "evidence": "A named diagnosis is ruled out AND the feature that argues against it is stated. Ruling out without a reason does not count."
+        },
+        {
+          "id": "discriminator",
+          "text": "The discriminating test named",
+          "card": "senior",
+          "anchor": "moves-3",
+          "derived": "test_named",
+          "code": "B7",
+          "scored_from": "transcript",
+          "evidence": "A specific test is named as the thing that separates the top candidates, with what a positive and a negative would each mean."
+        },
+        {
+          "id": "confidence",
+          "text": "Confidence stated, and what would change my mind",
+          "card": "senior",
+          "anchor": "moves-4",
+          "code": "B8",
+          "scored_from": "transcript",
+          "evidence": "A working diagnosis with a confidence expression AND an explicit falsifying condition. Both halves are required."
+        },
+        {
+          "id": "board_posted",
+          "text": "Board exported and posted",
+          "card": "scribe",
+          "anchor": "after",
+          "derived": "board_archived",
+          "code": "B9",
+          "scored_from": "manifest",
+          "evidence": "board_exported == true."
+        }
       ]
     }
   ],
-
   "automatic_fails_title": "It did not hit the standard if any of these are true",
   "automatic_fails": [
-    { "id": "early_diagnosis", "text": "The diagnosis came out before the second pass finished", "card": "presenter",   "anchor": "does-not" },
-    { "id": "faculty_early",   "text": "Faculty entered the discussion before 0:19",             "card": "faculty",     "anchor": "during" },
-    { "id": "ran_over",        "text": "We ran past 25 minutes",                                 "card": "facilitator", "anchor": "during", "derived": "ran_over" },
-    { "id": "nothing_struck",  "text": "Nothing on the board ever got crossed off",              "card": "scribe",      "anchor": "colour-code", "derived": "!any_struck" }
+    {
+      "id": "early_diagnosis",
+      "text": "The diagnosis came out before the second pass finished",
+      "card": "presenter",
+      "anchor": "does-not",
+      "code": "F1",
+      "scored_from": "transcript",
+      "evidence": "The diagnosis was stated before the second pass finished."
+    },
+    {
+      "id": "faculty_early",
+      "text": "Faculty entered the discussion before 0:19",
+      "card": "faculty",
+      "anchor": "during",
+      "code": "F2",
+      "scored_from": "timing",
+      "evidence": "A faculty turn before 00:19:00."
+    },
+    {
+      "id": "ran_over",
+      "text": "We ran past 25 minutes",
+      "card": "facilitator",
+      "anchor": "during",
+      "derived": "ran_over",
+      "code": "F3",
+      "scored_from": "timing",
+      "evidence": "The last cue timestamp is past 25:00."
+    },
+    {
+      "id": "nothing_struck",
+      "text": "Nothing on the board ever got crossed off",
+      "card": "scribe",
+      "anchor": "colour-code",
+      "derived": "!any_struck",
+      "code": "F4",
+      "scored_from": "derived",
+      "evidence": "True when struck_reason (B6) is false — nothing was ever crossed off."
+    }
   ]
 }
