@@ -190,3 +190,60 @@ Honest about the ceiling of a DOM/CSS build:
    particle-heavy feature intros want the real renderer.
 3. **Licensed WILD art.** Still blocked — no Signature Series is owned.
 4. **Audio design.** Synthesised bleeps stand in for a scored soundtrack.
+
+## What is left, and it is art rather than code
+
+The presentation systems are built and measured. Reel motion is drawn on canvas
+with velocity-proportional blur; the spin curve is solved rather than tuned
+(peak velocity provably equals cruise, deceleration monotonic, overshoot 2.5%,
+landing exact); wins use a three-beat character animation with a specular sweep
+composited inside the symbol's own alpha; the row multiplier turns its row hot
+at reel scale; the win ladder has four tiers; features are staged as a set piece
+and sold from a priced menu.
+
+The remaining gap is that **the twelve Lions are static portrait PNGs**, and no
+amount of further engineering changes that. This was tested rather than assumed:
+
+* **Mesh deformation was built twice and rejected twice.** Horizontal slices
+  with a travelling sine moved the muzzle along with the mane -- shearing rigid
+  cartoon line art reads as the lion melting. Splitting each slice into three so
+  the displacement could fall off horizontally held the face still and left hard
+  vertical seams down the cheek and tongue. Both were rendered and inspected
+  before being reverted. A continuous mesh needs many columns with smoothly
+  varying offsets, and tile-based warping seams regardless without WebGL and a
+  real mesh.
+* **What DID work is anatomy-free.** A specular band travelling across the
+  symbol, clipped by `source-atop` to its own alpha, changes the artwork's
+  appearance over time without displacing a pixel. That shipped. Anything
+  anatomy-AWARE cannot be applied uniformly, for a reason specific to this cast.
+
+### Why a blink cannot simply be switched on
+
+Of the twelve symbols, only half have eyes a lid could close over:
+
+| | count | symbols |
+|---|---|---|
+| plainly blinkable | 6 | Crown #4230, LAZY Hat #5216, Sheriff #1506, Police Hat #2038, Pirate Hat #4117, Black Cap #5348 |
+| eyes behind opaque hardware | 2 | Shades #4522, Leopard Coat #482 |
+| eyes replaced by symbols | 2 | Money Eyes #4837, BTC Eyes #5813 |
+| partial or already closed | 2 | Monocle #840, Sleepy #1725 |
+
+A blink applied uniformly is wrong on six of twelve: sunglasses do not blink,
+and a `$` is not an eye. Making it right is a per-symbol authoring decision --
+which lions blink, where their lids sit, what a lid does behind a monocle -- and
+that is the definition of the work being commissioned.
+
+### The brief
+
+Twelve symbols. For each: an **idle loop** (2-4s, seamless) and a **win
+reaction** (600-900ms). House style is Lazy Lions as drawn; the game reads the
+frames, it does not restyle them.
+
+Deliver as a horizontal sprite sheet per symbol, frames of equal size, plus a
+JSON sidecar giving frame count and duration. The renderer already draws symbols
+from pre-scaled offscreen canvases (`sprite()` in play/index.html), so a sheet
+drops in where the single frame is cached today -- the change is the cache key
+gaining a frame index, not a new pipeline.
+
+Six of the twelve want a blink in the idle. The other six want something else
+entirely, and deciding what is the job.
