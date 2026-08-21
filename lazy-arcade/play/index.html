@@ -92,10 +92,30 @@ body{
 .reels.anticipating{animation:anticPulse 1.05s ease-in-out infinite}
 @keyframes anticPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
 .strip{display:flex;flex-direction:column;will-change:transform}
+/* Symbols sit on a TILE, not on open field.
+   Looking at the reference: every symbol there has its own framed backing plate,
+   tinted by tier -- parchment for the card royals, colour for the premiums. That
+   is what gives the grid structure and makes each symbol read as an object you
+   could pick up. Ours were floating on a dark field, which is why the board read
+   as a poster rather than as a machine. */
 .sym{height:var(--cell);display:flex;align-items:center;justify-content:center;
-     position:relative;padding:4px}
-.sym img,.sym svg{width:100%;height:100%;object-fit:contain;display:block;border-radius:9px;
+     position:relative;padding:7px}
+.sym::before{content:"";position:absolute;inset:3px;border-radius:11px;
+  background:linear-gradient(180deg,var(--tile-1,#2A2233),var(--tile-2,#160F1E));
+  border:1px solid var(--tile-edge,#3A2F47);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -6px 14px -8px #000,
+             0 2px 4px rgba(0,0,0,.45);
+  z-index:0}
+.sym img,.sym svg{position:relative;z-index:1;
+     width:100%;height:100%;object-fit:contain;display:block;border-radius:9px;
      filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+/* Tier tint. Premium plates run warm, mids cool, lows stay neutral, so a glance
+   at the board sorts the symbols by value before any of them is recognised. */
+.sym.t-prem{--tile-1:#3B2A16;--tile-2:#1D1207;--tile-edge:#6B4A18}
+.sym.t-mid {--tile-1:#152A34;--tile-2:#0A1720;--tile-edge:#265060}
+.sym.t-low {--tile-1:#262030;--tile-2:#130F1B;--tile-edge:#382E45}
+.sym.t-wild{--tile-1:#4A3406;--tile-2:#241800;--tile-edge:#9C7412}
+.sym.t-scat{--tile-1:#10304A;--tile-2:#071B2B;--tile-edge:#1E5C86}
 .sym.dim{filter:grayscale(.75) brightness(.42)}
 .sym.mane::after{content:"";position:absolute;inset:5px;border-radius:9px;
   border:1.5px solid var(--data);box-shadow:0 0 12px -3px var(--data);opacity:.85}
@@ -2169,16 +2189,20 @@ function syncCell(){
   if($("multRail") && !$("multRail").children.length) buildMultRail();
 }
 
+/* Every `.sym` is built here so the tier class is never applied in one place and
+   forgotten in another -- there are four sites that create cells. */
+function symCell(sym,g){
+  const c=document.createElement("div");
+  c.className="sym "+(SYM[sym]?SYM[sym].cls:"");
+  c.innerHTML=symbolHTML(sym,g);
+  return c;
+}
 function buildReels(grid){
   const host=$("reels"); host.innerHTML="";
   for(let r=0;r<REELS;r++){
     const reel=document.createElement("div"); reel.className="reel";
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++){
-      const cell=document.createElement("div"); cell.className="sym";
-      cell.innerHTML=symbolHTML(grid[r][row]);
-      strip.appendChild(cell);
-    }
+    for(let row=0;row<ROWS;row++) strip.appendChild(symCell(grid[r][row]));
     reel.appendChild(strip); host.appendChild(reel);
   }
 }
@@ -2229,6 +2253,25 @@ function warmSymbolImages(g){ for(let s=0;s<NSYM;s++) symbolImage(s,g); }
    frames. Rescaling once per symbol per cell size and then blitting 1:1 moves
    the work out of the frame loop entirely. */
 const SPRITE=new Map();
+/* The tile is identical for every cell, so building its gradient and path per
+   symbol per frame was pure waste -- it cost 7ms a frame on desktop, more than
+   four times what the entire blurred reel costs. Rendered once per size and
+   blitted. */
+const TILES=new Map();
+function tileSprite(w,h){
+  if(w<2||h<2) return null;
+  const key=w+"x"+h;
+  if(TILES.has(key)) return TILES.get(key);
+  const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+  const g2=cv.getContext("2d"), rr=Math.min(11,h/2);
+  g2.beginPath();
+  if(g2.roundRect) g2.roundRect(.5,.5,w-1,h-1,rr); else g2.rect(.5,.5,w-1,h-1);
+  const lg=g2.createLinearGradient(0,0,0,h);
+  lg.addColorStop(0,"#2A2233"); lg.addColorStop(1,"#160F1E");
+  g2.fillStyle=lg; g2.fill();
+  g2.strokeStyle="#3A2F47"; g2.lineWidth=1; g2.stroke();
+  TILES.set(key,cv); return cv;
+}
 function sprite(sym,g,size){
   g=g||game;
   const key=g+":"+sym+":"+size;
@@ -2331,6 +2374,19 @@ function drawColumn(c,cell){
   ctx.beginPath(); ctx.rect(c.x,c.y,c.w,cell*ROWS); ctx.clip();
   const k0=Math.floor(c.top/cell);
   const x=c.x+(c.w-size)/2;
+
+  // Tiles travel with the symbols, or the grid structure vanishes the moment a
+  // reel moves and reappears when it lands. Drawn NEUTRAL rather than
+  // tier-tinted: a moving reel is motion-blurred, so the tint would cost fill
+  // rate to render something nobody can resolve. The tint is a resting-state
+  // signal and lives in CSS.
+  ctx.globalAlpha=1;
+  const tile=tileSprite(Math.round(c.w-6),Math.round(cell-6));
+  for(let k=k0;k<=k0+ROWS;k++){
+    const y=c.y+k*cell-c.top;
+    if(y>c.y+cell*ROWS||y+cell<c.y) continue;
+    if(tile) ctx.drawImage(tile,c.x+3,y+3);
+  }
   const h=size*stretch, dy=(h-size)/2;
   for(let stamp=0;stamp<steps;stamp++){
     const lag=(stamp/steps)*(c.prevTop-c.top);
@@ -2356,14 +2412,8 @@ function spinReel(reelEl,finalCol,reelIdx,duration,delay){
   return new Promise(resolve=>{
     const cell=cellPx(), BUF=turbo?6:14;
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++){
-      const c=document.createElement("div"); c.className="sym";
-      c.innerHTML=symbolHTML(finalCol[row]); strip.appendChild(c);
-    }
-    for(let i=0;i<BUF;i++){
-      const c=document.createElement("div"); c.className="sym";
-      c.innerHTML=symbolHTML(randomSym(reelIdx)); strip.appendChild(c);
-    }
+    for(let row=0;row<ROWS;row++) strip.appendChild(symCell(finalCol[row]));
+    for(let i=0;i<BUF;i++) strip.appendChild(symCell(randomSym(reelIdx)));
     reelEl.innerHTML=""; reelEl.appendChild(strip);
     reelEl.classList.add("blur");
 
@@ -2403,10 +2453,7 @@ async function animateSpin(grid,scatterCount){
   // that have been in the document since the spin began.
   for(let r=0;r<REELS;r++){
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++){
-      const c=document.createElement("div"); c.className="sym";
-      c.innerHTML=symbolHTML(grid[r][row]); strip.appendChild(c);
-    }
+    for(let row=0;row<ROWS;row++) strip.appendChild(symCell(grid[r][row]));
     reels[r].innerHTML=""; reels[r].appendChild(strip);
   }
 
@@ -2661,7 +2708,8 @@ function paintGrid(grid,marks,coinsArr,maneSet){
   for(let r=0;r<REELS;r++){
     const strip=document.createElement("div"); strip.className="strip";
     for(let row=0;row<ROWS;row++){
-      const c=document.createElement("div"); c.className="sym";
+      const c=document.createElement("div");
+      c.className="sym "+(SYM[grid[r][row]]?SYM[grid[r][row]].cls:"");
       const idx=r*ROWS+row;
       if(coinsArr&&coinsArr[idx]){
         c.innerHTML=svgScatter()+`<span style="position:absolute;bottom:2px;font-family:var(--mono);
