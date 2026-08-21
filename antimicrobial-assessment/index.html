@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Med Student Rotation Primer | Sage Project</title>
+    <title>Antimicrobial Selection & Dosing Assessment | Sage Project</title>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -473,7 +473,7 @@
         <span class="logo-text">Sage Project</span>
     </a>
     <span class="header-sep">›</span>
-    <span class="header-title">Med Student Rotation Primer</span>
+    <span class="header-title">Antimicrobial Selection & Dosing Assessment</span>
 </header>
 
 <!-- ─── SCREEN 1: INTAKE ─── -->
@@ -481,24 +481,24 @@
     <div class="intake-wrap">
         <div class="intake-badge">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-            Pediatric ID · MS3/MS4 Rotation Primer
+            Pediatric Antimicrobial Pharmacology
         </div>
-        <h1>How ready are you for Peds ID?</h1>
-        <p class="subtitle">Adaptive assessment covering the 10 core domains a 3rd-year student needs to know for their Pediatrics shelf and Peds ID rotation. Questions escalate in difficulty based on your answers.</p>
+        <h1>Antimicrobial Selection &amp; Dosing Assessment</h1>
+        <p class="subtitle">Adaptive assessment covering the 10 core domains of pediatric antimicrobial pharmacology — from beta-lactams and PK/PD to stewardship and special populations. Questions escalate in difficulty based on your answers.</p>
 
         <div class="domains-preview">
             <h4>10 Domains Covered</h4>
             <div class="domain-tags">
-                <span class="domain-tag">Fever & Sepsis</span>
-                <span class="domain-tag">Meningitis & CNS</span>
-                <span class="domain-tag">Respiratory</span>
-                <span class="domain-tag">Skin & Soft Tissue</span>
-                <span class="domain-tag">Bone & Joint</span>
-                <span class="domain-tag">UTI & Renal</span>
-                <span class="domain-tag">Congenital & Perinatal</span>
-                <span class="domain-tag">Vaccines & Prevention</span>
-                <span class="domain-tag">Antimicrobial Principles</span>
-                <span class="domain-tag">Immunocompromised Host</span>
+                <span class="domain-tag">Beta-Lactams</span>
+                <span class="domain-tag">Aminoglycosides & Monitoring</span>
+                <span class="domain-tag">Vancomycin & Glycopeptides</span>
+                <span class="domain-tag">Antifungal Agents</span>
+                <span class="domain-tag">Antiviral Agents</span>
+                <span class="domain-tag">Resistance Mechanisms</span>
+                <span class="domain-tag">PK/PD & Dosing</span>
+                <span class="domain-tag">Interactions & Toxicity</span>
+                <span class="domain-tag">Stewardship</span>
+                <span class="domain-tag">Special Populations</span>
             </div>
         </div>
 
@@ -513,22 +513,22 @@
                     <input type="text" id="f-name" placeholder="Jane Smith" required>
                 </div>
                 <div class="form-group">
-                    <label for="f-year">Year</label>
+                    <label for="f-year">Role</label>
                     <select id="f-year" required>
                         <option value="">Select...</option>
-                        <option value="MS3">MS3</option>
-                        <option value="MS4">MS4</option>
-                        <option value="Other">Other</option>
+                        <option value="Medical Student">Medical Student</option>
+                        <option value="Resident">Resident</option>
+                        <option value="Fellow">Fellow</option>
                     </select>
                 </div>
             </div>
             <div class="form-group">
-                <label for="f-school">Medical School</label>
+                <label for="f-school">Institution / Program</label>
                 <input type="text" id="f-school" placeholder="University of..." required>
             </div>
             <div class="form-group">
                 <label for="f-email">Your Email (for your copy of results)</label>
-                <input type="email" id="f-email" placeholder="you@medschool.edu" required>
+                <input type="email" id="f-email" placeholder="you@institution.edu" required>
             </div>
             <button type="submit" class="btn-start">
                 Begin Assessment
@@ -593,7 +593,7 @@
 
         <div class="report-section">
             <h3>Send Faculty Report</h3>
-            <p>Email a summary of your performance — domain scores, tier reached, and overall result — to your attending or clerkship director.</p>
+            <p>Email a summary of your performance — domain scores, tier reached, and overall result — to your attending or program director.</p>
             <button class="report-btn" id="send-report-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
                 Send Faculty Report
@@ -615,427 +615,427 @@
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
 const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzVGqv0Ot-L9BtUzcWhq8XTpmOEZSGqVFwD0kPLSRfKBFVvTlRLMdzmtWXZuaPf6adz/exec';
-const ASSESSMENT_TYPE = 'Med Student'; // identifies this assessment in the shared Sheet
+const ASSESSMENT_TYPE = 'Antimicrobial'; // identifies this assessment in the shared Sheet
 
 // ─── QUESTION BANK ───────────────────────────────────────────────────────────
 const DOMAINS = [
     {
-        id: 'fever',
-        name: 'Fever & Sepsis',
+        id: 'betalactams',
+        name: 'Beta-Lactam Antibiotics',
         questions: [
             {
                 tier: 1,
-                text: 'A 3-week-old previously healthy infant presents with a rectal temperature of 38.3°C. Parents report decreased feeding. He appears non-toxic. What is the most appropriate next step?',
+                text: 'A 4-year-old needs treatment for community-acquired pneumonia. The team selects high-dose amoxicillin. What is the primary PK/PD target that determines beta-lactam efficacy?',
                 options: [
-                    'Reassure parents and follow up in 24 hours',
-                    'Full sepsis evaluation (CBC, blood culture, UA/UC, LP) and empiric IV antibiotics',
-                    'Blood culture only; observe in the ED for 4 hours',
-                    'Urinalysis and urine culture only; treat if positive'
+                    'Peak concentration to MIC ratio (Cmax/MIC)',
+                    'Percent of the dosing interval that free drug concentration remains above the MIC (fT>MIC)',
+                    '24-hour AUC to MIC ratio (AUC/MIC)',
+                    'Trough concentration measured just before the next dose'
                 ],
                 correct: 1,
-                rationale: 'Infants ≤28 days with fever require a full sepsis evaluation including LP, CBC, and blood/urine cultures due to significant risk of serious bacterial infection (SBI) — including meningitis. Empiric antibiotics (ampicillin + gentamicin ± acyclovir for HSV risk) are started pending results. A non-toxic appearance does not exclude SBI in this age group.'
+                rationale: 'Beta-lactams exhibit time-dependent killing. Efficacy correlates with the percentage of the dosing interval during which free drug concentration exceeds the MIC (fT>MIC), not with peak concentration. For penicillins ~50% fT>MIC and cephalosporins ~60–70% is the target. This is why frequent dosing, prolonged/continuous infusions, and higher total daily doses (rather than higher single peaks) optimize beta-lactam therapy. Aminoglycosides are concentration-dependent and vancomycin is AUC-driven.'
             },
             {
                 tier: 2,
-                text: 'A 6-week-old with fever undergoes workup: WBC 14.5k, bands 12% (band:total PMN ratio 0.25), UA negative, CSF: WBC 3, protein 52, glucose 48 (serum 95). Using the Rochester Criteria, what factor classifies this infant as HIGH risk?',
+                text: 'A 9-year-old with a documented severe IgE-mediated anaphylactic reaction to penicillin develops a serious gram-negative infection requiring a beta-lactam. Which agent carries the LOWEST risk of cross-reactivity?',
                 options: [
-                    'WBC of 14,500',
-                    'Band:total PMN ratio of 0.25 (>0.2)',
-                    'CSF protein of 52 mg/dL',
-                    'CSF:serum glucose ratio of 0.51'
+                    'Cefazolin (first-generation cephalosporin)',
+                    'Meropenem (carbapenem)',
+                    'Aztreonam (monobactam)',
+                    'Amoxicillin-clavulanate'
                 ],
-                correct: 1,
-                rationale: 'Rochester criteria define low-risk as band:total PMN ratio ≤0.2. A ratio >0.2 classifies as high-risk for SBI. The WBC 14,500 is borderline (original Rochester low-risk threshold: <15,000). The CSF values here are normal. Rochester criteria apply to infants 28–60 days and help stratify who can be managed without empiric antibiotics — but clinical judgment always applies.'
+                correct: 2,
+                rationale: 'Aztreonam, a monobactam, has a monocyclic beta-lactam ring with no shared R1 side chain with penicillins (it does cross-react with ceftazidime, which shares an identical side chain). It is considered safe in penicillin-allergic patients and is a preferred gram-negative option. Carbapenem cross-reactivity with penicillins is low (~1%) but not zero. Cephalosporin cross-reactivity is driven by shared R1 side chains rather than the core ring; cefazolin has a unique side chain but is still a cephalosporin. Aztreonam is the lowest-risk choice listed.'
             },
             {
                 tier: 3,
-                text: 'A 10-day-old presents with fever. His mother was GBS-positive and received IV ampicillin 5 hours before delivery. The neonate appeared healthy at birth and was discharged at 48 hours. Which statement about this clinical scenario is MOST accurate?',
+                text: 'A neonate with meningitis caused by an AmpC-overproducing Enterobacter cloacae is improving on ceftriaxone. The ID team recommends switching to a carbapenem. What is the underlying concern?',
                 options: [
-                    'Adequate IAP (≥4h) eliminates risk of early-onset GBS; this fever is unlikely to be GBS',
-                    'This is late-onset GBS disease (days 7–89); IAP provides no protection against late-onset disease',
-                    'At 10 days, GBS disease is not possible; evaluation should focus on HSV',
-                    'IAP efficacy is unrelated to timing; the full dose of ampicillin was protective'
+                    'Ceftriaxone does not penetrate the CSF adequately for Enterobacter',
+                    'Enterobacter can derepress chromosomal AmpC beta-lactamase during therapy, leading to emergent resistance to third-generation cephalosporins',
+                    'Ceftriaxone displaces bilirubin and is absolutely contraindicated in all infections',
+                    'Carbapenems are bacteriostatic and preferred for slow-growing organisms'
                 ],
                 correct: 1,
-                rationale: 'GBS disease is classified as early-onset (0–6 days) or late-onset (7–89 days). Intrapartum antibiotic prophylaxis (IAP) reduces early-onset GBS by ~80% but provides NO protection against late-onset GBS, which is acquired postnatally (community/nosocomial). At 10 days this is late-onset disease. Full sepsis workup is still indicated. HSV should also be considered (risk factors: maternal lesions, prolonged rupture, ill-appearing infant).'
+                rationale: 'Organisms in the "SPACE/HECK" group — notably Enterobacter, Serratia, Citrobacter freundii, and others — carry inducible chromosomal AmpC beta-lactamase. Exposure to third-generation cephalosporins can select for stably derepressed mutants that hyperproduce AmpC, causing treatment failure even when the isolate initially tests susceptible. Carbapenems are stable to AmpC and preferred for serious infections; cefepime (a poor AmpC inducer and stable substrate) is an alternative. Ceftriaxone bilirubin displacement is a separate neonatal concern but is not the AmpC issue described.'
             }
         ]
     },
     {
-        id: 'meningitis',
-        name: 'Meningitis & CNS',
+        id: 'aminoglycosides',
+        name: 'Aminoglycosides & Monitoring',
         questions: [
             {
                 tier: 1,
-                text: 'Which organism is the most common cause of bacterial meningitis in a previously healthy 8-month-old?',
+                text: 'Gentamicin is being dosed once daily (extended-interval) in a 10-year-old with a gram-negative bloodstream infection. Which PK/PD property best justifies extended-interval dosing?',
                 options: [
-                    'Listeria monocytogenes',
-                    'Group B Streptococcus',
-                    'Streptococcus pneumoniae',
-                    'Neisseria meningitidis'
+                    'Time-dependent killing requiring sustained levels above the MIC',
+                    'Concentration-dependent killing with a significant post-antibiotic effect',
+                    'Minimal renal elimination allowing infrequent dosing',
+                    'Bacteriostatic mechanism that tolerates low troughs'
                 ],
-                correct: 2,
-                rationale: 'After the neonatal period (>1 month), S. pneumoniae is the leading cause of bacterial meningitis in children. GBS and Listeria predominate in neonates (<1 month). N. meningitidis peaks in older children and adolescents (college students). Haemophilus influenzae type b was previously a major cause but is now rare due to conjugate vaccination.'
+                correct: 1,
+                rationale: 'Aminoglycosides display concentration-dependent killing (efficacy tracks peak:MIC, target ~8–10:1) plus a prolonged post-antibiotic effect that continues to suppress bacterial regrowth after levels fall below the MIC. Extended-interval (once-daily) dosing exploits both: high peaks maximize killing, while the drug-free interval before the next dose allows troughs to fall, reducing nephrotoxic and ototoxic accumulation. They are bactericidal, not bacteriostatic, and are renally eliminated.'
             },
             {
                 tier: 2,
-                text: 'A 2-year-old with fever, neck stiffness, and altered mental status has CSF: WBC 1,800 (92% PMN), protein 210, glucose 22 (serum 108). Empiric ceftriaxone + vancomycin are started. Which adjunctive therapy reduces hearing loss in pediatric bacterial meningitis?',
+                text: 'A 6-year-old on conventional (every-8-hour) gentamicin has a measured trough of 2.8 mcg/mL. What is the most appropriate interpretation and action?',
                 options: [
-                    'IV immunoglobulin (IVIG)',
-                    'Dexamethasone (0.15 mg/kg q6h × 4 days)',
-                    'Mannitol infusion',
-                    'Phenobarbital prophylaxis'
+                    'Trough is therapeutic; continue current regimen',
+                    'Trough is elevated (goal <2 mcg/mL with conventional dosing); extend the interval to reduce toxicity risk',
+                    'Trough is subtherapeutic; increase the dose',
+                    'Trough is irrelevant; only peaks matter for aminoglycosides'
                 ],
                 correct: 1,
-                rationale: 'Dexamethasone given before or with the first dose of antibiotics reduces hearing loss and neurological sequelae in H. influenzae type b and S. pneumoniae meningitis. It is most beneficial for H. influenzae meningitis. Ideally started 15–30 minutes before antibiotics; if not possible, give with first antibiotic dose. Do not initiate if antibiotics have already been given >1 hour prior, as benefit is lost.'
+                rationale: 'With conventional (multiple-daily) gentamicin dosing, the target trough is <2 mcg/mL (often <1–2). A trough of 2.8 mcg/mL indicates accumulation, which raises the risk of nephrotoxicity and ototoxicity. The appropriate response is to lengthen the dosing interval (rather than simply lowering each dose), allowing more time for elimination. Troughs are clinically critical for aminoglycosides precisely because they reflect accumulation and toxicity risk, even though peaks drive efficacy.'
             },
             {
                 tier: 3,
-                text: 'A 5-year-old has 3 days of fever, progressive headache, and a focal seizure. MRI shows a ring-enhancing lesion in the right temporal lobe with surrounding edema. CSF: WBC 55 (65% lymphocytes), protein 90, glucose 50 (serum 95). Gram stain is negative. What is the MOST likely diagnosis and first-line treatment?',
+                text: 'A 14-year-old with cystic fibrosis receiving IV tobramycin for a pulmonary exacerbation develops a rising serum creatinine and new high-frequency hearing loss on audiometry. Which statement about aminoglycoside toxicity is MOST accurate?',
                 options: [
-                    'Bacterial brain abscess; neurosurgical drainage + IV ceftriaxone + metronidazole',
-                    'HSV encephalitis; IV acyclovir 20 mg/kg q8h',
-                    'Tuberculous meningitis; 4-drug anti-TB therapy',
-                    'Autoimmune encephalitis; high-dose IV methylprednisolone'
+                    'Nephrotoxicity is typically irreversible, whereas ototoxicity reliably resolves after stopping the drug',
+                    'Ototoxicity (cochlear and vestibular) is often irreversible, while nephrotoxicity is usually reversible after discontinuation',
+                    'Both toxicities are fully prevented by therapeutic drug monitoring',
+                    'A mitochondrial m.1555A>G variant protects against aminoglycoside-induced hearing loss'
                 ],
                 correct: 1,
-                rationale: 'HSV encephalitis classically involves temporal lobes, presenting with fever, behavioral change, focal seizures, and aphasia. CSF shows lymphocytic pleocytosis, elevated protein, and normal glucose. MRI shows temporal/insular signal change ± ring enhancement. IV acyclovir (20 mg/kg q8h, max 10 mg/kg) should be started empirically while awaiting HSV PCR — delays increase morbidity/mortality. Bacterial abscess has more neutrophilic CSF. TB meningitis has a more subacute course.'
+                rationale: 'Aminoglycoside ototoxicity results from accumulation in cochlear and vestibular hair cells and is frequently irreversible, often beginning with high-frequency hearing loss before affecting speech frequencies. Nephrotoxicity is due to proximal tubular accumulation and is generally reversible once the drug is stopped. Therapeutic drug monitoring reduces but does not eliminate toxicity risk, especially with prolonged or repeated courses (as in CF). The mitochondrial m.1555A>G variant predisposes to — not protects against — aminoglycoside-induced hearing loss and warrants avoidance when known.'
             }
         ]
     },
     {
-        id: 'respiratory',
-        name: 'Respiratory Infections',
+        id: 'vancomycin',
+        name: 'Vancomycin & Glycopeptides',
         questions: [
             {
                 tier: 1,
-                text: 'A 7-month-old presents in January with 3 days of URI symptoms, now with audible wheezing and SpO2 94% on room air. This is his first wheezing episode. What is the most likely causative pathogen?',
+                text: 'A 7-year-old is started on IV vancomycin for suspected MRSA bacteremia. Which monitoring parameter do current pediatric guidelines emphasize as the preferred efficacy target?',
                 options: [
-                    'Streptococcus pneumoniae',
-                    'Respiratory syncytial virus (RSV)',
-                    'Influenza A',
-                    'Mycoplasma pneumoniae'
+                    'Peak concentration of 30–40 mcg/mL',
+                    'AUC24/MIC ratio of approximately 400–600',
+                    'Trough above 20 mcg/mL in all patients',
+                    'Time above MIC for at least 50% of the interval'
                 ],
                 correct: 1,
-                rationale: 'RSV is the leading cause of bronchiolitis in infants <2 years, peaking November–March. Bronchiolitis is a clinical diagnosis: URI followed by lower respiratory involvement (wheeze/crackles), first episode in an infant. Management is supportive (nasal suctioning, oxygen). Mycoplasma causes "atypical pneumonia" in school-age children. Bronchodilators and corticosteroids are NOT recommended for routine bronchiolitis.'
+                rationale: 'Vancomycin efficacy against MRSA is best predicted by the 24-hour AUC to MIC ratio, with a target of approximately 400–600 (assuming MIC ≤1 by broth microdilution). Updated 2020 consensus guidelines recommend AUC-guided dosing over trough-only monitoring, because troughs of 15–20 mcg/mL (previously used as a surrogate) overestimate exposure and increase nephrotoxicity risk. Vancomycin is not concentration-dependent (peaks are not the target) and is not primarily a time>MIC drug like beta-lactams.'
             },
             {
                 tier: 2,
-                text: 'An unvaccinated 4-year-old develops paroxysmal coughing spells with a post-tussive inspiratory whoop and vomiting for 2 weeks. WBC is 22k with 78% lymphocytes. What is the preferred treatment and primary goal at this stage?',
+                text: 'During a vancomycin infusion, a 5-year-old develops flushing of the face and upper torso with pruritus shortly after the infusion begins. The reaction resolves when the infusion is slowed. What is the mechanism?',
                 options: [
-                    'Amoxicillin × 10 days to eliminate the organism and shorten illness duration',
-                    'Azithromycin × 5 days primarily to reduce transmission to contacts',
-                    'TMP-SMX × 14 days as first-line for Bordetella pertussis',
-                    'Supportive care only; antibiotics do not benefit the paroxysmal stage'
+                    'IgE-mediated anaphylaxis requiring permanent avoidance of vancomycin',
+                    'Direct, non-IgE-mediated mast cell degranulation causing histamine release (infusion-reaction / "vancomycin flushing syndrome")',
+                    'Serum sickness from immune complex deposition',
+                    'Red blood cell hemolysis from the dye in the formulation'
                 ],
                 correct: 1,
-                rationale: 'Pertussis (Bordetella pertussis) during the paroxysmal phase: antibiotics (azithromycin preferred in children; erythromycin is an alternative) eradicate nasopharyngeal carriage and reduce transmission. They do NOT significantly shorten illness once the paroxysmal stage is established. Azithromycin × 5 days is preferred (fewer GI side effects; erythromycin linked to infantile hypertrophic pyloric stenosis in neonates). Lymphocytosis is a hallmark. Infants <6 months have highest mortality risk.'
+                rationale: 'Vancomycin flushing syndrome (formerly "red man syndrome") is a rate-related, non-IgE-mediated reaction caused by direct mast cell and basophil degranulation with histamine release. It typically appears with rapid infusion and presents as flushing/erythema of the face, neck, and upper torso with pruritus. Management is to slow the infusion (administer over ≥60 minutes, longer for larger doses) and pretreat with antihistamines if needed — not permanent avoidance. It is distinct from true IgE-mediated anaphylaxis.'
             },
             {
                 tier: 3,
-                text: 'A 3-year-old is admitted with pneumonia and a large pleural effusion. Thoracentesis: pH 7.08, LDH 2,100 U/L, glucose 32 mg/dL, turbid appearance. IV antibiotics are started. What is the next most appropriate management step?',
+                text: 'A 12-year-old with MRSA bacteremia remains febrile with persistently positive blood cultures after several days of vancomycin; the isolate now has a vancomycin MIC of 2 mcg/mL and the patient cannot achieve an AUC/MIC ≥400 without nephrotoxic dosing. What is the most appropriate next step?',
                 options: [
-                    'Continue antibiotics alone; repeat imaging at 48 hours',
-                    'Add antifungal coverage for possible fungal empyema',
-                    'Chest tube drainage or surgical decortication (VATS)',
-                    'Bronchoscopy to identify the anatomic source'
+                    'Continue vancomycin and simply raise the trough target to >20 mcg/mL',
+                    'Switch to an alternative anti-MRSA agent such as daptomycin (for bacteremia) or linezolid, and evaluate for a metastatic source',
+                    'Add rifampin monotherapy to the failing vancomycin',
+                    'Stop all antibiotics and repeat cultures off therapy'
                 ],
-                correct: 2,
-                rationale: "This is a complicated parapneumonic effusion / empyema (pH <7.2, markedly elevated LDH, low glucose, turbid = exudate meeting Light's criteria). These require drainage. Options include thoracostomy tube with or without intrapleural fibrinolytics (tPA + DNase), or VATS decortication for loculated/organized empyema. Antibiotics alone are insufficient for frank empyema. S. pneumoniae and S. aureus (including MRSA) are common pediatric pathogens. Delayed drainage is associated with longer hospitalization."
+                correct: 1,
+                rationale: 'Vancomycin failure is more likely when the MIC is 2 mcg/mL, because achieving an AUC/MIC ≥400 requires aggressive (often nephrotoxic) dosing. Persistent bacteremia warrants switching to an alternative agent — daptomycin (bactericidal, used for bacteremia/endocarditis but inactivated by pulmonary surfactant so not for pneumonia) or linezolid — plus a thorough search for an undrained/metastatic focus (endocarditis, abscess, infected line, osteomyelitis). Simply pushing the trough higher increases toxicity without reliably improving outcomes, and rifampin should never be used as monotherapy due to rapid resistance.'
             }
         ]
     },
     {
-        id: 'ssti',
-        name: 'Skin & Soft Tissue',
+        id: 'antifungals',
+        name: 'Antifungal Agents',
         questions: [
             {
                 tier: 1,
-                text: 'A 6-year-old presents with golden-crusted lesions on the face around the nose and mouth. He is afebrile with no systemic symptoms and no induration or fluctuance. What is the most likely diagnosis?',
+                text: 'A 3-year-old with leukemia develops invasive candidiasis with candidemia. Which class is recommended as first-line therapy for most patients with invasive candidiasis?',
                 options: [
-                    'Herpes simplex labialis',
-                    'Non-bullous impetigo',
-                    'Contact dermatitis',
-                    'Eczema herpeticum'
-                ],
-                correct: 1,
-                rationale: 'Non-bullous impetigo (S. aureus ± S. pyogenes) is the most common bacterial skin infection in children, presenting with honey-golden crusts on the face. Treatment: topical mupirocin for limited localized disease; oral antibiotics (dicloxacillin or cephalexin; TMP-SMX/clindamycin if MRSA suspected) for extensive disease. Herpes simplex has vesicular morphology. Eczema herpeticum (HSV superinfection on eczema) has punched-out erosions on eczematous skin.'
-            },
-            {
-                tier: 2,
-                text: 'A 10-year-old presents with a 3 cm fluctuant, erythematous abscess on the thigh. He is afebrile with no surrounding cellulitis and no systemic signs. After incision and drainage, what additional management is most supported by current evidence?',
-                options: [
-                    'No antibiotics; I&D alone is sufficient for uncomplicated abscesses',
-                    'Oral TMP-SMX for 5–7 days to reduce treatment failure and recurrence',
-                    'IV vancomycin for 48 hours then oral step-down',
-                    'Oral clindamycin for 14 days'
-                ],
-                correct: 1,
-                rationale: 'The NEJM NEJM/Talan 2017 trial demonstrated that TMP-SMX (vs. placebo) after I&D significantly reduces treatment failure and recurrence for uncomplicated skin abscesses. TMP-SMX provides MRSA coverage and twice-daily dosing. Course is 5–7 days. I&D remains the cornerstone of treatment — antibiotics are adjunctive. IV vancomycin is reserved for systemic infection, immunocompromised hosts, or failure of oral therapy.'
-            },
-            {
-                tier: 3,
-                text: 'An 8-year-old develops rapidly spreading leg erythema after a minor scrape. Over 12 hours: severe pain disproportionate to visible findings, fever 39.8°C, skin discoloration/bullae, WBC 23k, CRP 185, lactate 3.4. What is the most critical immediate intervention?',
-                options: [
-                    'Start IV vancomycin + pip-tazo and admit for 48-hour IV course',
-                    'MRI of the leg to define tissue plane involvement before deciding on surgery',
-                    'Emergent surgical consultation for exploration and aggressive debridement',
-                    'Emergent fasciotomy to decompress compartment syndrome'
-                ],
-                correct: 2,
-                rationale: 'This is necrotizing fasciitis — a surgical emergency. Hallmarks: pain out of proportion to examination, rapid spread, systemic toxicity, skin changes (bullae, dusky discoloration), and markedly elevated inflammatory markers. LRINEC score ≥6 supports the diagnosis but clinical suspicion should not wait for lab confirmation. Emergent surgical debridement is the cornerstone of treatment. Antibiotics (broad-spectrum including MRSA coverage) are adjunctive. Every hour of delay increases mortality. Do not wait for MRI if clinical suspicion is high.'
-            }
-        ]
-    },
-    {
-        id: 'bonejoint',
-        name: 'Bone & Joint',
-        questions: [
-            {
-                tier: 1,
-                text: 'A 4-year-old presents with 2 days of fever and refusal to bear weight on the right leg. He holds his right hip flexed, abducted, and externally rotated. ESR 48, CRP 44, WBC 13.2k. What is the most likely diagnosis?',
-                options: [
-                    'Transient synovitis (toxic synovitis)',
-                    'Legg-Calvé-Perthes disease',
-                    'Septic arthritis of the hip',
-                    'Osteomyelitis of the proximal femur'
-                ],
-                correct: 2,
-                rationale: 'Septic arthritis of the hip presents with fever, refusal to bear weight, and the hip held in the position of maximum capsular volume (flexed, abducted, externally rotated). The Kocher criteria (fever, ESR >40, WBC >12k, refusal to weight-bear; CRP >2 added by Caird) stratify risk vs. transient synovitis. This child meets 4 criteria → very high probability of septic arthritis. Requires emergent joint aspiration and surgical irrigation. Transient synovitis is afebrile with lower inflammatory markers.'
-            },
-            {
-                tier: 2,
-                text: 'A 2-year-old presents with fever and exquisite point tenderness over the distal femur. X-ray is normal. MRI confirms metaphyseal bone marrow edema without drainable abscess. What is the most likely causative organism?',
-                options: [
-                    'Staphylococcus aureus',
-                    'Group A Streptococcus',
-                    'Streptococcus pneumoniae',
-                    'Kingella kingae'
+                    'Echinocandins (e.g., micafungin, caspofungin)',
+                    'Azoles (e.g., fluconazole) for all patients regardless of stability',
+                    'Flucytosine monotherapy',
+                    'Topical nystatin'
                 ],
                 correct: 0,
-                rationale: 'S. aureus is the most common cause of osteomyelitis and septic arthritis across all pediatric age groups beyond the neonatal period, accounting for ~50–60% of cases. MRSA rates vary by region. Empiric treatment should cover S. aureus: oxacillin/nafcillin for MSSA, vancomycin/clindamycin if MRSA is prevalent. Blood cultures are positive in 30–40% of cases and should be drawn before antibiotics. Duration is typically 4–6 weeks total (IV then oral transition).'
-            },
-            {
-                tier: 3,
-                text: 'A 14-month-old has knee swelling, fever, and fussiness. ESR 30, CRP 20, WBC 11k. Synovial fluid WBC: 38,000. Gram stain and standard cultures are negative at 72 hours. What organism should be strongly suspected and how is it best detected?',
-                options: [
-                    'Kingella kingae; inoculate synovial fluid into BACTEC blood culture bottles',
-                    'Borrelia burgdorferi; Lyme serology (ELISA + confirmatory Western blot)',
-                    'Mycobacterium tuberculosis; synovial biopsy with AFB stain and culture',
-                    'Neisseria gonorrhoeae; NAAT of joint fluid and urogenital sites'
-                ],
-                correct: 0,
-                rationale: 'Kingella kingae is a fastidious gram-negative coccobacillus and a major cause of osteoarticular infections in children 6 months–4 years. It causes lower inflammatory markers than S. aureus (often misclassified as "culture-negative"). Standard agar plates miss it; inoculating joint fluid into BACTEC aerobic blood culture bottles dramatically improves yield. PCR is available at referral labs. K. kingae is part of the HACEK group, typically penicillin-susceptible. Always consider it in this age group with culture-negative joint infection.'
-            }
-        ]
-    },
-    {
-        id: 'uti',
-        name: 'UTI & Renal',
-        questions: [
-            {
-                tier: 1,
-                text: 'A 2-year-old girl has 2 days of fever to 39°C, irritability, and vomiting. UA: leukocyte esterase 3+, nitrites positive, >50 WBC/hpf. No prior UTIs. What is the most likely causative organism?',
-                options: [
-                    'Klebsiella pneumoniae',
-                    'Escherichia coli',
-                    'Enterococcus faecalis',
-                    'Pseudomonas aeruginosa'
-                ],
-                correct: 1,
-                rationale: 'E. coli accounts for 80–85% of pediatric UTIs. Klebsiella and Proteus are less common gram-negatives. Enterococcus is rare in healthy children. Pseudomonas is uncommon without structural abnormalities or prior instrumentation. A positive nitrite test indicates gram-negative bacteruria (gram-positive organisms do not reduce nitrate to nitrite). Treatment: oral amoxicillin-clavulanate, TMP-SMX, or cephalosporin based on local susceptibilities.'
+                rationale: 'Echinocandins (micafungin, caspofungin, anidulafungin) are recommended first-line for most patients with invasive candidiasis/candidemia, including neutropenic and unstable patients, because of fungicidal activity against Candida, an excellent safety profile, and reliable activity against many fluconazole-resistant species (e.g., C. glabrata, C. krusei). They inhibit beta-1,3-glucan synthase in the fungal cell wall. Fluconazole is an option for stable, non-neutropenic patients without prior azole exposure. Flucytosine is never used alone (rapid resistance), and nystatin treats only mucocutaneous disease.'
             },
             {
                 tier: 2,
-                text: 'A 6-month-old male is diagnosed with his first febrile UTI. After completing antibiotics, what is the most appropriate next step per AAP guidelines?',
+                text: 'A 10-year-old with febrile neutropenia and CT findings concerning for invasive pulmonary aspergillosis is started on antifungal therapy. Which agent is first-line, and what is a key monitoring concern?',
                 options: [
-                    'No further workup is needed after a first UTI',
-                    'Renal and bladder ultrasound',
-                    'Voiding cystourethrogram (VCUG) immediately',
-                    'DMSA renal scan within 72 hours'
+                    'Fluconazole; monitor QT interval only',
+                    'Voriconazole; monitor hepatic function, visual disturbances, and obtain therapeutic drug levels due to nonlinear, variable pharmacokinetics',
+                    'Micafungin; echinocandins are first-line for aspergillosis',
+                    'Amphotericin B deoxycholate; no monitoring required'
                 ],
                 correct: 1,
-                rationale: 'Per 2011 AAP guidelines, renal and bladder ultrasound is recommended after the first febrile UTI in children 2–24 months. VCUG is reserved for abnormal ultrasound (hydronephrosis, scarring, duplex) or recurrent febrile UTIs — not routinely after a first UTI. Early DMSA scan can confirm acute pyelonephritis but is not standard first-line. The goal of ultrasound is to identify anatomical abnormalities predisposing to recurrent infections.'
+                rationale: 'Voriconazole is first-line for invasive aspergillosis (isavuconazole is an alternative). It has nonlinear, saturable (and CYP2C19-polymorphism-dependent) pharmacokinetics, so therapeutic drug monitoring is recommended to ensure efficacy and limit toxicity. Characteristic adverse effects include reversible visual disturbances/photopsia, hepatotoxicity, phototoxicity, and QT prolongation, plus many CYP-mediated drug interactions. Fluconazole has no meaningful Aspergillus activity. Echinocandins are not first-line for aspergillosis (used as salvage/combination). Amphotericin requires close renal and electrolyte monitoring.'
             },
             {
                 tier: 3,
-                text: 'A 5-year-old with known grade III VUR is on TMP-SMX prophylaxis. He develops a febrile UTI; urine culture grows E. coli resistant to TMP-SMX. After completing IV ceftriaxone, what is the highest-priority next step?',
+                text: 'A 6-year-old on a continuous amphotericin B (deoxycholate) infusion develops hypokalemia, hypomagnesemia, and a rising creatinine. Which statement best explains the nephrotoxicity and a mitigation strategy?',
                 options: [
-                    'Switch prophylaxis to nitrofurantoin given breakthrough UTI on TMP-SMX',
-                    'Discontinue prophylaxis; evidence for benefit with grade III VUR is insufficient',
-                    'Pursue ureteral reimplantation given breakthrough UTI on prophylaxis',
-                    'DMSA scan in ~6 months to assess for new renal cortical scarring'
+                    'Amphotericin binds fungal ergosterol only and never affects human cells; the renal injury is unrelated',
+                    'Amphotericin binds membrane sterols including some human cholesterol, causing renal vasoconstriction and tubular potassium/magnesium wasting; sodium loading and switching to a lipid formulation reduce toxicity',
+                    'The injury is purely allergic and resolves with antihistamines',
+                    'Liposomal amphotericin is more nephrotoxic than the deoxycholate form'
                 ],
-                correct: 3,
-                rationale: 'Renal cortical scarring (reflux nephropathy) is the major long-term complication of recurrent febrile UTIs in VUR. DMSA scan 4–6 months after infection is the gold standard for detecting new cortical scarring. This informs the risk-benefit decision of continuing prophylaxis vs. surgical correction. The RIVUR trial showed TMP-SMX prophylaxis reduces recurrent UTIs but evidence for scar prevention is less definitive. Switching prophylaxis is appropriate but secondary to first identifying whether scarring occurred.'
+                correct: 1,
+                rationale: 'Amphotericin B binds ergosterol in fungal membranes but also has affinity for human cholesterol, producing dose-limiting nephrotoxicity through afferent arteriolar vasoconstriction (reduced GFR) and direct distal tubular injury causing renal potassium and magnesium wasting (and renal tubular acidosis). Mitigation includes sodium loading/pre-hydration, aggressive electrolyte (K+/Mg2+) repletion, and using lipid formulations (liposomal amphotericin), which are LESS nephrotoxic than the conventional deoxycholate product. Infusion-related fevers/rigors are a separate acute reaction.'
             }
         ]
     },
     {
-        id: 'congenital',
-        name: 'Congenital & Perinatal',
+        id: 'antivirals',
+        name: 'Antiviral Agents (HSV, CMV, Influenza, RSV)',
         questions: [
             {
                 tier: 1,
-                text: 'Which congenital infection is most associated with periventricular calcifications, sensorineural hearing loss, and chorioretinitis — and is the leading non-genetic cause of congenital hearing loss?',
+                text: 'A 12-day-old neonate is diagnosed with disseminated HSV infection. What is the appropriate antiviral therapy?',
                 options: [
-                    'Congenital toxoplasmosis',
-                    'Congenital rubella',
-                    'Congenital CMV (cytomegalovirus)',
-                    'Congenital syphilis'
+                    'Oral acyclovir for 7 days',
+                    'High-dose IV acyclovir (60 mg/kg/day divided every 8 hours) for at least 21 days, followed by oral suppression',
+                    'IV ganciclovir for 14 days',
+                    'Oseltamivir for 5 days'
                 ],
-                correct: 2,
-                rationale: 'Congenital CMV is the most common congenital viral infection (~0.5–1% of births) and the leading non-genetic cause of sensorineural hearing loss (SNHL). Periventricular calcifications are characteristic (vs. diffuse/scattered in toxoplasmosis). Other features: IUGR, microcephaly, hepatosplenomegaly, thrombocytopenia, petechiae ("blueberry muffin"). 85–90% are asymptomatic at birth but 10–15% of these develop late SNHL. Valganciclovir × 6 months improves hearing outcomes in symptomatic infants.'
+                correct: 1,
+                rationale: 'Neonatal HSV requires high-dose IV acyclovir at 60 mg/kg/day divided every 8 hours. Duration is at least 21 days for disseminated or CNS disease (14 days for skin/eye/mouth disease), and a documented negative CSF HSV PCR is required before stopping CNS therapy. Survivors are then placed on 6 months of oral acyclovir suppression, which improves neurodevelopmental outcomes. Renal function and neutrophil counts must be monitored. Ganciclovir treats CMV, and oseltamivir treats influenza — neither is appropriate for HSV.'
             },
             {
                 tier: 2,
-                text: 'A healthy neonate is born at 39 weeks to a GBS-positive mother who received IV ampicillin starting 2 hours before delivery. The infant is vigorous with APGAR 8/9. What is the appropriate management?',
+                text: 'A symptomatic neonate with congenital CMV (CNS involvement) is to receive antiviral therapy to improve hearing and neurodevelopmental outcomes. Which agent/regimen is recommended, and what is the key toxicity to monitor?',
                 options: [
-                    'Full sepsis evaluation (CBC, blood culture, LP) and empiric ampicillin/gentamicin',
-                    'Observe for ≥48 hours with vital signs monitoring; no routine bloodwork',
-                    'Discharge at 24 hours if feeding well; standard newborn care',
-                    'CBC and blood culture; treat if WBC or differential is abnormal'
+                    'Acyclovir for 10 days; monitor for hepatotoxicity',
+                    'Oral valganciclovir (or IV ganciclovir) for 6 months; monitor for neutropenia',
+                    'Oseltamivir for 6 weeks; monitor for bronchospasm',
+                    'Foscarnet first-line for all neonates; monitor for ototoxicity'
                 ],
                 correct: 1,
-                rationale: 'Adequate IAP requires penicillin/ampicillin ≥4 hours before delivery. This mother received only 2 hours — inadequate IAP. Per CDC/AAP guidelines, a term (≥37 weeks) well-appearing neonate born to GBS-positive mother with inadequate IAP should be observed for ≥48 hours. If any signs of sepsis develop, full evaluation and empiric antibiotics are indicated. No routine laboratory evaluation is required for well-appearing term infants — but 48h observation is still mandated rather than early discharge.'
+                rationale: 'Symptomatic congenital CMV with CNS or other significant disease is treated with valganciclovir 16 mg/kg/dose orally twice daily (or IV ganciclovir) for 6 months, which improves audiologic and neurodevelopmental outcomes (per the CASG/Kimberlin trials). The principal dose-limiting toxicity is neutropenia, requiring frequent absolute neutrophil count monitoring (more common with ganciclovir than valganciclovir). Foscarnet is reserved for ganciclovir resistance/intolerance and is itself nephrotoxic. Acyclovir lacks reliable CMV activity, and oseltamivir is an influenza drug.'
             },
             {
                 tier: 3,
-                text: 'A 3-week-old presents with bloody nasal discharge (snuffles), a copper-colored maculopapular rash on palms and soles, hepatosplenomegaly, and periostitis on long-bone X-rays. Maternal RPR was reactive (1:32) with no prenatal treatment. Infant RPR is 1:128. What treatment is correct?',
+                text: 'During influenza season, a previously healthy 8-year-old with confirmed influenza A is started on oseltamivir but worsens after several days. The lab reports an H275Y neuraminidase mutation. What does this imply and what is a reasonable alternative?',
                 options: [
-                    'Benzathine penicillin G IM × 1 dose (2.4 million units)',
-                    'Aqueous crystalline penicillin G IV × 10–14 days',
-                    'Oral doxycycline × 28 days',
-                    'IV ceftriaxone × 10–14 days'
+                    'H275Y confers resistance to all influenza antivirals; only supportive care remains',
+                    'H275Y typically confers oseltamivir (and peramivir) resistance while often retaining zanamivir susceptibility; consider inhaled/IV zanamivir or baloxavir',
+                    'H275Y is a marker of resistance to the M2 inhibitors amantadine and rimantadine only',
+                    'H275Y indicates the virus is actually influenza B and oseltamivir should simply be dose-increased'
                 ],
                 correct: 1,
-                rationale: 'This is confirmed symptomatic congenital syphilis. Treatment requires aqueous crystalline penicillin G IV (or procaine penicillin IM) for 10–14 days to achieve adequate CNS penetration. Benzathine penicillin G single IM dose is insufficient for congenital syphilis (poor CNS levels) — it is reserved only for specific asymptomatic scenarios meeting strict CDC criteria. Doxycycline is contraindicated in neonates/young infants. Ceftriaxone is not recommended due to limited data. Lumbar puncture to evaluate CSF should be performed in all confirmed cases.'
+                rationale: 'The neuraminidase H275Y substitution (N1 numbering) is the classic mutation conferring resistance to oseltamivir and the related neuraminidase inhibitor peramivir, while typically preserving susceptibility to zanamivir (which has a different binding interaction). Reasonable alternatives include zanamivir or baloxavir (a cap-dependent endonuclease inhibitor with a distinct mechanism). The adamantanes (amantadine/rimantadine) target the M2 ion channel — a different resistance pathway — and are no longer recommended for circulating influenza A due to widespread resistance and have no activity against influenza B.'
             }
         ]
     },
     {
-        id: 'vaccines',
-        name: 'Vaccines & Prevention',
+        id: 'resistance',
+        name: 'Antibiotic Resistance Mechanisms',
         questions: [
             {
                 tier: 1,
-                text: 'Which of the following vaccines is a LIVE attenuated vaccine?',
+                text: 'An isolate of Klebsiella pneumoniae is reported as an "ESBL producer." What does this resistance mechanism primarily confer?',
                 options: [
-                    'Hepatitis B vaccine (HepB)',
-                    'Inactivated poliovirus vaccine (IPV)',
-                    'Measles-Mumps-Rubella (MMR)',
-                    'Meningococcal conjugate vaccine (MenACWY)'
+                    'Resistance to vancomycin via altered cell wall precursors',
+                    'Hydrolysis of penicillins, most cephalosporins, and aztreonam (but typically not carbapenems), with inhibition by clavulanate',
+                    'Resistance to aminoglycosides only',
+                    'Resistance to fluoroquinolones via DNA gyrase mutation'
                 ],
-                correct: 2,
-                rationale: 'Live attenuated vaccines in the US schedule: MMR, MMRV (MMR + varicella), varicella (VZV), intranasal influenza (LAIV), oral rotavirus, yellow fever, and oral typhoid (Ty21a). Live vaccines are contraindicated in severely immunocompromised patients (e.g., HIV with low CD4, active chemotherapy) and during pregnancy. Hepatitis B is a recombinant subunit vaccine. IPV is an inactivated vaccine. MenACWY is a polysaccharide conjugate vaccine.'
+                correct: 1,
+                rationale: 'Extended-spectrum beta-lactamases (ESBLs; e.g., CTX-M, SHV, TEM derivatives) hydrolyze penicillins, most cephalosporins (including third-generation agents), and aztreonam, but generally NOT carbapenems or cephamycins. They are classically inhibited in vitro by clavulanic acid. Serious ESBL infections are treated with carbapenems. ESBLs are unrelated to vancomycin resistance (vanA/vanB gene clusters altering D-Ala-D-Ala to D-Ala-D-Lac) and act on beta-lactams rather than aminoglycosides or fluoroquinolones.'
             },
             {
                 tier: 2,
-                text: 'A 14-month-old received IVIG (2 g/kg) for Kawasaki disease 4 weeks ago. He is now due for MMR and varicella vaccines. What is the most appropriate action?',
+                text: 'A child has a Staphylococcus aureus isolate that tests erythromycin-resistant but clindamycin-susceptible. The lab performs a D-test, which is positive. What does this indicate for therapy?',
                 options: [
-                    'Give both vaccines now; 4 weeks is sufficient waiting time',
-                    'Give MMR now; defer varicella only for 11 months',
-                    'Defer both MMR and varicella for approximately 11 months from IVIG administration',
-                    'Give both vaccines now and recheck titers in 3 months to confirm immunogenicity'
+                    'Clindamycin can be used safely at standard doses',
+                    'Inducible clindamycin resistance (erm-mediated MLSb) is present; clindamycin may fail and should generally be avoided for serious infections',
+                    'The isolate is actually vancomycin-resistant',
+                    'The D-test detects efflux-mediated resistance only and clindamycin remains fully active'
                 ],
-                correct: 2,
-                rationale: 'IVIG contains passively acquired antibodies that interfere with response to live attenuated vaccines. The deferral period depends on IVIG dose: for Kawasaki disease dosing (2 g/kg), defer 11 months per Red Book (AAP) recommendations. Both MMR and varicella are live vaccines and must be deferred. Checking titers after early vaccination is not validated as a reliable workaround. This is a high-yield concept for both pediatric boards and shelf exams.'
+                correct: 1,
+                rationale: 'A positive D-test reveals inducible clindamycin resistance mediated by erm genes (the MLSb phenotype), in which erythromycin induces methylation of the ribosomal target, conferring cross-resistance to clindamycin even though the isolate appears clindamycin-susceptible on routine testing. The flattened "D"-shaped zone of inhibition between the erythromycin and clindamycin disks signals this. For serious infections, clindamycin should generally be avoided because resistance can emerge during therapy and cause failure. Efflux-mediated (msrA) resistance affects macrolides but spares clindamycin and yields a negative D-test.'
             },
             {
                 tier: 3,
-                text: 'An unvaccinated susceptible 17-year-old is exposed to a household contact confirmed to have varicella (chickenpox) 4 days ago. She is healthy and not immunocompromised. What is the most appropriate post-exposure management?',
+                text: 'A multidrug-resistant Klebsiella pneumoniae is reported as carbapenem-resistant and KPC-positive. Which statement about this mechanism and treatment is MOST accurate?',
                 options: [
-                    'VariZIG (varicella-zoster immune globulin) within 10 days of exposure',
-                    'Prophylactic oral acyclovir × 7 days starting immediately',
-                    'Varicella vaccine as soon as possible (within 5 days of exposure)',
-                    'No intervention; varicella is self-limited in healthy adolescents'
+                    'KPC is a metallo-beta-lactamase inhibited by EDTA but not by avibactam',
+                    'KPC is a serine carbapenemase (Ambler class A) that can be inhibited by newer agents such as ceftazidime-avibactam or meropenem-vaborbactam',
+                    'KPC organisms remain reliably susceptible to all third-generation cephalosporins',
+                    'KPC confers resistance only to penicillins and is overcome by standard meropenem dosing'
                 ],
-                correct: 2,
-                rationale: 'For healthy, immunocompetent individuals without prior varicella immunity, varicella vaccine given within 3–5 days of exposure can prevent or attenuate disease in 70–90% of cases. It is the preferred post-exposure prophylaxis for this population. VariZIG is reserved for high-risk individuals who cannot receive live vaccine: immunocompromised, pregnant women, and neonates. Acyclovir prophylaxis is not routinely recommended. Option D ignores a modifiable prevention opportunity.'
+                correct: 1,
+                rationale: 'KPC (Klebsiella pneumoniae carbapenemase) is a serine-based, Ambler class A carbapenemase that hydrolyzes virtually all beta-lactams including carbapenems. Importantly, KPC is inhibited by the newer beta-lactamase inhibitor avibactam, so ceftazidime-avibactam and meropenem-vaborbactam are effective options. This contrasts with metallo-beta-lactamases (NDM, VIM, IMP; Ambler class B), which use a zinc active site, are inhibited in vitro by EDTA, and are NOT inhibited by avibactam (often requiring agents such as cefiderocol or aztreonam-avibactam combinations). KPC organisms are broadly cephalosporin-resistant.'
             }
         ]
     },
     {
-        id: 'antimicrobials',
-        name: 'Antimicrobial Principles',
+        id: 'pkpd',
+        name: 'PK/PD Principles & Dosing Optimization',
         questions: [
             {
                 tier: 1,
-                text: 'Which antibiotic class exerts its bactericidal effect by inhibiting bacterial cell wall synthesis through binding to penicillin-binding proteins (PBPs)?',
+                text: 'Which of the following antibiotic classes is best optimized by maximizing the peak concentration relative to the MIC (concentration-dependent killing)?',
                 options: [
-                    'Aminoglycosides',
-                    'Fluoroquinolones',
                     'Beta-lactams',
+                    'Aminoglycosides',
+                    'Glycopeptides (vancomycin)',
                     'Macrolides'
                 ],
-                correct: 2,
-                rationale: 'Beta-lactams (penicillins, cephalosporins, carbapenems, monobactams) covalently bind PBPs, blocking peptidoglycan cross-linking → cell lysis. Aminoglycosides inhibit protein synthesis at the 30S ribosomal subunit. Fluoroquinolones inhibit DNA gyrase and topoisomerase IV (DNA replication). Macrolides inhibit protein synthesis at the 50S ribosomal subunit (bacteriostatic against most organisms). Knowing mechanism helps predict which organisms are covered and which resistance mechanisms apply.'
+                correct: 1,
+                rationale: 'Aminoglycosides (and fluoroquinolones to a degree) exhibit concentration-dependent killing, optimized by a high peak:MIC ratio (target ~8–10:1 for aminoglycosides), which supports once-daily extended-interval dosing. Beta-lactams are time-dependent (optimize fT>MIC). Vancomycin is best described by total exposure, AUC/MIC. Macrolides such as azithromycin are largely AUC/MIC-driven with substantial post-antibiotic effects. Matching the PK/PD index to the drug class is the foundation of rational dosing.'
             },
             {
                 tier: 2,
-                text: 'A child with recurrent S. aureus infections has MRSA confirmed. What is the primary mechanism conferring methicillin resistance in MRSA?',
+                text: 'To better attain the beta-lactam PK/PD target (fT>MIC) against a less-susceptible Pseudomonas isolate, which dosing strategy for piperacillin-tazobactam is most rational?',
                 options: [
-                    'Production of a beta-lactamase enzyme that directly hydrolyzes methicillin',
-                    'Acquisition of the mecA gene encoding PBP2a — an altered PBP with low beta-lactam affinity',
-                    'Upregulation of drug efflux pumps that export methicillin from the cell',
-                    'Point mutations in the original PBP1–4 reducing methicillin binding affinity'
+                    'Give a single large bolus once daily to maximize the peak',
+                    'Use an extended (prolonged) infusion (e.g., over 3–4 hours) or continuous infusion to increase the time above the MIC',
+                    'Reduce the dose but shorten the infusion to 5 minutes',
+                    'Switch to a peak-targeted strategy as for aminoglycosides'
                 ],
                 correct: 1,
-                rationale: 'MRSA resistance is mediated by mecA (carried on the mobile genetic element SCCmec), which encodes PBP2a — an altered PBP with low affinity for essentially all beta-lactam antibiotics. This is distinct from "penicillinase-producing" MSSA, whose beta-lactamase is overcome by penicillinase-stable penicillins (oxacillin) or beta-lactam/inhibitor combinations. PBP2a cannot be overcome by any beta-lactam, necessitating non-beta-lactam agents (vancomycin, daptomycin, linezolid, TMP-SMX, clindamycin depending on susceptibility).'
+                rationale: 'Because beta-lactams are time-dependent, extending the infusion time (e.g., piperacillin-tazobactam over 3–4 hours, or continuous infusion) increases the duration that free drug stays above the MIC, improving fT>MIC attainment — particularly valuable for organisms with higher MICs such as Pseudomonas. A once-daily bolus produces a high but short-lived peak that does not help a time-dependent drug, and peak-targeting (the aminoglycoside strategy) is the wrong index for beta-lactams. Higher/more frequent dosing also helps but prolonged infusion is the targeted optimization.'
             },
             {
                 tier: 3,
-                text: 'A 12-year-old with gram-negative bacteremia is receiving once-daily gentamicin. Drug levels: peak 10 mcg/mL, trough 0.3 mcg/mL. Which PK/PD principle best describes aminoglycoside bactericidal activity and justifies once-daily dosing?',
+                text: 'A critically ill child with sepsis and a hyperdynamic circulation (augmented renal clearance) is failing to respond to standard beta-lactam dosing. What pharmacokinetic changes explain this, and what is the appropriate response?',
                 options: [
-                    'Time-dependent killing: efficacy correlates with % time drug concentration exceeds the MIC',
-                    'Concentration-dependent killing: bactericidal activity correlates with peak:MIC ratio',
-                    'AUC/MIC-dependent killing: efficacy correlates with total drug exposure over 24 hours',
-                    'Paradoxical effect: aminoglycosides lose potency at high concentrations (Eagle effect)'
+                    'Increased volume of distribution and augmented renal clearance lower beta-lactam concentrations; increase the dose and/or use prolonged infusions, guided by TDM where available',
+                    'Sepsis universally decreases clearance, so the dose should be reduced',
+                    'Protein binding is irrelevant in critical illness, so no dose change is needed',
+                    'Beta-lactams are concentration-dependent, so a single larger peak will fix the problem'
                 ],
-                correct: 1,
-                rationale: 'Aminoglycosides demonstrate concentration-dependent killing: bactericidal activity correlates with peak:MIC ratio (target ≥8–10:1). This justifies once-daily (extended-interval) dosing — achieves higher peaks, maintains equivalent efficacy, and allows drug-free troughs that reduce nephrotoxicity and ototoxicity. Contrast with beta-lactams (time-dependent: efficacy correlates with % time > MIC) and vancomycin/fluoroquinolones (AUC/MIC-dependent). Aminoglycosides also exhibit a post-antibiotic effect (bacterial suppression continues after drug concentrations fall below MIC).'
+                correct: 0,
+                rationale: 'In sepsis, capillary leak and aggressive fluid resuscitation expand the volume of distribution of hydrophilic drugs (beta-lactams, aminoglycosides, vancomycin), lowering peak concentrations, while augmented renal clearance (enhanced GFR from a hyperdynamic state) accelerates elimination and shortens the time above the MIC. Both reduce target attainment, so the response is to increase dose and/or extend the infusion, ideally guided by therapeutic drug monitoring. Hypoalbuminemia also raises the free fraction of highly protein-bound agents, further altering exposure. Beta-lactams remain time-dependent, so peak-targeting alone does not correct the problem.'
             }
         ]
     },
     {
-        id: 'immunocompromised',
-        name: 'Immunocompromised Host',
+        id: 'interactions',
+        name: 'Drug Interactions & Toxicity',
         questions: [
             {
                 tier: 1,
-                text: 'An HIV-positive 4-year-old has a CD4 count of 180 cells/mm³. Which prophylactic medication should be initiated?',
+                text: 'A teenager is prescribed an oral fluoroquinolone and reports also taking calcium carbonate, an iron supplement, and a multivitamin. What counseling is most important?',
                 options: [
-                    'Fluconazole for Candida prevention',
-                    'TMP-SMX for Pneumocystis jirovecii pneumonia (PCP) prevention',
-                    'Azithromycin for Mycobacterium avium complex (MAC) prevention',
-                    'Valganciclovir for CMV prevention'
+                    'These supplements increase fluoroquinolone absorption and should be co-administered',
+                    'Polyvalent cations (calcium, iron, magnesium, aluminum, zinc) chelate fluoroquinolones and markedly reduce their absorption; separate the doses by several hours',
+                    'Supplements have no effect on fluoroquinolone absorption',
+                    'The patient must stop all calcium and iron permanently while on therapy'
                 ],
                 correct: 1,
-                rationale: 'TMP-SMX (Bactrim) is indicated for PCP prophylaxis in HIV-positive children. Age-based CD4 thresholds: all HIV-exposed infants start TMP-SMX at 4–6 weeks; ages 1–5 years: prophylaxis when CD4 <500 cells/mm³ or CD4% <15%; ≥6 years: CD4 <200 (same as adults). MAC prophylaxis (azithromycin) is added when CD4 <50 (advanced disease). PCP remains a major cause of AIDS-defining illness and mortality in children if untreated HIV.'
+                rationale: 'Fluoroquinolones (and oral tetracyclines) chelate polyvalent cations — calcium, iron, magnesium, aluminum, and zinc — found in antacids, supplements, multivitamins, and dairy, dramatically reducing oral antibiotic absorption and risking treatment failure. The practical solution is dose separation (give the fluoroquinolone 2 hours before or 6 hours after the cation-containing product) rather than permanent discontinuation. This is one of the most clinically common and preventable antibiotic interactions.'
             },
             {
                 tier: 2,
-                text: 'A 7-year-old with ALL is on induction chemotherapy. On day 10 she develops fever (38.5°C) and her ANC is 180 cells/mm³. She has a central venous catheter. What is the most appropriate immediate management?',
+                text: 'A child is started on linezolid while also taking an SSRI for anxiety. Which toxicity concern is most important to monitor?',
                 options: [
-                    'Oral antibiotics and outpatient follow-up if she appears well',
-                    'Blood cultures (peripheral + central line), then immediate empiric IV broad-spectrum antibiotics',
-                    'Blood cultures and CXR; wait 24 hours for preliminary culture data before starting antibiotics',
-                    'Empiric antifungal therapy alone given likely fungal etiology after 10 days of chemotherapy'
+                    'QT prolongation requiring continuous ECG monitoring',
+                    'Serotonin syndrome, because linezolid is a weak monoamine oxidase inhibitor (and prolonged courses also risk myelosuppression and peripheral/optic neuropathy)',
+                    'Nephrotoxicity from glomerular injury',
+                    'Disulfiram-like reaction with alcohol'
                 ],
                 correct: 1,
-                rationale: 'Febrile neutropenia (fever + ANC <500, or <1000 and falling) is a medical emergency. Key principles: (1) draw blood cultures from ALL lumens of central catheter AND a peripheral stick simultaneously; (2) start empiric broad-spectrum IV antibiotics immediately — never wait for culture results; delay increases mortality. First-line agents cover P. aeruginosa: cefepime, piperacillin-tazobactam, or meropenem. Add vancomycin for catheter-site infection, hemodynamic instability, or MRSA concern. Risk stratification (MASCC, CTCAE) may allow outpatient management in low-risk cases, but ANC 180 = high-risk.'
+                rationale: 'Linezolid is a reversible, nonselective monoamine oxidase inhibitor, so combining it with serotonergic drugs (SSRIs, SNRIs, triptans, meperidine) can precipitate serotonin syndrome (agitation, hyperthermia, clonus, autonomic instability). When co-administration is unavoidable, monitor closely. Linezolid also causes dose- and duration-dependent myelosuppression (especially thrombocytopenia) with courses beyond ~2 weeks, and prolonged use risks peripheral and optic neuropathy and lactic acidosis. A disulfiram-like reaction with alcohol is associated with metronidazole, not linezolid.'
             },
             {
                 tier: 3,
-                text: 'A 10-year-old is 45 days post-allogeneic hematopoietic stem cell transplant (on tacrolimus for GVHD prophylaxis). He develops fever and new pulmonary nodules on CT with a halo sign. Serum galactomannan is positive (index 3.2). What is the most likely diagnosis and first-line treatment?',
+                text: 'A child with epilepsy on a stable phenytoin regimen and a transplant recipient on tacrolimus are each started on antimicrobials. Which pairing correctly predicts the interaction?',
                 options: [
-                    'Pneumocystis jirovecii pneumonia (PCP); IV TMP-SMX 15–20 mg/kg/day',
-                    'Invasive pulmonary aspergillosis (IPA); voriconazole',
-                    'Disseminated cryptococcosis; amphotericin B + flucytosine',
-                    'CMV pneumonitis; IV ganciclovir + IVIG'
+                    'Rifampin induces CYP3A4 and lowers tacrolimus levels (risking rejection); azole antifungals and clarithromycin inhibit CYP3A4 and raise tacrolimus levels (risking toxicity)',
+                    'Rifampin inhibits CYP enzymes and raises tacrolimus levels',
+                    'Azole antifungals induce CYP3A4 and lower tacrolimus levels',
+                    'Antimicrobials never affect calcineurin inhibitor or anticonvulsant levels'
+                ],
+                correct: 0,
+                rationale: 'Rifampin is a potent inducer of CYP3A4 (and P-glycoprotein), accelerating metabolism of many drugs and lowering tacrolimus, cyclosporine, and numerous other levels — a major cause of subtherapeutic immunosuppression and transplant rejection. Conversely, azole antifungals (fluconazole, voriconazole, posaconazole) and macrolides such as clarithromycin/erythromycin inhibit CYP3A4, raising calcineurin-inhibitor levels and causing nephrotoxicity/neurotoxicity unless doses are reduced and levels monitored. Rifampin also lowers many anticonvulsant levels, while isoniazid and some azoles can inhibit phenytoin metabolism — both directions require monitoring.'
+            }
+        ]
+    },
+    {
+        id: 'stewardship',
+        name: 'Stewardship: De-escalation & Duration',
+        questions: [
+            {
+                tier: 1,
+                text: 'A child started on empiric broad-spectrum antibiotics for pneumonia now has blood cultures growing fully susceptible Streptococcus pneumoniae and is improving. What is the core stewardship action?',
+                options: [
+                    'Continue the broad-spectrum regimen unchanged to avoid relapse',
+                    'De-escalate to a narrow-spectrum agent (e.g., ampicillin/penicillin) targeting the identified susceptible organism',
+                    'Add a second broad-spectrum agent for synergy',
+                    'Extend therapy to 21 days regardless of response'
                 ],
                 correct: 1,
-                rationale: 'Invasive pulmonary aspergillosis (IPA) is a leading cause of infection-related mortality in allogeneic HSCT recipients, particularly during prolonged neutropenia and with calcineurin inhibitor immunosuppression. Classic CT findings: nodules with halo sign (hemorrhagic infarction around fungal hyphae) or air crescent sign (later). Galactomannan (serum or BAL) is the diagnostic biomarker. Voriconazole is first-line treatment (superior to amphotericin B in the landmark Herbrecht trial 2002). Isavuconazole is an alternative with a better side-effect profile. PCP presents with diffuse ground-glass (not nodules) and negative galactomannan.'
+                rationale: 'De-escalation — narrowing therapy once culture and susceptibility results identify the pathogen and the patient is improving — is a central principle of antimicrobial stewardship. For pan-susceptible pneumococcus, narrowing to ampicillin or penicillin reduces selection pressure for resistance, limits collateral damage to the microbiome (and C. difficile risk), and lowers cost and toxicity, all without compromising efficacy. Continuing unnecessary broad coverage or adding agents drives resistance, and durations should be guided by evidence rather than arbitrarily prolonged.'
+            },
+            {
+                tier: 2,
+                text: 'An otherwise healthy 5-year-old hospitalized with uncomplicated community-acquired pneumonia has responded well after a few days of IV antibiotics and is tolerating oral intake. Which approach reflects current evidence on duration?',
+                options: [
+                    'Mandate a full 14-day IV course before any oral switch',
+                    'Switch to oral therapy once clinically improving and tolerating oral intake; short total courses (about 5 days) are effective for uncomplicated CAP',
+                    'Treat for at least 21 days to prevent recurrence',
+                    'Stop antibiotics as soon as the child is afebrile for 12 hours, regardless of total course'
+                ],
+                correct: 1,
+                rationale: 'Evidence (including the SAFER and CAP-IT trials) supports shorter courses — about 5 days — for uncomplicated pediatric community-acquired pneumonia, with no benefit from longer durations in children who are improving. IV-to-oral switch is appropriate once the child is clinically improving, hemodynamically stable, and tolerating oral intake; prolonged IV therapy offers no advantage and increases line complications and length of stay. "Longer is better" is outdated; durations should be the shortest effective course rather than a fixed 14–21 days.'
+            },
+            {
+                tier: 3,
+                text: 'A stewardship team wants to safely shorten antibiotic durations on a pediatric ward. Which biomarker-based or evidence-based strategy is best supported, and what is an important caveat?',
+                options: [
+                    'Procalcitonin-guided algorithms can help reduce antibiotic exposure, but must be combined with clinical judgment and source control rather than used in isolation',
+                    'A single elevated C-reactive protein mandates at least 14 days of therapy',
+                    'Procalcitonin should be the sole determinant of starting and stopping all antibiotics',
+                    'Biomarkers replace the need for cultures and clinical assessment entirely'
+                ],
+                correct: 0,
+                rationale: 'Procalcitonin-guided algorithms have been shown to safely reduce antibiotic initiation and duration in several settings (notably lower respiratory tract infections and some ICU populations) when used as a decision-support adjunct. The critical caveat is that biomarkers must complement — never replace — clinical assessment, microbiologic data, and adequate source control; procalcitonin can be falsely low early or in localized infection and falsely elevated in non-infectious inflammation. Rigid single-value rules (e.g., a CRP dictating 14 days) are not evidence-based, and the shortest effective, clinically guided duration remains the goal.'
+            }
+        ]
+    },
+    {
+        id: 'specialpop',
+        name: 'Special Populations (Neonates, Renal Failure, Obesity)',
+        questions: [
+            {
+                tier: 1,
+                text: 'Why do neonates frequently require longer dosing intervals (e.g., every 12 hours rather than every 8) for renally cleared antibiotics such as gentamicin?',
+                options: [
+                    'Neonates have supranormal renal function that clears drugs faster',
+                    'Immature renal function (low GFR) and an expanded total body water content alter clearance and volume of distribution, prolonging drug half-life',
+                    'Neonatal protein binding is so high that drugs cannot be eliminated',
+                    'Neonates metabolize all antibiotics through the lungs'
+                ],
+                correct: 1,
+                rationale: 'Neonates have immature, lower glomerular filtration that matures over the first weeks to months of life, reducing clearance of renally eliminated drugs and prolonging their half-life — hence extended dosing intervals. They also have a proportionally larger total body water content, which increases the volume of distribution of hydrophilic agents (aminoglycosides, beta-lactams), often requiring a relatively larger weight-based dose but given less frequently. Gestational and postnatal age both drive these adjustments, which is why neonatal dosing tables are age- and weight-stratified.'
+            },
+            {
+                tier: 2,
+                text: 'A child with acute kidney injury (markedly reduced GFR) is being treated with vancomycin and meropenem. What is the most appropriate general dosing principle?',
+                options: [
+                    'Reduce the loading dose substantially because the kidneys are impaired',
+                    'Give a normal (weight-based) loading dose to rapidly reach therapeutic concentrations, then reduce the maintenance dose or lengthen the interval based on renal function and drug levels',
+                    'Withhold all antibiotics until renal function normalizes',
+                    'Double all maintenance doses to overcome poor clearance'
+                ],
+                correct: 1,
+                rationale: 'Loading doses depend chiefly on the volume of distribution (not clearance), so a full weight-based loading dose should usually be given even in renal impairment to reach therapeutic levels promptly — critical in serious infection. It is the maintenance dosing that must be adjusted: reduce the dose and/or extend the interval according to estimated GFR and, for vancomycin/aminoglycosides, measured drug levels. Withholding needed antibiotics is harmful, and simply doubling maintenance doses in renal failure causes accumulation and toxicity.'
+            },
+            {
+                tier: 3,
+                text: 'A severely obese adolescent needs vancomycin and an aminoglycoside. Which weight descriptor is generally most appropriate for initial dosing of each, and why?',
+                options: [
+                    'Use total body weight for both drugs because all antibiotics distribute equally into fat',
+                    'Vancomycin is typically dosed on actual (total) body weight (with caps and level monitoring), whereas aminoglycosides are dosed on an adjusted body weight because they distribute poorly into adipose tissue',
+                    'Both should be dosed on ideal body weight to avoid any toxicity',
+                    'Weight is irrelevant in obesity; use fixed adult doses for all'
+                ],
+                correct: 1,
+                rationale: 'Obesity alters volume of distribution differently across drugs. Vancomycin distributes substantially even into adipose tissue, so it is generally dosed on actual (total) body weight, with a maximum dose cap and AUC/level-guided monitoring to avoid excessive exposure. Aminoglycosides are hydrophilic and distribute poorly into fat, so dosing on total body weight overestimates the needed dose and risks toxicity; an adjusted body weight (ideal body weight plus a correction factor for excess weight) is preferred, followed by level monitoring. Using a single weight metric for all antibiotics, or ignoring weight altogether, leads to under- or over-dosing.'
             }
         ]
     }
@@ -1231,13 +1231,13 @@ function showResults() {
     let headline, subline;
     if (pct >= 80) {
         headline = 'Strong Foundation';
-        subline = `${student.name}, your breadth and depth across Peds ID domains is excellent. Focus on any weak areas below.`;
+        subline = `${student.name}, your breadth and depth across antimicrobial pharmacology domains is excellent. Focus on any weak areas below.`;
     } else if (pct >= 60) {
         headline = 'Good Start';
         subline = `${student.name}, solid coverage overall. Review the domains where you stalled at Tier 1 or 2.`;
     } else {
         headline = 'Opportunity to Build';
-        subline = `${student.name}, use the rationale below as your rotation study guide — these are the high-yield concepts.`;
+        subline = `${student.name}, use the rationale below as your study guide — these are the high-yield antimicrobial concepts.`;
     }
     document.getElementById('results-headline').textContent = headline;
     document.getElementById('results-subline').textContent = subline;
@@ -1353,12 +1353,9 @@ async function saveResultsToSheet(pct, correct, total) {
             answers: r.tiers.map(t => ({
                 tier: t.tier + 1,
                 question: t.question.text,
-                options: t.question.options,
                 selected: t.question.options[t.selectedOption],
-                selectedIndex: t.selectedOption,
                 correct: t.correct,
                 correctAnswer: t.question.options[t.question.correct],
-                correctIndex: t.question.correct,
                 rationale: t.question.rationale
             }))
         };
@@ -1401,11 +1398,11 @@ function sendFacultyReport(pct, correct, total) {
     }).join('\n');
 
     const body = encodeURIComponent(
-`Sage Project – Med Student Rotation Primer Report
+`Sage Project – Antimicrobial Selection & Dosing Assessment Report
 
-Student: ${student.name}
-Year: ${student.year}
-School: ${student.school}
+Name: ${student.name}
+Role: ${student.year}
+Institution/Program: ${student.school}
 Email: ${student.email}
 Date: ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}
 
@@ -1415,12 +1412,12 @@ DOMAIN BREAKDOWN:
 ${domainSummary}
 
 ---
-Assessment: Pediatric ID Med Student Rotation Primer
+Assessment: Antimicrobial Selection & Dosing Assessment
 Adaptive format – Tier 1 (Recognition) → Tier 2 (Application) → Tier 3 (Reasoning)
 sageproject.xyz`
     );
 
-    const subject = encodeURIComponent(`Peds ID Rotation Assessment – ${student.name} – ${pct}%`);
+    const subject = encodeURIComponent(`Antimicrobial Assessment – ${student.name} – ${pct}%`);
     window.location.href = `mailto:${FACULTY_EMAIL}?subject=${subject}&body=${body}&cc=${encodeURIComponent(student.email)}`;
 }
 

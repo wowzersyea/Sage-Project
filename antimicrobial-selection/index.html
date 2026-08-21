@@ -313,6 +313,8 @@
 <script>
 // ─── CONFIG ─────────────────────────────────────────────────────────────────
 const FACULTY_EMAIL = 'faculty@sageproject.xyz'; // change to attending's email
+const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzVGqv0Ot-L9BtUzcWhq8XTpmOEZSGqVFwD0kPLSRfKBFVvTlRLMdzmtWXZuaPf6adz/exec';
+const ASSESSMENT_TYPE = 'Antimicrobial Selection'; // tab name in Google Sheet
 // AI grading endpoint — set this to your local server when ready, e.g. 'http://localhost:8787/grade'
 // Leave blank to use the manual email/download flow only.
 const AI_GRADER_ENDPOINT = '';
@@ -751,8 +753,56 @@ async function submitAssessment() {
     }
   }
 
+  // Auto-save to Google Sheets (silent)
+  saveResultsToSheet(lastPayload);
+
   document.getElementById('email-report-btn').onclick = emailReport;
   document.getElementById('download-btn').onclick = downloadJSON;
+}
+
+async function saveResultsToSheet(payload) {
+  if (!SHEETS_ENDPOINT) return;
+  const s = payload.scored;
+
+  // Build domain breakdown in same format as other assessments
+  const domains = Object.values(s.perDomain).map(d => ({
+    domain: d.name,
+    correct: d.points,
+    asked: d.max,
+    maxTier: Math.max(...(s.perQuestion.filter(q => q.domainId === Object.keys(s.perDomain).find(k => s.perDomain[k].name === d.name)).map(q => q.tier)), 0),
+    answers: s.perQuestion.filter(q => q.domainId === Object.keys(s.perDomain).find(k => s.perDomain[k].name === d.name)).map(q => ({
+      tier: q.tier,
+      question: q.question,
+      correct: q.score === 1,
+      score: q.score,
+      detail: q.detail
+    }))
+  }));
+
+  const sheetsPayload = {
+    assessmentType: ASSESSMENT_TYPE,
+    timestamp: payload.submittedAt,
+    name: payload.student.name,
+    year: payload.student.level,
+    school: payload.student.program,
+    email: payload.student.email,
+    overallScore: s.overall.pct,
+    correct: Math.round(s.overall.points),
+    total: s.overall.max,
+    domains: domains,
+    fullPayload: payload
+  };
+
+  try {
+    await fetch(SHEETS_ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sheetsPayload)
+    });
+  } catch(e) {
+    console.warn('Could not save to Sheets:', e);
+  }
 }
 
 function emailReport() {
