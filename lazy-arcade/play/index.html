@@ -211,21 +211,43 @@ body{
 canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
 
 /* banners */
-.banner{position:absolute;inset:0;display:flex;flex-direction:column;gap:4px;
+/* Win presentation, restructured against the reference.
+   Ours had the hierarchy inverted: the tier name was 52px and the amount 30px,
+   so the biggest thing on screen was the word "Big win" rather than the number.
+   In the reference the AMOUNT is the screen -- vast outlined numerals spanning
+   nearly the full width, with the tier name small above them -- and the reels
+   stay visible behind rather than being covered, so the win is seen landing on
+   the board that produced it. */
+.banner{position:absolute;inset:0;display:flex;flex-direction:column;gap:2px;
   align-items:center;justify-content:center;z-index:7;pointer-events:none;
-  background:radial-gradient(60% 60% at 50% 50%,rgba(20,8,32,.86),rgba(11,9,16,.62));
+  background:radial-gradient(62% 62% at 50% 50%,rgba(16,6,26,.72),rgba(11,9,16,.40));
   opacity:0;transition:opacity .22s}
 .banner.on{opacity:1}
-.banner .big{font-weight:900;letter-spacing:.1em;text-transform:uppercase;
-  font-size:clamp(24px,6.4vw,52px);line-height:1;
+.banner .big{font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+  font-size:clamp(15px,3.1vw,30px);line-height:1;
   background:linear-gradient(180deg,#FFF6DC,var(--gold) 48%,#C4860E);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 3px 0 rgba(0,0,0,.5));animation:thump .5s ease-out}
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55));animation:thump .5s ease-out}
 @keyframes thump{0%{transform:scale(.55);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1)}}
-.banner .amt{font-family:var(--mono);font-size:clamp(17px,4vw,30px);font-weight:700;
-  color:var(--gold-3);font-variant-numeric:tabular-nums}
-.banner .sub{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--muted)}
+.banner .amt{font-family:var(--mono);font-weight:900;line-height:.94;
+  font-size:clamp(44px,12.5vw,124px);
+  color:#FFD54A;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  /* The outline is a ring of hard text-shadows, not -webkit-text-stroke.
+     A stroke draws CENTRED on the glyph edge, so the fill covers its inner half
+     and what survives is half the width asked for -- at these sizes it vanished
+     entirely. `paint-order: stroke fill` would fix that, but it is an SVG
+     property and Chromium ignores it on HTML text. Eight offsets at the same
+     radius give a solid outline that actually sits outside the letterform. */
+  text-shadow:
+    -5px -5px 0 #3A0A08, 0 -6px 0 #3A0A08,  5px -5px 0 #3A0A08,
+     6px  0   0 #3A0A08, 5px  5px 0 #3A0A08, 0   6px 0 #3A0A08,
+    -5px  5px 0 #3A0A08,-6px  0   0 #3A0A08,
+     0   11px 0 rgba(0,0,0,.42), 0 0 48px rgba(255,180,40,.5);
+  animation:amtIn .42s cubic-bezier(.2,1.4,.35,1) both}
+@keyframes amtIn{0%{transform:scale(.7);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+.banner .sub{font-family:var(--mono);font-size:clamp(10px,1.4vw,13px);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold-2);margin-top:10px;
+  text-shadow:0 2px 4px rgba(0,0,0,.9),0 0 10px rgba(0,0,0,.8)}
 
 /* meter strip above reels */
 .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
