@@ -430,6 +430,51 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* --------------------------------------------------------------- max win */
+// The cabinet advertises a maximum win and capWin enforces one, from two
+// separate declarations: MAXWIN for the label, CONF[game].cap for the clamp,
+// and a bare literal inside hlPick for Hi/Lo. Nothing tied them together. They
+// agree today -- this was checked and found correct -- but a promise the game
+// will not honour is exactly the fault the fairness verifier had when its copy
+// of the strips went stale, and it costs nothing to pin.
+console.log("\nMax win");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const rows = [];
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click();
+      await sleep(350);
+      const shown = +document.getElementById("chipMax").textContent.replace(/[^\d]/g, "");
+      // Clamp a deliberately over-cap round and check both the total and that
+      // the base/feature split survives -- session RTP is reported off that.
+      const cap = CONF[g].cap;
+      const o = capWin({ base: cap * 3, feature: cap * 7, fs: true, marks: new Set(), frames: [] }, cap);
+      rows.push({ g, shown, MAXWIN: MAXWIN[g], cap,
+                  clamped: o.base + o.feature, share: o.base / (o.base + o.feature) });
+    }
+    document.querySelector('[data-game="hilo"]').click();
+    await sleep(350);
+    return { rows,
+             hiloShown: +document.getElementById("chipMax").textContent.replace(/[^\d]/g, ""),
+             hiloLiteral: +((hlPick.toString().match(/>=\s*(\d+)/) || [])[1]) };
+  });
+  const mismatched = r.rows.filter((x) => !(x.shown === x.cap && x.MAXWIN === x.cap));
+  check("the advertised max win is the one the game enforces", mismatched.length === 0,
+        mismatched.length ? mismatched.map((x) => `${x.g}: shows ${x.shown}, caps ${x.cap}`).join("; ")
+                          : r.rows.map((x) => `${x.g} ${x.cap}`).join(", "));
+  check("an over-cap round is clamped to exactly the cap",
+        r.rows.every((x) => Math.abs(x.clamped - x.cap) < 1e-6),
+        r.rows.map((x) => `${x.g} -> ${x.clamped}`).join(", "));
+  check("clamping preserves the base/feature split",
+        r.rows.every((x) => Math.abs(x.share - 0.3) < 1e-9), "3:7 stays 3:7");
+  check("Hi/Lo's round cap matches the figure on the cabinet",
+        r.hiloShown === r.hiloLiteral,
+        `cabinet ${r.hiloShown}, code ${r.hiloLiteral}`);
+  await ctx.close();
+}
+
 /* ------------------------------------------------------------ round replay */
 // Clicking a spin in the log re-derives it from (seed, client, nonce). That is
 // a fairness feature, so a replay that disagrees with what was paid is worse
