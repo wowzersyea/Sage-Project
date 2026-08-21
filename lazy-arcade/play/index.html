@@ -205,6 +205,20 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   box-shadow:0 0 26px -6px var(--gold),0 3px 10px rgba(0,0,0,.5);
   transform:translate(-50%,0)}
 
+.sym.lineoff{filter:brightness(.34) saturate(.45);transition:filter .18s ease}
+.sym.lineon{filter:brightness(1.3) drop-shadow(0 0 14px var(--gold));
+  transform:scale(1.05);transition:filter .18s ease,transform .18s ease;z-index:2}
+/* Below the grid, not over it. At the top it sat across the first row of
+   symbols -- including, on occasion, the very cells it was describing.
+   It cannot collide with .spinwin: that one only appears during a feature and
+   this one only in the base game. */
+.lineLabel{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+  z-index:8;pointer-events:none;opacity:0;transition:opacity .18s ease;
+  font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--gold-3);
+  background:rgba(10,7,16,.86);border:1px solid var(--gold-2);
+  padding:5px 13px;border-radius:999px;white-space:nowrap}
+.lineLabel.on{opacity:1}
+
 @keyframes slamlit{
   0%{filter:none;transform:none}
   22%{filter:brightness(1.75) saturate(1.25) drop-shadow(0 0 16px var(--gold));
@@ -983,7 +997,7 @@ const ROW_MULT_CAP=25, FREE_SPINS=10, SCATTERS_TO_TRIGGER=3;
    was tried and measured: only 4 of 40 lines are flat, so a stepped line
    collected a multiplier per row it wandered through and a uniform x3 board
    paid 7.4x. The badge on the row has to mean what it says. */
-function vaultLines(grid,pays,rowMult,marks,paidRows){
+function vaultLines(grid,pays,rowMult,marks,paidRows,wins){
   let lineUnits=0;
   for(const line of LINES){
     const s=grid[0][line[0]];
@@ -999,8 +1013,13 @@ function vaultLines(grid,pays,rowMult,marks,paidRows){
     for(let r=0;r<n;r++){
       if(rowMult[line[r]]>m){ m=rowMult[line[r]]; mRow=line[r]; }
     }
-    lineUnits+=pay*(m===0?1:m);
+    const mult=m===0?1:m;
+    lineUnits+=pay*mult;
     if(marks) for(let r=0;r<n;r++) marks.add(r+":"+line[r]);
+    // Presentation only: which line paid, with what, and how much. A grid that
+    // lights fourteen cells at once tells the player they won but never what
+    // won, and "what won" is how a paytable is actually learned.
+    if(wins) wins.push({line:line.slice(),sym:s,count:n,units:pay*mult/40,mult});
     // Presentation only -- which row's badge actually multiplied this win. The
     // connection between a lit badge and a bigger number is the whole mechanic;
     // leaving the player to infer it wastes the feature.
@@ -1032,11 +1051,11 @@ function vaultFreeSpins(rng){
         landed.push({reel:r,row,val});
       }
     }
-    const marks=new Set(), paidRows=new Set();
-    const win=vaultLines(grid,pays,rowMult,marks,paidRows);
+    const marks=new Set(), paidRows=new Set(), wins=[];
+    const win=vaultLines(grid,pays,rowMult,marks,paidRows,wins);
     feature+=win;
     frames.push({grid,marks,label:"lion's share",
-                 rowMult:rowMult.slice(),orbs:landed,spinWin:win,paidRows,
+                 rowMult:rowMult.slice(),orbs:landed,spinWin:win,paidRows,wins,
                  spinNo:spin+1});
   }
   return {feature,frames};
@@ -1045,15 +1064,15 @@ function vaultFreeSpins(rng){
 function spinVault(rng,state){
   const pays=PAYS.traitvault, strips=CONF.traitvault.strips;
   const grid=drawGrid(strips,rng);
-  const marks=new Set();
-  const base=vaultLines(grid,pays,[0,0,0,0],marks,null);
+  const marks=new Set(), wins=[];
+  const base=vaultLines(grid,pays,[0,0,0,0],marks,null,wins);
 
   let scat=0;
   const scatMarks=new Set();
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
     if(grid[r][row]===SCAT){ scat++; scatMarks.add(r+":"+row); }
   }
-  const frames=[{grid,marks,scatter:scatMarks,label:null}];
+  const frames=[{grid,marks,scatter:scatMarks,label:null,wins}];
 
   let feature=0, fs=false;
   if(scat>=SCATTERS_TO_TRIGGER){
@@ -2319,6 +2338,41 @@ function spinWinPop(amount){
   a.onfinish=()=>el.remove();
 }
 
+/* Cycle the winning lines one at a time.
+   A paying grid currently lights every winning cell at once, which on 40 lines
+   can be most of the board -- the player is told they won and never shown what
+   won. Every cabinet worth copying walks the lines afterwards. Capped at the
+   five biggest so a heavy board does not hold the game hostage. */
+async function showWinLines(wins,bet){
+  if(!wins||wins.length<2||turbo||reduceMotion) return;
+  const host=$("reels"), reels=[...host.children];
+  const top=wins.slice().sort((a,b)=>b.units-a.units).slice(0,5);
+  const label=document.createElement("div");
+  label.className="lineLabel"; $("screen").appendChild(label);
+  for(const w of top){
+    const cells=[];
+    for(let r=0;r<REELS;r++){
+      const c=reels[r]&&reels[r].querySelectorAll(".sym")[w.line[r]];
+      if(c) cells.push({c,on:r<w.count});
+    }
+    cells.forEach(({c,on})=>{ c.classList.toggle("lineon",on); c.classList.toggle("lineoff",!on); });
+    // every cell NOT on this line goes quiet
+    reels.forEach((rl,ri)=>rl.querySelectorAll(".sym").forEach((c,row)=>{
+      if(w.line[ri]!==row) c.classList.add("lineoff");
+    }));
+    label.textContent=`${symName(w.sym)} ×${w.count}`+
+      (w.mult>1?`  ·  row ×${w.mult}`:"")+`  ·  ${fmt(w.units*bet)}`;
+    label.classList.add("on");
+    pluck(392*(1+top.indexOf(w)*0.12),0.5,0.09,0.6);
+    await sleep(520);
+    reels.forEach(rl=>rl.querySelectorAll(".sym").forEach(c=>{
+      c.classList.remove("lineon","lineoff");
+    }));
+  }
+  label.classList.remove("on");
+  setTimeout(()=>label.remove(),300);
+}
+
 /* A multiplier lands on a ROW, so the row is what has to react. Without this the
    only feedback is a badge ticking over in the margin, and the mechanic's whole
    claim -- that this row is now worth more -- never reaches the grid itself.
@@ -2578,6 +2632,10 @@ async function doSpin(){
     else winChime(Math.min(3,1+Math.floor(winMult)));
     await countUp(win);
     if(winMult>=5) coins(18,.9);
+    // Then walk the lines, so the player learns what paid rather than only that
+    // something did. Base-game wins only: during a feature the frames are
+    // already advancing on their own clock.
+    if(game==="traitvault" && out.base>0) await showWinLines(first.wins,bet);
   }
   history.push({nonce,game,client:$("fClient").value,bet:stake,win,mult:winMult,
                 seed:hex(serverSeed)});
