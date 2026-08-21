@@ -430,6 +430,40 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* ------------------------------------------------------- playfield centring */
+// Trait Vault puts a multiplier rail beside the grid. As a flex item it pushed
+// the grid sideways: at 1280 wide Pride sat 183/183 and Trait Vault 221/145, so
+// the playfield jumped 38px right when you switched games and stayed lopsided
+// for as long as you played that one. A mirrored spacer balances the rail.
+console.log("\nPlayfield centring");
+{
+  for (const w of [1280, 1024, 820]) {
+    const { p, ctx } = await page({ viewport: { width: w, height: 920 } });
+    const r = await p.evaluate(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const out = {};
+      for (const g of ["pride", "traitvault"]) {
+        document.querySelector(`[data-game="${g}"]`).click();
+        await sleep(400);
+        const scr = document.getElementById("screen").getBoundingClientRect();
+        const reels = document.getElementById("reels").getBoundingClientRect();
+        out[g] = { left: reels.left - scr.left, right: scr.right - reels.right,
+                   width: reels.width };
+      }
+      return out;
+    });
+    const centred = (v) => Math.abs(v.left - v.right) <= 2;
+    check(`${w}px: the grid is centred in the cabinet, rail or no rail`,
+          centred(r.pride) && centred(r.traitvault),
+          `pride ${Math.round(r.pride.left)}/${Math.round(r.pride.right)}, `
+          + `traitvault ${Math.round(r.traitvault.left)}/${Math.round(r.traitvault.right)}`);
+    check(`${w}px: the grid does not move when the game changes`,
+          Math.abs(r.pride.left - r.traitvault.left) <= 2,
+          `moves ${Math.round(Math.abs(r.pride.left - r.traitvault.left))}px`);
+    await ctx.close();
+  }
+}
+
 /* --------------------------------------------------------------- max win */
 // The cabinet advertises a maximum win and capWin enforces one, from two
 // separate declarations: MAXWIN for the label, CONF[game].cap for the clamp,
