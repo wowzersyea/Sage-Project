@@ -469,6 +469,9 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .ro .k{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .ro .v{font-family:var(--mono);font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
 .ro .v.gold{color:var(--gold)} .ro .v.win{color:var(--win)}
+/* Net position is coloured, but never ONLY coloured -- it carries its own sign,
+   so a player who cannot separate the two hues still reads it correctly. */
+.ro .v.loss{color:#E8788A}
 .spinwrap{display:flex;gap:9px;align-items:center;justify-content:flex-end}
 .spin{position:relative;width:clamp(78px,13vw,100px);height:clamp(78px,13vw,100px);
   border-radius:50%;border:none;cursor:pointer;font-family:var(--mono);font-weight:800;
@@ -664,6 +667,16 @@ footer b{color:var(--hot)}
             <span class="k">At risk</span><span class="v" id="hlRisk">0</span></div>
           <div class="ro" id="multRo" style="display:none">
             <span class="k">Streak</span><span class="v" id="hlMult">1.00×</span></div>
+          <!-- Session clock and net position. Both are required of a real-money
+               cabinet: UKGC 3.3.3 and the MGA player-protection directive make
+               elapsed time and net position visible without the player having
+               to ask, and no tier-one operator ships without them. They were
+               tracked in the maths bench and never shown on the cabinet, which
+               is the same as not having them. -->
+          <div class="ro"><span class="k">Session</span>
+            <span class="v" id="sessionClock" aria-label="Time played this session">0:00</span></div>
+          <div class="ro"><span class="k">Net</span>
+            <span class="v" id="netPos" aria-label="Net position this session">0</span></div>
         </div>
 
         <div class="betrow">
@@ -3177,6 +3190,7 @@ async function doSpin(){
   }
 
   balance+=win;
+  if(sessionStart===null) sessionStart=Date.now();   // clock starts on the first real spin
   S.spins++; S.staked+=stake; S.returned+=win;
   if(win>0) S.hits++;
   if(winMult>S.best) S.best=winMult;
@@ -3404,8 +3418,35 @@ function refreshCostLabels(){
   $("ante").textContent = anteOn ? `Ante ${fmt(bet*ANTE.pride.stake)}` : "Ante";
   $("ante").style.display = game==="pride" ? "" : "none";
 }
+/* Time played, and what it has cost.
+ *
+ * The clock starts at the FIRST SPIN, not at page load -- a tab left open over
+ * lunch has not been a two-hour session, and a reminder that says it has is one
+ * the player learns to ignore.
+ *
+ * Net comes from staked and returned, never from balance minus its opening
+ * value. Those two disagree the moment anything else touches the balance, and
+ * the number a player checks to decide whether to stop is not a number to
+ * derive loosely.
+ */
+let sessionStart=null;
+function netPosition(){ return S.returned-S.staked; }
+function paintSession(){
+  const el=$("sessionClock"); if(!el) return;
+  const ms=sessionStart?Date.now()-sessionStart:0;
+  const mins=Math.floor(ms/60000), secs=Math.floor(ms/1000)%60;
+  el.textContent=(mins>=60?Math.floor(mins/60)+":"+String(mins%60).padStart(2,"0"):String(mins))
+                 +":"+String(secs).padStart(2,"0");
+  const net=netPosition(), n=$("netPos");
+  n.textContent=(net>0?"+":"")+fmt(net);
+  n.classList.toggle("win",net>0);
+  n.classList.toggle("loss",net<0);
+}
+setInterval(paintSession,1000);
+
 function updateHud(){
   $("bal").textContent=fmt(balance);
+  paintSession();
   $("sSpins").textContent=fmt(S.spins);
   $("fNonce").textContent=nonce;
   if(S.staked>0){

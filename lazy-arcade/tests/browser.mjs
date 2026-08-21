@@ -362,6 +362,50 @@ console.log("\nWin roll-up");
   await ctx.close();
 }
 
+/* ------------------------------------------------ session clock and net */
+// Elapsed time and net position have to be visible without the player asking
+// for them. Both were tracked in the maths bench and shown nowhere on the
+// cabinet, which is the same as not having them.
+console.log("\nSession clock and net position");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true; turbo = true;
+    const idle = document.getElementById("sessionClock").textContent;
+    // A tab left open is not a session: the clock must not run before a spin.
+    await sleep(2200);
+    const stillIdle = document.getElementById("sessionClock").textContent;
+
+    document.querySelector('[data-game="traitvault"]').click();
+    await sleep(300);
+    await doSpin();
+    const started = sessionStart;
+    await sleep(2200);
+    const running = document.getElementById("sessionClock").textContent;
+
+    // Net must come from staked/returned, not from balance drift. Move the
+    // balance behind its back and the reported net must not follow.
+    const netBefore = document.getElementById("netPos").textContent;
+    balance += 50000;
+    updateHud();
+    const netAfter = document.getElementById("netPos").textContent;
+    return { idle, stillIdle, running, started: started !== null,
+             netBefore, netAfter,
+             agrees: Math.abs((S.returned - S.staked) - netPosition()) < 1e-9,
+             signed: /^[+-]|^0$/.test(document.getElementById("netPos").textContent) };
+  });
+  check("the clock does not run before the first spin", r.stillIdle === r.idle,
+        `${r.idle} -> ${r.stillIdle} with no spin`);
+  check("the clock starts on the first spin", r.started);
+  check("the clock advances while playing", r.running !== r.idle, `now ${r.running}`);
+  check("net position is staked vs returned, not balance drift",
+        r.netBefore === r.netAfter, `${r.netBefore} -> ${r.netAfter} after a balance top-up`);
+  check("net position agrees with the session totals", r.agrees);
+  check("net position carries its sign, not just a colour", r.signed, r.netAfter);
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- reel curve */
 console.log("\nReel curve");
 {
