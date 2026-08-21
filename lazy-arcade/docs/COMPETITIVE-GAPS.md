@@ -336,41 +336,45 @@ bytes -- a clean 5 MiB, which is a gateway cutting the stream, not an image.
 The builder's `decodes_fully()` caught it and said so rather than shipping a
 half-drawn tile, which is precisely why that check exists.
 
-### Why a blink cannot simply be switched on
+### The blink, and being wrong about it twice
 
-The lift-a-layer rule was tested here too, and **it does not carry**. In flat
-cartoon art a lid filled with the face's own fur colour should be
-indistinguishable from fur, so a synthesised lid sliding down over the eye ought
-to read as a blink without any new art. It does not. Rendered on the Pirate lion
--- the only one of the twelve whose eye whites can be located automatically at
-all -- it reads as REDACTION: two black bars across the face. The fur colour has
-to be sampled from somewhere, and everywhere adjacent to an eye in this art is
-the black outline that rings it.
+It ships. Four Lions blink: LAZY Hat #5216, Horns #1725, Pirate Hat #4117 and
+Black Cap #5348.
 
-That is the difference from the mane, and it is the whole difference. A mane is
-a layer that EXISTS and can be lifted. A lid does not exist anywhere in the
-source; it has to be invented -- correct fur colour, correct eye geometry, a
-curved lash line, per lion. Inventing art in a house style is the definition of
-what needs an artist, and no amount of compositing substitutes for it.
+This file previously argued the blink was the one thing that genuinely needed a
+drawn frame, because a lid "does not exist anywhere in the source; it has to be
+invented". The argument was wrong, and the evidence for it was a bug. That
+attempt filled the lid with fur sampled a few pixels ABOVE the eye, which in
+this art is the black brow line every time, so it rendered two dark bars and
+read as redaction. The failure was in the sampling.
 
-Eye detection is also unreliable on its own terms: scanning for eye-white blobs
-finds a clean symmetric pair on exactly one of the twelve. The LAZY lion's
-strongest "eyes" are the letters on its cap; the white lion yields sixteen
-candidate blobs because its whole face is white.
+Sampling BETWEEN the eyes -- the one place on the face guaranteed to be neither
+mane nor outline -- gives the true fur colour, and a curved lash line on the
+lid's leading edge is what turns a patch of fur into a closed eye. The result
+reads as drawn, and the muzzle, mane and headgear never move.
 
-Of the twelve symbols, only half have eyes a lid could close over:
+Eye boxes are DECLARED, not detected, for exactly the reason the mane colours
+are: detection finds a clean symmetric pair on one of the twelve. It reads the
+LAZY Lion's cap lettering as eyes and returns twenty candidate blobs for the
+white Sheriff, whose whole face is white.
 
-| | count | symbols |
-|---|---|---|
-| plainly blinkable | 6 | Crown #4230, LAZY Hat #5216, Sheriff #1506, Police Hat #2038, Pirate Hat #4117, Black Cap #5348 |
-| eyes behind opaque hardware | 2 | Shades #4522, Leopard Coat #482 |
-| eyes replaced by symbols | 2 | Money Eyes #4837, BTC Eyes #5813 |
-| partial or already closed | 2 | Monocle #840, Sleepy #1725 |
+Eight of the twelve do not blink, and each for a stated reason: Shades #4522,
+Leopard Coat #482 and Police Hat #2038 have opaque hardware over their eyes;
+Bucket Hat #4837 and BTC Eyes #5813 have symbol eyes that should not blink;
+Crown #4230 and Monocle #840 sit behind lenses; and Sheriff #1506 was BUILT AND
+REJECTED on inspection -- against white fur with heavy dark linework the lid
+reads as a grey block rather than a closed eye.
 
-A blink applied uniformly is wrong on six of twelve: sunglasses do not blink,
-and a `$` is not an eye. Making it right is a per-symbol authoring decision --
-which lions blink, where their lids sit, what a lid does behind a monocle -- and
-that is the definition of the work being commissioned.
+Blinks fire one cell at a time on an uneven timer and never while the reels are
+moving. Twenty animals blinking together reads as a strobe, which is the same
+lockstep problem the idle bob solves with staggered phases.
+
+**The pattern worth keeping.** Three times in this project something was called
+impossible and was not: the mane (deforming failed, lifting a layer worked), Cub
+Cluster's crops (the IPFS test used a client that ignores the proxy), and now
+the blink (the fur sample hit an outline). Every one was a faulty instrument
+read as a property of the world. When this file says something cannot be done,
+check what was actually measured.
 
 ### The brief
 

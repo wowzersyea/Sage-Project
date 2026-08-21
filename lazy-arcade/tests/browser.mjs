@@ -998,6 +998,75 @@ console.log("\nFeature music");
   await ctx.close();
 }
 
+/* ------------------------------------------------------------------ blink */
+// I called this impossible twice before building it. The first attempt filled
+// the lid with "fur" sampled a few pixels above the eye, hit the black brow
+// line every time, and rendered redaction bars -- a sampling bug I read as
+// proof the idea could not work. Sampling BETWEEN the eyes, where the pixel is
+// guaranteed to be face rather than mane or outline, and adding a curved lash
+// line, produces a closed eye that reads as drawn.
+//
+// Four of twelve carry one. The rest wear shades or goggles, have symbol eyes
+// that should not blink, sit behind lenses, or -- the white Sheriff -- were
+// tried and rejected because a lid on white fur reads as a grey block.
+console.log("\nBlink");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    const carry = Object.keys(SYMBOL_ART.default).filter((k) => SYMBOL_ART.default[k].blinkUri);
+    let frames = 0, maxAtOnce = 0;
+    const iv = setInterval(() => {
+      const on = document.querySelectorAll("#reels .sym img.blink.on").length;
+      if (on > 0) frames++;
+      maxAtOnce = Math.max(maxAtOnce, on);
+    }, 40);
+    await sleep(9000);
+    clearInterval(iv);
+
+    // Drive the guard directly rather than hoping a random blink lands inside a
+    // spin. Waiting for the coincidence made this check pass with the guard
+    // REMOVED -- a short turbo spin almost never overlaps a tick, so it proved
+    // nothing either way.
+    let duringSpin = 0;
+    const spin = doSpin();
+    for (let i = 0; i < 40 && busy; i++) {
+      blinkOnce();
+      duringSpin += document.querySelectorAll("#reels .sym img.blink.on").length;
+      await sleep(25);
+    }
+    await spin;
+
+    // Read the layer LAST, from whatever is on the board now. Holding a
+    // reference across the wait measured a node the reels had since replaced,
+    // and a detached element reports the initial value for everything -- so
+    // this check read z-index 0 off an element that was never on screen.
+    const layer = document.querySelector("#reels .sym img.blink");
+    const cs = layer ? getComputedStyle(layer) : null;
+    return { carry, layers: document.querySelectorAll("#reels .sym img.blink").length,
+             frames, maxAtOnce, duringSpin,
+             z: cs ? +cs.zIndex : null, hidden: layer ? layer.getAttribute("aria-hidden") : null,
+             alt: layer ? layer.alt : null,
+             firstImgIsBody: (() => {
+               const c = document.querySelector("#reels .sym");
+               const first = c && c.querySelector("img");
+               return !!first && !first.classList.contains("blink")
+                      && !first.classList.contains("mane");
+             })() };
+  });
+  check("some symbols carry a closed-eye layer", r.carry.length >= 3, r.carry.join(","));
+  check("the blink layer sits above the body", r.z >= 2, `z-index ${r.z}`);
+  check("lions do blink", r.frames > 0, `${r.frames} sampled frames with an eye shut`);
+  check("they do not blink in unison", r.maxAtOnce <= 1, `${r.maxAtOnce} at once`);
+  check("no blinking while the reels are moving", r.duringSpin === 0, `${r.duringSpin} frames`);
+  check("the blink layer is not announced to screen readers",
+        r.alt === "" && r.hidden === "true");
+  check("the body image is still the one carrying the symbol name", r.firstImgIsBody);
+  check("no runtime errors around blinking", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* ------------------------------------------------------- secondary motion */
 // The mane ships as its own layer so it can lag the roar. Four earlier attempts
 // at motion inside the outline DEFORMED the art and sheared the muzzle; this one

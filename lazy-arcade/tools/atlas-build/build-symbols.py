@@ -344,6 +344,56 @@ MANE_COLOUR = {
 }
 
 
+# Eye boxes for a blink, declared rather than detected -- for the same reason
+# the mane colours are. Detection finds a clean symmetric pair on exactly ONE of
+# the twelve: it reads the LAZY lion's cap lettering as eyes and returns twenty
+# candidate blobs for the white lion, whose whole face is white.
+#
+# Only lions with plainly visible eyes appear. Shades and goggles hide three
+# (P3, P4, L1), two have symbol eyes that should not blink (M1 money, M3 BTC),
+# two sit behind lenses (P1 dork glasses, M2 monocle), and the white Sheriff
+# (M4) was TRIED AND REJECTED on inspection: against white fur with heavy dark
+# linework the lid reads as a grey block rather than a closed eye.
+#
+# Boxes are in tile pixels at TILE resolution. Each was checked by rendering the
+# closed frame and looking at it.
+EYE_BOXES = {
+    "P2": [(106, 95, 137, 112), (145, 95, 178, 112)],
+    "L2": [(110, 100, 142, 117), (146, 100, 178, 117)],
+    "L3": [(114, 97, 134, 120), (159, 97, 175, 117)],
+    "L4": [(103, 93, 137, 120), (146, 93, 180, 118)],
+}
+LASH = (28, 10, 4)
+
+
+def close_eyes(tile, boxes):
+    """A copy of the tile with its eyes shut.
+
+    The lid is filled with the face's OWN fur, sampled from between the eyes --
+    the one place guaranteed to be face rather than mane or outline. An earlier
+    attempt sampled a few pixels ABOVE each eye, hit the black brow line every
+    time, and drew what looked like redaction bars; that failure was in the
+    sampling, not the idea. The curved lash line is what makes it read as a
+    closed eye rather than a patch of fur.
+    """
+    from PIL import ImageDraw
+    out = tile.convert("RGBA")
+    px = out.load()
+    dr = ImageDraw.Draw(out)
+    mid = (boxes[0][2] + boxes[1][0]) // 2
+    for (x0, y0, x1, y1) in boxes:
+        cy = (y0 + y1) // 2
+        fur = px[mid, cy][:3]
+        if sum(fur) < 150:
+            fur = px[mid, max(0, cy - 8)][:3]
+        lid = y1 + 2
+        dr.rectangle([x0 - 2, y0 - 5, x1 + 2, lid - 4], fill=fur + (255,))
+        dr.ellipse([x0 - 2, lid - 12, x1 + 2, lid + 2], fill=fur + (255,))
+        dr.arc([x0 - 2, lid - 12, x1 + 2, lid + 2], start=10, end=170,
+               fill=LASH + (255,), width=3)
+    return out
+
+
 def split_mane(tile, colour):
     """(tile with the mane lifted out, the mane on its own).
 
@@ -410,6 +460,12 @@ def build_set(manifest, lions, cubs, label):
             base_tile, mane_tile = split_mane(tile, colour)
             mane_uri = to_uri(mane_tile)
             tile = base_tile
+        # The blink is drawn on the BASE, after the mane is lifted, so the three
+        # layers stay consistent: mane behind, body, closed-eye body over it.
+        blink_uri = None
+        boxes = EYE_BOXES.get(sym) if collection == "lion" else None
+        if boxes is not None:
+            blink_uri = to_uri(close_eyes(tile, boxes))
         uri = to_uri(tile)
         total += len(uri) + (len(mane_uri) if mane_uri else 0)
         mane = meta["traits"].get("Mane", f"#{token_id}")
@@ -421,9 +477,12 @@ def build_set(manifest, lions, cubs, label):
                     "trait": trait, "name": name, "mane": mane, "uri": uri, "bg": bg}
         if mane_uri:
             out[sym]["maneUri"] = mane_uri
+        if blink_uri:
+            out[sym]["blinkUri"] = blink_uri
         print(f"  {sym:<3} {collection:<4} #{token_id:<6} {region:<10} "
               f"{(trait or note):<28} {len(uri)//1024:>4} KB"
-              f"{'  +mane ' + str(len(mane_uri)//1024) + ' KB' if mane_uri else ''}")
+              f"{'  +mane ' + str(len(mane_uri)//1024) + ' KB' if mane_uri else ''}"
+              f"{'  +blink ' + str(len(blink_uri)//1024) + ' KB' if blink_uri else ''}")
     return out, total
 
 
