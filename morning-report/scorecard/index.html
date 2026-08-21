@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scorecard | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .cardgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .colpanel{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .colhead{
+    background:var(--navy);color:#fff;padding:8px 16px;
+    font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .colpanel.reasoning .colhead{background:var(--teal)}
+  .items{padding:6px 0}
+
+  .item{
+    display:flex;gap:11px;align-items:flex-start;padding:9px 16px;
+    border-bottom:1px solid #EEF2F5;cursor:pointer;
+  }
+  .item:last-child{border-bottom:none}
+  .item:hover{background:#F7F9FB}
+  .box{
+    width:19px;height:19px;flex:none;border:2px solid var(--line);border-radius:3px;
+    margin-top:1px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;color:transparent;background:#fff;
+  }
+  .item.on .box{background:var(--green);border-color:var(--green);color:#fff}
+  .item .txt{flex:1;font-size:13.5px;line-height:1.45}
+  .item.on .txt{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1.5px}
+  .item .meta{display:flex;gap:7px;align-items:center;margin-top:4px;flex-wrap:wrap}
+  .item .std{font-size:11px;color:var(--teal);text-decoration:none;border-bottom:1px dotted #9FC4CE}
+  .item .std:hover{color:var(--navy);border-bottom-color:var(--navy)}
+  .item.overridden .board{background:#FBF0DE;color:#8A6014;border-color:var(--amber)}
+
+  .fails{background:#FDF6F7;border:1px solid var(--red);border-radius:8px;overflow:hidden;margin-top:16px}
+  .fails .colhead{background:var(--red)}
+  .fails .item .box{border-color:#E3C2C7}
+  .fails .item.on .box{background:var(--red);border-color:var(--red)}
+  .fails .item.on .txt{color:var(--red);text-decoration:none;font-weight:600}
+  .fails .item:hover{background:#FBEEF0}
+
+  .tally{
+    position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;
+    padding:11px 0;margin-bottom:18px;
+  }
+  .tally-in{
+    max-width:1100px;margin:0 auto;padding:0 28px;
+    display:flex;gap:18px;align-items:center;flex-wrap:wrap;
+  }
+  .tally .n{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1}
+  .tally .of{color:#9FB4C8;font-size:13px}
+  .tally .flag{
+    background:var(--red);color:#fff;font-size:11px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:3px;
+  }
+  .tally .src{margin-left:auto;font-size:12px;color:#9FB4C8}
+  .tally .src b{color:var(--amber)}
+
+  .sessionbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:6px}
+  .savebar{
+    position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+    padding:14px 0;margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  }
+  @media print{
+    .mr-bar,.savebar,.tally,footer.mr,header.hero .sub,header.hero .rule{display:none}
+    body{background:#fff}
+    .item:hover{background:none}
+    @page{margin:12mm}
+  }
+  @media (max-width:900px){ .cardgrid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · after</p>
+    <h1 id="title">Strike it out</h1>
+    <p class="sub" id="lede"></p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<div class="tally">
+  <div class="tally-in">
+    <span class="n" id="struck">0</span><span class="of">of 16 struck</span>
+    <span class="flag" id="failflag" hidden>Did not hit the standard</span>
+    <span class="src" id="src"></span>
+  </div>
+</div>
+
+<section class="band" style="padding-top:6px">
+  <div class="wrap">
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="sessionbar">
+        <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
+        <div><label class="f" for="site">Site</label><input type="text" id="site" placeholder="Galveston"></div>
+        <div><label class="f" for="presenter">Presenter role note</label><input type="text" id="presenter" placeholder="optional, not a name"></div>
+      </div>
+      <p class="hint" id="boardnote"></p>
+    </div>
+
+    <div class="cardgrid" id="cardgrid"></div>
+
+    <div class="fails">
+      <div class="colhead" id="failhead"></div>
+      <div class="items" id="failitems"></div>
+    </div>
+
+    <p class="hint" id="footer" style="margin-top:14px"></p>
+
+    <div class="savebar">
+      <button class="amber" id="save">Save the scorecard</button>
+      <button class="ghost" id="print">Print</button>
+      <a class="btn ghost" href="../capture/" id="toCapture">Capture the case →</a>
+      <span class="hint" style="margin:0" id="savenote"></span>
+    </div>
+
+    <div class="privacy" style="margin-top:20px">
+      <b>No names, and nothing summative</b>
+      What is saved is the sixteen verdicts and the four fails, with no participant names and no
+      verbatim quotes — in a group this small a quotation identifies its speaker. A single session
+      cannot be de-identified either, which is why the group report refuses to render fewer than four.
+      This is formative. It is not a milestone, an evaluation record, or an input to one.
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project — Morning Report. The rubric lives in <code>content/rubric.json</code>; the printed card is under <a href="../roles/#handouts">handouts</a>.</p></div>
+</footer>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var rubric = null;
+var derived = null;
+var archiveId = null;
+var verdicts = {};      /* id -> { value, source, overridden } */
+var sessionId = new URLSearchParams(location.search).get("session") || "";
+
+function allItems(){
+  var out = [];
+  rubric.columns.forEach(function(c){ c.items.forEach(function(i){ out.push(i); }); });
+  return out;
+}
+
+/* A derived key may be negated: "!any_struck" ticks the fail when
+   nothing was ever crossed off. */
+function fromBoard(key){
+  if (!derived || !key) return undefined;
+  var neg = key.charAt(0) === "!";
+  var k = neg ? key.slice(1) : key;
+  if (!(k in derived)) return undefined;
+  var v = derived[k];
+  if (v === null || v === undefined) return undefined;   // the board could not tell
+  return neg ? !v : !!v;
+}
+
+function seed(){
+  allItems().concat(rubric.automatic_fails).forEach(function(item){
+    var b = fromBoard(item.derived);
+    verdicts[item.id] = b === undefined
+      ? { value: false, source: "human", overridden: false }
+      : { value: b, source: "board", overridden: false };
+  });
+}
+
+function render(){
+  var grid = $("cardgrid");
+  grid.innerHTML = "";
+  rubric.columns.forEach(function(col){
+    var panel = document.createElement("div");
+    panel.className = "colpanel " + col.id;
+    var head = document.createElement("div");
+    head.className = "colhead";
+    head.textContent = col.title;
+    var items = document.createElement("div");
+    items.className = "items";
+    col.items.forEach(function(i){ items.appendChild(itemRow(i)); });
+    panel.appendChild(head); panel.appendChild(items);
+    grid.appendChild(panel);
+  });
+
+  $("failhead").textContent = rubric.automatic_fails_title;
+  var fi = $("failitems");
+  fi.innerHTML = "";
+  rubric.automatic_fails.forEach(function(i){ fi.appendChild(itemRow(i, true)); });
+
+  $("footer").textContent = rubric.footer;
+  tally();
+}
+
+function itemRow(item, isFail){
+  var v = verdicts[item.id];
+  var row = document.createElement("div");
+  row.className = "item" + (v.value ? " on" : "") + (v.overridden ? " overridden" : "");
+
+  var box = document.createElement("div");
+  box.className = "box";
+  box.textContent = isFail ? "✗" : "✓";
+
+  var txt = document.createElement("div");
+  txt.className = "txt";
+  txt.appendChild(document.createTextNode(item.text));
+
+  var meta = document.createElement("div");
+  meta.className = "meta";
+
+  if (item.card){
+    var std = document.createElement("a");
+    std.className = "std";
+    std.href = "../roles/" + item.card + "/" + (item.anchor ? "#" + item.anchor : "");
+    std.target = "_blank";
+    std.rel = "noopener";
+    std.textContent = "the standard →";
+    std.title = "Opens the line on the " + item.card + " card this came from";
+    std.addEventListener("click", function(e){ e.stopPropagation(); });
+    meta.appendChild(std);
+  }
+
+  if (v.source === "board"){
+    var pill = document.createElement("span");
+    pill.className = "pill board";
+    pill.textContent = v.overridden ? "overridden" : "from the board";
+    meta.appendChild(pill);
+  }
+
+  if (meta.children.length) txt.appendChild(meta);
+
+  row.appendChild(box); row.appendChild(txt);
+  row.addEventListener("click", function(){
+    v.value = !v.value;
+    if (v.source === "board"){
+      var b = fromBoard(item.derived);
+      v.overridden = (b !== undefined && b !== v.value);
+    }
+    render();
+  });
+  return row;
+}
+
+function tally(){
+  var n = allItems().filter(function(i){ return verdicts[i.id].value; }).length;
+  $("struck").textContent = String(n);
+  var failed = rubric.automatic_fails.filter(function(f){ return verdicts[f.id].value; });
+  $("failflag").hidden = failed.length === 0;
+
+  var fromB = allItems().concat(rubric.automatic_fails)
+    .filter(function(i){ return verdicts[i.id].source === "board"; }).length;
+  $("src").innerHTML = fromB
+    ? "<b>" + fromB + "</b> ticked from the board — click any of them to override"
+    : "Nothing pre-ticked: no board archive found for this session";
+}
+
+/* ---------- save ------------------------------------------------------- */
+
+function record(){
+  var date = $("date").value || MRStore.today();
+  var site = ($("site").value || "").trim();
+  var items = {};
+  allItems().forEach(function(i){
+    var v = verdicts[i.id];
+    items[i.id] = {
+      final_verdict: v.value,
+      source: v.overridden ? "human" : v.source,
+      confidence: v.source === "board" && !v.overridden ? 1 : null,
+      model_verdict: null
+    };
+    if (v.overridden) items[i.id].board_verdict = fromBoard(i.derived);
+  });
+  var fails = {};
+  rubric.automatic_fails.forEach(function(f){
+    var v = verdicts[f.id];
+    fails[f.id] = {
+      final_verdict: v.value,
+      source: v.overridden ? "human" : v.source,
+      confidence: v.source === "board" && !v.overridden ? 1 : null,
+      model_verdict: null
+    };
+  });
+  return {
+    id: MRStore.sessionId(date, site),
+    date: date,
+    site: site,
+    note: ($("presenter").value || "").trim(),
+    rubric_version: rubric._version || 1,
+    items: items,
+    automatic_fails: fails,
+    struck: allItems().filter(function(i){ return verdicts[i.id].value; }).length,
+    of: allItems().length,
+    failed: rubric.automatic_fails.some(function(f){ return verdicts[f.id].value; }),
+    scored: new Date().toISOString()
+  };
+}
+
+$("save").addEventListener("click", function(){
+  var r = record();
+  var path = "sessions/" + r.id + ".json";
+  if (!MRStore.status().ready){
+    MRStore.download(path, r);
+    MRStore.notify("warn", "No folder connected, so the scorecard was downloaded. Put it in sessions/ by hand.", true);
+    return;
+  }
+  MRStore.read(path).then(function(existing){
+    if (existing && !confirm("There is already a scorecard for " + r.id + ". Overwrite it?")) return;
+    return MRStore.write(path, r).then(function(ok){
+      if (!ok) return;
+      MRStore.notify("ok", "Saved to " + path + ".");
+      $("savenote").textContent = "Saved. It counts toward the group report once there are four sessions.";
+    });
+  });
+});
+
+$("print").addEventListener("click", function(){ window.print(); });
+
+/* ---------- boot --------------------------------------------------------- */
+
+fetch(MRStore.base() + "content/rubric.json", { cache: "no-cache" })
+  .then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then(function(j){
+    rubric = j;
+    $("title").textContent = j.title;
+    $("lede").textContent = j.lede;
+    return MRStore.whenReady;
+  })
+  .then(function(){
+    MRStore.mountBar("mr-bar");
+    $("date").value = MRStore.today();
+    if (!MRStore.status().ready) return null;
+    if (sessionId) return MRStore.read("board-archive/" + sessionId + ".json");
+    return MRStore.list("board-archive").then(function(names){
+      var latest = names.filter(function(n){ return /\.json$/.test(n); }).sort().pop();
+      return latest ? MRStore.read("board-archive/" + latest) : null;
+    });
+  })
+  .then(function(a){
+    if (a){
+      derived = a.derived || null;
+      archiveId = a.id;
+      if (a.date) $("date").value = a.date;
+      if (a.site) $("site").value = a.site;
+      $("toCapture").href = "../capture/?session=" + encodeURIComponent(a.id);
+      $("boardnote").textContent = "Reading the board archive for " + a.id +
+        (derived && derived.clock_ran ? " — the clock ran to " + Math.floor(derived.elapsed_seconds/60) + ":" +
+          String(derived.elapsed_seconds%60).padStart(2,"0") + "." : " — the clock did not run, so timing is left to you.");
+    } else {
+      $("boardnote").textContent = "No board archive found, so nothing is pre-ticked. Every item is yours to judge.";
+    }
+    seed();
+    render();
+  })
+  .catch(function(err){
+    MRStore.notify("err", "Could not load the rubric (content/rubric.json) — " +
+      (err && err.message ? err.message : err) + ". The scorecard cannot render without it.", true);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "_source": "Morning_Report_Scorecard.pdf — the printed strike-out card. Sixteen items in two columns plus four automatic fails. The web scorecard and the CLI both read this file; do not restate the items anywhere else.",
+
+  "title": "Strike it out",
+  "lede": "Cross each one off as it happens. What is left standing at 0:25 is the feedback — no debrief required.",
+  "footer": "One per session. If the same box survives four weeks running, that is the thing to teach.",
+
+  "_derived_note": "`derived` names a key in the board archive's derived block. Those items arrive pre-ticked and marked, and the facilitator can override any of them. Six are the ones the spec lists; test_named and any_struck are here on the same footing because they are board fields too, not judgements.",
+
+  "columns": [
+    {
+      "id": "presentation",
+      "title": "The presentation",
+      "items": [
+        { "id": "deidentified",   "text": "De-identified — no MRN, no dates, no burned-in IDs", "card": "presenter",   "anchor": "before" },
+        { "id": "eight_slides",   "text": "Eight slides or fewer",                              "card": "presenter",   "anchor": "before" },
+        { "id": "objective_read", "text": "One objective, read aloud at 0:00",                  "card": "facilitator", "anchor": "during" },
+        { "id": "hook_first",     "text": "Hook first, not demographics",                       "card": "presenter",   "anchor": "script-0" },
+        { "id": "one_block",      "text": "History and exam in one block — no labs yet",        "card": "presenter",   "anchor": "during" },
+        { "id": "let_silence",    "text": "Stopped talking and let the silence run",            "card": "presenter",   "anchor": "during" },
+        { "id": "reveal_missed",  "text": "Reveal named what was missed, and why",              "card": "presenter",   "anchor": "does-not" }
+      ]
+    },
+    {
+      "id": "reasoning",
+      "title": "The reasoning",
+      "items": [
+        { "id": "problem_rep",     "text": "Problem representation in one sentence",              "card": "pgy1",        "anchor": "deliverables", "derived": "pr_present" },
+        { "id": "three_to_four",   "text": "Three to four diagnoses, each with a reason",         "card": "pgy1",        "anchor": "deliverables", "derived": "intern_reasoned" },
+        { "id": "cant_miss",       "text": "The can't-miss, named as such",                       "card": "pgy1",        "anchor": "deliverables" },
+        { "id": "uninterrupted",   "text": "First pass finished uninterrupted",                   "card": "facilitator", "anchor": "during" },
+        { "id": "framework_first", "text": "A framework named before the list",                   "card": "senior",      "anchor": "moves-0",      "derived": "framework_before_list" },
+        { "id": "struck_reason",   "text": "Something struck off, with the reason beside it",     "card": "senior",      "anchor": "moves-1",      "derived": "struck_with_reason" },
+        { "id": "discriminator",   "text": "The discriminating test named",                       "card": "senior",      "anchor": "moves-3",      "derived": "test_named" },
+        { "id": "confidence",      "text": "Confidence stated, and what would change my mind",    "card": "senior",      "anchor": "moves-4" },
+        { "id": "board_posted",    "text": "Board exported and posted",                           "card": "scribe",      "anchor": "after",        "derived": "board_archived" }
+      ]
+    }
+  ],
+
+  "automatic_fails_title": "It did not hit the standard if any of these are true",
+  "automatic_fails": [
+    { "id": "early_diagnosis", "text": "The diagnosis came out before the second pass finished", "card": "presenter",   "anchor": "does-not" },
+    { "id": "faculty_early",   "text": "Faculty entered the discussion before 0:19",             "card": "faculty",     "anchor": "during" },
+    { "id": "ran_over",        "text": "We ran past 25 minutes",                                 "card": "facilitator", "anchor": "during", "derived": "ran_over" },
+    { "id": "nothing_struck",  "text": "Nothing on the board ever got crossed off",              "card": "scribe",      "anchor": "colour-code", "derived": "!any_struck" }
+  ]
+}
