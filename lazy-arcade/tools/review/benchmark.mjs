@@ -132,6 +132,8 @@ const m = await p.evaluate(async () => {
     limiter: typeof masterLimiter !== "undefined" && !!masterLimiter,
     duck: typeof duckMusic === "function",
     music: typeof startRhythm === "function",
+    // Not "does the function exist" -- does every path that spins reach it.
+    musicPaths: /startMusic\(\)/.test(doSpin.toString()),
     tickPitch: typeof counterTick === "function",
     scatterEscalate: typeof scatterLand === "function",
     reelThud: typeof thud === "function",
@@ -284,7 +286,11 @@ row(B, "Particle / coin effects", m.coins ? PASS : ABSENT, "coins() present");
 
 row(C, "Master limiter", m.audio.limiter ? PASS : ABSENT, "DynamicsCompressorNode on the bus");
 row(C, "Music ducks under wins", m.audio.duck ? PASS : ABSENT, "duckMusic present");
-row(C, "Music bed", m.audio.music ? PASS : ABSENT, "lookahead-scheduled rhythm");
+row(C, "Music bed starts on every entry point", m.audio.musicPaths ? PASS : ABSENT,
+    m.audio.musicPaths ? "spin button, space bar and autoplay all start it"
+                       : "at least one way of spinning leaves the game silent",
+    "This row used to read PASS because startMusic() existed. It did exist, and " +
+    "was wired to the spin button alone -- SPACE and autoplay span in silence.");
 row(C, "Win tick rises in pitch", m.audio.tickPitch ? PASS : ABSENT, "counterTick(progress, tier)");
 row(C, "Escalating scatter landings", m.audio.scatterEscalate ? PASS : ABSENT, "scatterLand(index)");
 row(C, "Reel stop impact", m.audio.reelThud ? PASS : ABSENT, "thud(reel)");

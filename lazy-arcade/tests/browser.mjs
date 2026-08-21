@@ -406,6 +406,30 @@ console.log("\nSession clock and net position");
   await ctx.close();
 }
 
+/* ----------------------------------------------------------------- music */
+// The bed was wired to the spin BUTTON only, so pressing SPACE span the reels in
+// silence and so did every spin of an autoplay run -- which is how most of a
+// session is played. Three entry points, one of them remembering. A benchmark
+// that only asked whether startMusic() existed reported this as working.
+console.log("\nMusic on every entry point");
+{
+  const entries = [
+    ["the spin button", async (p) => p.click("#spin")],
+    ["the space bar", async (p) => p.keyboard.press("Space")],
+    ["autoplay", async (p) => p.click("#auto")],
+  ];
+  for (const [name, act] of entries) {
+    const { p, ctx } = await page();
+    await act(p);
+    await p.waitForTimeout(1300);
+    const r = await p.evaluate(() => ({ music: !!music, rhythm: !!rhythm, spins: nonce }));
+    check(`${name} starts the music`, r.music && r.rhythm,
+          `music=${r.music} rhythm=${r.rhythm} after ${r.spins} spin(s)`);
+    check(`${name} actually spins`, r.spins > 0, `${r.spins} spins`);
+    await ctx.close();
+  }
+}
+
 /* ------------------------------------------------------- secondary motion */
 // The mane ships as its own layer so it can lag the roar. Four earlier attempts
 // at motion inside the outline DEFORMED the art and sheared the muzzle; this one

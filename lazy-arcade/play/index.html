@@ -3171,6 +3171,12 @@ async function countUp(target,mult,tier){
 /* ============================== play loop =============================== */
 async function doSpin(){
   if(busy) return;
+  // The bed starts HERE, not at the controls. It used to be wired to the spin
+  // button alone, so pressing SPACE span the reels in silence and so did every
+  // spin of an autoplay run -- which is how most of a session is played. Three
+  // entry points, one of them remembering. A spin is the thing that should
+  // start the music, so the spin starts it.
+  ac(); startMusic(); startRhythm();
   const bet=+$("bet").value;
   const buying=buyNext&&BUY_PRICE[game]!==undefined;
   const useAnte=anteOn&&game==="pride"&&!buying;
@@ -3699,7 +3705,7 @@ $("infoClose").addEventListener("click",()=>$("info").classList.remove("on"));
 $("info").addEventListener("click",e=>{ if(e.target.id==="info") $("info").classList.remove("on"); });
 $("autoCfg").addEventListener("click",()=>$("autoPanel").classList.toggle("on"));
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>selectGame(t.dataset.game)));
-$("spin").addEventListener("click",()=>{ac();startMusic();startRhythm();doSpin();});
+$("spin").addEventListener("click",()=>{doSpin();});
 $("auto").addEventListener("click",()=>{ac();runAuto();});
 $("ante").addEventListener("click",()=>{
   anteOn=!anteOn; $("ante").setAttribute("aria-pressed",String(anteOn));
