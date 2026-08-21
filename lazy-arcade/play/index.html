@@ -2644,15 +2644,42 @@ async function animateSpin(grid,scatterCount){
     reels[r].innerHTML=""; reels[r].appendChild(strip);
   }
 
+  // Anticipation, in two parts that must NOT happen at the same time.
+  //
+  // The DRAG is planned up front, because a reel that is still spinning after
+  // its neighbour has stopped is the anticipation -- that is what a cabinet
+  // actually does. The DIM, PULSE AND RISER are held back until the scatter
+  // that justifies them has landed.
+  //
+  // Both used to fire here, in a loop that runs synchronously at t=0. The
+  // cabinet dimmed and the riser sounded BEFORE REEL 1 HAD STOPPED, so the
+  // player was told two scatters were coming before seeing a single one land
+  // -- the outcome, announced ahead of the reveal. It also stacked up to three
+  // risers on one frame. Same fault as the canvas ribbon parked on the result:
+  // the machine knows the answer, and must not let on.
+  //
+  // The drag escalates. A third scatter showing has to buy more rope than the
+  // second, or the biggest moment in the game is paced like the smallest.
+  const antic=new Array(REELS).fill(0);
+  if(!turbo && scatterCount>=2){
+    for(let r=2;r<REELS;r++){
+      const seen=countScatUpTo(grid,r);
+      if(seen>=2) antic[r]=620+(seen-2)*520;
+    }
+  }
+  const anticStarted=new Array(REELS).fill(false);
+  const beginAnticipation=r=>{
+    if(r>=REELS||!antic[r]||anticStarted[r]) return;
+    anticStarted[r]=true;
+    reels[r].classList.add("anticipate");
+    host.classList.add("anticipating");
+    const secs=antic[r]/1000;
+    riser(secs); heartbeat(secs+0.1);
+  };
+
   const plan=[];
   for(let r=0;r<REELS;r++){
-    // Anticipation: once two scatters are showing, drag the next reel out.
-    let extra=0;
-    if(!turbo && r>=2 && scatterCount>=2 && countScatUpTo(grid,r)>=2){
-      extra=700; reels[r].classList.add("anticipate");
-      host.classList.add("anticipating");
-      riser(0.75); heartbeat(0.8);
-    }
+    const extra=antic[r];
     // Every reel starts NOW and they STOP in sequence -- which is what a real
     // cabinet does, and what the staggered start got backwards. Delaying the
     // start left reels 4 and 5 sitting motionless for up to half a second while
@@ -2665,6 +2692,9 @@ async function animateSpin(grid,scatterCount){
     thud(r);
     reels[r].classList.remove("anticipate");
     if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
+    // The reel that just stopped is the one carrying the scatter that earns
+    // the next reel its anticipation, so this is the earliest honest moment.
+    beginAnticipation(r+1);
     if(!turbo&&!reduceMotion){
       const cells=reels[r].querySelectorAll(".sym");
       for(let i=0;i<ROWS&&i<cells.length;i++){
@@ -2681,12 +2711,14 @@ async function animateSpin(grid,scatterCount){
   }else{
     // Canvas unavailable: the original DOM animation still works, it just
     // cannot show velocity.
+    // Same landing handler as the canvas path. It used to inline its own
+    // partial copy -- class removal only, no thud, no settle -- so a browser
+    // without canvas quietly lost the landing entirely, and would now lose the
+    // anticipation handoff with it.
     const jobs=[];
     for(let r=0;r<REELS;r++){
-      jobs.push(spinReel(reels[r],grid[r],r,plan[r].duration,plan[r].delay).then(()=>{
-        reels[r].classList.remove("anticipate");
-        if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
-      }));
+      jobs.push(spinReel(reels[r],grid[r],r,plan[r].duration,plan[r].delay)
+        .then(()=>onLand(r)));
     }
     await Promise.all(jobs);
   }

@@ -250,6 +250,68 @@ console.log("\nAccessibility");
   await ctx.close();
 }
 
+/* ------------------------------------------------------------ anticipation */
+// A slot must never tell the player the outcome before it shows it. The
+// anticipation used to dim the cabinet and sound its riser at t=0, from a loop
+// that read the finished grid -- so two scatters were announced before reel 1
+// had stopped. These sample the cabinet over a whole spin and check WHEN it
+// lights up, not merely whether it does.
+console.log("\nAnticipation");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    document.querySelector('[data-game="pride"]').click();
+    await sleep(400);
+    muted = true;                     // audio is not what is under test here
+    const host = document.getElementById("reels");
+
+    // Watch the cabinet for the whole spin, recording the first frame at which
+    // anticipation appears and which reel landed by then.
+    const run = async (grid) => {
+      const seen = [];
+      const t0 = performance.now();
+      let firstOn = null;
+      const obs = setInterval(() => {
+        const on = host.classList.contains("anticipating");
+        if (on && firstOn === null) firstOn = performance.now() - t0;
+        seen.push(on);
+      }, 16);
+      let scat = 0;
+      for (let a = 0; a < 5; a++) for (let b = 0; b < 4; b++) if (grid[a][b] === SCAT) scat++;
+      await animateSpin(grid, scat);
+      clearInterval(obs);
+      return { firstOn, ever: seen.some(Boolean), total: performance.now() - t0 };
+    };
+
+    // Two scatters on reels 1-2 -- reel 3 must drag, but only after reel 1 has
+    // stopped. Reel 1 lands at 520ms (base), so anything earlier is a spoiler.
+    const g = [];
+    for (let a = 0; a < 5; a++) { g.push([]); for (let b = 0; b < 4; b++) g[a].push(P1); }
+    g[0][0] = SCAT; g[1][0] = SCAT;
+    const two = await run(g);
+
+    // No scatters at all: the cabinet must never light up.
+    const clean = [];
+    for (let a = 0; a < 5; a++) { clean.push([]); for (let b = 0; b < 4; b++) clean[a].push(P1); }
+    const none = await run(clean);
+
+    // Three scatters must buy MORE rope than two, or the biggest moment in the
+    // game is paced like a smaller one.
+    const g3 = JSON.parse(JSON.stringify(g)); g3[2][0] = SCAT;
+    const three = await run(g3);
+    return { two, none, three };
+  });
+  check("two scatters do light the cabinet", r.two.ever);
+  check("anticipation does not start before the first reel lands",
+        r.two.firstOn === null || r.two.firstOn >= 500, `first seen at ${Math.round(r.two.firstOn)}ms`);
+  check("a board with no scatters never anticipates", !r.none.ever);
+  check("a third scatter drags longer than a second",
+        r.three.total > r.two.total + 200,
+        `three ${Math.round(r.three.total)}ms vs two ${Math.round(r.two.total)}ms`);
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- reel curve */
 console.log("\nReel curve");
 {
