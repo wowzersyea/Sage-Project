@@ -265,6 +265,43 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   .sym.slam,.screen.shake{animation:none}
 }
 
+/* ---- feature transition ---- */
+.fintro{position:absolute;inset:0;z-index:9;display:grid;place-items:center;
+  overflow:hidden;pointer-events:none}
+.fintro::after{content:"";position:absolute;inset:0;background:rgba(6,4,10,.74);
+  animation:fiFade .34s ease-out both}
+@keyframes fiFade{from{opacity:0}to{opacity:1}}
+.fi-wipe{position:absolute;top:0;bottom:0;width:36%;
+  background:linear-gradient(90deg,transparent,rgba(255,214,110,.55),transparent);
+  animation:fiWipe .78s cubic-bezier(.4,0,.2,1) both;z-index:1}
+@keyframes fiWipe{from{left:-40%}to{left:110%}}
+.fi-body{position:relative;z-index:2;display:flex;align-items:center;gap:clamp(10px,2.4vw,26px);
+  animation:fiIn .62s cubic-bezier(.2,1.5,.35,1) .22s both}
+@keyframes fiIn{
+  0%{opacity:0;transform:scale(.62) rotate(-4deg)}
+  62%{opacity:1;transform:scale(1.08) rotate(1deg)}
+  100%{opacity:1;transform:scale(1) rotate(0)}
+}
+.fi-lion{width:clamp(72px,13vw,146px);height:auto;display:block;
+  filter:drop-shadow(0 0 26px rgba(255,205,92,.75)) drop-shadow(0 6px 10px rgba(0,0,0,.6));
+  animation:fiLion 2.1s ease-in-out .5s infinite}
+@keyframes fiLion{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-7px) rotate(1deg)}}
+.fi-text{display:flex;flex-direction:column;gap:6px}
+.fi-text b{font-family:var(--serif,ui-serif,Georgia,serif);
+  font-size:clamp(26px,5.4vw,54px);line-height:1;letter-spacing:-.01em;
+  color:var(--gold-3);text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 34px var(--gold)}
+.fi-text span{font-family:var(--mono);font-size:clamp(10px,1.5vw,13px);
+  letter-spacing:.16em;text-transform:uppercase;color:var(--gold-2)}
+.fintro.out{animation:fiOut .32s ease-in both}
+@keyframes fiOut{to{opacity:0;transform:scale(1.04)}}
+/* the board falls back while the card is up */
+.reels.blown{filter:blur(3px) brightness(.55) saturate(.6);
+  transform:scale(.985);transition:filter .3s ease,transform .3s ease}
+@media (prefers-reduced-motion: reduce){
+  .fintro::after,.fi-wipe,.fi-body,.fi-lion,.fintro.out{animation:none}
+  .reels.blown{filter:brightness(.6);transform:none}
+}
+
 /* paytable rows show the lion, not just its name */
 .ptsym{display:flex;align-items:center;gap:9px}
 .ptsym .sym,.ptsym>:first-child{width:34px;height:34px;flex:0 0 34px;position:relative}
@@ -2593,6 +2630,40 @@ function paintGrid(grid,marks,coinsArr,maneSet){
   }
 }
 
+/* The feature transition.
+   Landing the round IS the moment, and a line of text sliding in undersells it.
+   This is a set piece: the board falls away, a gold wipe crosses the screen, and
+   the title lands with the Crown lion -- the game's top symbol, so the card is
+   made of the same cast as the reels rather than of typography.
+   Built rather than commissioned: a rendered cutscene is an asset, but the
+   staging, timing and weight of one are just sequencing. */
+async function featureIntro(title,sub){
+  if(turbo){ await sleep(220); return; }
+  const scr=$("screen");
+  const card=document.createElement("div");
+  card.className="fintro";
+  const lion=(SYMBOL_ART.default&&SYMBOL_ART.default.P1)
+    ? `<img class="fi-lion" src="${SYMBOL_ART.default.P1.uri}" alt="">` : "";
+  card.innerHTML=`<div class="fi-wipe"></div>
+    <div class="fi-body">${lion}
+      <div class="fi-text"><b>${title}</b><span>${sub||""}</span></div></div>`;
+  scr.appendChild(card);
+  $("reels").classList.add("blown");
+  if(reduceMotion){ await sleep(900); }
+  else{
+    riser(0.62);
+    await sleep(120); gunshot(0.75);
+    await sleep(320); jackpotHit(1.0);
+    // a burst of coins timed to the strike, using the existing fx layer
+    if(typeof coins==="function") coins(46,1.15);
+    await sleep(1500);
+  }
+  card.classList.add("out");
+  $("reels").classList.remove("blown");
+  await sleep(reduceMotion?60:340);
+  card.remove();
+}
+
 async function showBanner(kind,amount,sub){
   const b=$("banner");
   $("bannerBig").textContent=kind;
@@ -2680,9 +2751,9 @@ async function doSpin(){
   // Feature intro. Pragmatic announces the round, runs it, then reports the
   // total -- without the bookends a free-spin round just looks like fast spins.
   if(out.fs && game!=="cubcluster"){
-    await showBanner(game==="pride"?"10 free spins":"Lion's Share",
-                     0, game==="pride"?"every wild carries ×2"
-                                      :"10 free spins · row multipliers stick and build");
+    await featureIntro(game==="pride"?"Free Spins":"Lion's Share",
+                       game==="pride"?"10 spins · every wild carries ×2"
+                                    :"10 free spins · row multipliers stick and build");
   }
   if(frames.length>1){
     featTotal=0; $("chipFeat").classList.remove("hidden");
