@@ -430,6 +430,65 @@ console.log("\nMusic on every entry point");
   }
 }
 
+/* --------------------------------------------------- running feature total */
+// The total shown during a tumble chain or a free-spin round was interpolated
+// from the frame index: out.feature * (i / (frames.length - 1)). That is a
+// fabricated number. With the Cub Cluster ladder paying 1, 2, 3, 5, 8 the real
+// accumulation is nothing like a straight line, and a sweep of 4,000 rounds put
+// the worst error at 172% -- 44.4 on screen against 16.3 actually won.
+console.log("\nRunning feature total");
+{
+  const { p, ctx } = await page();
+  const r = await p.evaluate(() => {
+    const pays = PAYS.cubcluster, strips = CONF.cubcluster.strips;
+    let worst = 0, detail = null, chains = 0, frames = 0, missing = 0;
+    for (let n = 1; n < 2500; n++) {
+      const rng = makeRng(new Uint8Array(32).map((_, i) => (i * 31 + n) & 0xff),
+                          "c", n, "cubcluster");
+      const out = spinCluster(rng);
+      if (!out.frames || out.frames.length < 3) continue;
+      chains++;
+      // Re-derive the truth from the ladder, independently of what was stored.
+      const LADDER = [1, 2, 3, 5, 8];
+      const rng2 = makeRng(new Uint8Array(32).map((_, i) => (i * 31 + n) & 0xff),
+                           "c", n, "cubcluster");
+      let grid = drawGrid(strips, rng2), acc = 0, chain = 0, truth = [];
+      for (;;) {
+        const { total, remove } = clusterFind(grid, pays);
+        if (total === 0) { truth.push(acc); break; }
+        acc += total * LADDER[Math.min(chain, LADDER.length - 1)];
+        truth.push(acc);
+        const ng = [];
+        for (let r2 = 0; r2 < REELS; r2++) {
+          const keep = [];
+          for (let row = 0; row < ROWS; row++) if (!remove.has(r2 + ":" + row)) keep.push(grid[r2][row]);
+          const need = ROWS - keep.length, fresh = [];
+          for (let i = 0; i < need; i++) { const st = strips[r2]; fresh.push(st[rng2.below(st.length)]); }
+          ng.push(fresh.concat(keep));
+        }
+        grid = ng; chain++;
+        if (chain > 60) break;
+      }
+      for (let i = 0; i < out.frames.length && i < truth.length; i++) {
+        const w = out.frames[i].won;
+        if (w == null) { missing++; continue; }
+        frames++;
+        const err = Math.abs(w - truth[i]);
+        const rel = truth[i] > 0 ? err / truth[i] : (w > 0 ? 1 : 0);
+        if (rel > worst) { worst = rel; detail = { n, i, shown: +w.toFixed(3), truth: +truth[i].toFixed(3) }; }
+      }
+    }
+    return { chains, frames, missing, worst: +(worst * 100).toFixed(2), detail };
+  });
+  check("tumble frames carry what has actually been won", r.missing === 0,
+        `${r.missing} frame(s) with no running total`);
+  check("the running total matches the real accumulation, not a ramp",
+        r.worst < 0.01, `worst error ${r.worst}% over ${r.frames} frames in ${r.chains} chains`
+        + (r.detail && r.worst >= 0.01 ? ` (showed ${r.detail.shown}, owed ${r.detail.truth})` : ""));
+  check("enough chains were sampled to mean anything", r.chains >= 20, `${r.chains} chains`);
+  await ctx.close();
+}
+
 /* ------------------------------------------------------------ phone layout */
 // play/index.html shipped with NO meta tags at all -- no charset, no viewport --
 // while the verifier page next to it has always had them. A phone therefore laid
