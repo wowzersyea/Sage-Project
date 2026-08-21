@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Differential specificity | Morning Report</title>
+<meta name="description" content="A teaching tool for morning report: how specific a differential item has to be before it earns a place on the board.">
+<style>
+  :root{
+    --navy:#16283C;
+    --navy-2:#24405E;
+    --amber:#E8A33D;
+    --teal:#2E7D8F;
+    --green:#3F7D5C;
+    --red:#B23A48;
+    --paper:#F4F6F8;
+    --line:#D8E0E7;
+    --ink:#1B2733;
+    --muted:#6B7885;
+    --serif:"Cambria","Hoefler Text","Palatino Linotype",Georgia,serif;
+    --sans:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+
+  header.hero{background:var(--navy);color:#fff;padding:38px 0 34px}
+  .eyebrow{
+    font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--amber);margin:0 0 9px;
+  }
+  header.hero h1{
+    font-family:var(--serif);font-size:36px;font-weight:700;margin:0 0 12px;
+    letter-spacing:-.01em;line-height:1.1;
+  }
+  header.hero p{margin:0;color:#BFD0E0;font-size:15.5px;max-width:66ch}
+  .home{color:#9FB4C8;text-decoration:none;font-weight:600}
+  .home:hover{color:#fff}
+  header.hero .rule{
+    width:64px;height:3px;background:var(--amber);margin:20px 0 0;border-radius:2px;
+  }
+
+  section{padding:38px 0}
+  h2{
+    font-family:var(--serif);font-size:25px;font-weight:700;margin:0 0 6px;color:var(--navy);
+  }
+  .lede{margin:0 0 24px;color:var(--muted);font-size:14.5px;max-width:72ch}
+
+  /* ---- ladder ---- */
+  .ladder{display:flex;flex-direction:column;gap:10px}
+  .rung{
+    background:#fff;border:1px solid var(--line);border-radius:7px;
+    padding:16px 20px;display:grid;grid-template-columns:190px 1fr 1fr;
+    gap:18px;align-items:center;
+  }
+  .rung .lvl{display:flex;align-items:center;gap:9px}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .lvl-name{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+  .rung .ex{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--navy)}
+  .rung .why{font-size:13.5px;color:#3D4855}
+
+  /* ---- tests ---- */
+  .tests{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .test{background:#fff;border:1px solid var(--line);border-radius:7px;padding:20px 22px}
+  .test .num{
+    width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+    margin-bottom:11px;
+  }
+  .test h3{font-family:var(--serif);font-size:18px;margin:0 0 7px;color:var(--navy)}
+  .test p{margin:0;font-size:13.5px;color:#3D4855}
+
+  .callout{
+    margin-top:18px;background:var(--navy);color:#D7E2EC;border-radius:7px;
+    padding:22px 24px;font-size:14px;
+  }
+  .callout b{color:var(--amber);display:block;font-family:var(--serif);font-size:17px;margin-bottom:7px}
+
+  /* ---- practice ---- */
+  .case-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .tab{
+    font-family:var(--sans);font-size:13.5px;font-weight:600;
+    background:#fff;border:1px solid var(--line);color:var(--muted);
+    padding:9px 15px;border-radius:5px;cursor:pointer;
+  }
+  .tab:hover{border-color:#9FB0BE;color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  .stem{
+    background:#fff;border:1px solid var(--line);border-radius:7px;
+    padding:18px 22px;margin-bottom:18px;
+  }
+  .stem .label{
+    font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--teal);margin-bottom:6px;
+  }
+  .stem p{margin:0;font-size:15.5px;font-family:var(--serif);color:var(--navy);line-height:1.45}
+
+  .items{display:flex;flex-direction:column;gap:9px}
+  .item{
+    background:#fff;border:1px solid var(--line);border-radius:7px;padding:14px 18px;
+  }
+  .item-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .item-name{font-size:15.5px;font-weight:600;color:var(--ink)}
+  .choices{display:flex;gap:6px;flex-wrap:wrap}
+  .choice{
+    font-family:var(--sans);font-size:12.5px;font-weight:600;
+    background:#F7F9FB;border:1px solid var(--line);color:var(--muted);
+    padding:7px 12px;border-radius:5px;cursor:pointer;white-space:nowrap;
+  }
+  .choice:hover:not(:disabled){border-color:#9FB0BE;color:var(--ink);background:#fff}
+  .choice:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .choice:disabled{cursor:default}
+  .choice.picked-right{background:var(--green);border-color:var(--green);color:#fff}
+  .choice.picked-wrong{background:var(--red);border-color:var(--red);color:#fff}
+  .choice.reveal{border-color:var(--green);color:var(--green);background:#fff}
+  .feedback{
+    margin-top:11px;padding-top:11px;border-top:1px solid var(--line);
+    font-size:13.5px;color:#3D4855;
+  }
+  .feedback[hidden]{display:none}
+  .feedback .verdict{font-weight:700;margin-right:5px}
+  .verdict.ok{color:var(--green)}
+  .verdict.no{color:var(--red)}
+
+  .score{
+    margin-top:20px;background:#fff;border:1px solid var(--line);border-radius:7px;
+    padding:16px 20px;display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+  }
+  .score .txt{font-size:14px;color:#3D4855}
+  .score .txt b{font-family:var(--serif);font-size:19px;color:var(--navy)}
+  .btn{
+    font-family:var(--sans);font-size:13.5px;font-weight:600;
+    background:var(--navy);color:#fff;border:1px solid var(--navy);
+    padding:10px 16px;border-radius:5px;cursor:pointer;
+  }
+  .btn:hover{background:var(--navy-2);border-color:var(--navy-2)}
+  .btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  footer{background:var(--navy);color:#7D93A8;font-size:12.5px;padding:26px 0 34px;margin-top:20px}
+  footer a{color:#BFD0E0}
+  footer p{margin:0 0 7px}
+
+  @media (max-width:820px){
+    .rung{grid-template-columns:1fr;gap:8px}
+    .tests{grid-template-columns:1fr}
+    header.hero h1{font-size:29px}
+    .wrap{padding:0 20px}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .feedback{animation:fade .22s ease-out}
+    @keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow"><a class="home" href="../../">← Morning Report</a> &nbsp;·&nbsp; clinical reasoning</p>
+    <h1>How specific does a differential have to be?</h1>
+    <p>An item earns a place on the board only if you can name the test that would refute it. "Hepatitis" in a patient with transaminitis restates the data — it survives every result because it claims nothing.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="wrap">
+  <h2>The four rungs</h2>
+  <p class="lede">Worked through one presentation — a teenager with jaundice and transaminases in the 900s.</p>
+  <div class="ladder">
+    <div class="rung">
+      <div class="lvl"><span class="dot" style="background:#B23A48"></span><span class="lvl-name" style="color:#B23A48">Restates the data</span></div>
+      <div class="ex">"Hepatitis"</div>
+      <div class="why">Not a hypothesis. You already know the liver is inflamed — that is why you are standing there.</div>
+    </div>
+    <div class="rung">
+      <div class="lvl"><span class="dot" style="background:#E8A33D"></span><span class="lvl-name" style="color:#B8801F">Category</span></div>
+      <div class="ex">"Infectious hepatitis"</div>
+      <div class="why">Scaffolding, not a list item. This belongs on the framework line above the differential.</div>
+    </div>
+    <div class="rung">
+      <div class="lvl"><span class="dot" style="background:#3F7D5C"></span><span class="lvl-name" style="color:#3F7D5C">Entity</span></div>
+      <div class="ex">Hepatitis A · EBV · Neonatal HSV</div>
+      <div class="why">The right level. Each has a distinct test and a distinct action.</div>
+    </div>
+    <div class="rung">
+      <div class="lvl"><span class="dot" style="background:#6B7885"></span><span class="lvl-name" style="color:#6B7885">Sub-entity</span></div>
+      <div class="ex">"HAV genotype IB"</div>
+      <div class="why">Noise. Nothing you do tomorrow morning changes.</div>
+    </div>
+  </div>
+
+  <div class="tests">
+    <div class="test">
+      <div class="num">1</div>
+      <h3>What test would refute this?</h3>
+      <p>No answer means it is not a hypothesis. "Hepatitis A" has one — IgM anti-HAV, back tomorrow. "Hepatitis" has none, which is exactly the problem.</p>
+    </div>
+    <div class="test">
+      <div class="num">2</div>
+      <h3>Would tomorrow look different?</h3>
+      <p>Split two items apart only if you would act differently on each. If the plan is identical either way, merge them and move on.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Why this matters on the board</b>
+    A vague item can never be crossed off. It absorbs every result without ever being refuted, so the differential column stops moving and the strike-throughs dry up. Specificity is what makes a list prunable — and pruning is the visible reasoning the whole session is built around.
+  </div>
+</section>
+
+<section class="wrap" id="practice">
+  <h2>Practice</h2>
+  <p class="lede">Three presentations, each with a mixed list. Sort every item onto a rung. Intended for the senior discussant to run through before report, or for the group in the first few weeks of the new format.</p>
+
+  <div class="case-tabs" role="tablist" aria-label="Cases"></div>
+  <div class="stem">
+    <div class="label">Presentation</div>
+    <p id="stem-text"></p>
+  </div>
+  <div class="items" id="items"></div>
+
+  <div class="score">
+    <div class="txt" id="score-text">Sort the items above.</div>
+    <button class="btn" id="reset">Start this case over</button>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Sage Project — clinical tools for pediatric infectious diseases and antimicrobial stewardship. Companion to the <a href="../../">morning report module</a> and the <a href="../../roles/senior/">senior discussant card</a>.</p>
+    <p>Companion to the morning report format. Method framing adapted from Elisseou S, Holt SR. <em>Effective Strategies for Planning and Facilitating Morning Report.</em> J Grad Med Educ. 2022;14(3):260–264.</p>
+  </div>
+</footer>
+
+<script>
+/* ==================================================================
+   CASES — add or edit freely.
+   level: "restates" | "category" | "entity" | "sub"
+   ================================================================== */
+
+const LEVELS = [
+  { id:"restates", label:"Restates the data" },
+  { id:"category", label:"Category" },
+  { id:"entity",   label:"Entity" },
+  { id:"sub",      label:"Sub-entity" }
+];
+
+const CASES = [
+  {
+    name: "Teen with jaundice",
+    stem: "14-year-old, two weeks of malaise, now jaundiced. ALT 940, AST 810, total bilirubin 6.2, INR 1.0. No acetaminophen history offered.",
+    items: [
+      { text:"Hepatitis", level:"restates",
+        why:"Liver inflammation is the finding you started with. Nothing here can be ruled out or in." },
+      { text:"Liver injury", level:"restates",
+        why:"Same problem — a paraphrase of the transaminases rather than a claim about cause." },
+      { text:"Infectious hepatitis", level:"category",
+        why:"This is one branch of the framework. Write it on the framework line, then list the entities underneath it." },
+      { text:"Hepatitis A", level:"entity",
+        why:"Refutable by IgM anti-HAV, and it changes public health reporting and contact prophylaxis." },
+      { text:"EBV hepatitis", level:"entity",
+        why:"Distinct serology, distinct counselling about splenic rupture and return to sport." },
+      { text:"Autoimmune hepatitis", level:"entity",
+        why:"ANA, anti-smooth muscle, IgG — and it is the item that gets missed when the list stops at 'viral'." },
+      { text:"Acetaminophen toxicity", level:"entity",
+        why:"A level and a nomogram refute it, and it is the one item with a time-critical antidote." },
+      { text:"HAV genotype IB", level:"sub",
+        why:"Epidemiologically interesting, clinically inert. No management decision turns on it." }
+    ]
+  },
+  {
+    name: "Toddler who won't walk",
+    stem: "3-year-old refusing to bear weight on the right leg for two days. Temp 38.6. Holds the hip flexed and externally rotated. CRP 8.4.",
+    items: [
+      { text:"Limp", level:"restates",
+        why:"The presenting complaint, restated. It cannot be crossed off by any result." },
+      { text:"Infection", level:"category",
+        why:"A framework branch. Useful as scaffolding above the list, useless as an entry in it." },
+      { text:"Septic arthritis of the hip", level:"entity",
+        why:"Aspiration refutes or confirms it, and it is the item that turns this into an operating room problem tonight." },
+      { text:"Transient synovitis", level:"entity",
+        why:"A real competing entity with its own criteria — and the one that makes the Kocher discriminators worth applying." },
+      { text:"Osteomyelitis of the proximal femur", level:"entity",
+        why:"MRI refutes it, and it changes the duration and route of therapy." },
+      { text:"Leukemia", level:"entity",
+        why:"CBC with differential and smear. The can't-miss that hides behind a fever-and-limp anchor." },
+      { text:"Musculoskeletal problem", level:"restates",
+        why:"Broader than the presentation itself. It excludes nothing and predicts nothing." },
+      { text:"MRSA clonal complex 8 osteomyelitis", level:"sub",
+        why:"MRSA versus MSSA changes therapy and belongs in the entity — the clonal complex does not." }
+    ]
+  },
+  {
+    name: "Febrile neonate",
+    stem: "8-day-old, rectal temp 38.4, poor feeding since this morning, mildly ill-appearing. Term, uncomplicated delivery. Mother had no prenatal care in the third trimester.",
+    items: [
+      { text:"Fever", level:"restates",
+        why:"The reason for the visit. It is data, not a diagnosis." },
+      { text:"Serious bacterial infection", level:"category",
+        why:"A useful triage bucket for the framework line, but you cannot send a test for 'SBI'." },
+      { text:"Neonatal sepsis", level:"category",
+        why:"Closer to a syndrome than an entity. It still doesn't tell you which culture matters or what to cover." },
+      { text:"Group B streptococcal bacteremia", level:"entity",
+        why:"Blood culture refutes it, and it shapes empiric ampicillin dosing and duration." },
+      { text:"E. coli urinary tract infection with bacteremia", level:"entity",
+        why:"Urine and blood cultures, plus imaging follow-up. A distinct workup from the item above it." },
+      { text:"Disseminated neonatal HSV", level:"entity",
+        why:"The whole point of specificity. 'Infection' does not make anyone reach for acyclovir; this does, before the PCR resolves." },
+      { text:"Enteroviral sepsis syndrome", level:"entity",
+        why:"CSF enterovirus PCR, and a positive result is what lets you stop antibiotics early." },
+      { text:"HSV-1 versus HSV-2", level:"sub",
+        why:"Empiric acyclovir is identical either way. Typing informs counselling later, not management now." }
+    ]
+  }
+];
+
+/* ==================================================================
+   Machinery
+   ================================================================== */
+
+const tabsEl   = document.querySelector(".case-tabs");
+const stemEl   = document.getElementById("stem-text");
+const itemsEl  = document.getElementById("items");
+const scoreEl  = document.getElementById("score-text");
+const resetBtn = document.getElementById("reset");
+
+let current = 0;
+let answered = [];
+
+function levelLabel(id){
+  const l = LEVELS.find(x => x.id === id);
+  return l ? l.label : id;
+}
+
+function buildTabs(){
+  CASES.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "tab";
+    b.textContent = c.name;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", i === current ? "true" : "false");
+    b.addEventListener("click", () => { current = i; render(); });
+    tabsEl.appendChild(b);
+  });
+}
+
+function syncTabs(){
+  [...tabsEl.children].forEach((b, i) =>
+    b.setAttribute("aria-selected", i === current ? "true" : "false"));
+}
+
+function render(){
+  syncTabs();
+  const c = CASES[current];
+  stemEl.textContent = c.stem;
+  answered = new Array(c.items.length).fill(null);
+  itemsEl.innerHTML = "";
+
+  c.items.forEach((item, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "item";
+
+    const row = document.createElement("div");
+    row.className = "item-row";
+
+    const name = document.createElement("div");
+    name.className = "item-name";
+    name.textContent = item.text;
+    row.appendChild(name);
+
+    const choices = document.createElement("div");
+    choices.className = "choices";
+    LEVELS.forEach(lv => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice";
+      btn.textContent = lv.label;
+      btn.dataset.level = lv.id;
+      btn.addEventListener("click", () => answer(idx, lv.id, wrap));
+      choices.appendChild(btn);
+    });
+    row.appendChild(choices);
+    wrap.appendChild(row);
+
+    const fb = document.createElement("div");
+    fb.className = "feedback";
+    fb.hidden = true;
+    wrap.appendChild(fb);
+
+    itemsEl.appendChild(wrap);
+  });
+
+  updateScore();
+}
+
+function answer(idx, picked, wrap){
+  if (answered[idx] !== null) return;
+  const item = CASES[current].items[idx];
+  const correct = picked === item.level;
+  answered[idx] = correct;
+
+  wrap.querySelectorAll(".choice").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.level === picked)
+      b.classList.add(correct ? "picked-right" : "picked-wrong");
+    else if (b.dataset.level === item.level && !correct)
+      b.classList.add("reveal");
+  });
+
+  const fb = wrap.querySelector(".feedback");
+  fb.hidden = false;
+  fb.innerHTML = "";
+  const v = document.createElement("span");
+  v.className = "verdict " + (correct ? "ok" : "no");
+  v.textContent = correct ? "Yes." : levelLabel(item.level) + ".";
+  fb.appendChild(v);
+  fb.appendChild(document.createTextNode(item.why));
+
+  updateScore();
+}
+
+function updateScore(){
+  const done = answered.filter(a => a !== null).length;
+  const right = answered.filter(a => a === true).length;
+  const total = answered.length;
+  if (done === 0){
+    scoreEl.textContent = "Sort the items above.";
+  } else if (done < total){
+    scoreEl.innerHTML = "<b>" + right + " / " + done + "</b> so far — " + (total - done) + " left.";
+  } else {
+    scoreEl.innerHTML = "<b>" + right + " / " + total + "</b> — " +
+      (right === total
+        ? "every item on the right rung."
+        : "the misses are the ones worth talking through out loud.");
+  }
+}
+
+resetBtn.addEventListener("click", render);
+
+buildTabs();
+render();
+</script>
+</body>
+</html>
