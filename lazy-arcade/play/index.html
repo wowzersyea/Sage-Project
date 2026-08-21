@@ -129,6 +129,9 @@ body{
 }
 .sym.settle{animation:settle .26s cubic-bezier(.3,1.3,.5,1) both}
 .blur .strip{filter:blur(2.2px) brightness(1.06)}
+.reelfx{position:absolute;z-index:4;pointer-events:none;transition:opacity .12s linear}
+/* while a reel is drawn on the canvas its DOM cells must not also be visible */
+.reel.spinning .strip{visibility:hidden}
 @media(prefers-reduced-motion:reduce){
   .sym.pop,.sym.drop,.sym.burst,.sym.settle,.reel.anticipate,
   .reels.anticipating{animation:none}
@@ -2018,6 +2021,169 @@ function randomSym(reelIdx){
   return st[Math.floor(Math.random()*st.length)];
 }
 
+/* ============== canvas reel renderer (spinning state only) ================
+   The reels rest in the DOM -- that is where win marks, the pop, the row slam,
+   the orb targets and the paytable all live, and none of that is worth moving.
+   But a DOM strip cannot show MOTION. The old spin translated a div and leaned
+   on `filter: blur(2.2px)`, which is a constant, isotropic smudge: it blurs
+   sideways as much as vertically, and it looks identical whether the reel is at
+   full speed or about to stop.
+   Real motion blur is directional and proportional to velocity. So the spin --
+   and only the spin -- is drawn on a canvas: each symbol is stamped several
+   times along the distance it covered in that frame, which is what a camera
+   integrating over a shutter interval actually produces. When a reel lands, the
+   canvas column is cleared and the DOM cells take over.
+   Falls back to the DOM animation if anything here is unavailable. */
+const IMG=new Map();
+let reelCanvas=null, reelCtx=null;
+
+function symbolImage(sym,g){
+  g=g||game;
+  const key=g+":"+sym;
+  if(IMG.has(key)) return IMG.get(key);
+  const html=symbolHTML(sym,g);
+  let src=null;
+  const m=html.match(/<img[^>]+src="([^"]+)"/);
+  if(m) src=m[1];
+  else{
+    const svg=html.match(/<svg[\s\S]*<\/svg>/);
+    if(svg) src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg[0]);
+  }
+  if(!src){ IMG.set(key,null); return null; }
+  const im=new Image(); im.decoding="async"; im.src=src;
+  IMG.set(key,im); return im;
+}
+/* Warm the cache so the first spin is not the one that decodes twelve images. */
+function warmSymbolImages(g){ for(let s=0;s<NSYM;s++) symbolImage(s,g); }
+
+/* Sprites pre-scaled to the size they are actually drawn at.
+   The source tiles are 240px and a desktop cell is ~107px, so every drawImage
+   was asking the compositor to filter a 240 -> 107 downscale, and the spin does
+   that up to 175 times a frame. Measured at 30.8ms median -- 32fps with dropped
+   frames. Rescaling once per symbol per cell size and then blitting 1:1 moves
+   the work out of the frame loop entirely. */
+const SPRITE=new Map();
+function sprite(sym,g,size){
+  g=g||game;
+  const key=g+":"+sym+":"+size;
+  if(SPRITE.has(key)) return SPRITE.get(key);
+  const im=symbolImage(sym,g);
+  if(!im||!im.complete||!im.naturalWidth) return null;   // retry next frame
+  const cv=document.createElement("canvas");
+  cv.width=size; cv.height=size;
+  cv.getContext("2d").drawImage(im,0,0,size,size);
+  SPRITE.set(key,cv);
+  return cv;
+}
+
+function ensureReelCanvas(){
+  if(reelCanvas&&reelCanvas.isConnected) return reelCanvas;
+  const scr=$("screen"); if(!scr) return null;
+  reelCanvas=document.createElement("canvas");
+  reelCanvas.className="reelfx";
+  scr.appendChild(reelCanvas);
+  reelCtx=reelCanvas.getContext("2d");
+  return reelCanvas;
+}
+
+/* Spin every reel on the canvas. Resolves per reel through `onLand` so the
+   caller keeps the same staggered-stop sequencing it had before. */
+function canvasSpinAll(grid,plan,onLand){
+  const cv=ensureReelCanvas(); if(!cv||!reelCtx) return false;
+  const host=$("reels"), reels=[...host.children];
+  const sRect=$("screen").getBoundingClientRect();
+  const hRect=host.getBoundingClientRect();
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.max(1,Math.round(hRect.width*dpr));
+  cv.height=Math.max(1,Math.round(hRect.height*dpr));
+  cv.style.left=(hRect.left-sRect.left)+"px";
+  cv.style.top=(hRect.top-sRect.top)+"px";
+  cv.style.width=hRect.width+"px";
+  cv.style.height=hRect.height+"px";
+  cv.style.opacity="1";
+  reelCtx.setTransform(dpr,0,0,dpr,0,0);
+
+  const cell=cellPx(), BUF=turbo?7:16;
+  const cols=reels.map((el,r)=>{
+    const box=el.getBoundingClientRect();
+    // FINAL COLUMN FIRST, buffer beneath it -- the same order the DOM strip
+    // uses, and the order that makes the scroll run the right way. Built the
+    // other way round, `top` starts at the far end of the ribbon and a reel
+    // that has not begun its delay yet sits parked on the RESULT, showing the
+    // outcome before it spins and then scrolling away from it.
+    const seq=[];
+    for(let row=0;row<ROWS;row++) seq.push(grid[r][row]);
+    for(let i=0;i<BUF;i++) seq.push(randomSym(r));
+    el.classList.add("spinning");
+    return {r, x:box.left-hRect.left, w:box.width, y:box.top-hRect.top,
+            seq, BUF, top:0, prevTop:0, landed:false,
+            start:plan[r].delay, dur:plan[r].duration};
+  });
+
+  const t0=performance.now();
+  return new Promise(resolve=>{
+    (function frame(now){
+      const t=now-t0;
+      reelCtx.clearRect(0,0,cv.width,cv.height);
+      let alive=false;
+      for(const c of cols){
+        if(c.landed) continue;
+        const k=Math.max(0,Math.min(1,(t-c.start)/c.dur));
+        // Ease matches the DOM curve it replaces, including the overshoot: the
+        // reel passes its stop and settles back, which is what gives a
+        // mechanical reel its weight.
+        const e=k<1?(1-Math.pow(1-k,3)):1;
+        const over=k>0.86&&k<1 ? Math.sin((k-0.86)/0.14*Math.PI)*0.16 : 0;
+        c.prevTop=c.top;
+        c.top=(c.BUF*cell)*(1-e)+over*cell;
+        drawColumn(c,cell);
+        if(k>=1){
+          c.landed=true;
+          reels[c.r].classList.remove("spinning");
+          onLand&&onLand(c.r);
+        } else alive=true;
+      }
+      if(alive) requestAnimationFrame(frame);
+      else{ reelCtx.clearRect(0,0,cv.width,cv.height); cv.style.opacity="0"; resolve(); }
+    })(performance.now());
+  });
+}
+
+function drawColumn(c,cell){
+  const ctx=reelCtx;
+  const speed=Math.abs(c.top-c.prevTop);
+  const pad=Math.round(cell*0.06), size=Math.round(cell-pad*2);
+  // Four stamps is the whole budget. Beyond that the extra copies land inside
+  // each other and cost fill rate for no visible streak; the gap between them is
+  // closed by stretching the sprite along the direction of travel instead, which
+  // is one draw rather than several.
+  // Reduced motion gets the reel, not the smear: a single crisp stamp per
+  // symbol, no stretch. The spin still happens -- it just stops being a blur.
+  const steps=reduceMotion?1:Math.max(1,Math.min(4,Math.round(speed/(cell*0.5))));
+  const stretch=(!reduceMotion&&steps>1)?Math.min(2.6,1+speed/(cell*1.5)):1;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(c.x,c.y,c.w,cell*ROWS); ctx.clip();
+  const k0=Math.floor(c.top/cell);
+  const x=c.x+(c.w-size)/2;
+  const h=size*stretch, dy=(h-size)/2;
+  for(let stamp=0;stamp<steps;stamp++){
+    const lag=(stamp/steps)*(c.prevTop-c.top);
+    // Alpha sums to roughly 1 across the stamps, with the leading edge -- where
+    // the symbol actually is this frame -- carrying more of it, so the streak
+    // trails behind the symbol instead of smearing evenly either side of it.
+    ctx.globalAlpha=(stamp===0?1.5:0.7)/steps;
+    for(let k=k0;k<=k0+ROWS;k++){
+      const sp=sprite(c.seq[Math.max(0,Math.min(c.seq.length-1,k))],game,size);
+      if(!sp) continue;
+      const y=c.y+k*cell-c.top+lag;
+      if(y>c.y+cell*ROWS||y+cell<c.y) continue;
+      ctx.drawImage(sp,x,y+pad-dy,size,h);
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha=1;
+}
+
 /* One reel: final four on top, a buffer of blur symbols beneath, translated
    from -buffer back to 0 so symbols scroll DOWN and settle on the result. */
 function spinReel(reelEl,finalCol,reelIdx,duration,delay){
@@ -2064,8 +2230,21 @@ async function animateSpin(grid,scatterCount){
   const reels=[...host.children];
   startReelLoop();
   const base=turbo?170:520, step=turbo?55:135;
-  const jobs=[];
-  let running=0;
+
+  // The RESULT goes into the DOM up front and the canvas covers it while it
+  // spins. That way landing is a reveal rather than a rebuild, and everything
+  // downstream -- win marks, the row slam, orb targets -- addresses real cells
+  // that have been in the document since the spin began.
+  for(let r=0;r<REELS;r++){
+    const strip=document.createElement("div"); strip.className="strip";
+    for(let row=0;row<ROWS;row++){
+      const c=document.createElement("div"); c.className="sym";
+      c.innerHTML=symbolHTML(grid[r][row]); strip.appendChild(c);
+    }
+    reels[r].innerHTML=""; reels[r].appendChild(strip);
+  }
+
+  const plan=[];
   for(let r=0;r<REELS;r++){
     // Anticipation: once two scatters are showing, drag the next reel out.
     let extra=0;
@@ -2074,13 +2253,43 @@ async function animateSpin(grid,scatterCount){
       host.classList.add("anticipating");
       riser(0.75); heartbeat(0.8);
     }
-    jobs.push(spinReel(reels[r],grid[r],r,base+extra,r*step).then(()=>{
-      reels[r].classList.remove("anticipate");
-      if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
-    }));
+    // Every reel starts NOW and they STOP in sequence -- which is what a real
+    // cabinet does, and what the staggered start got backwards. Delaying the
+    // start left reels 4 and 5 sitting motionless for up to half a second while
+    // the first three were already flying.
+    plan.push({delay:0, duration:base+r*step+extra});
     if(!turbo) setTimeout(()=>blip(760+r*40,.04,"square",.025),r*step);
   }
-  await Promise.all(jobs);
+
+  const onLand=r=>{
+    thud(r);
+    reels[r].classList.remove("anticipate");
+    if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
+    if(!turbo&&!reduceMotion){
+      const cells=reels[r].querySelectorAll(".sym");
+      for(let i=0;i<ROWS&&i<cells.length;i++){
+        cells[i].style.animationDelay=(i*22)+"ms";
+        cells[i].classList.add("settle");
+      }
+    }
+  };
+
+  let spun=null;
+  try{ spun=canvasSpinAll(grid,plan,onLand); }catch(e){ spun=null; }
+  if(spun&&typeof spun.then==="function"){
+    await spun;
+  }else{
+    // Canvas unavailable: the original DOM animation still works, it just
+    // cannot show velocity.
+    const jobs=[];
+    for(let r=0;r<REELS;r++){
+      jobs.push(spinReel(reels[r],grid[r],r,plan[r].duration,plan[r].delay).then(()=>{
+        reels[r].classList.remove("anticipate");
+        if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
+      }));
+    }
+    await Promise.all(jobs);
+  }
   host.classList.remove("anticipating");
   stopReelLoop();
 }
@@ -2642,7 +2851,7 @@ function selectGame(g){
   $("chipMax").innerHTML = isHilo ? 'Round cap <b>5,000×</b>'
     : `Max win <b>${fmt(MAXWIN[g])}×</b>`;
   $("winOut").textContent="0";
-  if(!isHilo){ syncCell(); buildReels(blankGrid()); }
+  if(!isHilo){ syncCell(); buildReels(blankGrid()); warmSymbolImages(g); }
   else if(!hl.card){ hl.card=hlDraw(null); }
   if(isHilo) hlRender(true);
   renderPaytable(); updateHud(); fxResize();
