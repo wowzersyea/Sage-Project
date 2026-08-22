@@ -1347,7 +1347,12 @@ console.log("\nSecondary motion (mane)");
   const r = await p.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     muted = true;
-    document.querySelector('[data-game="traitvault"]').click();
+    // PRIDE, not Trait Vault: the vault now carries its own twelve without
+    // mane layers (measured-not-assumed -- each layer needs per-token declared
+    // colours), so the layered set this test exercises only renders in Pride.
+    // On the vault board the first cell had no mane at all and the test
+    // crashed reading a style off null.
+    document.querySelector('[data-game="pride"]').click();
     await sleep(400);
 
     const withMane = Object.keys(SYMBOL_ART.default)
@@ -1398,7 +1403,7 @@ console.log("\nSecondary motion (mane)");
       anim: cs.animationName, maneZ: +cs.zIndex, bodyZ: +getComputedStyle(body).zIndex,
       moves: new Set(seen).size,
       alt: mane.alt, hidden: mane.getAttribute("aria-hidden"),
-      firstImgIsBody: cell.querySelector("img").alt === symName(P1, "traitvault"),
+      firstImgIsBody: cell.querySelector("img").alt === symName(P1, "pride"),
       composed: !!(composed && composed.complete && composed.naturalWidth > 0),
       baseOpaque, drawnOpaque,
     };
@@ -1552,6 +1557,71 @@ console.log("\nSymbol art");
         coins.length === 2 && coins.every((c) => c.opaque > 0.66 && c.opaque < 0.80),
         coins.map((c) => c.opaque.toFixed(3)).join(", "));
   check("no runtime errors reading the symbol art", errs.length === 0,
+        errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* ---------------------------------------------------- production distinctness */
+/* Three slots means three GAMES, and until this pass Pride and Trait Vault
+   shipped the same twelve Lions -- one game wearing two colour schemes. The
+   vault now carries its own set; these checks hold the two apart, verify the
+   tumble ladder made it onto the screen, and confirm a feature closes with a
+   total card the way every shipped bonus does. */
+console.log("\nProduction distinctness");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const ids = ["P1","P2","P3","P4","M1","M2","M3","M4","L1","L2","L3","L4"];
+    const tv = SYMBOL_ART.traitvault || {};
+    const shared = ids.filter(id => !tv[id] || tv[id].uri === SYMBOL_ART.default[id].uri);
+    const tvTokens = new Set(ids.map(id => tv[id] && tv[id].tokenId));
+    const prideTokens = new Set(ids.map(id => SYMBOL_ART.default[id].tokenId));
+    const tokenOverlap = [...tvTokens].filter(t => prideTokens.has(t));
+
+    // the tumble ladder: rungs from the single shared constant, correct
+    // lit/done state, and absent outside Cub Cluster
+    document.querySelector('[data-game="cubcluster"]').click();
+    await sleep(450);
+    paintTumbleLadder(2);
+    const el = document.getElementById("tumbleLadder");
+    const rungs = [...el.children].map(c => c.textContent);
+    const lit = [...el.children].map(c => c.classList.contains("live") ? "L"
+                 : c.classList.contains("done") ? "d" : ".").join("");
+    const shownInCluster = !el.classList.contains("hidden");
+    document.querySelector('[data-game="pride"]').click();
+    await sleep(450);
+    paintTumbleLadder(0);   // must refuse: wrong game
+    const hiddenInPride = el.classList.contains("hidden");
+
+    // the feature-end card: buy a Trait Vault round and watch the banner
+    document.querySelector('[data-game="traitvault"]').click();
+    await sleep(450);
+    turbo = true; muted = true; buyNext = true;
+    const seen = [];
+    const iv = setInterval(() => {
+      const t = document.getElementById("bannerBig").textContent;
+      if (t && !seen.includes(t)) seen.push(t);
+    }, 50);
+    await doSpin();
+    clearInterval(iv);
+    return { shared, tokenOverlap, rungs, lit, shownInCluster, hiddenInPride,
+             banners: seen };
+  });
+  check("Trait Vault's twelve are all its own art", r.shared.length === 0,
+        r.shared.join(",") || "12/12 distinct");
+  check("no token appears in both Pride and Trait Vault", r.tokenOverlap.length === 0,
+        r.tokenOverlap.join(","));
+  check("the tumble ladder shows the real rungs",
+        r.shownInCluster && r.rungs.join(",") === "×1,×2,×3,×5,×8",
+        r.rungs.join(","));
+  check("the ladder lights the live rung and marks the climbed ones",
+        r.lit === "ddL..", r.lit);
+  check("the ladder does not leak into other games", r.hiddenInPride);
+  check("a feature closes with a total card",
+        r.banners.some(t => /feature complete/i.test(t)),
+        `banners seen: ${r.banners.join(" | ") || "none"}`);
+  check("no runtime errors around distinctness", errs.length === 0,
         errs.slice(0, 2).join(" | "));
   await ctx.close();
 }

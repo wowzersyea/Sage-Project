@@ -127,6 +127,34 @@ CUBS = [
     ("M2", "cub", "character", None, 3097, "LAZY hat, red mane, stoner eyes"),
 ]
 
+# Trait Vault's OWN twelve. Pride and Trait Vault shipped the same twelve
+# Lions, which made them one game wearing two colour schemes -- the single
+# biggest gap between this cabinet and a studio catalogue, where no two titles
+# share a symbol. The operator holds 120 Lions; twelve more, chosen for a
+# "vault riches" identity: top hat and halo premiums, exotic bodies in the
+# mids (zebra, galaxy, zombie), and a matched crew of spinner-hat lows that
+# read as a family the way card royals do.
+#
+# No mane/blink/tongue layers here yet, and that is the measured-not-assumed
+# rule, not neglect: every layer in the default set rests on per-token declared
+# colours and eye boxes that took repeated correction against the art. These
+# twelve ship with pop, settle and idle -- the vault's drama is the multiplier
+# rows, not character acting -- and layers can be declared later token by token.
+VAULT = [
+    ("P1", "lion", "character", None, 7234, "TOP HAT -- black-and-gold mane, lizard blue, shades"),
+    ("P2", "lion", "character", None, 5443, "HALO -- ice mane, purple fur coat, anime eyes"),
+    ("P3", "lion", "bust",      None, 5523, "GLADIATOR ARMOUR -- spinner hat, fake glasses"),
+    ("P4", "lion", "character", None, 6159, "SANTA HAT -- rainbow top knot, black body"),
+    ("M1", "lion", "character", None, 1328, "Zebra body, bunny ears, bubble gum"),
+    ("M2", "lion", "character", None, 1589, "Galaxy body, straw hat, red top knot"),
+    ("M3", "lion", "character", None, 7250, "Zombie body, shades, tongue out"),
+    ("M4", "lion", "character", None, 7213, "Safari hat, water goggles, Ethereum shirt"),
+    ("L1", "lion", "character", None, 7184, "Gold chain, bloody mane, straw hat"),
+    ("L2", "lion", "character", None, 8908, "Fire top knot, grey body, spinner"),
+    ("L3", "lion", "character", None, 9315, "Rainbow mane, zombie body, spinner"),
+    ("L4", "lion", "character", None, 2790, "Monocle, business shirt, spinner"),
+]
+
 
 def load_owned():
     lions = json.load(open(os.path.join(INGEST, "owned_traits.json")))["owned_tokens"]
@@ -577,7 +605,7 @@ def licensed_traits():
             for s in json.load(open(SYMBOLS))["symbols"] if s.get("identifiesTrait")}
 
 
-def build_set(manifest, lions, cubs, label):
+def build_set(manifest, lions, cubs, label, key_prefix=None):
     out, total = {}, 0
     named = licensed_traits()
     print(f"\n{label}")
@@ -592,7 +620,12 @@ def build_set(manifest, lions, cubs, label):
         tile, bg = build_tile(path, region, collection)
         # symbols.json keys Cub entries as "CUB:M2", so a bare "M2" lookup finds
         # the LION's M2 and records a Cub as a Monocle. Prefix by collection.
-        key = ("CUB:" if collection == "cub" else "") + sym
+        # The animation tables are keyed by this. A third set reusing Lion
+        # symbol ids MUST NOT inherit the default set's mane colours and eye
+        # boxes -- the same collision the Cubs hit -- so each set carries its
+        # own prefix.
+        key = (key_prefix if key_prefix is not None
+               else ("CUB:" if collection == "cub" else "")) + sym
         # Secondary motion: lift the mane so it can lag behind the roar. The
         # tables below are keyed the same way, because a Cub and a Lion share
         # symbol ids and a bare "M1" would hand a Cub the Lion's mane colour.
@@ -640,13 +673,15 @@ def build_set(manifest, lions, cubs, label):
 
 def main() -> int:
     lions, cubs = load_owned()
-    default_set, a = build_set(LIONS, lions, cubs, "default set (Pride, Trait Vault)")
+    default_set, a = build_set(LIONS, lions, cubs, "default set (Pride)")
     cub_set, b = build_set(CUBS, lions, cubs, "cubcluster overrides")
+    vault_set, c = build_set(VAULT, lions, cubs, "traitvault overrides", key_prefix="TV:")
 
     payload = {
         "generatedBy": "tools/atlas-build/build-symbols.py",
         "default": default_set,
         "cubcluster": cub_set,
+        "traitvault": vault_set,
     }
     block = "/* @@@SYMBOL_ART@@@ */\nconst SYMBOL_ART=" + json.dumps(payload) + ";\n"
 
@@ -657,7 +692,7 @@ def main() -> int:
         print("PAGE MISSING MARKERS", file=sys.stderr)
         return 2
     open(PAGE, "w").write(page[:start] + block + page[end:])
-    print(f"\ninjected {len(default_set)} + {len(cub_set)} tiles "
+    print(f"\ninjected {len(default_set)} + {len(cub_set)} + {len(vault_set)} tiles "
           f"({(a + b)//1024} KB) into {PAGE}")
     return 0
 

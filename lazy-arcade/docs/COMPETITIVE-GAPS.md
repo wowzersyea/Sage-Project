@@ -149,6 +149,42 @@ at exactly ten per grid, and it fails on the conditional version.
 
 ---
 
+## 0.8 The production-grade pass: three distinct games, and what still is not code
+
+A full review of all four games against what Hacksaw actually ships, and what
+was done about each finding.
+
+**Closed in this pass:**
+
+| Finding | Why it mattered | What shipped |
+|---|---|---|
+| Pride and Trait Vault shared all twelve symbols | One game wearing two colour schemes. No studio catalogue has two titles sharing a symbol. | Trait Vault carries its own twelve owned Lions -- top hat and halo premiums, exotic-body mids (zebra, galaxy, zombie), a matched spinner-hat low crew. Zero token overlap, held by test. |
+| Tumble multiplier lived in a text chip | "tumble 2 · x2" is a caption. Every shipped tumble game pins the live multiplier where the eye is. | An on-screen ladder (x1 x2 x3 x5 x8) that lights the live rung and marks the climbed ones, from the same constant the maths reads. |
+| Features ended by fading into the next spin | Every shipped bonus closes with a TOTAL WIN card. Ours rolled the total into the counter and the round never ended, it just stopped happening. | "Feature complete" card with the feature total, on the feature sound. |
+| Hi/Lo HUD said "Streak" over a multiplier | Wrong word for the number shown. | Says "Mult". |
+
+**Still open, and why each is not a code change:**
+
+- **Recorded audio stems.** The single biggest remaining distance to Hacksaw.
+  Synthesis now has structure, stereo, a chant and a roar -- but produced
+  stems have timbre no oscillator reaches. Needs licensed or commissioned
+  audio files; one impact sample and one bed loop per game would close most
+  of the gap.
+- **Animated symbol art.** The Lions perform (pop, mane, blink, tongue) by
+  layer-lifting flat art. True idle loops and win animations per symbol need
+  drawn frames -- the brief for a sprite-sheet pipeline is at the bottom of
+  this file. The new vault set ships without layers until its per-token
+  colours are declared and measured.
+- **Row-multiplier / feature art.** Orbs and the WILD are procedural house
+  style; the operator's intended multiplier art never arrived in the
+  conversation (proven in Sec. "The multiplier files were never received").
+- **The jurisdictional shell.** Real-money production needs the parts the
+  spec gates behind [CONFIRM]: contracts, custody, RNG attestation, KYC and
+  market-specific compliance (the buy button alone is illegal in the UK).
+  This bench deliberately stops at the front door of all of that.
+
+---
+
 ## 1. Slots vs Pragmatic Play
 
 ### Presentation — closable without touching the maths

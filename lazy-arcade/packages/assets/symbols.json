@@ -176,6 +176,126 @@
       "reason": "Lazy Juice, real NFT art. Operator holds 11 of token id 0.",
       "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
       "tokenId": 0
+    },
+    {
+      "id": "TV:P1",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7234,
+      "identifiesTrait": "Top Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Black-and-gold mane, lizard blue body, shades."
+    },
+    {
+      "id": "TV:P2",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5443,
+      "identifiesTrait": "Halo",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Ice mane, purple fur coat, anime eyes."
+    },
+    {
+      "id": "TV:P3",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5523,
+      "identifiesTrait": "Gladiator Armour",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Bust crop so the armour is in shot, like the default set's fur coat."
+    },
+    {
+      "id": "TV:P4",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 6159,
+      "identifiesTrait": "Santa Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Rainbow top knot on a black body."
+    },
+    {
+      "id": "TV:M1",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1328,
+      "identifiesTrait": "Zebra",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Zebra body, bunny ears, bubble gum."
+    },
+    {
+      "id": "TV:M2",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1589,
+      "identifiesTrait": "Galaxy",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Galaxy body under a straw hat."
+    },
+    {
+      "id": "TV:M3",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7250,
+      "identifiesTrait": "Zombie",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Zombie body, shades, tongue out."
+    },
+    {
+      "id": "TV:M4",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7213,
+      "identifiesTrait": "Safari Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Water goggles, Ethereum shirt."
+    },
+    {
+      "id": "TV:L1",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7184,
+      "identifiesTrait": "Gold Chain",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Bloody mane, straw hat."
+    },
+    {
+      "id": "TV:L2",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 8908,
+      "identifiesTrait": "Spinner Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Fire top knot, grey body."
+    },
+    {
+      "id": "TV:L3",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 9315,
+      "identifiesTrait": "Spinner Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Rainbow mane, zombie body."
+    },
+    {
+      "id": "TV:L4",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 2790,
+      "identifiesTrait": "Monocle",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Business shirt, smirk."
     }
   ]
 }
