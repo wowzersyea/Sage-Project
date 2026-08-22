@@ -562,6 +562,13 @@ fn cmd_hilo(flags: &HashMap<String, String>) -> i32 {
         if offered.len() < 2 {
             disabled_offers += 1;
         }
+        // A dead rank -- both directions refused -- is a free swap in the
+        // game, so it is a free redraw here: no stake, next card. Indexing
+        // offered[0] unconditionally panicked the moment the sucker-bet
+        // refusal created the first empty offer list.
+        if offered.is_empty() {
+            continue;
+        }
         // Strategy is irrelevant to the edge -- pick the first offered
         // direction, which is exactly the point being demonstrated.
         let dir: Direction = offered[0];

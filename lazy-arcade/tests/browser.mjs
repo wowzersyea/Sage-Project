@@ -510,13 +510,19 @@ console.log("\nRarity swap");
   const { p, ctx } = await page();
   const r = await p.evaluate(async () => {
     const n = RARITY_RANKS;
+    // Dead ranks are now DELIBERATE: the sucker-bet refusal (payout <= 1.00x
+    // is not offered) leaves ranks 0-3 and 97-100 with no playable direction,
+    // and their exit is the free swap. So the invariants shift: every rank
+    // that HAS an offer returns the house figure, the dead set is exactly the
+    // eight extremes, and the fee stays zero everywhere -- dead ranks
+    // included, where a paid swap would be a toll gate on the only door.
     let worstFee = 0, worstEV = 0, deadRanks = [];
     for (let ord = 1; ord <= n; ord++) {
       const f = swapFee(n, ord);
       if (Math.abs(f) > Math.abs(worstFee)) worstFee = f;
       const e = bestAvailableEV(n, ord);
       if (e === 0) deadRanks.push(ord - 1);
-      if (Math.abs(e - HOUSE) > Math.abs(worstEV)) worstEV = e - HOUSE;
+      else if (Math.abs(e - HOUSE) > Math.abs(worstEV)) worstEV = e - HOUSE;
     }
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     muted = true;
@@ -531,9 +537,9 @@ console.log("\nRarity swap");
   });
   check("a swap is free at every rank", Math.abs(r.worstFee) < 1e-12,
         `worst fee ${r.worstFee}`);
-  check("the best available bet returns the house figure at every rank",
+  check("every rank with an offer returns the house figure",
         Math.abs(r.worstEV) < 1e-12, `worst deviation ${r.worstEV.toExponential(2)} from ${r.HOUSE}`);
-  check("every rank has a playable direction", r.deadRanks === 0,
+  check("the refused ranks are exactly the eight extremes", r.deadRanks === 8,
         `${r.deadRanks} ranks with no bet on offer`);
   check("the button's promise matches the maths", /zero ev/.test(r.label), r.label);
   check("swapping redraws the card", r.changed);
@@ -1547,6 +1553,49 @@ console.log("\nSymbol art");
         coins.map((c) => c.opaque.toFixed(3)).join(", "));
   check("no runtime errors reading the symbol art", errs.length === 0,
         errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* -------------------------------------------------------- Hi/Lo presentation */
+/* Two fixes that only a browser can verify: a bust must LOOK like a bust (it
+   was a 1.4s chip flash while a 7x pot vanished), and a history tile for a
+   rank with no owned Lion must show the card back (it rendered a number
+   floating over a hole). The loss is forced by stubbing the draw -- function
+   declarations are writable globals in a classic script. */
+console.log("\nHi/Lo presentation");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    document.querySelector('[data-game="hilo"]').click();
+    await sleep(500);
+    const realDraw = hlDraw;
+    try {
+      // A mid-rank card, then a guaranteed-wrong pick: card 50, next card 1.
+      hl.card = 50; hl.live = false; hl.mult = 1; hlRender();
+      hlDraw = () => 1;
+      $("winOut").textContent = "7,777";        // stale WIN from a slot spin
+      await hlPick("rarer");                    // next=1 < 50: wrong
+      await sleep(150);
+      const bustShown = $("hlCard").classList.contains("bust");
+      const winReset = $("winOut").textContent;
+      const flashText = $("chipMode").textContent;
+      // History back-tile: a wrong entry whose rank has no owned art.
+      hl.hist.push({ card: 2, dir: "commoner", correct: true, art: null });
+      hlRender();
+      const tiles = [...document.querySelectorAll("#hlHist .h")];
+      const last = tiles[tiles.length - 1];
+      return { bustShown, winReset, flashText,
+               backTile: !!(last && last.querySelector(".back")),
+               tileCount: tiles.length };
+    } finally { hlDraw = realDraw; }
+  });
+  check("a bust marks the card, not just the chip", r.bustShown);
+  check("a bust resets the WIN readout", r.winReset === "0", `reads "${r.winReset}"`);
+  check("the bust message says what was lost", /Bust/.test(r.flashText), r.flashText);
+  check("a history card with no owned art shows the card back",
+        r.backTile, `${r.tileCount} tiles, last has back=${r.backTile}`);
+  check("no runtime errors in Hi/Lo", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }
 

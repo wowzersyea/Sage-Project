@@ -677,6 +677,18 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:3px 5px;
   font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1.1}
 .hlhist .h img{width:22px;height:22px;object-fit:contain}
+.hlhist .h .back{width:22px;height:22px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#241636,#150D20);border:1px solid var(--line);
+  border-radius:4px;color:var(--muted);font-size:12px;font-weight:700}
+.hlcard.bust{animation:hlbust .55s ease-out 1}
+@keyframes hlbust{
+  0%{transform:translateX(0)}
+  16%{transform:translateX(-7px)} 36%{transform:translateX(6px)}
+  56%{transform:translateX(-4px)} 76%{transform:translateX(2px)}
+  100%{transform:translateX(0)}}
+.hlcard.bust .portrait{filter:saturate(.4) brightness(.75);
+  transition:filter .1s; box-shadow:0 0 0 2px var(--hot),0 0 26px -6px var(--hot)}
+@media (prefers-reduced-motion: reduce){.hlcard.bust{animation:none}}
 .hlhist .h.up{border-color:var(--win);color:var(--win)}
 .hlhist .h.down{border-color:var(--data);color:var(--data)}
 .hlextra{display:flex;gap:8px;justify-content:center;margin-top:9px;flex-wrap:wrap}
@@ -1618,15 +1630,33 @@ function bestAvailableEV(n,p){
   }
   return best;
 }
+/* The VALUE of a position, which is not the same thing as its best offer.
+   A rank where both directions are refused still reaches a fair bet through
+   the free swap chain, and a free redraw preserves expectation -- so by
+   induction every position is worth exactly HOUSE. Without this, the fee
+   below priced dead ranks at bestAvailableEV = 0 and charged ~0.9x A BET to
+   swap out of exactly the positions where swapping is the only move: the
+   escape hatch became a toll gate the moment it was needed. */
+function positionEV(n,p){
+  const best=bestAvailableEV(n,p);
+  return best>0?best:HOUSE;
+}
 function swapFee(n,p){
   let sum=0;
-  for(let q=1;q<=n;q++){ if(q!==p) sum+=bestAvailableEV(n,q); }
-  return Math.max(0, sum/(n-1) - bestAvailableEV(n,p));
+  for(let q=1;q<=n;q++){ if(q!==p) sum+=positionEV(n,q); }
+  return Math.max(0, sum/(n-1) - positionEV(n,p));
 }
 const pRarer=(n,p)=>(n-p)/(n-1);
 const pCommoner=(n,p)=>(p-1)/(n-1);
 const payout=(n,p,dir)=>{ const q=dir==="rarer"?pRarer(n,p):pCommoner(n,p);
-  return q<MIN_P?null:HOUSE/q; };
+  // TWO refusals, one rule each, and both are refusals rather than caps
+  // because capping either end silently breaks the stated return:
+  //   q <  MIN_P  the long shot -- a sub-5% lottery ticket is not this game;
+  //   q >= HOUSE  the SUCKER BET. 0.97/q is then <= 1.00x, a wager that
+  //               cannot profit even when it WINS: at rank 2, "rarer" hit 98%
+  //               of the time and paid 0.99x -- risk 100 to be handed 99 for
+  //               being right. It sat on the board looking like a real button.
+  return (q<MIN_P||q>=HOUSE)?null:HOUSE/q; };
 
 /* @@@DOM_BOUNDARY@@@ everything below is presentation */
 
@@ -4111,10 +4141,21 @@ function hlRender(flip){
     $("hlOdds").textContent=`rarer ${(pr*100).toFixed(2)}% · commoner ${(pc*100).toFixed(2)}%`;
     const set=(btn,lbl,dir)=>{
       const p=payout(hl.n,hl.card,dir);
+      const q=dir==="rarer"?pRarer(hl.n,hl.card):pCommoner(hl.n,hl.card);
       btn.disabled=p===null;
-      btn.querySelector("small").textContent=p===null?"below 5% — not offered":p.toFixed(2)+"×";
+      btn.querySelector("small").textContent=
+        p!==null ? p.toFixed(2)+"×"
+        : q<MIN_P ? "below 5% — not offered"
+        : "pays ≤1× — not offered";
     };
     set($("hlHi"),"rarer","rarer"); set($("hlLo"),"commoner","commoner");
+    // At the extremes BOTH sides are refused (the favourite pays <=1x, the
+    // long shot is under the floor). The free swap is the exit, and the board
+    // has to say so -- a screen of disabled buttons with no explanation reads
+    // as a bug, not a rule.
+    if($("hlHi").disabled&&$("hlLo").disabled){
+      $("hlOdds").textContent+=" · no fair bet at this rank — swap free";
+    }
   }
   $("hlMult").textContent=hl.mult.toFixed(2)+"×";
   $("hlRisk").textContent=fmt(hl.risk);
@@ -4132,10 +4173,13 @@ function renderHist(){
   const el=$("hlHist"); el.innerHTML="";
   for(const h of hl.hist.slice(-12)){
     const d=document.createElement("div");
-    d.className="h "+(h.dir==="rarer"?"up":"down")+(h.correct?"":"");
+    d.className="h "+(h.dir==="rarer"?"up":"down");
     d.style.opacity=h.correct?"1":".45";
+    // A rank bucket with no owned Lion shows the card BACK here, same as the
+    // big card does. It rendered nothing at all -- a tile with a number
+    // floating over a hole, which reads as broken art rather than a rule.
     const card=h.art;
-    d.innerHTML=(card?`<img src="${card.uri}" alt="">`:"")+
+    d.innerHTML=(card?`<img src="${card.uri}" alt="">`:'<span class="back">?</span>')+
       `<span>${h.dir==="rarer"?"▲":"▼"} ${fmt(hl.mode==="rarity"?ordinalToRank(h.card):h.card)}</span>`;
     el.appendChild(d);
   }
@@ -4165,10 +4209,21 @@ async function hlPick(dir){
       hl.mult=1; hl.live=false; hl.risk=0;
       balance+=won; S.returned+=won; S.hits++; S.best=Math.max(S.best,capped);
       updateHud();
+      // The banner counts the amount up on its own display; the HUD's WIN
+      // readout was left showing whatever the last slot spin paid.
+      $("winOut").textContent=fmt(won);
       await showBanner("Epic win",won,"round cap — forced cash out");
     } else flash(`Correct · ${hl.mult.toFixed(2)}× banked`);
   } else {
-    blip(190,.34,"sawtooth",.07,80); flash("Wrong — stake lost");
+    // Say what actually vanished. "Stake lost" undersold every bust past the
+    // first pick: at 7.39x the player watched 739 leave the table and was
+    // told about 100.
+    const pot=hl.risk*hl.mult;
+    blip(190,.34,"sawtooth",.07,80);
+    flash(pot>hl.risk*1.005?`Bust — ${fmt(pot)} was on the table`:"Bust — stake lost");
+    $("winOut").textContent=fmt(0);
+    const cardEl=$("hlCard");
+    cardEl.classList.remove("bust"); void cardEl.offsetWidth; cardEl.classList.add("bust");
     hl.live=false; hl.risk=0; hl.mult=1;
   }
   hlRender(); updateHud(); busy=false;
@@ -4505,9 +4560,12 @@ function openInfo(){
       the rows it runs through — so the badge beside a row is exactly what that row pays.
       No retrigger; the round caps at 5,000×.`,
     hilo:`<b>Rarity duel.</b> Bet whether the next NFT is rarer or commoner than the current one.
-      Payout is <b>0.97 ÷ P(direction)</b>, so every offered bet returns exactly 97%. A direction
-      below 5% probability is <b>disabled rather than capped</b> — capping would silently break
-      the stated return. Multipliers compound; the round caps at 5,000×.`
+      Payout is <b>0.97 ÷ P(direction)</b>, so every offered bet returns exactly 97%. Two kinds of
+      bet are <b>disabled rather than capped</b> — capping either would silently break the stated
+      return: a direction below 5% probability, and a direction paying <b>1.00× or less</b>, which
+      could not profit even when it won. At the extreme ranks both sides are refused; the
+      <b>Rarity Swap stays free there</b> — redraw and play on. Multipliers compound; the round
+      caps at 5,000×.`
   }[game];
   // Per game, because the games are not verified to the same depth and a single
   // blanket sentence quietly promotes the least-verified one to the standard of
@@ -4568,7 +4626,15 @@ $("hlAuto").addEventListener("click",async()=>{
     // Always take the side the deck favours; the edge is identical either way,
     // so this just keeps rounds alive longer than a coin-flip strategy.
     const dir = pRarer(hl.n,hl.card) >= pCommoner(hl.n,hl.card) ? "rarer" : "commoner";
-    if(payout(hl.n,hl.card,dir)===null) break;
+    if(payout(hl.n,hl.card,dir)===null){
+      // The favourite refused means BOTH sides are refused (the favourite is
+      // the only side that can hit the <=1x rule, and its opposite is then
+      // under the 5% floor). The exit is the free swap, so take it and keep
+      // playing rather than silently stopping on ~8% of cards.
+      hl.card=hlDraw(hl.card); hlRender(true);
+      await sleep(240);
+      continue;
+    }
     await hlPick(dir);
     await sleep(430);
     if(hl.live && hl.mult>=2.2) hlCash();

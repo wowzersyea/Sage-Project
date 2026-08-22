@@ -258,7 +258,7 @@ console.log("\nHi/Lo exactness");
   // The shipped deck is now 101 rarity ranks (0..100), not 10,078 ordinals.
   // Every property the ordinal design relied on has to survive the change.
   const R = 101;
-  let rWorst = 0, rOffered = 0, alwaysOne = true;
+  let rWorst = 0, rOffered = 0;
   const disabled = [];
   for (let p = 1; p <= R; p++) {
     let any = false;
@@ -269,7 +269,6 @@ console.log("\nHi/Lo exactness");
       const prob = dir === "rarer" ? M.pRarer(R, p) : M.pCommoner(R, p);
       rWorst = Math.max(rWorst, Math.abs(prob * mult - 0.97));
     }
-    if (!any) alwaysOne = false;
     if (M.payout(R, p, "rarer") === null || M.payout(R, p, "commoner") === null) {
       disabled.push(p - 1);
     }
@@ -277,13 +276,36 @@ console.log("\nHi/Lo exactness");
   }
   check("rank deck: every offered bet returns exactly 0.97", rWorst < 1e-9,
         `worst ${rWorst.toExponential(2)} over ${rOffered} offers`);
-  check("rank deck: a playable direction exists at every rank", alwaysOne);
-  // Probabilities are r/100 and (100-r)/100, so the 5% floor bites at exactly
-  // r < 5 and r > 95. If this ever shifts, the floor logic has drifted.
-  check("rank deck: disabled exactly outside ranks 5..95",
-        disabled.every(r => r < 5 || r > 95) &&
-        disabled.length === 10,
-        `disabled at ranks ${disabled.join(",")}`);
+
+  // "A playable direction exists at every rank" was TRUE only because of the
+  // sucker bet: rank 2 offered "rarer" at 0.99x, a wager that loses money when
+  // it WINS. Refusing payouts <= 1.00x deliberately kills that property, so
+  // its replacement is the pair below: nothing offered can fail to profit, and
+  // every rank with no offer has a FREE way out.
+  let low = 0, deadFreeless = 0; const dead = [];
+  for (let p = 1; p <= R; p++) {
+    let any = false;
+    for (const dir of ["rarer", "commoner"]) {
+      const mult = M.payout(R, p, dir);
+      if (mult !== null) { any = true; if (mult <= 1.0) low++; }
+    }
+    if (!any) {
+      dead.push(p - 1);
+      if (M.swapFee(R, p) > 1e-9) deadFreeless++;
+    }
+  }
+  check("rank deck: no offered bet pays 1.00x or less", low === 0,
+        `${low} sucker bet(s) on the board`);
+  // The refusal map, exactly: the 5% floor bites at r<5 and r>95, the
+  // no-upside rule at r<=3 and r>=97, so the fully dead ranks are 0-3 and
+  // 97-100. If this shifts, one of the two refusal rules has drifted.
+  check("rank deck: dead exactly at ranks 0-3 and 97-100",
+        dead.length === 8 && dead.every(r => r <= 3 || r >= 97),
+        `dead at ranks ${dead.join(",")}`);
+  check("rank deck: every dead rank swaps out FREE", deadFreeless === 0,
+        `${deadFreeless} dead rank(s) with a paid swap`);
+  check("rank deck: swap is free at every rank",
+        Array.from({length:R},(_,i)=>M.swapFee(R,i+1)).every(f=>Math.abs(f)<1e-9));
 }
 
 /* --------------------------------------------------------------- 4. RTP */

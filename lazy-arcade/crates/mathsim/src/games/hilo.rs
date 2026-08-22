@@ -62,7 +62,13 @@ pub fn probability(n: u32, p: u32, dir: Direction) -> f64 {
 #[inline]
 pub fn payout(n: u32, p: u32, dir: Direction) -> Option<f64> {
     let prob = probability(n, p, dir);
-    if prob < MIN_OFFERED_PROBABILITY {
+    // Two refusals, mirrored exactly in play/index.html (a drift test holds
+    // the two implementations together): below the 5% floor the direction is
+    // a lottery ticket, and at prob >= HOUSE_RETURN the multiplier would be
+    // <= 1.00x -- a bet that cannot profit even when it wins. That one sat on
+    // the board for as long as this file existed: rank 2 offered "rarer" at
+    // 0.99x, risk everything to be handed back less.
+    if prob < MIN_OFFERED_PROBABILITY || prob >= HOUSE_RETURN {
         None
     } else {
         Some(HOUSE_RETURN / prob)
@@ -76,13 +82,13 @@ pub fn payout(n: u32, p: u32, dir: Direction) -> Option<f64> {
 /// cards. Its value to the player is the change in the best multiplier
 /// available; charging precisely that leaves the edge untouched.
 pub fn swap_fee(n: u32, p: u32) -> f64 {
-    let current = best_available_ev(n, p);
+    let current = position_ev(n, p);
     let mut sum = 0.0;
     for q in 1..=n {
         if q == p {
             continue;
         }
-        sum += best_available_ev(n, q);
+        sum += position_ev(n, q);
     }
     let after = sum / (n - 1) as f64;
     (after - current).max(0.0)
@@ -98,6 +104,17 @@ fn best_available_ev(n: u32, p: u32) -> f64 {
         }
     }
     best
+}
+
+/// The VALUE of a position, which is not the same thing as its best offer.
+/// A rank where both directions are refused still reaches a fair bet through
+/// the free swap chain, and a free redraw preserves expectation -- so by
+/// induction every position is worth exactly HOUSE_RETURN. Without this the
+/// fee priced dead ranks at best_available_ev = 0 and charged ~0.9x a bet to
+/// swap out of exactly the positions where swapping is the only move.
+fn position_ev(n: u32, p: u32) -> f64 {
+    let best = best_available_ev(n, p);
+    if best > 0.0 { best } else { HOUSE_RETURN }
 }
 
 pub struct HiLo {
@@ -221,11 +238,36 @@ mod tests {
     }
 
     #[test]
-    fn at_least_one_direction_is_always_offered() {
-        let g = HiLo { n: N };
+    fn no_offered_bet_pays_one_x_or_less() {
+        // The property that replaced "always offered": rank 2 used to offer
+        // "rarer" at 0.99x -- a bet that loses money when it WINS. Nothing on
+        // the board may pay <= 1.00x, and the ranks that would have are
+        // refused instead.
         for p in 1..=N {
-            assert!(!g.offered(p).is_empty(), "p={p} had no playable bet");
+            for dir in [Direction::Rarer, Direction::Commoner] {
+                if let Some(m) = payout(N, p, dir) {
+                    assert!(m > 1.0, "p={p} {dir:?} offered {m}x");
+                }
+            }
         }
+    }
+
+    #[test]
+    fn dead_ranks_exist_but_the_swap_out_is_free() {
+        // Refusing the sucker bet leaves ranks with NO playable direction --
+        // the favourite pays <=1x, the long shot is under the floor. That is
+        // acceptable only because the escape is free: the swap fee must be
+        // zero exactly where swapping is the only move.
+        let g = HiLo { n: N };
+        let mut dead = 0;
+        for p in 1..=N {
+            if g.offered(p).is_empty() {
+                dead += 1;
+                assert!(swap_fee(N, p).abs() < 1e-9,
+                        "p={p} is dead and its swap costs {}", swap_fee(N, p));
+            }
+        }
+        assert!(dead > 0, "expected refused ranks at the extremes; found none");
     }
 
     #[test]
@@ -263,6 +305,10 @@ mod tests {
         for _ in 0..400_000 {
             let p = g.draw_card(&mut rng);
             let offered = g.offered(p);
+            // A dead rank is a free swap in the game: redraw, no stake.
+            if offered.is_empty() {
+                continue;
+            }
             let dir = offered[0];
             staked += 1.0;
             returned += g.decide(&mut rng, p, dir).returned;
