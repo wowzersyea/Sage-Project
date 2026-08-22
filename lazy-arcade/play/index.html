@@ -670,6 +670,14 @@ details.bench[open]>summary::before{content:"▾ "}
   .ro .v{font-size:15px}
   .deck{gap:8px}
   .betrow{gap:6px}
+  /* The rail is mirrored by a spacer, so at handset width its 46px floor was
+     claiming 92px -- 38% of a 320px screen -- for the multipliers and their
+     blank twin, and the lions rendered at 28px. The number still has to be
+     readable across the room, so the rail shrinks WITH its type rather than
+     being cropped: RAIL_PHONE in the script must match the min-width here, and
+     a browser check asserts they agree. */
+  .multrail .mrow{min-width:34px}
+  .mbadge{font-size:12px;padding:4px 5px;border-radius:7px}
 }
 /* Short screens -- a small phone in portrait, or any phone in landscape -- have
    the opposite problem: enough width, almost no height. Trim vertical furniture.
@@ -2509,7 +2517,22 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAXWIN={pride:2000,cubcluster:2500,traitvault:5000};
 
 /* ============================ reel machinery ============================ */
-const RAIL_PX=52;   // rail min-width plus its gutter; reserved so cells centre
+const RAIL_MIN=46, RAIL_PHONE=34;  // .multrail .mrow min-width; see railPx()
+/* The rail is mirrored by an inert spacer so the GRID stays centred (see
+   .railspacer), which means the furniture beside the reels is TWO rail widths,
+   not one. This reserved a single flat 52 and the pair overflowed the screen on
+   a phone: at 420px wide the badges hung 11px past the bezel and the WIDEST of
+   them -- x25, the ceiling, and the best thing that happens in this game -- was
+   the one sliced. Derived from the same clamp the CSS uses rather than guessed
+   at, so the two cannot drift. */
+function railPx(){
+  if(!($("multRail") && !$("multRail").classList.contains("hidden"))) return 0;
+  // Mirrors the CSS exactly, including the handset override below 520px. A
+  // browser check asserts the two agree, because a number kept in two places is
+  // a number that drifts.
+  if(window.innerWidth<=520) return RAIL_PHONE+4;
+  return Math.ceil(Math.min(74, Math.max(RAIL_MIN, window.innerWidth*0.056)) + 4);
+}
 function cellPx(){
   // Constrained by BOTH axes: width alone gives ~183px cells on a desktop,
   // which pushes the reels past the fold and hides the controls.
@@ -2518,11 +2541,14 @@ function cellPx(){
   // --cell, so reading its width here would be reading back the value being
   // computed.
   const host=$("screen")||$("reels");
-  const railed=$("multRail") && !$("multRail").classList.contains("hidden");
-  const w=host.clientWidth-(railed?RAIL_PX:0)-14;
+  const w=host.clientWidth-railPx()*2-14;
   const byWidth=(w-8)/5*0.96;
   const byHeight=(window.innerHeight*0.52)/ROWS;
-  return Math.max(44,Math.round(Math.min(byWidth,byHeight,118)));
+  // The floor used to be a flat 44, which on a 320px handset was larger than
+  // the width available and forced the overflow back regardless of the reserve
+  // above. Below that the reels give way rather than the rail: a symbol a few
+  // pixels smaller still reads, a multiplier sliced in half does not.
+  return Math.max(Math.min(44,Math.floor(byWidth)),Math.round(Math.min(byWidth,byHeight,118)));
 }
 function syncCell(){
   document.documentElement.style.setProperty("--cell",cellPx()+"px");

@@ -744,6 +744,45 @@ console.log("\nPlayfield centring");
           `moves ${Math.round(Math.abs(r.pride.left - r.traitvault.left))}px`);
     await ctx.close();
   }
+
+  /* The check above measures the GRID, which is exactly why it kept passing
+     while the rail hung off the side of the cabinet. cellPx() reserved one rail
+     width, but the rail is mirrored by a spacer so the furniture beside the
+     reels is TWO -- and on a phone the pair overflowed. At 420px every badge
+     started left of the screen and the x25, the widest because it is the
+     ceiling, was sliced by a quarter. Found by screenshotting the board rather
+     than by any check, which is the third time in this project that has been
+     true. */
+  for (const [w, h] of [[320, 568], [390, 844], [520, 900]]) {
+    const { p, ctx } = await page({ viewport: { width: w, height: h } });
+    const r = await p.evaluate(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('[data-game="traitvault"]').click();
+      await sleep(450);
+      const g = []; for (let i = 0; i < 5; i++) g.push([0, 1, 2, 3]);
+      await animateSpin(g, 0);
+      paintMultRail([0, 3, ROW_MULT_CAP, 0], null, null);   // widest badge on the grid
+      await sleep(140);
+      const scr = document.getElementById("screen").getBoundingClientRect();
+      let worst = 0, which = "";
+      for (const bd of document.querySelectorAll("#multRail .mbadge")) {
+        const b = bd.getBoundingClientRect();
+        if (scr.left - b.left > worst) { worst = scr.left - b.left; which = bd.textContent; }
+      }
+      const railBox = document.getElementById("multRail").getBoundingClientRect();
+      return { worst, which, reserved: railPx(), measured: railBox.width,
+               cell: parseFloat(getComputedStyle(document.documentElement)
+                                  .getPropertyValue("--cell")) };
+    });
+    check(`${w}px: no multiplier badge is clipped by the cabinet`, r.worst <= 0.5,
+          r.worst > 0.5 ? `${r.which} hangs ${r.worst.toFixed(1)}px past the edge` : "");
+    // The reserve lives in JS and the width in CSS. Two copies of one number.
+    check(`${w}px: the width cellPx reserves matches the rail actually drawn`,
+          Math.abs(r.reserved - r.measured) <= 5,
+          `reserves ${r.reserved}px, draws ${r.measured.toFixed(1)}px`);
+    check(`${w}px: symbols stay big enough to read`, r.cell >= 30, `${r.cell}px cells`);
+    await ctx.close();
+  }
 }
 
 /* --------------------------------------------------------------- max win */
