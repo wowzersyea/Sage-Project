@@ -346,16 +346,23 @@ console.log("\nAnticipation");
       return { firstOn, ever: seen.some(Boolean), total: performance.now() - t0 };
     };
 
+    // Filler is M1, NOT P1. It was P1, chosen back when the Crown was an
+    // ordinary symbol -- and when the Crown became a stack, a board of P1
+    // filler silently became FIVE CROWNED REELS, the strongest anticipation
+    // trigger in the game. The "never anticipates" fixture was anticipating
+    // for a correct reason the fixture did not mean to assert. These grids
+    // exist to test the SCATTER drag in isolation.
+    //
     // Two scatters on reels 1-2 -- reel 3 must drag, but only after reel 1 has
     // stopped. Reel 1 lands at 520ms (base), so anything earlier is a spoiler.
     const g = [];
-    for (let a = 0; a < 5; a++) { g.push([]); for (let b = 0; b < 4; b++) g[a].push(P1); }
+    for (let a = 0; a < 5; a++) { g.push([]); for (let b = 0; b < 4; b++) g[a].push(M1); }
     g[0][0] = SCAT; g[1][0] = SCAT;
     const two = await run(g);
 
     // No scatters at all: the cabinet must never light up.
     const clean = [];
-    for (let a = 0; a < 5; a++) { clean.push([]); for (let b = 0; b < 4; b++) clean[a].push(P1); }
+    for (let a = 0; a < 5; a++) { clean.push([]); for (let b = 0; b < 4; b++) clean[a].push(M1); }
     const none = await run(clean);
 
     // Three scatters must buy MORE rope than two, or the biggest moment in the
@@ -1628,6 +1635,39 @@ console.log("\nPride: the Lion's Crown");
   });
   check("a bought round that fills the board carries the Lion out",
         bought.nft && bought.fs, `nft=${bought.nft}`);
+
+  // The crown DRAG. Scatters had drag, dim and riser while the reels deciding
+  // the Lion landed on the ordinary stagger -- the biggest moment in the
+  // cabinet paced like the smallest. Measured by racing two spins: a board
+  // whose first two reels are crowned must take visibly longer to land than a
+  // plain board, and the dragged reels must wear the anticipate class while
+  // they run. Timing, not implementation: it fails however the drag is lost.
+  const drag = await p.evaluate(async () => {
+    const plain = [], crowned = [];
+    for (let r = 0; r < REELS; r++) {
+      const a = [], b = [];
+      for (let row = 0; row < ROWS; row++) { a.push(6 + row); b.push(r < 2 ? P1 : 6 + row); }
+      plain.push(a); crowned.push(b);
+    }
+    const time = async (g) => {
+      const t0 = performance.now();
+      let seen = false;
+      const iv = setInterval(() => {
+        if (document.querySelector("#reels .reel.anticipate")) seen = true;
+      }, 60);
+      await animateSpin(g, 0);
+      clearInterval(iv);
+      return { ms: performance.now() - t0, seen };
+    };
+    const a = await time(plain);
+    const b = await time(crowned);
+    return { plain: Math.round(a.ms), crowned: Math.round(b.ms),
+             anticSeen: b.seen, plainAntic: a.seen };
+  });
+  check("two crowned reels drag the rest of the board",
+        drag.crowned - drag.plain > 500 && drag.anticSeen,
+        `plain ${drag.plain}ms vs crowned ${drag.crowned}ms, anticipate=${drag.anticSeen}`);
+  check("a plain board does not anticipate", !drag.plainAntic);
   check("no runtime errors in Pride", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }

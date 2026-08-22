@@ -58,6 +58,11 @@ const CASES = [
   ["3 scatters", "scatterLand(0);scatterLand(1);scatterLand(2)", -18, -8],
   ["epic + coins + kerching",
    "jackpotFanfare(4);kerching();for(let i=0;i<8;i++)counterTick(i/8,4)", -6, -1],
+  // The Lion's own fanfare. Scheduled entirely on the audio clock, which is
+  // what makes it renderable here at all -- setTimeout never fires inside an
+  // OfflineAudioContext render, so a wall-clock version would measure only
+  // its opening silence and pass any band by accident.
+  ["the Lion's Crown", "lionsCrownFanfare()", -8, -1],
 ];
 
 let failures = 0;
@@ -108,6 +113,40 @@ for (const [name, code, floor, ceil] of CASES) {
   check(`${name} sits in ${floor}..${ceil} dBFS`,
         v.clip === 0 && db >= floor && db <= ceil,
         `${db} dBFS${v.clip ? `, ${v.clip} CLIPPED SAMPLES` : ""}`);
+}
+
+// Stereo. The graph was mono -- not one panner in the page -- and width is
+// most of what separates a produced stem from an oscillator. Reel thuds now
+// pan by reel position, so reel 1 must render left-heavy and reel 5
+// right-heavy. Balance is (R-L)/(R+L) on channel energy: 0 is centred, and a
+// mono graph scores exactly 0 for both, which is how this check fails if the
+// panner is ever lost.
+{
+  const ctx = await browser.newContext({ viewport: { width: 800, height: 600 } });
+  const p = await ctx.newPage();
+  await p.goto(PAGE);
+  await p.waitForTimeout(1200);
+  const bal = await p.evaluate(async () => {
+    const render = async (src) => {
+      const SR = 44100, off = new OfflineAudioContext(2, SR, SR);
+      const Real = window.AudioContext;
+      window.AudioContext = function () { return off; };
+      actx = null; busGain = null; masterLimiter = null; verbSend = null;
+      musicDuck = null; muted = false;
+      ac();
+      (0, eval)(src);
+      window.AudioContext = Real;
+      const buf = await off.startRendering();
+      const L = buf.getChannelData(0), R = buf.getChannelData(1);
+      let el = 0, er = 0;
+      for (let i = 0; i < L.length; i++) { el += L[i] * L[i]; er += R[i] * R[i]; }
+      return (er - el) / (er + el + 1e-12);
+    };
+    return { left: await render("thud(0)"), right: await render("thud(4)") };
+  });
+  await ctx.close();
+  check("reel 1 lands left of centre", bal.left < -0.08, `balance ${bal.left.toFixed(3)}`);
+  check("reel 5 lands right of centre", bal.right > 0.08, `balance ${bal.right.toFixed(3)}`);
 }
 
 // The spread is the point. Individually-legal levels can still leave the small

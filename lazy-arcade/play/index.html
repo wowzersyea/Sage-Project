@@ -96,7 +96,7 @@ body{
 @keyframes antic{from{filter:brightness(1)}to{filter:brightness(1.28)}}
 /* Anticipation is a whole-cabinet moment, not a property of one reel. The reels
    already settled go quiet so the one still running is the only thing moving. */
-.reels.anticipating .reel:not(.anticipate){filter:brightness(.62) saturate(.7);
+.reels.anticipating .reel:not(.anticipate):not(.crowned){filter:brightness(.62) saturate(.7);
   transition:filter .35s ease}
 .reels.anticipating{animation:anticPulse 1.05s ease-in-out infinite}
 @keyframes anticPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
@@ -556,13 +556,29 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
   background:linear-gradient(180deg,transparent 0%,rgba(255,240,190,.34) 46%,transparent 92%);
   animation:crownsweep .85s ease-out 1}
 @keyframes crownsweep{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
+.sym.wavehit{animation:wavehit .5s ease-out 1}
+@keyframes wavehit{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.1);filter:brightness(1.5) drop-shadow(0 0 14px rgba(243,195,74,.8))}
+  100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.sym.wavehit{animation:none}}
+.screen.shake{animation:screenshake .32s ease-out 1}
+@keyframes screenshake{
+  0%{transform:translate(0,0)}
+  18%{transform:translate(var(--shake,2px),calc(var(--shake,2px)*-.55))}
+  42%{transform:translate(calc(var(--shake,2px)*-.8),calc(var(--shake,2px)*.4))}
+  68%{transform:translate(calc(var(--shake,2px)*.45),calc(var(--shake,2px)*-.2))}
+  100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion: reduce){.screen.shake{animation:none}}
 @media (prefers-reduced-motion: reduce){.reel.crowned::after{animation:none;opacity:0}}
 
 /* The Lion's Crown itself. Above Epic, and deliberately not the same object:
    every other celebration counts coins up, and this one is not a coin win at
    all -- it hands over a token. So it shows the Lion rather than a number. */
 #nftWin{position:absolute;inset:0;display:none;place-items:center;z-index:60;
-  background:radial-gradient(circle at 50% 42%,rgba(90,60,5,.90),rgba(8,5,1,.97));
+  /* Light enough that the five gold columns that EARNED this stay visible,
+     glowing through behind the Lion rather than erased by the dimmer. */
+  background:radial-gradient(circle at 50% 42%,rgba(90,60,5,.74),rgba(8,5,1,.88));
   backdrop-filter:blur(2px);text-align:center;padding:16px}
 #nftWin.on{display:grid}
 #nftWin .lion{width:min(34vh,190px);aspect-ratio:1;margin:0 auto 14px;
@@ -1845,6 +1861,20 @@ function ac(){
   if(actx.state==="suspended") actx.resume();
   return actx;
 }
+/* Position a voice on the cabinet, -1 (reel 1) .. 1 (reel 5). The graph was
+   entirely mono -- not one panner in the page -- and width is most of what
+   separates a produced stem from an oscillator. The reverb send stays shared
+   and centred; only the dry voice takes a position. */
+function toBus(g,x){
+  if(x&&actx.createStereoPanner){
+    const pn=actx.createStereoPanner();
+    pn.pan.value=Math.max(-1,Math.min(1,x));
+    g.connect(pn); pn.connect(busGain); return pn;
+  }
+  g.connect(busGain); return g;
+}
+function reelPan(index){ return ((index||0)-2)/2*0.55; }
+
 function env(node,peak,attack,decay,when){
   const c=ac(), t=when||c.currentTime, g=c.createGain();
   g.gain.setValueAtTime(0.0001,t);
@@ -1883,17 +1913,36 @@ function blip(freq,dur,type="square",gain=.05,slideTo){
    pitched thump so five of them in a row read as five distinct stops. */
 function thud(index){
   if(muted) return;
-  const c=ac(), t=c.currentTime;
+  const c=ac(), t=c.currentTime, x=reelPan(index);
   const src=c.createBufferSource(); src.buffer=noiseBuffer(0.05);
   const bp=c.createBiquadFilter(); bp.type="bandpass";
   bp.frequency.value=1400+(index||0)*120; bp.Q.value=1.2;
   src.connect(bp);
-  env(bp,0.50,0.002,0.05,t).connect(busGain);
+  toBus(env(bp,0.50,0.002,0.05,t),x);
   const o=c.createOscillator(); o.type="sine";
   o.frequency.setValueAtTime(200-(index||0)*8,t);
   o.frequency.exponentialRampToValueAtTime(64,t+0.11);
-  env(o,0.65,0.004,0.13,t).connect(busGain);
+  toBus(env(o,0.65,0.004,0.13,t),x);
   src.start(t); o.start(t); o.stop(t+0.16);
+}
+
+/* A crowned reel does not thud, it TOLLS. The strike stacks pitch with the
+   count -- root, third, fifth, octave, then the third above -- so the ears
+   track the jackpot forming before the eyes have counted gold columns. Panned
+   to the reel that crowned, like the thud it replaces. */
+const CROWN_NOTES=[220,277.18,329.63,440,554.37];
+function crownStrike(nth,reel){
+  if(muted) return;
+  const c=ac(), t=c.currentTime, x=reelPan(reel);
+  const note=CROWN_NOTES[Math.max(0,Math.min(nth-1,CROWN_NOTES.length-1))];
+  const sub=c.createOscillator(); sub.type="sine";
+  sub.frequency.setValueAtTime(70,t);
+  sub.frequency.exponentialRampToValueAtTime(40,t+0.5);
+  toBus(env(sub,0.5,0.004,0.6,t),x);
+  sub.start(t); sub.stop(t+0.7);
+  pluck(note,1.1,0.30,0.62,x);
+  pluck(note/2,1.3,0.16,0.5,x);
+  if(nth>=3) gunshot(0.45+0.15*nth);
 }
 function winChime(steps){
   if(muted) return;
@@ -2050,9 +2099,9 @@ function duckMusic(depth,holdMs){
         lowpass -- the body of the bell
      3. a sub sine dropping an octave -- the chest thump
    All of it goes to the delay tail so it rings for a couple of seconds. */
-function jackpotHit(power){
+function jackpotHit(power,at){
   if(muted) return;
-  const c=ac(), t=c.currentTime, p=power||1;
+  const c=ac(), t=c.currentTime+(at||0), p=power||1;
 
   const crack=c.createBufferSource(); crack.buffer=noiseBuffer(0.12);
   const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600; bp.Q.value=0.8;
@@ -2104,13 +2153,70 @@ function jackpotFanfare(tier){
   }
   for(let s=1;s<strikes;s++) setTimeout(()=>jackpotHit(0.7+0.2*s), 620*s);
 }
+/* The Lion's Crown. Not jackpotFanfare(4) -- that is the sound of a big COIN
+   win one notch up, and this is not a coin win at all. Three moves synthesis
+   can make that an oscillator fanfare cannot:
+
+   the CUT    everything drops to near-silence for a third of a second. The
+              drop before a hit lands harder than any hit, and it is the one
+              dynamic gesture this soundtrack had never used. duckMusic clamps
+              at -12dB precisely so ordinary fanfares keep the bed present, so
+              this writes the duck envelope itself -- the clamp guards routine
+              wins, and this is not one.
+   the TOLL   a slow plucked cascade on the Karplus-Strong string, the one
+              voice in the page that reads as an instrument, walking the A
+              chord upward and alternating sides of the stereo field.
+   the SWELL  a long sub rising an octave under a slow-attack detuned pad,
+              still opening while the coins rain. */
+function lionsCrownFanfare(){
+  if(muted) return;
+  const c=ac(), t=c.currentTime;
+  if(musicDuck){
+    const g=musicDuck.gain;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(Math.max(g.value,0.0001),t);
+    g.linearRampToValueAtTime(0.02,t+0.05);
+    g.setValueAtTime(0.02,t+3.4);
+    g.linearRampToValueAtTime(1,t+5.2);
+  }
+  const notes=[110,220,277.18,329.63,440,554.37,659.25];
+  notes.forEach((f,i)=>{
+    const at=0.36+i*0.23;
+    pluck(f,1.6,0.24,0.66,(i%2?1:-1)*0.45,at);
+    pluck(f*1.006,1.6,0.11,0.6,(i%2?-1:1)*0.3,at);
+  });
+  const sub=c.createOscillator(); sub.type="sine";
+  sub.frequency.setValueAtTime(27.5,t+0.3);
+  sub.frequency.exponentialRampToValueAtTime(55,t+2.6);
+  const sg=c.createGain();
+  sg.gain.setValueAtTime(0.0001,t+0.3);
+  sg.gain.exponentialRampToValueAtTime(0.20,t+2.2);
+  sg.gain.exponentialRampToValueAtTime(0.0001,t+4.6);
+  sub.connect(sg); sg.connect(busGain);
+  sub.start(t+0.3); sub.stop(t+4.7);
+  for(const det of [-0.7,-0.25,0.3,0.75]){
+    const o=c.createOscillator(); o.type="sawtooth";
+    o.frequency.value=220*(1+det*0.012);
+    const lp=c.createBiquadFilter(); lp.type="lowpass";
+    lp.frequency.setValueAtTime(320,t+0.4);
+    lp.frequency.exponentialRampToValueAtTime(2600,t+2.8);
+    const g=c.createGain();
+    g.gain.setValueAtTime(0.0001,t+0.4);
+    g.gain.linearRampToValueAtTime(0.034,t+2.4);
+    g.gain.linearRampToValueAtTime(0.0001,t+4.8);
+    o.connect(lp).connect(g); toBus(g,det); g.connect(verbSend);
+    o.start(t+0.4); o.stop(t+4.9);
+  }
+  jackpotHit(0.82,0.38);
+}
+
 /* ---- plucked string (Karplus-Strong) --------------------------------------
    A guitar twang is the one sound in this genre that oscillators cannot fake:
    the character is in how the harmonics decay at different rates, which is
    exactly what a filtered feedback delay does and what a sawtooth does not.
    Rendered straight into a buffer -- for plucks this short that is cheaper and
    more accurate than wiring a DelayNode feedback loop per note. */
-function pluck(freq,dur,gain,bright){
+function pluck(freq,dur,gain,bright,x,when){
   if(muted) return;
   const c=ac(), sr=c.sampleRate;
   const n=Math.max(1,Math.floor(sr/freq));            // delay line = one period
@@ -2132,11 +2238,15 @@ function pluck(freq,dur,gain,bright){
   }
   const src=c.createBufferSource(); src.buffer=buf;
   const g=c.createGain();
-  g.gain.setValueAtTime(gain==null?0.2:gain,c.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+  // Scheduled on the AUDIO clock, not setTimeout: the audio thread does not
+  // jitter with the main thread, and an OfflineAudioContext render -- which is
+  // how these levels are measured -- never runs wall-clock timers at all.
+  const t0=c.currentTime+(when||0);
+  g.gain.setValueAtTime(gain==null?0.2:gain,t0);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
   const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=4600;
-  src.connect(lp).connect(g); g.connect(busGain); g.connect(verbSend);
-  src.start();
+  src.connect(lp).connect(g); toBus(g,x); g.connect(verbSend);
+  src.start(t0);
 }
 
 /* A gunshot: crack, body, and a tail that decays into the room. */
@@ -2305,15 +2415,26 @@ function setRhythmTempo(bpm){ if(rhythm) rhythm.target=bpm; }
 /* Ambient bed. Always underneath on a real cabinet; kept well below the
    effect layer so it never competes with a win. */
 let music=null;
+/* One drone served all four games while the backdrops were already per-game --
+   the scenery changed and the room did not. Each game now has a root and a
+   temperament; same instrument, different key, which is how a cabinet floor
+   tells you where you are with your eyes closed. */
+const MUSIC_KEYS={
+  pride:      {freqs:[110,164.81,220,277.18],  lfo:0.045, cutoff:620},  // A major -- the western
+  cubcluster: {freqs:[146.83,220,293.66,370],  lfo:0.09,  cutoff:900},  // D, a fourth up, faster sweep
+  traitvault: {freqs:[92.5,138.59,185,220],    lfo:0.032, cutoff:520},  // F# minor -- the vault
+  hilo:       {freqs:[130.81,196,261.63,311.13],lfo:0.05, cutoff:700},  // C minor -- the card table
+};
 function startMusic(){
   if(music||muted) return;
   const c=ac();
+  const k=MUSIC_KEYS[game]||MUSIC_KEYS.pride;
   const bus=c.createGain(); bus.gain.value=0.0;
-  const filt=c.createBiquadFilter(); filt.type="lowpass"; filt.frequency.value=620; filt.Q.value=6;
+  const filt=c.createBiquadFilter(); filt.type="lowpass"; filt.frequency.value=k.cutoff; filt.Q.value=6;
   const lfo=c.createOscillator(), lfoGain=c.createGain();
-  lfo.frequency.value=0.045; lfoGain.gain.value=260;
+  lfo.frequency.value=k.lfo; lfoGain.gain.value=260;
   lfo.connect(lfoGain).connect(filt.frequency); lfo.start();
-  const voices=[110,164.81,220,277.18].map((f,i)=>{
+  const voices=k.freqs.map((f,i)=>{
     const o=c.createOscillator(); o.type=i%2?"sine":"triangle";
     o.frequency.value=f*(1+(i-1.5)*0.0016);
     const g=c.createGain(); g.gain.value=i===3?0.16:0.3;
@@ -2325,7 +2446,25 @@ function startMusic(){
   if(!musicDuck){ musicDuck=c.createGain(); musicDuck.gain.value=1; musicDuck.connect(busGain); }
   filt.connect(bus).connect(musicDuck);
   bus.gain.linearRampToValueAtTime(0.026,c.currentTime+3.5);
-  music={bus,voices,lfo};
+  music={bus,voices,lfo,filt};
+}
+/* Re-key the running bed when the game changes, by RAMP rather than restart --
+   a stop/start would put a hole in the room every time a player browses the
+   tabs. Accounts for the feature lift: an intense bed re-keys to the new
+   game's fifth, not its root. */
+function retuneMusic(){
+  if(!music) return;
+  const k=MUSIC_KEYS[game]||MUSIC_KEYS.pride;
+  const c=ac(), t=c.currentTime, ratio=musicIntense?1.5:1;
+  music.voices.forEach((v,i)=>{
+    v.frequency.cancelScheduledValues(t);
+    v.frequency.setValueAtTime(Math.max(v.frequency.value,1),t);
+    v.frequency.exponentialRampToValueAtTime(k.freqs[i]*(1+(i-1.5)*0.0016)*ratio,t+0.9);
+  });
+  music.lfo.frequency.cancelScheduledValues(t);
+  music.lfo.frequency.linearRampToValueAtTime(musicIntense?Math.max(0.16,k.lfo*2):k.lfo,t+0.9);
+  music.filt.frequency.cancelScheduledValues(t);
+  music.filt.frequency.linearRampToValueAtTime(k.cutoff,t+0.9);
 }
 /* Free-spin bed. A cabinet does not play the same loop through the feature --
    the change of key is most of how a player knows the round has started, and
@@ -3069,6 +3208,19 @@ async function animateSpin(grid,scatterCount){
       if(seen>=2) antic[r]=620+(seen-2)*520;
     }
   }
+  // PRIDE: the crown drag. Scatters had the full treatment -- drag, dim,
+  // riser -- while the reels that decide the LION landed on the ordinary
+  // stagger, which paced the biggest moment in the cabinet like the smallest.
+  // Same honest structure as above: the extra rope is planned up front (the
+  // machine already knows the grid), the dim and riser wait for the reel that
+  // justifies them to land. Outranks the scatter drag where both apply: a
+  // third scatter buys free spins, a fifth crown buys the Lion.
+  if(!turbo && game==="pride"){
+    for(let r=2;r<REELS;r++){
+      const seen=crownedUpTo(grid,r);
+      if(seen>=2) antic[r]=Math.max(antic[r],800+(seen-2)*700);
+    }
+  }
   const anticStarted=new Array(REELS).fill(false);
   const beginAnticipation=r=>{
     if(r>=REELS||!antic[r]||anticStarted[r]) return;
@@ -3091,7 +3243,16 @@ async function animateSpin(grid,scatterCount){
   }
 
   const onLand=r=>{
-    thud(r);
+    const isCrowned = game==="pride" && grid[r].every(sym=>sym===P1);
+    if(isCrowned){
+      const nth=crownedUpTo(grid,r+1);
+      // Golden NOW, not when the spin resolves: during the drag the dim covers
+      // every reel that is not dragging, which included the landed crowns --
+      // the reels causing the drama went dark while causing it.
+      reels[r].classList.add("crowned");
+      crownStrike(nth,r);
+      shakeScreen(nth);
+    } else thud(r);
     reels[r].classList.remove("anticipate");
     if(!host.querySelector(".reel.anticipate")) host.classList.remove("anticipating");
     // The reel that just stopped is the one carrying the scatter that earns
@@ -3126,6 +3287,23 @@ async function animateSpin(grid,scatterCount){
   }
   host.classList.remove("anticipating");
   stopReelLoop();
+}
+function crownedUpTo(grid,upto){
+  let n=0;
+  for(let r=0;r<upto&&r<REELS;r++){
+    let all=true;
+    for(let row=0;row<ROWS;row++) if(grid[r][row]!==P1){ all=false; break; }
+    if(all) n++;
+  }
+  return n;
+}
+/* A crowned reel lands with WEIGHT: a small screen kick that grows with the
+   count, because the fourth gold column should be felt as well as heard. */
+function shakeScreen(power){
+  if(reduceMotion||turbo) return;
+  const sc=$("screen");
+  sc.style.setProperty("--shake",(1.5+power*1.1).toFixed(1)+"px");
+  sc.classList.remove("shake"); void sc.offsetWidth; sc.classList.add("shake");
 }
 function countScatUpTo(grid,upto){
   let n=0;
@@ -3402,6 +3580,30 @@ async function featureIntro(title,sub){
   card.remove();
 }
 
+/* Pride pays 1024 ways and, until now, never showed one: winning symbols
+   popped in place and the geometry stayed in the player's head. For a win
+   worth study (15x+), sweep the marked cells reel by reel, left to right --
+   ways run on adjacent reels from reel 1, so the sweep IS the rule, animated.
+   Stops at the first reel without a mark for the same reason the pay does. */
+async function showWaysSweep(marks){
+  if(turbo||reduceMotion||!marks||!marks.size) return;
+  const reels=[...$("reels").children];
+  for(let r=0;r<REELS;r++){
+    const cells=reels[r].querySelectorAll(".sym");
+    let hit=false;
+    for(let row=0;row<ROWS;row++){
+      if(marks.has(r+":"+row)&&cells[row]){
+        hit=true;
+        cells[row].classList.remove("wavehit"); void cells[row].offsetWidth;
+        cells[row].classList.add("wavehit");
+      }
+    }
+    if(!hit) break;
+    blip(520+r*90,.06,"triangle",.03);
+    await sleep(95);
+  }
+}
+
 /* A reel is crowned when every row on it is the Crown. Derived from the GRID
    rather than trusted from a flag: the grid is what the player is looking at,
    and it is the same object the renderer and the replay both build, so there is
@@ -3433,9 +3635,8 @@ async function showNftWin(){
     "Play money bench: this records a claim, it does not transfer a token. "
     + "On mainnet the Lion is escrowed by the contract before the round is played.";
   box.classList.add("on");
-  jackpotFanfare(4);
-  setTimeout(()=>jackpotHit(1.0),240);
-  setTimeout(()=>coins(180,1.6),120);
+  lionsCrownFanfare();
+  setTimeout(()=>coins(180,1.6),650);
   const close=$("nftClose");
   await new Promise(done=>{
     const go=()=>{ close.removeEventListener("click",go); document.removeEventListener("keydown",key);
@@ -3665,6 +3866,7 @@ async function doSpin(){
     // something did. Base-game wins only: during a feature the frames are
     // already advancing on their own clock.
     if(game==="traitvault" && out.base>0) await showWinLines(first.wins,bet);
+    if(game==="pride" && out.base>0 && winMult>=15) await showWaysSweep(first.marks);
   }
   // The Lion comes LAST, after any coin celebration has finished. It is the
   // bigger event and it should not be interrupted by a count-up finishing
@@ -4065,7 +4267,7 @@ function selectGame(g){
     setTimeout(()=>flash(`Hi/Lo round settled · +${fmt(won)}`),40);
   }
   game=g; stopAuto=true; autoLeft=0;
-  setTheme(g);
+  setTheme(g); retuneMusic();
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.game===g)));
   const isHilo=g==="hilo";
   $("reels").classList.toggle("hidden",isHilo);
