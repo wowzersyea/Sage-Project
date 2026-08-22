@@ -1063,7 +1063,8 @@ console.log("\nPhone layout");
 }
 
 /* --------------------------------------------------------- feature music */
-// The bed lifts for a feature round -- 82 bpm to 132 -- and has to come back
+// The bed lifts for a feature round -- RHYTHM_BASE_BPM to RHYTHM_FEATURE_BPM,
+// compared against the page's own constants -- and has to come back
 // down. The interesting case is the abnormal exit: switching game mid-feature
 // skips the end of the round, and a tempo left stuck at the feature value would
 // play a base game at feature intensity for the rest of the session. This was
@@ -1103,6 +1104,26 @@ console.log("\nFeature music");
         r.midway && !r.switched.intense && r.switched.bpm === r.BASE && !r.switched.busy,
         `was intense=${r.midway}, ended at ${r.switched.bpm} bpm, busy=${r.switched.busy}`);
   check("no runtime errors around feature music", errs.length === 0, errs.slice(0, 2).join(" | "));
+
+  // The ARRANGEMENT, not just the tempo. Good-on-repeat is a structure claim:
+  // over one 16-bar lap the crowd chants LA-ZY-LI-ONS exactly twice and the
+  // roar seals the loop exactly once. Counted by scheduling a full lap through
+  // the same scheduler the player hears -- delete the chant from the rotation
+  // and this reads 0, make it constant and it reads 4+.
+  const lap = await p.evaluate(() => {
+    stopRhythm(); stopMusic();
+    muted = false; musicIntense = false;
+    startRhythm();
+    const secsPerLap = (60 / RHYTHM_BASE_BPM / 2) * 8 * 16;
+    rhythmScheduleAhead(secsPerLap + 0.2);
+    const out = { steps: rhythm.step, ...rhythm.stats };
+    stopRhythm();
+    return { ...out, expectSteps: 128 };
+  });
+  check("one lap of the track chants the name exactly twice",
+        lap.chants === 2, `${lap.chants} chant(s) in ${lap.steps} steps`);
+  check("one lap of the track roars exactly once",
+        lap.roars === 1, `${lap.roars} roar(s)`);
   await ctx.close();
 }
 

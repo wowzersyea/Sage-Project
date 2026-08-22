@@ -1858,7 +1858,7 @@ function ac(){
     wet.connect(busGain);
     verbSend.gain.value=1.0;
   }
-  if(actx.state==="suspended") actx.resume();
+  if(actx.state==="suspended"){ const r=actx.resume(); if(r&&r.catch) r.catch(()=>{}); }
   return actx;
 }
 /* Position a voice on the cabinet, -1 (reel 1) .. 1 (reel 5). The graph was
@@ -1918,11 +1918,11 @@ function thud(index){
   const bp=c.createBiquadFilter(); bp.type="bandpass";
   bp.frequency.value=1400+(index||0)*120; bp.Q.value=1.2;
   src.connect(bp);
-  toBus(env(bp,0.50,0.002,0.05,t),x);
+  toBus(env(bp,0.56,0.002,0.05,t),x);
   const o=c.createOscillator(); o.type="sine";
   o.frequency.setValueAtTime(200-(index||0)*8,t);
   o.frequency.exponentialRampToValueAtTime(64,t+0.11);
-  toBus(env(o,0.65,0.004,0.13,t),x);
+  toBus(env(o,0.72,0.004,0.13,t),x);
   src.start(t); o.start(t); o.stop(t+0.16);
 }
 
@@ -2292,7 +2292,133 @@ function kerching(){
    setTimeout alone would audibly stutter; setTimeout only decides WHEN to queue,
    never when a sound plays. */
 let rhythm=null;
-const RHYTHM_BASE_BPM=82, RHYTHM_FEATURE_BPM=132;
+/* 82 was a saloon; 104 is a floor. The feature still lifts a full gear on top,
+   and every test compares against these constants rather than restating them. */
+const RHYTHM_BASE_BPM=104, RHYTHM_FEATURE_BPM=138;
+
+/* ---- the kit -------------------------------------------------------------
+   The old percussion was a noise chuff -- a brush on a shoebox. A hype track
+   needs a kit: a sine-drop kick with a click on top, a noise-and-body snare,
+   and highpassed hats. Every voice stays small; the SFX must always top the
+   band, and the levels below were set against the meter, not by ear. */
+function kickDrum(t,g){
+  if(muted) return;
+  const c=ac();
+  const o=c.createOscillator(); o.type="sine";
+  o.frequency.setValueAtTime(150,t);
+  o.frequency.exponentialRampToValueAtTime(46,t+0.09);
+  env(o,g,0.002,0.16,t).connect(busGain);
+  o.start(t); o.stop(t+0.2);
+  const click=c.createBufferSource(); click.buffer=sharedNoise(); click.loop=true;
+  const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=4000;
+  click.connect(hp);
+  env(hp,g*0.25,0.001,0.02,t).connect(busGain);
+  click.start(t); click.stop(t+0.03);
+}
+function snareDrum(t,g){
+  if(muted) return;
+  const c=ac();
+  const n=c.createBufferSource(); n.buffer=sharedNoise(); n.loop=true;
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1900; bp.Q.value=0.7;
+  n.connect(bp);
+  const ng=env(bp,g,0.001,0.11,t); ng.connect(busGain); ng.connect(verbSend);
+  n.start(t); n.stop(t+0.13);
+  const o=c.createOscillator(); o.type="triangle";
+  o.frequency.setValueAtTime(230,t);
+  o.frequency.exponentialRampToValueAtTime(160,t+0.06);
+  env(o,g*0.6,0.001,0.07,t).connect(busGain);
+  o.start(t); o.stop(t+0.09);
+}
+function hatTick(t,g,open){
+  if(muted) return;
+  const c=ac();
+  const n=c.createBufferSource(); n.buffer=sharedNoise(); n.loop=true;
+  const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=6800;
+  n.connect(hp);
+  env(hp,g,0.001,open?0.20:0.035,t).connect(busGain);
+  n.start(t); n.stop(t+(open?0.24:0.05));
+}
+
+/* ---- the roar --------------------------------------------------------------
+   Two detuned saws around 90Hz with a 27Hz amplitude flutter -- the flutter is
+   the growl -- sagging in pitch through a closing lowpass, breath noise over
+   the top. It is the one sound in the track that says LION rather than song,
+   so it is rationed: the tail of every 16-bar cycle, and the door into a
+   feature. */
+function lionRoar(gain,when){
+  if(muted) return;
+  const c=ac(), t=when==null?c.currentTime:when, g0=gain||0.12;
+  for(const det of [1,1.028]){
+    const o=c.createOscillator(); o.type="sawtooth";
+    o.frequency.setValueAtTime(95*det,t);
+    o.frequency.exponentialRampToValueAtTime(62*det,t+1.1);
+    const lp=c.createBiquadFilter(); lp.type="lowpass";
+    lp.frequency.setValueAtTime(900,t);
+    lp.frequency.exponentialRampToValueAtTime(420,t+1.1);
+    const am=c.createGain(); am.gain.value=1;
+    const fl=c.createOscillator(); fl.frequency.value=27;
+    const flg=c.createGain(); flg.gain.value=0.45;
+    fl.connect(flg).connect(am.gain); fl.start(t); fl.stop(t+1.3);
+    o.connect(lp).connect(am);
+    const eg=env(am,g0,0.05,1.2,t); eg.connect(busGain); eg.connect(verbSend);
+    o.start(t); o.stop(t+1.3);
+  }
+  const n=c.createBufferSource(); n.buffer=sharedNoise(); n.loop=true;
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1300; bp.Q.value=0.6;
+  n.connect(bp);
+  env(bp,g0*0.5,0.06,1.1,t).connect(busGain);
+  n.start(t); n.stop(t+1.2);
+}
+
+/* ---- the chant -------------------------------------------------------------
+   The hook that makes this a song ABOUT Lazy Lions: a crowd singing the name.
+   Formant synthesis -- a sawtooth voice through the two or three bandpasses
+   that make a vowel a vowel -- is as close as a self-contained page gets to a
+   vocal, and a chant is the one vocal register where it convinces: chants are
+   pitched shouts, not lyric lines. Three voices per syllable (lead, a detuned
+   double, an octave-down crowd) so it reads as many, not one. */
+const VOWELS={
+  a:[[830,5,1],[1350,8,0.45],[2600,12,0.18]],
+  i:[[300,6,1],[2250,9,0.32],[3000,12,0.14]],
+  o:[[480,5,1],[900,8,0.5],[2500,12,0.1]],
+};
+function sungSyllable(f0,vowel,dur,gain,when,x){
+  if(muted) return;
+  const c=ac(), t=when==null?c.currentTime:when;
+  const o=c.createOscillator(); o.type="sawtooth";
+  o.frequency.setValueAtTime(f0*0.96,t);
+  o.frequency.exponentialRampToValueAtTime(f0,t+0.05);
+  const vib=c.createOscillator(), vg=c.createGain();
+  vib.frequency.value=5.4; vg.gain.value=f0*0.012;
+  vib.connect(vg).connect(o.frequency); vib.start(t); vib.stop(t+dur+0.1);
+  const mix=c.createGain(); mix.gain.value=1;
+  for(const [freq,q,amp] of VOWELS[vowel]){
+    const bp=c.createBiquadFilter(); bp.type="bandpass";
+    bp.frequency.value=freq; bp.Q.value=q;
+    const fg=c.createGain(); fg.gain.value=amp;
+    o.connect(bp); bp.connect(fg); fg.connect(mix);
+  }
+  const g=c.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(gain,t+0.045);
+  g.gain.setValueAtTime(gain,t+dur*0.65);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  mix.connect(g); toBus(g,x); g.connect(verbSend);
+  o.start(t); o.stop(t+dur+0.05);
+}
+/* "LA - ZY - LI - ONS", one syllable per beat, on the minor third figure the
+   cadence is built from. k transposes the whole chant into the game's key. */
+function chantLazyLions(when,beat,k){
+  if(muted) return;
+  const c=ac(), t=when==null?c.currentTime+0.05:when, b=beat||0.29, kk=k||1;
+  const line=[[220,"a"],[220,"i"],[261.63,"i"],[220,"o"]];
+  line.forEach(([f,v],i)=>{
+    const at=t+i*b*2;
+    sungSyllable(f*kk,v,b*1.5,0.19,at,(i%2?0.25:-0.25));
+    sungSyllable(f*kk*1.004,v,b*1.5,0.09,at,(i%2?-0.35:0.35));
+    sungSyllable(f*kk*0.5,v,b*1.5,0.10,at,0);
+  });
+}
 
 /* ---- the actual composition ---------------------------------------------
    A drone is not music, it is a held chord. This is a written piece: an
@@ -2356,52 +2482,81 @@ function chordStab(tones,when,gain){
     o.start(when); o.stop(when+0.6);
   }
 }
+/* ---- the arrangement -------------------------------------------------------
+   Good on repeat means NOTHING plays all the time. The track is a rotating
+   16-bar cycle over the four-bar cadence:
+
+     bars  0-3   groove       kit, bass, stabs -- the floor
+     bars  4-7   hook         the whistle enters over it
+     bars  8-11  chant        the crowd sings LA-ZY-LI-ONS, whistle rests
+     bars 12-15  ride out     hook returns, snare fill, a low roar into the top
+
+   ~37 seconds a lap at 104, so the chant lands twice a minute instead of
+   nagging, and the roar brands the loop point without wearing it out. The
+   feature keeps the rotation at 138 with a four-on-floor kick and 16th hats.
+
+   One shared clock schedules everything, so the tempo lift moves the whole
+   band. `scheduleRhythmStep` is split out of the timer for one reason: an
+   OfflineAudioContext never fires setTimeout, so the level harness calls
+   rhythmScheduleAhead() to lay out bars synchronously -- the render measures
+   the same code the player hears, not a copy of it. */
+function scheduleRhythmStep(t){
+  const c=ac();
+  const step=rhythm.step, slot=step%8, bar=Math.floor(step/8)%16, cbar=bar%4;
+  const hot=musicIntense, ch=CHORDS[cbar];
+  const stepDur=60/rhythm.bpm/2;
+  const k=(MUSIC_KEYS[game]||MUSIC_KEYS.pride).freqs[0]/110;   // transpose to the game's key
+
+  // kit: backbeat in the base game, four-on-the-floor in the feature
+  if(slot===0||slot===4||(hot&&(slot===2||slot===6))) kickDrum(t,0.115);
+  if(slot===2||slot===6) snareDrum(t,0.052);
+  hatTick(t,slot%2?0.012:0.019,slot===7);
+  if(hot) hatTick(t+stepDur/2,0.009,false);
+  // fill on the last bar of every 4-bar cycle, walking into the next
+  if(cbar===3&&slot>=6) snareDrum(t+stepDur/2,0.028);
+
+  // bass: driving eighths with the fifth on the third beat; the feature pumps
+  // root/octave on every eighth. pluck's `when` is an offset from now.
+  const off=Math.max(0,t-c.currentTime);
+  const bassPat=[1,null,1,null,1.5,null,1,null];
+  const bn=hot?(slot%2?2:1):bassPat[slot];
+  if(bn!=null) pluck(ch.root*k*bn,hot?0.4:0.55,0.10,0.34,0,off);
+
+  // stabs answer off the beat
+  if(slot===3||(slot===6&&!hot)) chordStab(ch.tones.map(f=>f*k),t,hot?0.026:0.018);
+
+  // the hook rests while the chant sings (base game); the feature keeps it
+  const note=MOTIF[cbar][slot];
+  const hookOn=hot?(bar<8||bar>=12):((bar>=4&&bar<8)||bar>=12);
+  if(note&&hookOn) whistle((hot?2:1)*note*k,hot?0.30:0.42,hot?0.045:0.036,t);
+
+  // the crowd, twice a lap
+  if((bar===8||bar===10)&&slot===0){
+    chantLazyLions(t,stepDur,k);
+    rhythm.stats.chants++;
+  }
+  // the roar that seals the loop
+  if(bar===15&&slot===4){ lionRoar(0.055,t); rhythm.stats.roars++; }
+}
+function rhythmScheduleAhead(sec){
+  if(!rhythm) return;
+  const c=ac(), horizon=c.currentTime+sec;
+  while(rhythm.next<horizon){
+    // ease toward the target tempo so a feature does not snap into place
+    rhythm.bpm+=(rhythm.target-rhythm.bpm)*0.12;
+    scheduleRhythmStep(rhythm.next);
+    rhythm.next+=60/rhythm.bpm/2;      // eighth notes
+    rhythm.step++;
+  }
+}
 function startRhythm(){
   if(rhythm||muted) return;
   const c=ac();
-  rhythm={bpm:RHYTHM_BASE_BPM, target:RHYTHM_BASE_BPM, next:c.currentTime+0.08, step:0, timer:null};
-  const chuff=(t,accent)=>{
-    const src=c.createBufferSource(); src.buffer=sharedNoise();
-    src.loop=true;
-    const bp=c.createBiquadFilter(); bp.type="bandpass";
-    bp.frequency.value=accent?520:900; bp.Q.value=accent?0.8:1.6;
-    src.connect(bp);
-    const g=env(bp,accent?0.05:0.022,0.004,accent?0.16:0.08,t); g.connect(busGain);
-    src.start(t); src.stop(t+(accent?0.2:0.1));
-    if(accent){
-      const o=c.createOscillator(); o.type="sine";
-      o.frequency.setValueAtTime(96,t);
-      o.frequency.exponentialRampToValueAtTime(52,t+0.11);
-      const og=env(o,0.075,0.004,0.13,t); og.connect(busGain);
-      o.start(t); o.stop(t+0.2);
-    }
-  };
+  rhythm={bpm:RHYTHM_BASE_BPM, target:RHYTHM_BASE_BPM, next:c.currentTime+0.08,
+          step:0, timer:null, stats:{chants:0,roars:0}};
   const tick=()=>{
     if(!rhythm) return;
-    const now=c.currentTime;
-    while(rhythm.next<now+0.2){
-      // ease toward the target tempo so a feature does not snap into place
-      rhythm.bpm+=(rhythm.target-rhythm.bpm)*0.12;
-      const t=rhythm.next, step=rhythm.step, slot=step%8, bar=Math.floor(step/8)%4;
-      const ch=CHORDS[bar], hot=musicIntense;
-
-      chuff(t, slot%4===0);
-      if(slot===0){                       // bass on the downbeat
-        pluck(ch.root, hot?0.85:1.1, hot?0.15:0.11, 0.34);
-      }else if(slot===3||slot===6){       // chord answers off the beat
-        chordStab(ch.tones, t, hot?0.030:0.020);
-      }
-      const note=MOTIF[bar][slot];
-      // The motif only enters every other cycle in the base game -- always
-      // hearing it turns a hook into wallpaper. In the feature it plays every
-      // bar, an octave up.
-      if(note && (hot || Math.floor(step/32)%2===1)){
-        whistle(hot?note*2:note, hot?0.30:0.42, hot?0.045:0.034, t);
-      }
-
-      rhythm.next+=60/rhythm.bpm/2;      // eighth notes
-      rhythm.step++;
-    }
+    rhythmScheduleAhead(0.2);
     rhythm.timer=setTimeout(tick,45);
   };
   tick();
@@ -2474,6 +2629,9 @@ let musicIntense=false;
 function setMusicIntensity(on){
   if(!music||musicIntense===!!on) return;
   musicIntense=!!on;
+  // The door into a feature is a ROAR -- the one sound that says lion, spent
+  // where it matters. The way out stays quiet; endings sell themselves.
+  if(on) lionRoar(0.12);
   const c=ac(), t=c.currentTime;
   const ratio=on?1.5:1/1.5;
   music.voices.forEach(v=>{

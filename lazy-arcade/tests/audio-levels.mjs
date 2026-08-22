@@ -63,6 +63,12 @@ const CASES = [
   // OfflineAudioContext render, so a wall-clock version would measure only
   // its opening silence and pass any band by accident.
   ["the Lion's Crown", "lionsCrownFanfare()", -8, -1],
+  // The hype track. rhythmScheduleAhead exists precisely so this render is
+  // possible: an OfflineAudioContext never fires the timer the live path uses,
+  // so the harness lays the bars out synchronously through the same scheduler.
+  ["the track, four bars", "startMusic();startRhythm();rhythmScheduleAhead(3.9)", -16, -6],
+  ["the chant", "chantLazyLions(0.05,0.29,1)", -24, -12],
+  ["the roar", "lionRoar(0.12)", -16, -6],
 ];
 
 let failures = 0;
