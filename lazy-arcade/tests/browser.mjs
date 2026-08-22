@@ -1452,6 +1452,76 @@ console.log("\nRow multiplier heat");
   await ctx.close();
 }
 
+/* ------------------------------------------------------------- symbol art */
+/* A symbol has to be an OBJECT on the reel, not a photograph pasted onto it.
+   Every Cub Cluster tile shipped as an opaque square: build_tile decided the
+   source art was "already cut out" by reading the alpha of a canvas it had
+   just padded itself, and the Cub character box is never square, so the padding
+   alone tripped it and keying was skipped for all four. Measured here on the
+   tiles the page actually carries, decoded in the browser, because that is the
+   thing that reaches a player -- symbols.json can say anything. */
+console.log("\nSymbol art");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const opacityOf = (uri) => new Promise((done) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const g = c.getContext("2d");
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, c.width, c.height).data;
+        let opaque = 0;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 200) opaque++;
+        done(opaque / (c.width * c.height));
+      };
+      img.onerror = () => done(-1);
+      img.src = uri;
+    });
+    const out = { groups: {}, cubPremiums: [], oneofone: 0 };
+    for (const group of ["default", "cubcluster"]) {
+      out.groups[group] = [];
+      for (const [sid, rec] of Object.entries(SYMBOL_ART[group] || {})) {
+        if (!rec || !rec.uri) continue;
+        out.groups[group].push({ sid, token: rec.tokenId, region: rec.region,
+                                 opaque: await opacityOf(rec.uri) });
+        if (rec.region === "oneofone") out.oneofone++;
+      }
+    }
+    for (const sid of ["P1", "P2"]) {
+      const rec = SYMBOL_ART.cubcluster[sid];
+      if (rec) out.cubPremiums.push({ sid, token: rec.tokenId, region: rec.region });
+    }
+    return out;
+  });
+
+  for (const [group, tiles] of Object.entries(r.groups)) {
+    const solid = tiles.filter((t) => t.opaque > 0.93);
+    const broken = tiles.filter((t) => t.opaque < 0);
+    check(`${group}: every tile decodes`, broken.length === 0,
+          broken.map((t) => t.sid).join(","));
+    check(`${group}: no tile is a solid square with its background baked in`,
+          solid.length === 0,
+          solid.map((t) => `${t.sid} #${t.token} ${t.opaque.toFixed(3)}`).join(", "));
+  }
+  // The 1/1s are struck as discs, so they sit near pi/4 of the tile by
+  // construction. Well clear of a square, and well clear of a keyed cut-out.
+  const coins = r.groups.cubcluster.filter((t) => t.region === "oneofone");
+  check("Cub Cluster's premiums are the two 1/1s",
+        r.cubPremiums.length === 2
+          && r.cubPremiums.every((c) => c.region === "oneofone")
+          && new Set(r.cubPremiums.map((c) => c.token)).size === 2
+          && r.cubPremiums.every((c) => [32010, 2195].includes(c.token)),
+        r.cubPremiums.map((c) => `${c.sid} #${c.token} ${c.region}`).join(", "));
+  check("a struck 1/1 covers about a disc's worth of its tile",
+        coins.length === 2 && coins.every((c) => c.opaque > 0.66 && c.opaque < 0.80),
+        coins.map((c) => c.opaque.toFixed(3)).join(", "));
+  check("no runtime errors reading the symbol art", errs.length === 0,
+        errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- reel curve */
 console.log("\nReel curve");
 {

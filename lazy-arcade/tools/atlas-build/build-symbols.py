@@ -111,13 +111,20 @@ LIONS = [
 # clip art with no silhouette, the cap's lettering clipped by the tile edge. A
 # symbol has to be recognisable by shape before it is recognisable by detail.
 #
-# Chosen for silhouette and colour separation from the two premiums: neither
-# wears a Crown (P1) or a LAZY Hat (P2), and neither has a red mane (P2).
+# The two premiums are the operator's 1/1s. Lazy Cubs marks them in metadata by
+# the ABSENCE of everything: a generative Cub carries ten traits, a Special
+# carries {"Age": "Special"} and nothing else, which is how these two were found
+# rather than guessed at. They are the only two in a 63-token holding.
+#
+# #32010 takes P1 over #2195 on legibility at reel size. Both are strong, but a
+# symbol has to survive being 32px tall on a phone, and #32010 has a silhouette
+# -- feathered cap, ruff collar -- where #2195's datamosh can read as a broken
+# image at a glance. Top symbol goes to the one that is unmistakable small.
 CUBS = [
-    ("P1", "cub", "character", None, 21095, "Crown, dork glasses"),
-    ("P2", "cub", "character", None, 3097, "LAZY hat, red mane"),
-    ("M1", "cub", "character", None, 14147, "BUCKET HAT -- water goggles, brown top knot"),
-    ("M2", "cub", "character", None, 1458,  "POLICE HAT -- shades, bubble gum, emerald mane"),
+    ("P1", "cub", "oneofone", None, 32010, "1/1 -- Elizabethan: feathered cap, ruff, tongue out"),
+    ("P2", "cub", "oneofone", None, 2195,  "1/1 -- glitch: datamosh, heterochromatic eyes"),
+    ("M1", "cub", "character", None, 21095, "Crown, dork glasses, red double tied up"),
+    ("M2", "cub", "character", None, 3097, "LAZY hat, red mane, stoner eyes"),
 ]
 
 
@@ -236,11 +243,51 @@ def fit_transparent(crop):
     return canvas
 
 
+def strike_coin(im):
+    """The 1/1 treatment: the whole artwork struck into a gold medallion.
+
+    The two Special Cubs the operator holds -- #2195 and #32010 -- do not have
+    the flat generative backdrop the rest of the collection has. Both sit on a
+    painted gold swirl, and a corner flood fill cannot lift a gradient: seeded
+    on the lightest gold it stops at the first dark band, and opened wide enough
+    to cross that band it starts eating tan fur, which is the same hue. Keying
+    them left 0.87 of the tile opaque -- a square photograph pasted on the reel.
+
+    #2195 makes the point harder. It is glitch art whose datamosh deliberately
+    smears the subject out across its own background, so there is no boundary to
+    cut along; "cut the character out" is not a thing that can be done to it.
+
+    So they are not cut out, they are FRAMED, and framed on purpose. The game
+    already speaks in struck medallions -- svgWild and svgOrb are both milled
+    gold discs -- so a 1/1 reads as a coin bearing the Cub, the swirl becomes
+    the coin's field, and the pair announce themselves as different from the
+    generative Cubs beside them, which is exactly what they are.
+    """
+    w, h = im.size
+    b = (0.12, 0.16, 0.88, 0.92)
+    crop = im.crop((int(b[0]*w), int(b[1]*h), int(b[2]*w), int(b[3]*h))).convert("RGB")
+    side = max(crop.size)
+    sq = Image.new("RGB", (side, side), crop.getpixel((1, 1)))
+    sq.paste(crop, ((side - crop.width) // 2, (side - crop.height) // 2))
+    t = sq.resize((800, 800), Image.LANCZOS).convert("RGBA")
+    d = ImageDraw.Draw(t, "RGBA")
+    d.ellipse((10, 10, 789, 789), outline=(107, 68, 5, 255), width=16)       # struck rim
+    d.arc((26, 26, 773, 773), 190, 350, fill=(255, 238, 190, 150), width=9)  # lit from above
+    d.arc((26, 26, 773, 773), 10, 170, fill=(90, 55, 4, 120), width=9)       # and shaded below
+    mask = Image.new("L", (800, 800), 0)
+    ImageDraw.Draw(mask).ellipse((8, 8, 791, 791), fill=255)
+    t.putalpha(mask.filter(ImageFilter.GaussianBlur(2.5)))
+    return t.resize((TILE, TILE), Image.LANCZOS), None
+
+
 def build_tile(path: str, region: str, collection: str):
     im = Image.open(path)
     had_alpha = im.mode in ("RGBA", "LA")
     im = im.convert("RGBA") if had_alpha else im.convert("RGB")
     w, h = im.size
+
+    if region == "oneofone":
+        return strike_coin(im)
 
     # Trait close-ups are NOT keyed. On a tight crop the frame corners sit
     # inside the character, so a border flood fill either eats the artwork or
@@ -255,17 +302,33 @@ def build_tile(path: str, region: str, collection: str):
     b = REGION[collection][region]
     crop = im.crop((int(b[0] * w), int(b[1] * h), int(b[2] * w), int(b[3] * h)))
     side = max(crop.size)
-    if had_alpha:
+
+    # Is the SOURCE ART already a cut-out? That is the only thing this branch is
+    # for -- art that arrives with its own alpha needs no keying.
+    #
+    # It used to ask the PADDED CANVAS instead, which answers a different
+    # question entirely. `side` is the longer edge, so any non-square crop gets
+    # transparent margin added right here, and that margin alone drove the
+    # minimum alpha to 0. The Cub character box is (0.16,0.24)-(0.84,0.94) --
+    # 6800x7000, never square -- so every Cub with an RGBA master returned here
+    # unkeyed. All four Cub Cluster symbols shipped as opaque squares carrying
+    # their backgrounds, measured at 0.967 opaque against 0.32-0.52 for the
+    # Lions, which is the whole visual gap between the two games: Lions are
+    # objects sitting on the reel, Cubs were photographs pasted onto it.
+    #
+    # The test now reads the crop's own alpha, before anything is padded.
+    if had_alpha and crop.getchannel("A").getextrema()[0] < 250:
         sq = Image.new("RGBA", (side, side), (0, 0, 0, 0))
         sq.paste(crop, ((side - crop.width) // 2, (side - crop.height) // 2))
-        work = sq.resize((800, 800), Image.LANCZOS)
-        if work.getchannel("A").getextrema()[0] < 250:
-            return work.resize((TILE, TILE), Image.LANCZOS), None
-        work = work.convert("RGB")
-    else:
-        sq = Image.new("RGB", (side, side), crop.getpixel((1, 1)))
-        sq.paste(crop, ((side - crop.width) // 2, (side - crop.height) // 2))
-        work = sq.resize((800, 800), Image.LANCZOS)
+        return sq.resize((TILE, TILE), Image.LANCZOS), None
+
+    # Pad with the artwork's own background rather than with black or with
+    # transparency, so the corner seeds the flood fill uses below land on
+    # background instead of on a margin this function introduced.
+    flat = crop.convert("RGB")
+    sq = Image.new("RGB", (side, side), flat.getpixel((1, 1)))
+    sq.paste(flat, ((side - flat.width) // 2, (side - flat.height) // 2))
+    work = sq.resize((800, 800), Image.LANCZOS)
 
     bg = work.getpixel((3, 3))
     if bg == KEY:
@@ -341,6 +404,14 @@ MANE_COLOUR = {
     "P4": (230, 56, 57),     # Top Knot - Red
     "M1": (229, 134, 50),    # Double Tied Up - Orange
     "L3": (35, 199, 64),     # Top Knot - Green
+    # No Cub entries, and that is a measurement rather than an oversight. A Cub
+    # is drawn head-on with its mane as a small tuft rather than the wide collar
+    # a Lion wears: #21095's Double Tied Up - Red covers 1.9% of its tile, and
+    # what there is sits UNDER the Crown, so lifting it slides the tuft out from
+    # beneath the headgear. #3097's mane is Red in metadata and not visible at
+    # all -- the LAZY Hat covers it. Below roughly a tenth of the tile a swing
+    # is invisible at reel size, which is the same reason Lion M3 has no mane
+    # layer at 15.8% of its muzzle box.
 }
 
 
@@ -362,6 +433,22 @@ EYE_BOXES = {
     "L2": [(110, 100, 142, 117), (146, 100, 178, 117)],
     "L3": [(114, 97, 134, 120), (159, 97, 175, 117)],
     "L4": [(103, 93, 137, 120), (146, 93, 180, 118)],
+    # Cub Cluster. One of its four blinks, and the other three are refusals with
+    # a reason, the same way eight of the twelve Lions are:
+    #
+    #   CUB:M1  #21095 wears Dork Glasses -- gold rims over both eyes. Same
+    #           exclusion as Lion P1 and M2, who sit behind lenses.
+    #   CUB:P1  #32010's eyes are ALREADY closed in the source art. There is
+    #           nothing to shut.
+    #   CUB:P2  #2195 is the glitch 1/1. Its eyes are open and mismatched, but
+    #           the datamosh runs straight through the eye line, so a clean lid
+    #           drawn over it would be the one undistorted thing on a face whose
+    #           whole subject is distortion.
+    #
+    # M2 #3097 has bare Stoner eyes and blinks. Fur is sampled between them at
+    # x=137, which on this Cub is the bridge of the nose -- yellow body fur, not
+    # the black brow line that made the Lion attempt look like redaction.
+    "CUB:M2": [(88, 99, 128, 120), (146, 97, 180, 118)],
 }
 LASH = (28, 10, 4)
 
@@ -503,11 +590,14 @@ def build_set(manifest, lions, cubs, label):
         meta = pool[str(token_id)]
         path = fetch(collection, token_id, meta)
         tile, bg = build_tile(path, region, collection)
-        # Secondary motion: lift the mane so it can lag behind the roar. Only
-        # the Lion set -- Cub tiles are small and some are trait crops, where a
-        # separated mane has nothing to hang off.
+        # symbols.json keys Cub entries as "CUB:M2", so a bare "M2" lookup finds
+        # the LION's M2 and records a Cub as a Monocle. Prefix by collection.
+        key = ("CUB:" if collection == "cub" else "") + sym
+        # Secondary motion: lift the mane so it can lag behind the roar. The
+        # tables below are keyed the same way, because a Cub and a Lion share
+        # symbol ids and a bare "M1" would hand a Cub the Lion's mane colour.
         mane_uri = None
-        colour = MANE_COLOUR.get(sym) if collection == "lion" else None
+        colour = MANE_COLOUR.get(key)
         if colour is not None:
             base_tile, mane_tile = split_mane(tile, colour)
             mane_uri = to_uri(mane_tile)
@@ -516,7 +606,7 @@ def build_set(manifest, lions, cubs, label):
         # does not carry a second static tongue that would ghost behind the
         # moving one whenever a Lion blinked.
         tongue_uri, tongue_pivot = None, None
-        tcfg = TONGUE.get(sym) if collection == "lion" else None
+        tcfg = TONGUE.get(key)
         if tcfg is not None:
             tb, tt, tp = split_tongue(tile, tcfg)
             if tb is not None:
@@ -524,15 +614,12 @@ def build_set(manifest, lions, cubs, label):
         # The blink is drawn on the BASE, after the mane is lifted, so the three
         # layers stay consistent: mane behind, body, closed-eye body over it.
         blink_uri = None
-        boxes = EYE_BOXES.get(sym) if collection == "lion" else None
+        boxes = EYE_BOXES.get(key)
         if boxes is not None:
             blink_uri = to_uri(close_eyes(tile, boxes))
         uri = to_uri(tile)
         total += len(uri) + (len(mane_uri) if mane_uri else 0)
         mane = meta["traits"].get("Mane", f"#{token_id}")
-        # symbols.json keys Cub entries as "CUB:M2", so a bare "M2" lookup finds
-        # the LION's M2 and records a Cub as a Monocle. Prefix by collection.
-        key = ("CUB:" if collection == "cub" else "") + sym
         name = (trait.split("::", 1)[1] if trait else None) or named.get(key) or mane
         out[sym] = {"tokenId": token_id, "collection": collection, "region": region,
                     "trait": trait, "name": name, "mane": mane, "uri": uri, "bg": bg}

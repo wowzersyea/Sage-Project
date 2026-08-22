@@ -120,38 +120,40 @@
       "tier": "premium",
       "game": "cubcluster",
       "source": "OWNED_CUB",
-      "tokenId": 21095,
+      "tokenId": 32010,
       "status": "OK",
-      "identifiesTrait": "Crown"
+      "identifiesTrait": "1/1 Special",
+      "note": "One of one. Lazy Cubs marks a Special by the ABSENCE of traits -- {\"Age\":\"Special\"} and nothing else -- which is how this was found rather than chosen. Struck as a gold medallion because its painted swirl backdrop cannot be keyed out and should not be."
     },
     {
       "id": "CUB:P2",
       "tier": "premium",
       "game": "cubcluster",
       "source": "OWNED_CUB",
-      "tokenId": 3097,
+      "tokenId": 2195,
       "status": "OK",
-      "identifiesTrait": "LAZY Hat"
+      "identifiesTrait": "1/1 Special",
+      "note": "The second one of one, and the only other in a 63-token holding. Glitch art: the datamosh smears the subject across its own background, so there is no boundary to cut along. Framed as a medallion for the same reason as P1."
     },
     {
       "id": "CUB:M1",
       "tier": "mid",
       "game": "cubcluster",
       "source": "OWNED_CUB",
-      "tokenId": 14147,
-      "identifiesTrait": "Bucket Hat",
+      "tokenId": 21095,
+      "identifiesTrait": "Crown",
       "status": "OK",
-      "note": "Whole Cub, not a trait crop: a cropped hat has no silhouette at reel size."
+      "note": "Whole Cub, not a trait crop. Demoted from premium when the 1/1s took P1 and P2."
     },
     {
       "id": "CUB:M2",
       "tier": "mid",
       "game": "cubcluster",
       "source": "OWNED_CUB",
-      "tokenId": 1458,
-      "identifiesTrait": "Police Hat",
+      "tokenId": 3097,
+      "identifiesTrait": "LAZY Hat",
       "status": "OK",
-      "note": "Whole Cub, not a trait crop. Emerald mane separates it from the premiums."
+      "note": "Whole Cub, not a trait crop. Bare Stoner eyes, so this is the one Cub that blinks."
     },
     {
       "id": "CUB:L1",
