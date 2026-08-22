@@ -102,7 +102,9 @@ volatility (see the statistical-power note below for why 100M is not enough).
 | Hi/Lo (collection, N=10,078) | 20M decisions | **0.969830** | — | PASS |
 | Hi/Lo (owned, N=73) | 5M decisions | **0.969687** | — | PASS |
 
-All four games meet the 97% RTP exit criterion. Trait Vault's base/feature
+Three games meet the 97% RTP exit criterion; Pride was later rebuilt to 87%
+coin RTP by operator request, funding the Lion's Crown NFT jackpot
+(COMPETITIVE-GAPS Sec. 0.7 has the full accounting). Trait Vault's base/feature
 split came out at exactly 74.0 / 23.0 against a 74 / 23 target, which is the
 two-axis calibration doing precisely what it was built for.
 

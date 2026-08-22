@@ -40,6 +40,7 @@ const exported = [
   "swapFee", "buyFeature", "BUY_PRICE", "ANTE", "anteStrips",
   "vaultFreeSpins", "vaultLines", "MULT_V", "MULT_W", "ROW_MULT_CAP",
   "FREE_SPINS", "SCATTERS_TO_TRIGGER", "RARITY_RANKS",
+  "CROWN_NUM", "CROWN_DENOM", "drawGridPride",
 ];
 const M = new Function(`${mathOnly}\nreturn {${exported.join(",")}};`)();
 
@@ -134,6 +135,18 @@ console.log("\nStructural pay rules");
     check("verifier page strip lengths match the live strips, Hi/Lo included",
           mismatch.length === 0,
           mismatch.join(" | ") || "all four games agree");
+
+    // The crown constants live in THREE places -- the page, this verifier, and
+    // pride.rs -- because each must work without loading the others. Same
+    // standing as the strip lengths, same failure mode: tune the jackpot rate
+    // in the page, forget the verifier, and /verify accuses every honest Pride
+    // spin of not reproducing. ROW_MULT_CAP already drifted 60-vs-25 once
+    // while every other check passed, so this is not hypothetical.
+    const vc = vhtml.match(/const CROWN_NUM = (\d+), CROWN_DENOM = (\d+)/);
+    check("verifier crown constants match the live game",
+          !!vc && +vc[1] === M.CROWN_NUM && +vc[2] === M.CROWN_DENOM,
+          vc ? `page ${M.CROWN_NUM}/${M.CROWN_DENOM} vs verifier ${vc[1]}/${vc[2]}`
+             : "verifier carries no crown constants");
   }
 
   check("Trait Vault carries scatters on every reel",

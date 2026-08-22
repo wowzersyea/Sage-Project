@@ -1161,7 +1161,11 @@ let ANTE_STRIPS=null;
 function buyFeature(rng,which){
   if(which==="pride"){
     const r=prideFreeSpins(rng,CONF.pride.strips,PAYS.pride);
-    return capWin({base:0,feature:r.feature,fs:true,marks:new Set(),frames:r.frames},CONF.pride.cap);
+    // r.nft must survive this hand-off. It did not: prideFreeSpins reported the
+    // filled board and this literal silently dropped it, so a BOUGHT round that
+    // filled with Crowns paid its coins and kept the Lion -- while the rules
+    // text promised the opposite in as many words.
+    return capWin({base:0,feature:r.feature,fs:true,marks:new Set(),frames:r.frames,nft:r.nft},CONF.pride.cap);
   }
   const r=vaultFreeSpins(rng);
   return capWin({base:0,feature:r.feature,fs:true,marks:new Set(),frames:r.frames},CONF.traitvault.cap);
@@ -3691,6 +3695,11 @@ async function runAuto(){
     autoLeft--;
     await doSpin();
     const last=history[history.length-1];
+    // The single-win stop reads the COIN multiplier, and the Lion can arrive on
+    // a spin that pays nothing in coins -- so without its own line, autoplay
+    // would claim the biggest prize in the cabinet and keep grinding as though
+    // nothing had happened.
+    if(last&&last.nft){ flash("Auto stopped · the Lion"); break; }
     if(winStop&&last&&last.mult>=winStop){ flash(`Auto stopped · ${last.mult.toFixed(1)}× hit`); break; }
     if(lossStop&&autoBaseline-balance>=lossStop){ flash("Auto stopped · loss limit"); break; }
     await sleep(turbo?10:110);
@@ -3990,8 +3999,9 @@ function replay(rec){
   const out=rederiveRound(rec);
   const f=out.frames[0];
   paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
+  if(rec.game==="pride"){ clearCrownReels(); paintCrownReels(f.grid); }
   const mode = rec.buy ? " · bought" : rec.ante ? " · ante" : "";
-  flash(`Replay #${rec.nonce}${mode} · ${(out.base+out.feature).toFixed(2)}×`);
+  flash(`Replay #${rec.nonce}${mode} · ${(out.base+out.feature).toFixed(2)}×${out.nft?" · THE LION":""}`);
 }
 function blankGrid(){
   const g=[]; for(let r=0;r<REELS;r++){const c=[];

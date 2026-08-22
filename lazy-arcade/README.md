@@ -1,7 +1,10 @@
 # Lazy Arcade
 
-Provably-fair Web3 arcade on Base: three slots plus a rarity card duel, all at
-97% RTP, wagered in $LAZY.
+Provably-fair Web3 arcade on Base: three slots plus a rarity card duel, wagered
+in $LAZY. Cub Cluster, Trait Vault and Hi/Lo return 97%; Pride returns 87% in
+coins by design, with the difference part-funding the Lion's Crown -- a Lazy
+Lion NFT paid for filling the board (0.89125 total return, both figures
+disclosed in-game).
 
 **Status: Phase 0 (blocking unknowns) and Phase 1 (math harness) only.**
 No contracts are deployed, no client is built, and nothing here should touch
@@ -82,7 +85,10 @@ cd crates/mathsim && cargo build --release
     --weights ../../packages/engine/src/paytables/weights/pride.weights
 ```
 
-`simulate` exits non-zero when RTP falls outside [0.9695, 0.9705].
+`simulate` exits non-zero when coin RTP falls outside the game's own band --
+[0.9695, 0.9705] for most, [0.8695, 0.8705] for Pride, whose jackpot is
+reported as a separate closed-form line rather than folded into the coin
+figure (see `exit_band` in main.rs).
 
 ### Why there are two RNGs
 

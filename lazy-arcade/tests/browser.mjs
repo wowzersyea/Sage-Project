@@ -1607,6 +1607,27 @@ console.log("\nPride: the Lion's Crown");
         r.draws.length === 1 && r.draws[0] === 2 * 5,
         `observed draw counts: ${r.draws.join(",")}`);
   check("the max-win cap does not swallow the NFT", r.cappedKeepsNft);
+  // A BOUGHT round follows a different code path -- buyFeature builds its own
+  // outcome literal -- and that literal is exactly where the flag went missing:
+  // prideFreeSpins reported the filled board and buyFeature dropped it, so a
+  // bought round paid its coins and kept the Lion while the rules text
+  // promised the opposite. Stub the draw to crown everything and walk the real
+  // path end to end.
+  const bought = await p.evaluate(() => {
+    const real = drawGridPride;
+    try {
+      drawGridPride = () => {
+        const g = []; for (let r = 0; r < REELS; r++) {
+          const c = []; for (let row = 0; row < ROWS; row++) c.push(P1); g.push(c);
+        }
+        return { grid: g, crowned: REELS };
+      };
+      const out = buyFeature(makeRng(new Uint8Array(32).map((_, i) => i), "b", 1, "pride"), "pride");
+      return { nft: !!out.nft, fs: out.fs };
+    } finally { drawGridPride = real; }
+  });
+  check("a bought round that fills the board carries the Lion out",
+        bought.nft && bought.fs, `nft=${bought.nft}`);
   check("no runtime errors in Pride", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }
