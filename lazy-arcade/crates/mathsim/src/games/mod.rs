@@ -11,6 +11,11 @@ pub struct SpinOutcome {
     /// Winnings attributable to the feature (free spins, tumbles, meter).
     pub feature: f64,
     pub feature_triggered: bool,
+    /// Pride only: the board filled with Crowns and the NFT was won. Kept OUT
+    /// of base/feature deliberately -- it is a fixed prize the coin paytable
+    /// cannot express, so folding it into the coin return would corrupt every
+    /// figure derived from it, `calibrate` first among them.
+    pub nft_won: bool,
 }
 
 impl SpinOutcome {

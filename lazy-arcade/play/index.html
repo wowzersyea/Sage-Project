@@ -535,6 +535,50 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
    but not all the way to grey. Left on the standard .dim it went flat and the
    badge beside it was describing heat that was no longer on the grid. */
 .sym.hotrow.dim{filter:grayscale(.3) brightness(.66)}
+
+/* PRIDE: a crowned reel is a COLUMN of gold, the vertical twin of the hot row.
+   The whole point of the mechanic is that a reel either is or is not the Crown,
+   so it has to be readable as one object rather than as four lucky cells. The
+   plate deepens toward the base like a struck bar, and the outline is the same
+   gold the WILD medallion and the 1/1 coins use, so the three read as one
+   family. */
+.reel.crowned{position:relative}
+.reel.crowned .sym::before{
+  background:linear-gradient(180deg,#7A5A0E,#3A2703);
+  border-color:#F3C34A;
+  box-shadow:inset 0 1px 0 rgba(255,240,190,.34),inset 0 -10px 20px -10px #000,
+             0 0 26px -6px #F3C34A}
+.reel.crowned .sym img{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))
+                              drop-shadow(0 0 14px rgba(243,195,74,.55))}
+/* One sweep down the column when it lands, so the reel announces itself. */
+.reel.crowned::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:8px;
+  background:linear-gradient(180deg,transparent 0%,rgba(255,240,190,.34) 46%,transparent 92%);
+  animation:crownsweep .85s ease-out 1}
+@keyframes crownsweep{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
+@media (prefers-reduced-motion: reduce){.reel.crowned::after{animation:none;opacity:0}}
+
+/* The Lion's Crown itself. Above Epic, and deliberately not the same object:
+   every other celebration counts coins up, and this one is not a coin win at
+   all -- it hands over a token. So it shows the Lion rather than a number. */
+#nftWin{position:absolute;inset:0;display:none;place-items:center;z-index:60;
+  background:radial-gradient(circle at 50% 42%,rgba(90,60,5,.90),rgba(8,5,1,.97));
+  backdrop-filter:blur(2px);text-align:center;padding:16px}
+#nftWin.on{display:grid}
+#nftWin .lion{width:min(34vh,190px);aspect-ratio:1;margin:0 auto 14px;
+  filter:drop-shadow(0 0 28px rgba(243,195,74,.7));animation:nftrise .9s cubic-bezier(.2,1.4,.4,1)}
+#nftWin .lion img{width:100%;height:100%;object-fit:contain}
+@keyframes nftrise{from{transform:scale(.4) translateY(30px);opacity:0}to{transform:none;opacity:1}}
+#nftWin .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.24em;
+  text-transform:uppercase;color:#F3C34A;margin-bottom:6px}
+#nftWin .big{font-family:var(--mono);font-weight:900;letter-spacing:-.01em;
+  font-size:clamp(22px,5.4vw,42px);color:#FFE9A8;line-height:1.05;
+  text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 30px rgba(243,195,74,.5)}
+#nftWin .sub{font-family:var(--mono);font-size:12px;color:#E8D7A6;margin-top:10px;
+  max-width:46ch;line-height:1.7}
+#nftWin .note{font-family:var(--mono);font-size:10px;color:#B9A377;margin-top:12px;
+  max-width:52ch;line-height:1.7}
+@media (prefers-reduced-motion: reduce){#nftWin .lion{animation:none}}
 .mbadge.bump{animation:mbump .42s cubic-bezier(.2,1.5,.4,1)}
 @keyframes mbump{0%{transform:scale(1)}38%{transform:scale(1.42)}100%{transform:scale(1)}}
 /* fires when THIS row's multiplier is the one that paid */
@@ -772,9 +816,11 @@ footer b{color:var(--hot)}
           <div class="sheet">
             <h4 id="buyMenuTitle">Buy a feature</h4>
             <div class="buycards" id="buyCards"></div>
-            <p class="buynote">Every price is EV-neutral: buying returns the same 0.97 as
-              spinning for it. Measured with <code>mathsim buyprice</code> against the
-              calibrated paytable, and asserted by test.</p>
+            <p class="buynote">Every price is EV-neutral: buying returns exactly what spinning
+              for it returns — 0.97 in Cub Cluster and Trait Vault, 0.87 in Pride, each priced
+              against its OWN return rather than a shared figure. Measured with
+              <code>mathsim buyprice</code> against the calibrated paytable, and asserted by test.
+              A bought Pride round can still fill the board and win the Lion.</p>
             <button class="btn" id="buyClose">Close</button>
           </div>
         </div>
@@ -790,6 +836,17 @@ footer b{color:var(--hot)}
           <div class="big" id="bannerBig"></div>
           <div class="amt" id="bannerAmt"></div>
           <div class="sub" id="bannerSub"></div>
+        </div>
+        <div id="nftWin" role="alertdialog" aria-modal="true" aria-labelledby="nftTitle">
+          <div>
+            <div class="lion" id="nftLion"></div>
+            <div class="kicker">The Lion&rsquo;s Crown</div>
+            <div class="big" id="nftTitle">You won a Lazy Lion</div>
+            <div class="sub">Five crowned reels. The board filled with Crown #4230 &mdash;
+              the rarest trait in the collection and the one everybody wants.</div>
+            <div class="note" id="nftNote"></div>
+            <button class="btn" id="nftClose" style="margin-top:16px">Claim it</button>
+          </div>
         </div>
       </div>
 
@@ -871,9 +928,11 @@ footer b{color:var(--hot)}
           <div class="st"><div class="k">Hit rate</div><div class="v" id="sHit">—</div></div>
           <div class="st"><div class="k">Best win</div><div class="v" id="sBest" style="color:var(--gold)">—</div></div>
         </div>
-        <p class="note">Verified RTP <b>0.97009</b> / <b>0.97023</b> / <b>0.96994</b> over
-          250M / 250M / 600M spins. A few hundred spins here says almost nothing —
-          that swing is the product, not a bug.</p>
+        <p class="note">Verified RTP <b>0.89125</b> / <b>0.97023</b> / <b>0.96994</b> over
+          100M / 250M / 600M spins. Pride is the odd one out on purpose: its coin return is
+          <b>0.87001</b> and the remaining <b>0.02124</b> is the Lion&rsquo;s Crown, a Lazy Lion
+          paid on a full board of Crowns at 1 in 1,176,856 spins. A few hundred spins here says
+          almost nothing — that swing is the product, not a bug.</p>
       </div>
 
       <div class="card">
@@ -967,12 +1026,17 @@ const P1=2,P2=3,P3=4,P4=5,M1=6,M2=7,M3=8,M4=9,L1=10,L2=11,L3=12,L4=13;
 /* ---- verified weights (packages/engine/src/paytables/weights/*.weights) ---- */
 const CONF={
   pride:{
-    scale:2.58737, cap:2000,
-    w:[[0,4,6,6,3,9,7,14,14,20,20,18,18,13],
-       [6,4,11,12,8,9,7,14,14,14,14,16,16,19],
-       [8,4,6,7,8,9,12,13,15,15,16,16,16,11],
-       [6,5,6,7,8,9,12,13,19,15,16,16,16,16],
-       [0,4,6,10,8,8,12,18,12,15,18,18,18,18]]
+    // P1 carries NO strip weight. The Crown arrives only as a full-reel stack
+    // (drawGridPride), and leaving a weight here would scatter loose single
+    // Crowns among the stacks -- which is not the mechanic, and measured 1.639
+    // RTP against a 0.87 target when the page kept its old column while the
+    // Rust side had already zeroed it.
+    scale:2.586494, cap:2000,
+    w:[[0,4,0,6,3,9,7,14,14,20,20,18,18,13],
+       [6,4,0,12,8,9,7,14,14,14,14,16,16,19],
+       [8,4,0,7,8,9,12,13,15,15,16,16,16,11],
+       [6,5,0,7,8,9,12,13,19,15,16,16,16,16],
+       [0,4,0,10,8,8,12,18,12,15,18,18,18,18]]
   },
   cubcluster:{
     scale:41.706771, cap:2500,
@@ -1014,7 +1078,12 @@ for(const k in CONF) CONF[k].strips=CONF[k].w.map(buildStrip);
 function prideePays(){
   const p=Array.from({length:NSYM},()=>[0,0,0,0,0,0]);
   const set=(s,v)=>{p[s][3]=v[0];p[s][4]=v[1];p[s][5]=v[2];};
-  set(P1,[.40,1.60,8.00]); set(P2,[.30,1.20,6.00]); set(P3,[.24,.90,4.50]); set(P4,[.20,.70,3.50]);
+  // P1 pays far less PER WAY than its tier suggests, because it never arrives
+  // alone: the Crown only ever lands as a full reel, so three crowned reels is
+  // already 64 ways and four is 256. Carried over unchanged from a symbol that
+  // landed one row at a time, these took the volatility index to 10.6 against a
+  // 5.5 ceiling. Mirrors crates/mathsim/src/tables.rs::pride_pays exactly.
+  set(P1,[.10,.35,1.40]); set(P2,[.30,1.20,6.00]); set(P3,[.24,.90,4.50]); set(P4,[.20,.70,3.50]);
   set(M1,[.12,.40,1.60]);  set(M2,[.10,.32,1.30]); set(M3,[.08,.26,1.05]); set(M4,[.07,.22,.85]);
   set(L1,[.05,.14,.55]);   set(L2,[.04,.12,.45]);  set(L3,[.035,.10,.38]); set(L4,[.03,.08,.32]);
   set(SCAT,[1,3,20]);
@@ -1070,12 +1139,18 @@ const LINES=paylines40();
    paytable -- the price moves whenever the pay scale does.
    Trait Vault was 1.6350x when the feature was a Hold and Win worth about one
    and a half bets. Lion's Share is worth 16.5x a bet, so the price follows. */
-const BUY_PRICE={pride:18.3073, traitvault:17.8525};
+// Pride's price is EV / 0.87, not EV / 0.97. Its feature is worth 15.5917x a
+// triggered round; sold at the old 0.97 price it went for 18.3073x, which is
+// MORE than the round returns -- so the buy was quietly worse than spinning for
+// it, in a feature whose entire justification is that the two are identical.
+const BUY_PRICE={pride:17.9215, traitvault:17.8525};
 
 /* Ante tiers come from `mathsim ante`. Scatter weight is an integer, so +1 per
    reel is the smallest ante this strip length can express; the stake is solved
-   to keep RTP at 0.97 rather than fixed at a marketing-friendly +25%. */
-const ANTE={pride:{extraScatter:1, stake:1.1441}};
+   to hold the game's OWN coin RTP -- 0.87 for Pride -- rather than fixed at a
+   marketing-friendly +25%. Re-solved when Pride left 0.97: at the old 1.1441x
+   the player was overpaying for the same scatter supply. */
+const ANTE={pride:{extraScatter:1, stake:1.1358}};
 function anteStrips(){
   const w=CONF.pride.w.map(r=>r.slice());
   for(const reel of w) if(reel[SCAT]>0) reel[SCAT]+=ANTE.pride.extraScatter;
@@ -1212,11 +1287,42 @@ function drawGrid(strips,rng){
   }
   return g;
 }
+/* PRIDE ONLY: the Crown is a STACK, never a single symbol.
+
+   P1 carries zero weight on every Pride strip. Each reel instead turns entirely
+   to Crowns with probability CROWN_NUM/CROWN_DENOM, four rows at once, and five
+   crowned reels fills the board and wins the Lion's Crown -- a Lazy Lion NFT.
+
+   The jackpot exists because "fill the board" is otherwise IMPOSSIBLE, not
+   merely unlikely: buildStrip spreads symbols by largest remainder precisely to
+   avoid clumping, so no reel this project builds ever carries four identical
+   symbols in a row.
+
+   TWO DRAWS PER REEL, ALWAYS, IN THIS ORDER, matching
+   crates/mathsim/src/games/pride.rs::draw_grid exactly. The stack decision must
+   not change how many numbers a spin consumes -- /verify replays the same seed
+   triple through the same sequence, and a conditional draw would desynchronise
+   it for every spin after the first crowned reel. */
+const CROWN_NUM=600, CROWN_DENOM=10000, NFT_PRIZE_X=25000;
+function drawGridPride(strips,rng){
+  const g=[]; let crowned=0;
+  for(let r=0;r<REELS;r++){
+    const st=strips[r];
+    const roll=rng.below(CROWN_DENOM), stop=rng.below(st.length), col=[];
+    if(roll<CROWN_NUM){ crowned++; for(let row=0;row<ROWS;row++) col.push(P1); }
+    else for(let row=0;row<ROWS;row++) col.push(st[(stop+row)%st.length]);
+    g.push(col);
+  }
+  return {grid:g,crowned};
+}
 function capWin(o,cap){
   const t=o.base+o.feature;
   if(t<=cap) return o;
   const k=cap/t;
-  return {base:o.base*k,feature:o.feature*k,fs:o.fs,marks:o.marks,frames:o.frames};
+  // The cap clips COINS. The NFT is a prize outside the coin economy, so a
+  // capped spin still won it -- and a board full of Crowns is exactly the kind
+  // of spin that gets capped, which is where dropping it would have hurt.
+  return {base:o.base*k,feature:o.feature*k,fs:o.fs,marks:o.marks,frames:o.frames,nft:o.nft};
 }
 
 /* ---- PRIDE: 1024 ways ---- */
@@ -1258,32 +1364,36 @@ function prideEval(grid,multWilds,pays,marks){
    it is the point: a bought feature priced off the measured EV of the spun
    feature is only honest if it is literally the same round. */
 function prideFreeSpins(rng,strips,pays){
-  let feature=0; const frames=[];
+  let feature=0, nft=false; const frames=[];
   for(let i=0;i<10;i++){
-    const g2=drawGrid(strips,rng), m2=new Set();
+    const d2=drawGridPride(strips,rng), g2=d2.grid, m2=new Set();
+    if(d2.crowned===REELS) nft=true;
     feature+=prideEval(g2,true,pays,m2);
     let sc=0; for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(g2[r][row]===SCAT) sc++;
     feature+=pays[SCAT][Math.min(sc,REELS)]||0;
-    frames.push({grid:g2,marks:m2,label:`free spin ${i+1}/10 · ×2 wilds`});
+    frames.push({grid:g2,marks:m2,label:`free spin ${i+1}/10 · ×2 wilds`,
+                 crowned:d2.crowned});
   }
-  return {feature,frames};
+  return {feature,frames,nft};
 }
 function spinPride(rng,stripsOverride){
   const pays=PAYS.pride, strips=stripsOverride||CONF.pride.strips;
-  const grid=drawGrid(strips,rng);
+  const d=drawGridPride(strips,rng), grid=d.grid;
+  let nft=d.crowned===REELS;
   const marks=new Set();
   let base=prideEval(grid,false,pays,marks);
   let scat=0;
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(grid[r][row]===SCAT) scat++;
   base+=pays[SCAT][Math.min(scat,REELS)]||0;
-  const frames=[{grid,marks:new Set(marks),label:null}];
+  const frames=[{grid,marks:new Set(marks),label:null,crowned:d.crowned}];
   let feature=0, fs=false;
   if(scat>=3){
     fs=true;
     const r=prideFreeSpins(rng,strips,pays);
     feature=r.feature; frames.push(...r.frames);
+    if(r.nft) nft=true;
   }
-  return capWin({base,feature,fs,marks,frames},CONF.pride.cap);
+  return capWin({base,feature,fs,marks,frames,nft},CONF.pride.cap);
 }
 
 /* ---- CUB CLUSTER: 5+ orthogonal, tumbles ---- */
@@ -3288,6 +3398,51 @@ async function featureIntro(title,sub){
   card.remove();
 }
 
+/* A reel is crowned when every row on it is the Crown. Derived from the GRID
+   rather than trusted from a flag: the grid is what the player is looking at,
+   and it is the same object the renderer and the replay both build, so there is
+   no second source to drift from. */
+function paintCrownReels(grid){
+  const reels=$("reels").children;
+  for(let r=0;r<REELS;r++){
+    const el=reels[r]; if(!el) continue;
+    let all=true;
+    for(let row=0;row<ROWS;row++) if(!grid[r]||grid[r][row]!==P1){ all=false; break; }
+    el.classList.remove("crowned");
+    if(all){ void el.offsetWidth; el.classList.add("crowned"); }
+  }
+}
+function clearCrownReels(){
+  for(const el of $("reels").children) el.classList.remove("crowned");
+}
+
+/* The Lion's Crown. Not a bigger banner -- a different object, because it is
+   not a coin win: nothing counts up, and what the player receives is a token
+   rather than a number. It says plainly that this bench awards a CLAIM and not
+   a transfer, because the alternative is a page that looks like it just moved
+   an NFT into somebody's wallet. */
+async function showNftWin(){
+  const box=$("nftWin"), art=SYMBOL_ART.default && SYMBOL_ART.default.P1;
+  $("nftLion").innerHTML = art
+    ? `<img src="${art.uri}" alt="Lazy Lion #4230, the Crown lion">` : "";
+  $("nftNote").textContent =
+    "Play money bench: this records a claim, it does not transfer a token. "
+    + "On mainnet the Lion is escrowed by the contract before the round is played.";
+  box.classList.add("on");
+  jackpotFanfare(4);
+  setTimeout(()=>jackpotHit(1.0),240);
+  setTimeout(()=>coins(180,1.6),120);
+  const close=$("nftClose");
+  await new Promise(done=>{
+    const go=()=>{ close.removeEventListener("click",go); document.removeEventListener("keydown",key);
+                   box.classList.remove("on"); done(); };
+    const key=(e)=>{ if(e.key==="Escape"||e.key===" "||e.key==="Enter"){ e.preventDefault(); go(); } };
+    close.addEventListener("click",go);
+    document.addEventListener("keydown",key);
+    close.focus();
+  });
+}
+
 async function showBanner(kind,amount,sub){
   const b=$("banner");
   b.classList.toggle("epic",/epic|super mega/i.test(kind));
@@ -3400,8 +3555,10 @@ async function doSpin(){
   let scat=0;
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(first.grid[r][row]===SCAT) scat++;
 
+  clearCrownReels();
   await animateSpin(first.grid,scat);
   paintGrid(first.grid,first.marks.size?first.marks:null);
+  paintCrownReels(first.grid);
 
   const winMult=out.base+out.feature, win=winMult*bet;
 
@@ -3453,6 +3610,7 @@ async function doSpin(){
       await sleep(turbo?60:230);
     }
     paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
+    if(game==="pride") paintCrownReels(f.grid);
     if(game==="traitvault"&&f.rowMult){
       $("fsN").textContent=f.spinNo!=null?f.spinNo:i;
       await flyOrbs(f.orbs);
@@ -3504,6 +3662,10 @@ async function doSpin(){
     // already advancing on their own clock.
     if(game==="traitvault" && out.base>0) await showWinLines(first.wins,bet);
   }
+  // The Lion comes LAST, after any coin celebration has finished. It is the
+  // bigger event and it should not be interrupted by a count-up finishing
+  // underneath it.
+  if(out.nft) await showNftWin();
   // The MODE the round was played in, not just its seed. A replay that reaches
   // for the plain spin function reproduces a different round for anything
   // bought or ante-loaded: measured, a bought Pride round that paid 5.0971x
@@ -3511,7 +3673,7 @@ async function doSpin(){
   // 1.4231x. A player checking a win against a figure that does not match is
   // the exact opposite of what a fairness feature is for.
   history.push({nonce,game,client:$("fClient").value,bet:stake,win,mult:winMult,
-                seed:hex(serverSeed),buy:!!buying,ante:!!useAnte});
+                seed:hex(serverSeed),buy:!!buying,ante:!!useAnte,nft:!!out.nft});
   if(history.length>200) history.shift();
   logSpin(win,win/stake);
   updateHud();
@@ -3798,7 +3960,11 @@ function logSpin(win,mult){
   if(l.firstChild&&l.firstChild.textContent.includes("no spins")) l.innerHTML="";
   const d=document.createElement("div");
   d.className=win>0?"w":"l";
-  d.innerHTML=`<span>#${nonce}</span><span>${win>0?"+"+fmt(win)+" · "+mult.toFixed(2)+"×":"—"}</span>`;
+  const rec0=history[history.length-1];
+  // The Lion is not a coin amount, so it is not folded into the win column --
+  // a round can pay nothing and still be the biggest thing that ever happened.
+  d.innerHTML=`<span>#${nonce}${rec0&&rec0.nft?' <b style="color:#F3C34A">CROWN</b>':""}</span>`
+            + `<span>${win>0?"+"+fmt(win)+" · "+mult.toFixed(2)+"×":"—"}</span>`;
   d.title="Replay this spin";
   const rec=history[history.length-1];
   d.addEventListener("click",()=>replay(rec));
@@ -3941,9 +4107,23 @@ function openInfo(){
   $("infoPay").innerHTML=$("paytable").innerHTML;
   const rules={
     pride:`<b>1024 ways.</b> All four rows on all five reels are active, so wins pay per way,
-      left to right on adjacent reels. Wild appears on reels 2–4 only and substitutes for
+      left to right on adjacent reels. Wild appears on reels 2&ndash;4 only and substitutes for
       everything except the $LAZY scatter. <b>3+ scatters award 10 free spins</b> in which every
-      wild carries a ×2 multiplier; multipliers on one way add and cap at ×10. No retrigger.`,
+      wild carries a &times;2 multiplier; multipliers on one way add and cap at &times;10. No retrigger.
+      <br><br>
+      <b>The Crown is a stack.</b> Crown #4230 carries no weight on the reels at all. Instead each
+      reel turns <b>entirely</b> to Crowns on its own roll &mdash; four rows at once, about 1 spin
+      in 17 per reel. One crowned reel is a good hit, three is 64 ways, four is 256.
+      <br><br>
+      <b>The Lion&rsquo;s Crown.</b> Fill the board &mdash; all five reels crowned &mdash; and you
+      win <b>a Lazy Lion NFT</b>, the Crown trait itself. That is <b>1 in 1,176,856 spins</b>,
+      free spins included. The prize sits outside the coin game: it is not capped by the 2,000&times;
+      ceiling, and a spin that pays nothing in coins can still win it.
+      <br><br>
+      This is why Pride returns <b>0.87 in coins</b> where the rest of the cabinet returns 0.97.
+      The difference is not house margin &mdash; it is the jackpot, worth <b>0.02124</b> on top,
+      for <b>0.89125 total</b>. On this bench the win records a <b>claim</b>; it does not move a
+      token. On mainnet the Lion would be escrowed by the contract before the round is played.`,
     cubcluster:`<b>Cluster pays.</b> Five or more orthogonally adjacent matching symbols pay.
       Winners vanish, symbols fall, and the grid re-evaluates — the <b>tumble multiplier climbs
       1 · 2 · 3 · 5 · 8</b> and caps at ×8. A wild joins every cluster it touches.`,
@@ -3964,7 +4144,13 @@ function openInfo(){
   // the best. Trait Vault's maths was rebuilt for Lion's Share and its figure is
   // the measurement, with its error bar, rather than a claim of the target.
   const rtpLine = {
-    pride:      "<b>RTP</b> 0.97009 measured over 250M spins on the production rng.",
+    // Pride reports BOTH halves, because they are funded differently and a
+    // single averaged figure would describe a machine nobody plays: the coin
+    // return is what the paytable pays every spin, the jackpot is a fixed prize
+    // arriving at a rate no session will ever sample.
+    pride:      "<b>RTP</b> coin 0.87001 measured over 100M spins on the production rng, " +
+                "plus 0.02124 from the Lion&#39;s Crown &mdash; <b>0.89125 total</b>. The coin " +
+                "return is deliberately below the rest of the cabinet: that is what funds the NFT.",
     cubcluster: "<b>RTP</b> 0.97023 measured over 250M spins on the production rng.",
     traitvault: "<b>RTP</b> 0.97000 &plusmn;0.00044 measured over 600M spins on the " +
                 "production rng, after the Lion&#39;s Share rework.",

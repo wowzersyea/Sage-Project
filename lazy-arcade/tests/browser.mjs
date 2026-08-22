@@ -1522,6 +1522,95 @@ console.log("\nSymbol art");
   await ctx.close();
 }
 
+/* ------------------------------------------------- Pride: the Lion's Crown */
+/* Pride funds a Lazy Lion NFT by returning 0.87 in coins instead of 0.97, and
+   pays it for a board full of Crowns. Two things have to hold or the whole
+   mechanic is a lie: the Crown must never appear as a loose single symbol (it
+   carries no strip weight -- it only ever arrives as a full reel), and the draw
+   sequence must match the Rust and the standalone verifier EXACTLY, because a
+   single extra or missing draw shifts every number after it and /verify would
+   tell an honest player their spin did not reproduce. */
+console.log("\nPride: the Lion's Crown");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    document.querySelector('[data-game="pride"]').click();
+    await new Promise((r) => setTimeout(r, 450));
+
+    // 1. No loose Crowns anywhere on the strips.
+    const looseWeight = CONF.pride.w.map((reel) => reel[P1]);
+    const onStrip = CONF.pride.strips.reduce(
+      (n, st) => n + st.filter((x) => x === P1).length, 0);
+
+    // 2. Over many spins, every Crown seen is part of a full column of four.
+    const seed = new Uint8Array(32).map((_, i) => (i * 13 + 5) & 0xff);
+    let crownCells = 0, crownReels = 0, partial = 0, nftRounds = 0, totalReels = 0, spins = 6000;
+    for (let n = 0; n < spins; n++) {
+      const out = spinPride(makeRng(seed, "crown", n, "pride"));
+      if (out.nft) nftRounds++;
+      for (const f of out.frames) {
+        for (let reel = 0; reel < REELS; reel++) {
+          let c = 0;
+          for (let row = 0; row < ROWS; row++) if (f.grid[reel][row] === P1) c++;
+          crownCells += c;
+          if (c === ROWS) crownReels++;
+          else if (c > 0) partial++;
+          totalReels++;
+        }
+      }
+    }
+
+    // 3. Draw-order parity: the number of RNG values a Pride grid consumes must
+    //    be fixed at two per reel whether or not any reel crowns.
+    const count = (nonce) => {
+      const rng = makeRng(seed, "count", nonce, "pride");
+      let used = 0;
+      const wrapped = { below: (n) => { used++; return rng.below(n); } };
+      drawGridPride(CONF.pride.strips, wrapped);
+      return used;
+    };
+    const draws = new Set();
+    for (let n = 0; n < 400; n++) draws.add(count(n));
+
+    // 4. A crowned board must survive the max-win cap.
+    const capped = capWin({ base: 5000, feature: 0, fs: false, marks: new Set(),
+                            frames: [], nft: true }, CONF.pride.cap);
+
+    return { looseWeight, onStrip, crownCells, crownReels, partial, nftRounds, spins, totalReels, rows: ROWS,
+             draws: [...draws], cappedKeepsNft: !!capped.nft,
+             crownNum: CROWN_NUM, crownDenom: CROWN_DENOM };
+  });
+
+  check("the Crown carries no strip weight in Pride",
+        r.looseWeight.every((w) => w === 0) && r.onStrip === 0,
+        `weights ${r.looseWeight.join(",")}, ${r.onStrip} on the built strips`);
+  check("every Crown on screen is part of a full stack of four",
+        r.partial === 0 && r.crownReels > 0,
+        `${r.partial} partial column(s), ${r.crownReels} full`);
+  // Every Crown cell belongs to a full column, so the cell count is exactly
+  // four times the column count -- an identity, and worth pinning because it is
+  // what "the Crown is a stack" MEANS in the rendered grid.
+  check("Crown cells are exactly four per crowned reel",
+        r.crownCells === r.crownReels * r.rows,
+        `${r.crownCells} cells vs ${r.crownReels} x ${r.rows}`);
+  // And the rate itself, against the constant that declares it rather than
+  // against a number typed here.
+  {
+    const want = r.crownNum / r.crownDenom;
+    const got = r.crownReels / r.totalReels;
+    check("crowned reels land at the declared rate",
+          Math.abs(got / want - 1) < 0.15,
+          `${(got * 100).toFixed(2)}% observed vs ${(want * 100).toFixed(2)}% declared `
+          + `over ${r.totalReels} reels`);
+  }
+  check("a Pride grid always consumes two draws per reel",
+        r.draws.length === 1 && r.draws[0] === 2 * 5,
+        `observed draw counts: ${r.draws.join(",")}`);
+  check("the max-win cap does not swallow the NFT", r.cappedKeepsNft);
+  check("no runtime errors in Pride", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
 /* -------------------------------------------------------------- reel curve */
 console.log("\nReel curve");
 {

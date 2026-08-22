@@ -32,14 +32,20 @@ const L3: u8 = 12;
 
 pub fn pride_strips() -> StripSpec {
     // Wild is absent from reels 1 and 5 by construction (spec Sec. 6.4).
+    //
+    // P1 carries NO strip weight in Pride. The Crown arrives only as a full-reel
+    // stack, drawn per reel in pride::draw_grid -- see CROWN_STACK_NUM. Leaving
+    // a weight here would put loose single Crowns on the reels alongside the
+    // stacks, which both breaks the mechanic's read and quietly changes the
+    // return away from what the weights file was calibrated against.
     let outer = weights_from(&[
-        (SCAT, 4), (P1, 6), (P2, 7), (P3, 8), (P4, 9),
+        (SCAT, 4), (P2, 7), (P3, 8), (P4, 9),
         (M1, 12), (M2, 13), (M3, 14), (M4, 15),
         (L1, 18), (L2, 18), (L3, 18), (L4, 18),
     ]);
     let inner = |wild: u32| {
         weights_from(&[
-            (WILD, wild), (SCAT, 4), (P1, 6), (P2, 7), (P3, 8), (P4, 9),
+            (WILD, wild), (SCAT, 4), (P2, 7), (P3, 8), (P4, 9),
             (M1, 12), (M2, 13), (M3, 14), (M4, 15),
             (L1, 16), (L2, 16), (L3, 16), (L4, 16),
         ])
@@ -54,7 +60,13 @@ pub fn pride_pays() -> PayTable {
         p[s as usize][4] = v[1];
         p[s as usize][5] = v[2];
     };
-    set(&mut p, P1, [0.40, 1.60, 8.00]);
+    // The Crown pays far less PER WAY than its tier would suggest, because it
+    // never arrives alone: a crowned reel contributes four rows, so three
+    // crowned reels is already 64 ways and four is 256. The old numbers were
+    // set for a symbol that landed one row at a time, and carried straight over
+    // they took the volatility index to 10.6 against a 5.5 ceiling. The stack
+    // supplies the ways; the paytable no longer has to.
+    set(&mut p, P1, [0.10, 0.35, 1.40]);
     set(&mut p, P2, [0.30, 1.20, 6.00]);
     set(&mut p, P3, [0.24, 0.90, 4.50]);
     set(&mut p, P4, [0.20, 0.70, 3.50]);

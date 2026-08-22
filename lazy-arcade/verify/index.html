@@ -118,7 +118,7 @@
 // and would have told an honest player their spin did not reproduce.
 // tests/verify-play-math.mjs now asserts this table against the live strips.
 const STRIPS = {
-  pride:      [152, 164, 156, 164, 165],
+  pride:      [146, 153, 150, 158, 159],
   cubcluster: [159, 166, 168, 166, 171],
   traitvault: [158, 149, 160, 167, 144],
   // Hi/Lo draws a RARITY RANK, not a card from the full collection. It sat at
@@ -129,6 +129,12 @@ const STRIPS = {
   // Vault, in the one game the drift test did not cover.
   hilo:       [101]
 };
+
+// Mirrors CROWN_NUM / CROWN_DENOM in play/index.html and CROWN_STACK_NUM /
+// CROWN_STACK_DENOM in crates/mathsim/src/games/pride.rs. Duplicated here for
+// the same reason the strip lengths are: this page must verify a round without
+// loading anything from the game.
+const CROWN_NUM = 600, CROWN_DENOM = 10000;
 
 const enc = new TextEncoder();
 
@@ -220,7 +226,33 @@ document.getElementById("go").addEventListener("click", async () => {
   const rng = new HmacRng(seed, prefix);
   const lengths = STRIPS[game];
   const stops = [];
-  for (const len of lengths) stops.push(await rng.below(len));
+  const crowned = [];
+
+  // PRIDE DRAWS TWICE PER REEL. The Crown carries no strip weight there; each
+  // reel instead turns entirely to Crowns on its own roll, and five crowned
+  // reels wins the Lion's Crown. The roll is drawn BEFORE the stop and the stop
+  // is drawn either way, so the sequence has a fixed length -- see
+  // drawGridPride in play/index.html and pride.rs::draw_grid.
+  //
+  // Getting this wrong is not a cosmetic error: a single extra or missing draw
+  // shifts every number after it, so this page would derive stops the game
+  // never used and tell an honest player their spin did not reproduce. That is
+  // the same failure this file's STRIPS comment records, one level deeper --
+  // the drift there was in the numbers, here it would be in their ORDER.
+  for (let i = 0; i < lengths.length; i++) {
+    if (game === "pride") {
+      const roll = await rng.below(CROWN_DENOM);
+      crowned.push(roll < CROWN_NUM);
+      lines.push("  reel " + (i + 1) + " crown roll = " + roll + " / " + CROWN_DENOM +
+                 (roll < CROWN_NUM ? "  -> CROWNED (whole reel)" : ""));
+    }
+    stops.push(await rng.below(lengths[i]));
+  }
+
+  if (game === "pride" && crowned.length && crowned.every(Boolean)) {
+    lines.push("");
+    lines.push("  ALL FIVE REELS CROWNED -- this round won the Lion's Crown.");
+  }
 
   out.innerHTML = lines.join("\n");
 
@@ -230,8 +262,10 @@ document.getElementById("go").addEventListener("click", async () => {
   stops.forEach((s, i) => {
     const d = document.createElement("div");
     d.className = "stop";
-    d.innerHTML = "<b>" + label + " " + (i + 1) + "</b>" + s +
+    const crown = game === "pride" && crowned[i];
+    d.innerHTML = "<b>" + label + " " + (i + 1) + (crown ? " \u2014 CROWNED" : "") + "</b>" + s +
                   '<span style="color:var(--muted)"> / ' + lengths[i] + "</span>";
+    if (crown) d.style.borderColor = "#F3C34A";
     box.appendChild(d);
   });
   out.appendChild(box);

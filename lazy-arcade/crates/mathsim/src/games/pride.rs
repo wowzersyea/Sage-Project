@@ -18,6 +18,63 @@ pub const GAME_ID: &str = "pride";
 pub const FREE_SPINS_AWARDED: usize = 10;
 pub const SCATTERS_TO_TRIGGER: u32 = 3;
 
+/// THE CROWN IS A STACK, NEVER A SINGLE SYMBOL.
+///
+/// P1 -- the Crown lion -- carries zero weight on every strip. Instead each
+/// reel independently turns entirely to Crowns with probability
+/// CROWN_STACK_NUM / CROWN_STACK_DENOM, four rows at once.
+///
+/// This exists because the jackpot is "fill the board", and on the strips that
+/// event has probability exactly ZERO rather than merely small. `build_strip`
+/// spreads symbols by largest remainder specifically to avoid clumping, so a
+/// run of four identical symbols never occurs on any reel this project builds.
+/// A full screen of one symbol is not unlikely there; it is impossible. Stacked
+/// reels are how real machines make a full screen reachable, and they also give
+/// the mechanic its shape on the way up: one crowned reel is a nice hit, three
+/// is a large one, five is the Lion.
+pub const CROWN_STACK_NUM: u32 = 600;
+pub const CROWN_STACK_DENOM: u32 = 10_000;
+
+/// The NFT prize, in units of total bet.
+///
+/// The paytable CANNOT reach this and must never be scaled to try: it is a
+/// fixed prize, so it is a constant term in the RTP, exactly the case the
+/// README warns about after Trait Vault's Hold and Win left a stale one behind.
+/// `calibrate` therefore solves the coin paytable against
+/// (target RTP - jackpot RTP), and the jackpot's contribution is computed in
+/// closed form rather than sampled -- at one hit in ~1.3 million spins, a
+/// simulation long enough to measure it accurately would take longer than the
+/// calibration it feeds.
+pub const NFT_PRIZE_X: f64 = 25_000.0;
+
+/// Per GRID: every reel must crown, and the reels are independent.
+pub fn nft_probability() -> f64 {
+    (CROWN_STACK_NUM as f64 / CROWN_STACK_DENOM as f64).powi(REELS as i32)
+}
+
+/// Per SPIN, which is the number a player actually experiences and is NOT the
+/// same thing.
+///
+/// A triggered spin draws eleven grids, not one, and every one of them can fill
+/// the board. Reporting the per-grid figure as though it were per-spin
+/// understated the jackpot rate by about 9%: a 100M run predicted 78 hits and
+/// produced 99, which is how the error was caught -- the observed count sat
+/// 2.4 sigma above a "closed form" that was quietly measuring something else.
+///
+/// The trigger rate is a property of the strips rather than of this file, so it
+/// is passed in from the same simulation that measured it.
+pub fn nft_probability_per_spin(feature_frequency: f64) -> f64 {
+    let grids = 1.0 + FREE_SPINS_AWARDED as f64 * feature_frequency;
+    // Union over grids. The double-hit term is ~1e-12 and dropped, but the
+    // bound is stated rather than assumed away.
+    grids * nft_probability()
+}
+
+/// The jackpot's share of RTP, in the same units as `Stats::rtp`.
+pub fn nft_rtp(feature_frequency: f64) -> f64 {
+    nft_probability_per_spin(feature_frequency) * NFT_PRIZE_X
+}
+
 pub struct Pride {
     pub strips: Strips,
     pub pays: PayTable,
@@ -37,20 +94,38 @@ impl Pride {
         Pride { strips: spec.build(), pays }
     }
 
-    fn draw_grid(&self, rng: &mut impl Rng) -> Grid {
+    /// Returns the grid and how many reels came up crowned.
+    ///
+    /// TWO DRAWS PER REEL, ALWAYS, IN THIS ORDER. The stack decision must not
+    /// change how many numbers a spin consumes -- the page and the standalone
+    /// verifier replay the same seed triple through the same sequence, and a
+    /// conditional draw would desynchronise them for every spin after the first
+    /// crowned reel. Drawing the stop even when it goes unused costs one HMAC
+    /// block and buys exact parity.
+    fn draw_grid(&self, rng: &mut impl Rng) -> (Grid, u32) {
         let mut grid = [[0u8; ROWS]; REELS];
+        let mut crowned = 0u32;
         for reel in 0..REELS {
+            let roll = rng.below(CROWN_STACK_DENOM);
             let stop = rng.below(self.strips.len(reel));
-            for row in 0..ROWS {
-                grid[reel][row] = self.strips.at(reel, stop, row);
+            if roll < CROWN_STACK_NUM {
+                crowned += 1;
+                for row in 0..ROWS {
+                    grid[reel][row] = P1;
+                }
+            } else {
+                for row in 0..ROWS {
+                    grid[reel][row] = self.strips.at(reel, stop, row);
+                }
             }
         }
-        grid
+        (grid, crowned)
     }
 
     pub fn spin(&self, rng: &mut impl Rng) -> SpinOutcome {
-        let grid = self.draw_grid(rng);
+        let (grid, crowned) = self.draw_grid(rng);
         let mut out = SpinOutcome::default();
+        out.nft_won = crowned as usize == REELS;
 
         out.base = self.evaluate(&grid, false);
 
@@ -60,7 +135,8 @@ impl Pride {
         if scatters >= SCATTERS_TO_TRIGGER {
             out.feature_triggered = true;
             for _ in 0..FREE_SPINS_AWARDED {
-                let fs_grid = self.draw_grid(rng);
+                let (fs_grid, fs_crowned) = self.draw_grid(rng);
+                out.nft_won |= fs_crowned as usize == REELS;
                 out.feature += self.evaluate(&fs_grid, true);
                 let fs_scatters = count_scatters(&fs_grid);
                 out.feature += self.pays[SCAT as usize][(fs_scatters as usize).min(REELS)];

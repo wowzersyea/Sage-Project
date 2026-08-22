@@ -86,6 +86,69 @@ whole time.
 
 ---
 
+## 0.7 Pride is now an 87% machine, and that is a deliberate trade
+
+Pride was rebuilt around a prize the coin game cannot pay: **fill the board with
+Crowns and win a Lazy Lion NFT**. Three things follow from that, and all three
+are departures worth stating rather than burying.
+
+**It breaks the spec's RTP mandate, on request.** Spec Sec. 0/1 puts every game
+at 97%. Pride now returns **0.87001 in coins** (100M spins, production RNG,
++/-0.00099) plus **0.02124** from the jackpot, for **0.89125 total**. The
+operator asked for high-80s with the shortfall funding the NFT, and that is
+exactly where it landed. The point worth being honest about: the missing ten
+points are NOT all in the prize. Ten points of coin return buys two points of
+jackpot, because a jackpot at one-in-a-million is mostly variance, not value.
+The other eight points are house margin by any other name. If the intent is that
+players fund the Lion and nothing else, the coin return wants to be ~0.95, not
+0.87.
+
+**A full board was impossible, not merely unlikely.** `build_strip` spreads
+symbols by largest remainder specifically to avoid clumping, so no reel this
+project builds ever carries four identical symbols in a row. The probability of
+a full screen on the old strips was exactly zero. The Crown therefore carries no
+strip weight at all: each reel turns entirely to Crowns on its own roll, 600 in
+10,000, and five crowned reels fills the board. That is 1 in 1,286,008 per grid
+and **1 in 1,176,856 per spin**, because a triggered spin draws eleven grids and
+every one of them can fill.
+
+That per-spin figure is a correction. The first version reported the per-grid
+number as though it were per-spin, and the 100M run caught it: 99 observed hits
+against 78 predicted, 2.4 sigma high. The "closed form" was quietly measuring a
+different event from the one being counted.
+
+**The jackpot is a constant term, and the README predicted it.** From
+`README.md`, written well before this game existed:
+
+> If a future feature pays values the paytable cannot reach — a fixed jackpot, a
+> coin round — the constant term needs to come back deliberately rather than be
+> inherited.
+
+It is handled by keeping the prize OUT of the coin economy entirely rather than
+by patching the solver: `Stats::rtp()` never sees it, so the coin return stays
+strictly proportional to pay scale and `calibrate` remains valid unchanged. The
+jackpot is reported as its own line and added only at the end.
+
+### What the mechanic cost elsewhere
+
+| | before | after | why |
+|---|---|---|---|
+| P1 pays (3/4/5) | 0.40 / 1.60 / 8.00 | 0.10 / 0.35 / 1.40 | A crowned reel is four rows, so three crowned reels is already 64 ways. Carried over unchanged the old numbers took volatility to **10.6** against a 5.5 ceiling; at the new ones it is **5.04**. |
+| buy price | 18.3073x | 17.9215x | `buyprice` divided by a hardcoded 0.97. Harmless while every game returned 0.97, and house-negative the moment one did not: Pride's feature is worth 15.59x a round, so the old price sold it for MORE than it returns while printing "identical to spinning for it". |
+| ante stake | 1.1441x | 1.1358x | Solved against 0.87 rather than 0.97. |
+| exit band | one global pair | per game | A single band would have had to widen to admit both 0.87 and 0.97, which is the same as checking neither. |
+
+### The parity trap
+
+Pride draws **twice per reel** now -- the crown roll, then the stop, and the
+stop is drawn even when it goes unused. A conditional draw would be one number
+shorter on crowned reels, which shifts every value after it and desynchronises
+`/verify` for the rest of the round. The standalone verifier was updated in
+lockstep and shows each reel's crown roll; a browser check pins the draw count
+at exactly ten per grid, and it fails on the conditional version.
+
+---
+
 ## 1. Slots vs Pragmatic Play
 
 ### Presentation — closable without touching the maths

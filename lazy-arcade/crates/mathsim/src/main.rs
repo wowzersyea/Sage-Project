@@ -17,8 +17,24 @@ use sha256::sha256;
 use sim::{run, GameKind, RngMode, RunConfig, Stats, HIST_BUCKETS, HIST_EDGES};
 use std::collections::HashMap;
 
-const EXIT_RTP_LOW: f64 = 0.9695;
-const EXIT_RTP_HIGH: f64 = 0.9705;
+/// The exit band is PER GAME, because Pride is no longer a 97% machine.
+///
+/// It was a single pair of constants covering every game, which was true while
+/// every game targeted 0.97. Pride now pays a Lazy Lion NFT for filling the
+/// board with Crowns, and that prize is funded by taking the coin return down
+/// rather than by the house absorbing it -- so its band has to move with it,
+/// and the other two must NOT move with Pride. A global band would have had to
+/// widen to admit both, which is the same as not checking either.
+///
+/// Pride's band is on the COIN return. The jackpot's contribution is a separate
+/// figure, added in the report, because a player is owed both numbers and the
+/// two are funded differently.
+fn exit_band(kind: GameKind) -> (f64, f64) {
+    match kind {
+        GameKind::Pride => (0.8695, 0.8705),
+        _ => (0.9695, 0.9705),
+    }
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -133,16 +149,17 @@ fn cmd_simulate(flags: &HashMap<String, String>) -> i32 {
 
     report(kind, &stats, bet, rng_mode, elapsed);
 
-    let in_band = stats.rtp() >= EXIT_RTP_LOW && stats.rtp() <= EXIT_RTP_HIGH;
+    let (lo, hi) = exit_band(kind);
+    let in_band = stats.rtp() >= lo && stats.rtp() <= hi;
     if rng_mode != RngMode::Hmac {
         println!("\nNOTE: --rng fast is a search aid. This figure is NOT a quotable RTP.");
         return 0;
     }
     if in_band {
-        println!("\nEXIT CRITERION MET: RTP is inside [{EXIT_RTP_LOW}, {EXIT_RTP_HIGH}].");
+        println!("\nEXIT CRITERION MET: coin RTP is inside [{lo}, {hi}].");
         0
     } else {
-        println!("\nEXIT CRITERION FAILED: RTP {:.5} is outside [{EXIT_RTP_LOW}, {EXIT_RTP_HIGH}].", stats.rtp());
+        println!("\nEXIT CRITERION FAILED: coin RTP {:.5} is outside [{lo}, {hi}].", stats.rtp());
         1
     }
 }
@@ -435,7 +452,13 @@ fn cmd_buyprice(flags: &HashMap<String, String>) -> i32 {
         return 1;
     }
     let ev_per_trigger = stats.feature_rtp() / freq;
-    let price = ev_per_trigger / 0.97;
+    // Divide by the GAME's target, not by a hardcoded 0.97. That literal was
+    // harmless while every game returned 0.97 and silently wrong the moment one
+    // did not: Pride returns 0.87, and pricing its feature at EV/0.97 sells the
+    // round for less than spinning for it is worth -- a house-negative bug that
+    // reports itself as "identical to spinning for it".
+    let target: f64 = flag(flags, "target-rtp", exit_band(kind).0 + 0.0005);
+    let price = ev_per_trigger / target;
 
     println!("=== BUY FEATURE PRICE -- {} ===", kind.id());
     println!("  spins                 : {spins}");
@@ -677,7 +700,8 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
     println!("  bet                    : {bet} $LAZY");
     println!("  wall clock             : {:.1}s", elapsed.as_secs_f64());
     println!();
-    println!("  RTP                    : {:.5}   (target 0.97000)", s.rtp());
+    let (band_lo, band_hi) = exit_band(kind);
+    println!("  coin RTP               : {:.5}   (band [{band_lo}, {band_hi}])", s.rtp());
     println!("  95% CI on RTP          : +/- {:.5}", s.rtp_ci95());
     println!("  hit frequency          : {:.4}    (target {target_hit:.2})", s.hit_frequency());
     println!("  volatility index       : {:.3}     (target {target_vol:.1}, ceiling {vol_ceiling:.1})", s.volatility());
@@ -690,6 +714,32 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
     println!("  feature trigger freq   : {:.5}  (1 in {:.0})", s.feature_frequency(),
              if s.feature_frequency() > 0.0 { 1.0 / s.feature_frequency() } else { f64::INFINITY });
     println!("  longest losing streak  : {} (per-worker lower bound)", s.longest_losing_streak);
+    if kind == GameKind::Pride {
+        // The NFT is reported SEPARATELY from the coin RTP and never folded in.
+        // A player is owed both numbers: one is what the paytable returns, the
+        // other is a fixed prize that arrives at a rate no session will ever
+        // sample. Averaging them into a single figure would describe a machine
+        // nobody actually plays.
+        //
+        // The expected figure is closed form -- q^5 * prize -- because at one
+        // hit in ~1.3 million spins even a 100M-spin run sees about 77 of them,
+        // so the OBSERVED rate is a check on the mechanic, not a measurement of
+        // it. Both are printed so the two can be compared.
+        let p = games::pride::nft_probability_per_spin(s.feature_frequency());
+        let observed = s.nft_hits as f64 / s.spins.max(1) as f64;
+        println!();
+        println!("  -- Lion's Crown jackpot (a Lazy Lion NFT, outside the coin economy) --");
+        println!("  per grid                : 1 in {:.0}", 1.0 / games::pride::nft_probability());
+        println!("  per SPIN                : 1 in {:.0}  (a triggered spin draws 11 grids)",
+                 1.0 / p);
+        println!("  observed               : {} hit(s), 1 in {}", s.nft_hits,
+                 if observed > 0.0 { format!("{:.0}", 1.0 / observed) } else { "-- (none seen)".into() });
+        println!("  prize                  : {:.0}x total bet", games::pride::NFT_PRIZE_X);
+        let jr = games::pride::nft_rtp(s.feature_frequency());
+        println!("  jackpot RTP            : {jr:.5}   (closed form on the measured trigger rate)");
+        println!("  TOTAL RETURN           : {:.5}   (coin {:.5} + jackpot {jr:.5})",
+                 s.rtp() + jr, s.rtp());
+    }
     println!();
     println!("  win distribution (multiples of bet):");
     let mut low = 0.0f64;

@@ -43,6 +43,14 @@ const exported = [
 ];
 const M = new Function(`${mathOnly}\nreturn {${exported.join(",")}};`)();
 
+/* Per-game COIN RTP targets. Pride is no longer a 0.97 machine: it funds the
+   Lion's Crown NFT by taking its coin return down to 0.87, and the prize sits
+   outside the coin economy entirely. A single shared 0.97 would have to widen
+   to admit 0.87, which is the same as checking neither. Module scope, because
+   the RTP block and the ante/buy block both price against it and a copy in each
+   is a copy that drifts. */
+const TARGET = { pride: 0.87, traitvault: 0.97, cubcluster: 0.97 };
+
 let failures = 0;
 const check = (name, ok, detail = "") => {
   if (ok) {
@@ -292,8 +300,8 @@ console.log("\nRTP convergence (loose -- catches porting errors, not calibration
     const rtp = sum / spins;
     const vol = Math.sqrt(Math.max(0, sumSq / spins - rtp * rtp));
     const ci = 1.96 * vol / Math.sqrt(spins);
-    check(`${game} RTP`, Math.abs(rtp - 0.97) < 3 * ci + 0.005,
-          `${rtp.toFixed(4)} +/-${ci.toFixed(4)} (vol ${vol.toFixed(2)})`);
+    check(`${game} coin RTP`, Math.abs(rtp - TARGET[game]) < 3 * ci + 0.005,
+          `${rtp.toFixed(4)} vs target ${TARGET[game]} +/-${ci.toFixed(4)} (vol ${vol.toFixed(2)})`);
     check(`${game} respects max win cap`, maxWin <= cap + 1e-6,
           `max ${maxWin.toFixed(1)}x vs cap ${cap}x`);
   }
@@ -317,7 +325,7 @@ console.log("\nAnte and buy-feature pricing");
     const vol = Math.sqrt(Math.max(0, sumSq / spins - ev * ev));
     const ci = 1.96 * vol / Math.sqrt(spins);
     const rtp = ev / M.BUY_PRICE[game];
-    check(`${game} buy-feature RTP`, Math.abs(rtp - 0.97) < 3 * ci / M.BUY_PRICE[game] + 0.01,
+    check(`${game} buy-feature RTP`, Math.abs(rtp - TARGET[game]) < 3 * ci / M.BUY_PRICE[game] + 0.01,
           `${rtp.toFixed(4)} at price ${M.BUY_PRICE[game]}x (EV ${ev.toFixed(3)}x)`);
   }
 
@@ -336,7 +344,7 @@ console.log("\nAnte and buy-feature pricing");
   const ci = 1.96 * vol / Math.sqrt(spins);
   const rtp = ret / M.ANTE.pride.stake;
   check("pride ante RTP at solved stake",
-        Math.abs(rtp - 0.97) < 3 * ci + 0.01,
+        Math.abs(rtp - TARGET.pride) < 3 * ci + 0.01,
         `${rtp.toFixed(4)} at stake ${M.ANTE.pride.stake}x, feature 1 in ${(spins/Math.max(1,trig)).toFixed(0)}`);
 }
 

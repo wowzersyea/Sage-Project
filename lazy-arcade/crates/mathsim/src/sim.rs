@@ -162,6 +162,7 @@ pub struct Stats {
     pub base_sum: f64,
     pub feature_sum: f64,
     pub feature_triggers: u64,
+    pub nft_hits: u64,
     pub longest_losing_streak: u64,
     current_losing_streak: u64,
     pub hist: [u64; HIST_BUCKETS],
@@ -178,6 +179,7 @@ impl Default for Stats {
             base_sum: 0.0,
             feature_sum: 0.0,
             feature_triggers: 0,
+            nft_hits: 0,
             longest_losing_streak: 0,
             current_losing_streak: 0,
             hist: [0; HIST_BUCKETS],
@@ -196,6 +198,9 @@ impl Stats {
         self.feature_sum += out.feature;
         if out.feature_triggered {
             self.feature_triggers += 1;
+        }
+        if out.nft_won {
+            self.nft_hits += 1;
         }
         if total > 0.0 {
             self.hits += 1;
@@ -226,6 +231,7 @@ impl Stats {
         self.base_sum += other.base_sum;
         self.feature_sum += other.feature_sum;
         self.feature_triggers += other.feature_triggers;
+        self.nft_hits += other.nft_hits;
         self.max_win = self.max_win.max(other.max_win);
         // Streaks are per-thread; the true global streak would need a single
         // sequential stream, so this reports the longest observed on any one
@@ -348,6 +354,9 @@ fn apply_win_cap(out: SpinOutcome, cap: f64) -> SpinOutcome {
         base: out.base * ratio,
         feature: out.feature * ratio,
         feature_triggered: out.feature_triggered,
+        // The max-win cap clips COINS. The NFT is a prize sitting outside the
+        // coin economy, so a capped spin still won it.
+        nft_won: out.nft_won,
     }
 }
 
@@ -357,7 +366,9 @@ fn apply_win_cap(out: SpinOutcome, cap: f64) -> SpinOutcome {
 fn per_stake(out: SpinOutcome, stake: f64) -> SpinOutcome {
     if stake == 1.0 { return out; }
     SpinOutcome { base: out.base / stake, feature: out.feature / stake,
-                  feature_triggered: out.feature_triggered }
+                  feature_triggered: out.feature_triggered,
+                  // Won or not won; there is no fraction of an NFT to pro-rate.
+                  nft_won: out.nft_won }
 }
 
 fn derive_server_seed(seed: u64) -> [u8; 32] {
@@ -374,17 +385,21 @@ mod tests {
 
     #[test]
     fn win_cap_clamps_total_and_preserves_the_split_ratio() {
-        let out = SpinOutcome { base: 3000.0, feature: 1000.0, feature_triggered: true };
+        let out = SpinOutcome { base: 3000.0, feature: 1000.0, feature_triggered: true, nft_won: true };
         let capped = apply_win_cap(out, 2_500.0);
         assert!((capped.total() - 2_500.0).abs() < 1e-9);
         // 3:1 before, 3:1 after.
         assert!((capped.base / capped.feature - 3.0).abs() < 1e-9);
         assert!(capped.feature_triggered);
+        // The cap clips COINS. A spin that filled the board still won the NFT,
+        // and clipping it away would quietly delete the prize on exactly the
+        // biggest spins -- the ones most likely to be capped.
+        assert!(capped.nft_won, "the max-win cap must not swallow the NFT");
     }
 
     #[test]
     fn win_cap_leaves_ordinary_spins_untouched() {
-        let out = SpinOutcome { base: 12.0, feature: 3.0, feature_triggered: true };
+        let out = SpinOutcome { base: 12.0, feature: 3.0, feature_triggered: true, nft_won: true };
         let capped = apply_win_cap(out, 2_500.0);
         assert_eq!(capped.base, 12.0);
         assert_eq!(capped.feature, 3.0);
