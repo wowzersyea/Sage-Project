@@ -175,9 +175,24 @@
     "Q3 (Pediatric-specific addition):",
     "Q7 (New for Version 5.0):",
     "No new FDA drug safety communications, pediatric drug shortages, or new resistance alerts directly relevant to pediatric ID/ASP practice were identified with confirmed publication dates of July 26 \u2013 August 09, 2026.",
-    "Ongoing monitoring reminders from prior periods:"
+    "Ongoing monitoring reminders from prior periods:",
+    "Clinical Implications for Pediatric ID/ASP Programs:",
+    "No new IDSA, PIDS, AAP, ESCMID, or CDC formal guidelines were published between August 9\u201323, 2026.",
+    "Eliminating Inappropriate Postoperative Antibiotics: A Stepped-Wedge Cluster Randomized Trial (OPerAtiC)",
+    "*Pediatrics, Published July 16, 2026 (online ahead of print, confirmed within digest window as first available August 2026)* | https://doi.org/10.1542/peds.2026-076092",
+    "[Article 1] Oral Antibiotic Switch and Corticosteroid Use in Pediatric Invasive Group A Streptococcal Infection: A Multicenter Retrospective Cohort",
+    "[Article 2] RSV-Associated Perinatal Outcomes: A Pathology-Based Cohort Study",
+    "[Article 3] Antibiotic Use and Outcomes in Pediatric Infectious Complications of Pediatric Oncology Patients: A 10-Year Multicenter Retrospective Study and Literature Review",
+    "[Article 4] Pediatric RSV Outcomes \u2014 Italian Multicenter Stewardship Cohort",
+    "[Article 5] Pediatric RSV Brain/CNS Outcomes \u2014 UK Study (Haddock, Drysdale)",
+    "[MMWR Report 1] Notes from the Field: Potential Infant HIV Exposure from Donated Breast Milk Received Through Social Media \u2014 Santa Clara County, California, May 2025\u2013January 2026",
+    "*MMWR Morbidity and Mortality Weekly Report, Vol. 75, No. 31, August 13, 2026* | https://doi.org/10.15585/mmwr.mm7531a2",
+    "[MMWR Report 2] Southward Expansion of *Ixodes scapularis* (Blacklegged) Tick Pathogens \u2014 Western North Carolina, November 2024\u2013August 2025",
+    "*MMWR Morbidity and Mortality Weekly Report, Vol. 75, No. 31, August 13, 2026* | https://doi.org/10.15585/mmwr.mm7531a1",
+    "No new FDA drug safety communications, new pediatric drug shortages, or novel resistance alerts directly relevant to pediatric ID/ASP practice were identified with confirmed publication dates of August 9\u201323, 2026.",
+    "Important transparency note:"
   ],
-  "last_run": "2026-08-09T06:34:28.355553",
+  "last_run": "2026-08-23T06:19:47.922517",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -1239,6 +1254,138 @@
       "key_finding": "Version 5.0 updates preferred agents for resistant gram-negative infections and explicitly cross-references pediatric consensus dosing recommendations for newer beta-lactam agents including cefiderocol, ceftazidime-avibactam, ceftolozane-tazobactam, imipenem-cilastatin-relebactam, and sulbactam-durlobactam.",
       "study_type": "guideline",
       "digest_date": "2026-08-09"
+    },
+    {
+      "title": "Eliminating Inappropriate Postoperative Antibiotics: A Stepped-Wedge Cluster Randomized Trial (OPerAtiC)",
+      "doi": "https://doi.org/10.1542/peds.2026-076092",
+      "journal": "Pediatrics",
+      "date": "July 16, 2026",
+      "topics": [
+        "antimicrobial-stewardship",
+        "postoperative-prophylaxis",
+        "surgical-site-infection",
+        "pediatric-surgery",
+        "implementation-science",
+        "electronic-health-record",
+        "facilitation-workshop"
+      ],
+      "key_finding": "Facilitation workshops combined with EHR order set modification safely reduced inappropriate postoperative antibiotic continuation in pediatric low-risk surgery without increasing surgical site infection rates compared to order set modification alone.",
+      "study_type": "rct",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "Oral Antibiotic Switch and Corticosteroid Use in Pediatric Invasive Group A Streptococcal Infection: A Multicenter Retrospective Cohort",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "August 21, 2026",
+      "topics": [
+        "group-a-streptococcus",
+        "invasive-disease",
+        "corticosteroid-adjunctive-therapy",
+        "oral-antibiotic-switch",
+        "pediatric-id"
+      ],
+      "key_finding": "Real-world Spanish multicenter observational data on oral antibiotic switch timing and corticosteroid use in pediatric invasive GAS, providing clinical context for recent ESPID guidelines.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "RSV-Associated Perinatal Outcomes: A Pathology-Based Cohort Study",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "August 20, 2026",
+      "topics": [
+        "respiratory-syncytial-virus",
+        "perinatal-pathology",
+        "stillbirth",
+        "maternal-vaccination",
+        "placental-pathology"
+      ],
+      "key_finding": "Pathology-based characterization of RSV-associated perinatal outcomes and placental involvement, relevant to defining the burden preventable by maternal RSV vaccination.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "Antibiotic Use and Outcomes in Pediatric Infectious Complications of Pediatric Oncology Patients: A 10-Year Multicenter Retrospective Study and Literature Review",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "August 21, 2026",
+      "topics": [
+        "antimicrobial-stewardship",
+        "pediatric-oncology",
+        "immunocompromised-host",
+        "empiric-therapy",
+        "breakthrough-infection",
+        "hematologic-malignancy"
+      ],
+      "key_finding": "Ten-year French multicenter data on antibiotic use patterns and outcomes in pediatric hematology/oncology infectious complications, informing empiric therapy protocols for immunocompromised children.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "Pediatric RSV Outcomes \u2014 Italian Multicenter Stewardship Cohort",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "August 18, 2026",
+      "topics": [
+        "respiratory-syncytial-virus",
+        "antimicrobial-stewardship",
+        "lower-respiratory-tract-infection",
+        "antibiotic-prescribing",
+        "bronchiolitis"
+      ],
+      "key_finding": "Italian multicenter RSV-related stewardship and clinical outcomes data extending prior work on unnecessary antibiotic prescribing patterns in pediatric respiratory syncytial virus infections.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "Pediatric RSV Brain/CNS Outcomes \u2014 UK Study",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "August 20, 2026",
+      "topics": [
+        "respiratory-syncytial-virus",
+        "neurological-complications",
+        "central-nervous-system",
+        "neonatal-rsv",
+        "nirsevimab"
+      ],
+      "key_finding": "UK-based characterization of RSV-associated neurological and CNS complications in infants, potentially expanding the evidence base for nirsevimab effectiveness beyond respiratory hospitalization prevention.",
+      "study_type": "cohort",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "Notes from the Field: Potential Infant HIV Exposure from Donated Breast Milk Received Through Social Media \u2014 Santa Clara County, California, May 2025\u2013January 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7531a2",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "August 13, 2026",
+      "topics": [
+        "hiv-exposure",
+        "breast-milk-transmission",
+        "postexposure-prophylaxis",
+        "social-media-milk-sharing",
+        "infant-hiv-prevention"
+      ],
+      "key_finding": "Case report of potential infant HIV exposure through peer-to-peer social media\u2013acquired donor breast milk, illustrating the transmission risk of unscreened milk-sharing and reinforcing FDA and HMBANA guidelines for formal milk banking.",
+      "study_type": "case-series",
+      "digest_date": "2026-08-23"
+    },
+    {
+      "title": "Southward Expansion of Ixodes scapularis (Blacklegged) Tick Pathogens \u2014 Western North Carolina, November 2024\u2013August 2025",
+      "doi": "https://doi.org/10.15585/mmwr.mm7531a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "August 13, 2026",
+      "topics": [
+        "lyme-disease",
+        "tickborne-illness",
+        "babesiosis",
+        "anaplasmosis",
+        "geographic-expansion",
+        "vector-surveillance"
+      ],
+      "key_finding": "Community-based tick surveillance documenting southward expansion of Ixodes scapularis and associated pathogens into western North Carolina mountain regions, establishing new endemic areas for Lyme disease and coinfections with direct pediatric clinical implications.",
+      "study_type": "cross-sectional",
+      "digest_date": "2026-08-23"
     }
   ]
 }
