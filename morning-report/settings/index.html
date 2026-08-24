@@ -127,13 +127,26 @@
 
 </main>
 
-<script src="../assets/remote.js"></script>
+<script src="../assets/remote.js?v=1"></script>
 <script src="../assets/store.js"></script>
 <script>
 (function () {
   "use strict";
 
   var $ = function (id) { return document.getElementById(id); };
+
+  /* remote.js is the only script this page cannot do without. A blocked
+     CDN, a stale cache entry or an extension that ate the request would
+     otherwise leave a dead form with no explanation. */
+  if (!window.MRRemote) {
+    $("state").className = "state-line err";
+    $("state-txt").textContent =
+      "The script this page needs (assets/remote.js) did not load, so nothing here will work. " +
+      "Reload with a hard refresh; if it persists, the file is being blocked between you and the site.";
+    ["save", "forget", "recheck", "copylink"].forEach(function (id) { $(id).disabled = true; });
+    MRStore.mountBar("mr-bar");
+    return;
+  }
 
   function renderStatus() {
     var s = MRRemote.status();
