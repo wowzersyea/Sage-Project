@@ -378,7 +378,7 @@ Wheel.prototype.render = function(){
     if (isDrawn && !isWinner) path.setAttribute("opacity", ".34");
     rotor.appendChild(path);
 
-    var fit = fitLabel(person.name, n);
+    var fit = fitLabel(MRRoster.displayName(person), n);
     var text = document.createElementNS(SVG_NS, "text");
     text.setAttribute("class", "seg-label");
     text.setAttribute("font-size", fit.size);
@@ -497,7 +497,7 @@ Wheel.prototype.renderLedger = function(){
     var benched = cycle.benched.indexOf(person.id) !== -1;
     var drawn = cycle.drawn.indexOf(person.id) !== -1;
     chip.className = "chip" + (benched ? " benched" : (drawn ? " done" : (nextIds.indexOf(person.id) !== -1 ? " next" : "")));
-    chip.textContent = person.name;
+    chip.textContent = MRRoster.displayName(person);
     var last = MRRoster.lastServed(roster, person.id, self.role);
     chip.title = person.name + " — " + (last
       ? "last took this role " + last

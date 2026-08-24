@@ -87,6 +87,37 @@
     };
   }
 
+  /* What to show where space is tight — a wheel wedge, a pool chip.
+     A real roster carries four-part names, and two people who share a
+     given name are common. Truncated to fit a wedge, both can render as
+     the same string — which is worse than useless on a wheel whose whole
+     job is to name one person. `short` is optional and falls back to the
+     full name, so a roster without one still works. */
+  function displayName(res) {
+    if (!res) return "";
+    var s = (res.short || "").trim();
+    return s || res.name || "";
+  }
+
+  /* How a residency list is always ordered: by surname. `sort_name` is
+     optional and holds "Surname, Given"; without it we fall back to the
+     displayed name, which sorts by given name — better than nothing but
+     not what anyone scanning a roster expects. */
+  function sortKey(res) {
+    if (!res) return "";
+    return ((res.sort_name || res.name || "") + "").toLowerCase();
+  }
+
+  /* First given name plus the surname's initial. Used to propose a
+     short name in the editor; the user can always overrule it. */
+  function suggestShort(name) {
+    var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return parts[0] || "";
+    var first = parts[0];
+    var last = parts[parts.length - 1].replace(/^-+/, "");
+    return first + " " + (last.charAt(0) || "").toUpperCase() + ".";
+  }
+
   function normalise(r) {
     if (!r || typeof r !== "object") return blank();
     r.residents = Array.isArray(r.residents) ? r.residents : [];
@@ -98,6 +129,8 @@
     r.residents.forEach(function (p) {
       if (!Array.isArray(p.unavailable)) p.unavailable = [];
       if (typeof p.active !== "boolean") p.active = true;
+      if (typeof p.short !== "string") p.short = "";
+      if (typeof p.sort_name !== "string") p.sort_name = "";
     });
     return r;
   }
@@ -334,6 +367,8 @@
       return {
         id: p.id,
         name: p.name,
+        display: displayName(p),
+        sort_key: sortKey(p),
         level: p.level,
         counts: counts,
         total: total,
@@ -378,7 +413,7 @@
        is who you draw next. */
     rows.sort(function (a, b) {
       if (a.active_weeks_since !== b.active_weeks_since) return b.active_weeks_since - a.active_weeks_since;
-      return a.name.localeCompare(b.name);
+      return a.sort_key.localeCompare(b.sort_key);
     });
 
     return { rows: rows, medians: med, overdue_weeks: overdueWeeks };
@@ -483,6 +518,9 @@
     daysBetween: daysBetween,
     parseDate: parseDate,
     academicYearOf: academicYearOf,
+    displayName: displayName,
+    suggestShort: suggestShort,
+    sortKey: sortKey,
     roleLabel: function (id) {
       var r = ROLES.filter(function (x) { return x.id === id; })[0];
       return r ? r.label : id;
