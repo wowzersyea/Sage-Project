@@ -355,6 +355,11 @@
       <a class="primary" id="toScore" href="#" target="_blank" rel="noopener">Score the session →</a>
       <button class="ghost" id="stayHere">Stay on the board</button>
     </div>
+    <p style="margin-top:14px">The third is for everybody else: send this link round while people are still
+      in the room, because feedback asked for tomorrow does not arrive.</p>
+    <div class="row">
+      <a class="teal" id="toFeedback" href="#" target="_blank" rel="noopener">Ask the room how it went →</a>
+    </div>
   </div>
 </div>
 
@@ -880,6 +885,7 @@ function showFinish(archive, path, d){
 
   $("toCapture").href = "../capture/?session=" + encodeURIComponent(archive.id);
   $("toScore").href = "../scorecard/?session=" + encodeURIComponent(archive.id);
+  $("toFeedback").href = "../feedback/?session=" + encodeURIComponent(archive.id);
   $("finishVeil").hidden = false;
 }
 

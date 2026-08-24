@@ -25,6 +25,7 @@ Each suite exits non-zero on a failure or on any console error.
 | `report.test.js` | The four-session floor, cell suppression, and that no session or role is ever named |
 | `equity.test.js` | The four flags, the away adjustment, the CSV, and that nothing here reads `sessions/` |
 | `site.test.js` | Every page loads clean, every internal link resolves, and nothing writes `localStorage` |
+| `feedback.test.js` | Dictation into the boxes, the identifier gate, the rollup arithmetic, one model call per unit, and that the kept record carries no comment and nothing role-level |
 
 ## The fake file system
 

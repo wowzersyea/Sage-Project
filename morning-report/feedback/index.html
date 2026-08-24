@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedback | Morning Report</title>
+<meta name="description" content="Ninety seconds of anonymous feedback on a morning report session: the technology, the flow, the six roles, and the one thing to change.">
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .sessionbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+
+  .qhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:3px}
+  .qhead h2{margin:0}
+  .qhead .eyebrow{margin:0}
+
+  .scale{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+  .scale .opt{
+    flex:1 1 120px;min-width:110px;cursor:pointer;
+    border:1px solid var(--line);border-radius:6px;background:#FCFDFE;
+    padding:9px 11px;display:flex;flex-direction:column;gap:2px;
+  }
+  .scale .opt:hover{border-color:#9FB0BE}
+  .scale .opt input{position:absolute;opacity:0;width:0;height:0}
+  .scale .opt .n{font-family:var(--serif);font-size:19px;font-weight:700;line-height:1;color:var(--navy)}
+  .scale .opt .lb{font-size:11.5px;color:var(--muted);line-height:1.35}
+  .scale .opt.on{background:var(--navy);border-color:var(--navy)}
+  .scale .opt.on .n,.scale .opt.on .lb{color:#fff}
+  .scale .opt.skip{flex:0 1 150px;background:#F7F9FB}
+  .scale .opt.skip .lb{font-size:12.5px}
+  .scale .opt.skip.on{background:var(--muted);border-color:var(--muted)}
+  .scale .opt:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+
+  .ticks{margin:14px 0 4px;border-top:1px solid #EEF2F5;padding-top:12px}
+  .tick{
+    display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer;font-size:13.5px;
+  }
+  .tick input{width:auto;flex:none;margin-top:3px}
+  .tick.on span{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1.5px}
+
+  .roles .row{border-top:1px solid #EEF2F5;padding:16px 0}
+  .roles .row:first-child{border-top:none;padding-top:4px}
+  .roles .who{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .roles .who h3{margin:0}
+  .roles .who .tag{font-size:12.5px;color:var(--muted)}
+  .roles .who a{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--teal);text-decoration:none;margin-left:auto}
+  .roles .who a:hover{text-decoration:underline}
+
+  .phi{margin-top:16px}
+  .phi[hidden]{display:none}
+  .finding{
+    border:1px solid var(--red);border-left-width:4px;border-radius:6px;background:#FDF6F7;
+    padding:11px 14px;margin-bottom:8px;font-size:13px;
+  }
+  .finding.check{border-color:var(--amber);background:#FBF0DE}
+  .finding .top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .finding .kind{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+  .finding.check .kind{color:#8A6014}
+  .finding .where{font-size:11.5px;color:var(--muted)}
+  .finding code{
+    font-family:var(--mono);background:#fff;border:1px solid var(--line);
+    padding:1px 5px;border-radius:3px;font-size:12.5px;
+  }
+  .finding .why{margin-top:5px;color:#3D4855}
+  .finding .ack{margin-top:8px;font-size:12.5px;display:flex;gap:7px;align-items:center}
+  .finding .ack input{width:auto;flex:none}
+
+  .savebar{
+    position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+    padding:14px 0;margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;z-index:10;
+  }
+  .savebar .hint{margin:0}
+
+  .done{text-align:center;padding:26px 0}
+  .done h2{font-size:27px}
+  .done p{color:var(--muted);max-width:56ch;margin:0 auto 18px}
+  .done .bar{justify-content:center}
+
+  @media (max-width:820px){
+    .scale .opt{flex:1 1 45%}
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3KEGTRRS0Z');
+</script>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · after</p>
+    <h1 id="title">How did report go?</h1>
+    <p class="sub" id="lede"></p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div id="form">
+
+      <div class="panel" style="margin-bottom:16px">
+        <div class="sessionbar">
+          <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
+          <div><label class="f" for="site">Site</label><input type="text" id="site" placeholder="Galveston"></div>
+        </div>
+        <p class="hint" id="sessionnote"></p>
+        <p class="hint" id="voicenote"></p>
+      </div>
+
+      <div id="sections"></div>
+
+      <div class="panel roles" id="rolepanel" style="margin-top:16px">
+        <div class="qhead">
+          <p class="eyebrow" id="roleeyebrow"></p>
+        </div>
+        <h2 id="roletitle"></h2>
+        <p class="lede" id="rolelede"></p>
+        <div id="roles"></div>
+      </div>
+
+      <div class="phi panel" id="phi" hidden>
+        <h2>Identifiers</h2>
+        <p class="lede">Feedback is read by other people and dictation is not careful about names.
+          These have to be dealt with before this can be sent.</p>
+        <div id="findings"></div>
+      </div>
+
+      <div class="savebar">
+        <button class="amber" id="send">Send it</button>
+        <button class="ghost" id="clear">Clear the form</button>
+        <a class="btn ghost" href="summary/" id="toSummary">Read the summary →</a>
+        <span class="hint" id="sendnote"></span>
+      </div>
+
+      <div class="privacy" style="margin-top:20px">
+        <b>Anonymous, and the role notes are not kept</b>
+        Nothing here asks who you are, and there is no account. What you write about the session —
+        the technology, the flow, the overall — is kept with the session and belongs to nobody in
+        particular. What you write about a <em>role</em> goes to <code>working/</code>, which is
+        identified by inference and is swept after seven days: the roster records who held which role
+        on a date, so a permanent role file would join a name to a judgement. Role feedback is
+        formative, it is handed to the person, and it is never filed or reported.
+      </div>
+
+    </div>
+
+    <div class="done panel" id="done" hidden>
+      <h2>Sent. Thank you.</h2>
+      <p id="donenote"></p>
+      <div class="bar">
+        <a class="btn ghost" href="summary/" id="toSummary2">Read the summary →</a>
+        <button class="ghost" id="another">Send another</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — Morning Report. The questions live in <code>content/feedback.json</code>;
+      the roles come from <code>content/roles.json</code>. Neither is restated in this page.</p>
+    <p id="footnote"></p>
+  </div>
+</footer>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/phi.js"></script>
+<script src="../assets/voice.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var content = null;
+var roles = [];               /* [{slug,name,tagline}] in the order content asks for */
+var acked = {};
+var findings = [];
+var DRAFT = "mr.feedback.draft";
+var SENT = "mr.feedback.sent";
+
+/* ---------- the answers ------------------------------------------------- */
+
+function sessionId(){
+  return MRStore.sessionId($("date").value || MRStore.today(), ($("site").value || "").trim());
+}
+
+function ratingOf(name){
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  if (!el || el.value === "") return null;
+  return parseInt(el.value, 10);
+}
+
+function commentOf(id){
+  var el = $("c-" + id);
+  return el ? el.value.trim() : "";
+}
+
+function checksOf(sec){
+  var out = {};
+  sec.checks.forEach(function(c){
+    var el = $("t-" + sec.id + "-" + c.id);
+    if (el && el.checked) out[c.id] = true;
+  });
+  return out;
+}
+
+function record(){
+  var date = $("date").value || MRStore.today();
+  var site = ($("site").value || "").trim();
+  var r = {
+    id: "fb-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+    session: MRStore.sessionId(date, site),
+    date: date,
+    site: site,
+    feedback_version: content.version,
+    submitted: new Date().toISOString(),
+    roles: {}
+  };
+  content.sections.forEach(function(sec){
+    r[sec.id] = {
+      rating: ratingOf("r-" + sec.id),
+      checks: checksOf(sec),
+      comment: commentOf(sec.id)
+    };
+  });
+  roles.forEach(function(role){
+    r.roles[role.slug] = {
+      rating: ratingOf("r-role-" + role.slug),
+      comment: commentOf("role-" + role.slug)
+    };
+  });
+  return r;
+}
+
+/* Something was actually said — an empty form is not feedback. */
+function anything(r){
+  var said = false;
+  content.sections.forEach(function(sec){
+    var a = r[sec.id];
+    if (a.rating !== null || a.comment || Object.keys(a.checks).length) said = true;
+  });
+  Object.keys(r.roles).forEach(function(k){
+    if (r.roles[k].rating !== null || r.roles[k].comment) said = true;
+  });
+  return said;
+}
+
+/* ---------- render ------------------------------------------------------ */
+
+function scaleRow(name, label){
+  var wrap = document.createElement("div");
+  wrap.className = "scale";
+  wrap.setAttribute("role", "radiogroup");
+  if (label) wrap.setAttribute("aria-label", label);
+
+  function opt(value, n, label, skip){
+    var lab = document.createElement("label");
+    lab.className = "opt" + (skip ? " skip" : "");
+    var input = document.createElement("input");
+    input.type = "radio"; input.name = name; input.value = value;
+    lab.appendChild(input);
+    if (n){
+      var num = document.createElement("span");
+      num.className = "n"; num.textContent = n;
+      lab.appendChild(num);
+    }
+    var lb = document.createElement("span");
+    lb.className = "lb"; lb.textContent = label;
+    lab.appendChild(lb);
+    input.addEventListener("change", function(){
+      Array.prototype.forEach.call(wrap.children, function(c){ c.classList.remove("on"); });
+      lab.classList.add("on");
+      saveDraft();
+    });
+    return lab;
+  }
+
+  content.scale.forEach(function(p){ wrap.appendChild(opt(String(p.value), String(p.value), p.label)); });
+  wrap.appendChild(opt("", null, content.skip_label, true));
+  return wrap;
+}
+
+function commentBox(id, label, placeholder){
+  var box = document.createElement("div");
+
+  var lab = document.createElement("label");
+  lab.className = "f"; lab.setAttribute("for", "c-" + id);
+  lab.textContent = label;
+
+  var ta = document.createElement("textarea");
+  ta.id = "c-" + id;
+  ta.rows = 3;
+  ta.placeholder = placeholder || "";
+  ta.addEventListener("input", function(){ revalidate(); saveDraft(); });
+
+  box.appendChild(lab);
+  box.appendChild(ta);
+
+  var row = document.createElement("div");
+  row.className = "mic-row";
+  var mic = MRVoice.mount(ta, { label: label, startText: "Dictate", stopText: "Stop" });
+  if (mic){
+    row.appendChild(mic.button);
+    box.appendChild(row);
+    if (mic.interim) box.appendChild(mic.interim);
+  }
+  return box;
+}
+
+function renderSections(){
+  var host = $("sections");
+  host.innerHTML = "";
+  content.sections.forEach(function(sec){
+    var panel = document.createElement("div");
+    panel.className = "panel";
+    panel.style.marginBottom = "16px";
+
+    var head = document.createElement("div");
+    head.className = "qhead";
+    var eyebrow = document.createElement("p");
+    eyebrow.className = "eyebrow"; eyebrow.textContent = sec.eyebrow;
+    head.appendChild(eyebrow);
+    panel.appendChild(head);
+
+    var h2 = document.createElement("h2");
+    h2.textContent = sec.title;
+    panel.appendChild(h2);
+
+    var lede = document.createElement("p");
+    lede.className = "lede"; lede.textContent = sec.lede;
+    panel.appendChild(lede);
+
+    var q = document.createElement("p");
+    q.className = "f"; q.style.marginBottom = "0";
+    q.textContent = sec.question;
+    panel.appendChild(q);
+
+    panel.appendChild(scaleRow("r-" + sec.id, sec.title + " — " + sec.question));
+
+    var ticks = document.createElement("div");
+    ticks.className = "ticks";
+    var tl = document.createElement("p");
+    tl.className = "hint"; tl.style.marginTop = "0"; tl.textContent = content.tick_lede;
+    ticks.appendChild(tl);
+    sec.checks.forEach(function(c){
+      var lab = document.createElement("label");
+      lab.className = "tick";
+      var cb = document.createElement("input");
+      cb.type = "checkbox"; cb.id = "t-" + sec.id + "-" + c.id;
+      var span = document.createElement("span");
+      span.textContent = c.text;
+      cb.addEventListener("change", function(){
+        lab.classList.toggle("on", cb.checked);
+        saveDraft();
+      });
+      lab.appendChild(cb); lab.appendChild(span);
+      ticks.appendChild(lab);
+    });
+    panel.appendChild(ticks);
+
+    panel.appendChild(commentBox(sec.id, sec.comment_label, sec.comment_placeholder));
+    host.appendChild(panel);
+  });
+}
+
+function renderRoles(){
+  $("roleeyebrow").textContent = content.roles.eyebrow;
+  $("roletitle").textContent = content.roles.title;
+  $("rolelede").textContent = content.roles.lede;
+
+  var host = $("roles");
+  host.innerHTML = "";
+  roles.forEach(function(role){
+    var row = document.createElement("div");
+    row.className = "row";
+
+    var who = document.createElement("div");
+    who.className = "who";
+    var h3 = document.createElement("h3");
+    h3.textContent = role.name;
+    var tag = document.createElement("span");
+    tag.className = "tag"; tag.textContent = role.tagline || "";
+    var link = document.createElement("a");
+    link.href = "../roles/" + role.slug + "/";
+    link.target = "_blank"; link.rel = "noopener";
+    link.textContent = content.roles.card_link;
+    who.appendChild(h3); who.appendChild(tag); who.appendChild(link);
+    row.appendChild(who);
+
+    var q = document.createElement("p");
+    q.className = "hint"; q.textContent = content.roles.question;
+    row.appendChild(q);
+
+    row.appendChild(scaleRow("r-role-" + role.slug, role.name + " — " + content.roles.question));
+    row.appendChild(commentBox("role-" + role.slug, content.roles.comment_label,
+      content.roles.comment_placeholder));
+    host.appendChild(row);
+  });
+}
+
+/* ---------- the identifier check ---------------------------------------- */
+
+function fields(){
+  var f = {};
+  content.sections.forEach(function(sec){
+    var v = commentOf(sec.id);
+    if (v) f[sec.title] = v;
+  });
+  roles.forEach(function(role){
+    var v = commentOf("role-" + role.slug);
+    if (v) f[role.name] = v;
+  });
+  return f;
+}
+
+function keyOf(f){ return f.field + "|" + f.kind + "|" + f.match; }
+
+function revalidate(){
+  findings = MRPhi.scanAll(fields());
+  renderFindings();
+  paintSend();
+}
+
+function renderFindings(){
+  var host = $("findings");
+  host.innerHTML = "";
+  $("phi").hidden = findings.length === 0;
+
+  findings.forEach(function(f){
+    var box = document.createElement("div");
+    box.className = "finding" + (f.severity === "check" ? " check" : "");
+
+    var top = document.createElement("div");
+    top.className = "top";
+    var kind = document.createElement("span");
+    kind.className = "kind"; kind.textContent = f.kind;
+    var code = document.createElement("code");
+    code.textContent = f.match;
+    var where = document.createElement("span");
+    where.className = "where"; where.textContent = "in " + f.field;
+    top.appendChild(kind); top.appendChild(code); top.appendChild(where);
+
+    var why = document.createElement("div");
+    why.className = "why"; why.textContent = f.why;
+
+    box.appendChild(top); box.appendChild(why);
+
+    if (f.severity === "check"){
+      var ack = document.createElement("label");
+      ack.className = "ack";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!acked[keyOf(f)];
+      cb.addEventListener("change", function(){
+        acked[keyOf(f)] = cb.checked;
+        paintSend();
+      });
+      ack.appendChild(cb);
+      ack.appendChild(document.createTextNode("This is clinical, not a person's name."));
+      box.appendChild(ack);
+    }
+
+    host.appendChild(box);
+  });
+}
+
+function unresolved(){
+  return {
+    blocks: MRPhi.blocking(findings),
+    checks: findings.filter(function(f){
+      return f.severity === "check" && !acked[keyOf(f)];
+    })
+  };
+}
+
+function paintSend(){
+  var u = unresolved();
+  var btn = $("send");
+  var note = $("sendnote");
+  if (u.blocks.length){
+    btn.disabled = true;
+    note.textContent = u.blocks.length + (u.blocks.length === 1 ? " identifier has" : " identifiers have") +
+      " to come out first.";
+    return;
+  }
+  if (u.checks.length){
+    btn.disabled = true;
+    note.textContent = u.checks.length + " possible " + (u.checks.length === 1 ? "name" : "names") +
+      " to confirm or edit.";
+    return;
+  }
+  btn.disabled = false;
+  note.textContent = "";
+}
+
+/* ---------- draft, so a reload does not cost the typing ------------------ */
+
+function saveDraft(){
+  if (!content) return;
+  try { localStorage.setItem(DRAFT, JSON.stringify(record())); } catch (e) { /* private mode */ }
+}
+
+function clearDraft(){
+  try { localStorage.removeItem(DRAFT); } catch (e) { /* nothing to do */ }
+}
+
+function restoreDraft(){
+  var raw = null;
+  try { raw = localStorage.getItem(DRAFT); } catch (e) { return; }
+  if (!raw) return;
+  var d;
+  try { d = JSON.parse(raw); } catch (e) { return; }
+  if (!d || d.feedback_version !== content.version) return;
+
+  if (d.date) $("date").value = d.date;
+  if (d.site) $("site").value = d.site;
+
+  function setRating(name, value){
+    if (value === null || value === undefined) return;
+    var el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+    if (el){ el.checked = true; el.dispatchEvent(new Event("change")); }
+  }
+
+  content.sections.forEach(function(sec){
+    var a = d[sec.id]; if (!a) return;
+    setRating("r-" + sec.id, a.rating);
+    Object.keys(a.checks || {}).forEach(function(id){
+      var cb = $("t-" + sec.id + "-" + id);
+      if (cb){ cb.checked = true; cb.dispatchEvent(new Event("change")); }
+    });
+    if (a.comment) $("c-" + sec.id).value = a.comment;
+  });
+  roles.forEach(function(role){
+    var a = (d.roles || {})[role.slug]; if (!a) return;
+    setRating("r-role-" + role.slug, a.rating);
+    if (a.comment) $("c-role-" + role.slug).value = a.comment;
+  });
+  revalidate();
+}
+
+function alreadySent(session){
+  try {
+    var seen = JSON.parse(localStorage.getItem(SENT) || "[]");
+    return seen.indexOf(session) !== -1;
+  } catch (e) { return false; }
+}
+
+function markSent(session){
+  try {
+    var seen = JSON.parse(localStorage.getItem(SENT) || "[]");
+    if (seen.indexOf(session) === -1) seen.push(session);
+    localStorage.setItem(SENT, JSON.stringify(seen.slice(-40)));
+  } catch (e) { /* private mode */ }
+}
+
+/* ---------- send -------------------------------------------------------- */
+
+function summaryHref(session){
+  return "summary/?session=" + encodeURIComponent(session);
+}
+
+function finish(r, path){
+  MRVoice.stop();
+  markSent(r.session);
+  clearDraft();
+  $("form").hidden = true;
+  $("done").hidden = false;
+  $("donenote").textContent = "Written to " + path + ". " + content.footer;
+  $("toSummary2").href = summaryHref(r.session);
+  window.scrollTo(0, 0);
+}
+
+$("send").addEventListener("click", function(){
+  revalidate();
+  var u = unresolved();
+  if (u.blocks.length || u.checks.length){ paintSend(); return; }
+
+  var r = record();
+  if (!anything(r)){
+    $("sendnote").textContent = "Nothing has been filled in yet.";
+    return;
+  }
+
+  /* Flat, not one directory per session: the store lists files and
+     not directories, so a session folder would be invisible to the
+     summary page. The session is in the filename instead. */
+  var path = content.storage.submissions + r.session + "--" + r.id + ".json";
+  if (!MRStore.status().ready){
+    MRStore.download(path, r);
+    MRStore.notify("warn", "No folder connected, so the feedback was downloaded instead. " +
+      "Put it in " + path + " by hand.", true);
+    finish(r, path);
+    return;
+  }
+  MRStore.write(path, r).then(function(ok){
+    if (!ok) return;
+    finish(r, path);
+  });
+});
+
+$("clear").addEventListener("click", function(){
+  if (!confirm("Clear everything on this form?")) return;
+  MRVoice.stop();
+  clearDraft();
+  location.reload();
+});
+
+$("another").addEventListener("click", function(){
+  clearDraft();
+  location.reload();
+});
+
+/* ---------- boot -------------------------------------------------------- */
+
+Promise.all([
+  fetch(MRStore.base() + "content/feedback.json", { cache: "no-cache" })
+    .then(function(r){ if (!r.ok) throw new Error("feedback.json — HTTP " + r.status); return r.json(); }),
+  fetch(MRStore.base() + "content/roles.json", { cache: "no-cache" })
+    .then(function(r){ if (!r.ok) throw new Error("roles.json — HTTP " + r.status); return r.json(); })
+])
+.then(function(both){
+  content = both[0];
+  var cards = {};
+  (both[1].roles || []).forEach(function(c){ cards[c.slug] = c; });
+  roles = content.roles.order.map(function(slug){
+    var c = cards[slug] || {};
+    return { slug: slug, name: c.name || slug, tagline: c.tagline || "" };
+  });
+
+  $("title").textContent = content.title;
+  $("lede").textContent = content.lede;
+  $("footnote").textContent = content.footer;
+  $("voicenote").textContent = MRVoice.supported() ? MRVoice.NOTE : MRVoice.UNSUPPORTED;
+
+  renderSections();
+  renderRoles();
+  return MRStore.whenReady;
+})
+.then(function(){
+  MRStore.mountBar("mr-bar");
+  $("date").value = MRStore.today();
+
+  var asked = new URLSearchParams(location.search).get("session") || "";
+  function note(text){ $("sessionnote").textContent = text; }
+
+  function afterMeta(){
+    restoreDraft();
+    revalidate();
+    var s = sessionId();
+    $("toSummary").href = summaryHref(s);
+    if (alreadySent(s)){
+      note("This browser has already sent feedback for " + s +
+        ". Send another only if you have something new to say — one per person is the point.");
+    }
+    ["date", "site"].forEach(function(id){
+      $(id).addEventListener("input", function(){
+        $("toSummary").href = summaryHref(sessionId());
+        saveDraft();
+      });
+    });
+  }
+
+  if (!MRStore.status().ready){
+    note("No data folder connected, so sending will download the file instead.");
+    afterMeta();
+    return;
+  }
+
+  var pick = asked
+    ? MRStore.read("board-archive/" + asked + ".json")
+    : MRStore.list("board-archive").then(function(names){
+        var latest = names.filter(function(n){ return /\.json$/.test(n); }).sort().pop();
+        return latest ? MRStore.read("board-archive/" + latest) : null;
+      });
+
+  return pick.then(function(a){
+    if (a){
+      if (a.date) $("date").value = a.date;
+      if (a.site) $("site").value = a.site;
+      note(asked
+        ? "Feedback for " + a.id + ", the session this link was sent for."
+        : "Feedback for " + a.id + ", the most recent session on the board. Change the date or site if that is not the one you sat in.");
+    } else {
+      note("No board archive found, so this is dated today. Change it if you are catching up on an older session.");
+    }
+    afterMeta();
+  });
+})
+.catch(function(err){
+  MRStore.notify("err", "Could not load the questions — " +
+    (err && err.message ? err.message : err) + ". The form cannot render without them.", true);
+});
+</script>
+</body>
+</html>

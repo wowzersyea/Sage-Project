@@ -1,0 +1,173 @@
+{
+  "_source": "The feedback app at /morning-report/feedback/. The sections, the ticks, the scale and the model's instructions live here; the two pages restate none of it. Role names and taglines are read from roles.json at run time — nothing about what a role card asks is repeated in this file.",
+  "_privacy_note": "Nothing here asks who is filling it in, and nothing here asks for a name. The role sections are written to working/ and swept; only the session sections are kept. See the privacy block on each page.",
+  "version": 1,
+  "title": "How did report go?",
+  "lede": "Ninety seconds, anonymous, while it is still fresh. Tick what held, say the rest out loud.",
+  "scale": [
+    {
+      "value": 1,
+      "label": "Did not work",
+      "short": "Did not work"
+    },
+    {
+      "value": 2,
+      "label": "Rough",
+      "short": "Rough"
+    },
+    {
+      "value": 3,
+      "label": "Solid",
+      "short": "Solid"
+    },
+    {
+      "value": 4,
+      "label": "Strong",
+      "short": "Strong"
+    },
+    {
+      "value": 5,
+      "label": "As good as it gets",
+      "short": "Best case"
+    }
+  ],
+  "skip_label": "Did not see it",
+  "tick_lede": "Tick what held. Anything left unticked is what the summary picks up.",
+  "sections": [
+    {
+      "id": "overall",
+      "title": "Overall",
+      "eyebrow": "The one thing",
+      "question": "How did it go?",
+      "lede": "One rating, one change. If you only fill in one box on this page, make it this one.",
+      "checks": [
+        {
+          "id": "learned",
+          "text": "I left with something I did not walk in with"
+        },
+        {
+          "id": "safe",
+          "text": "It was safe to be wrong out loud"
+        },
+        {
+          "id": "again",
+          "text": "I would run this session again as it was"
+        }
+      ],
+      "comment_label": "The one thing to change next time",
+      "comment_placeholder": "One thing, not five. Say it plainly.",
+      "primary": true
+    },
+    {
+      "id": "technical",
+      "title": "Technical",
+      "eyebrow": "The room and the wire",
+      "question": "Did the technology stay out of the way?",
+      "lede": "Two sites on one call. This is the half that decides whether the far end could take part at all.",
+      "checks": [
+        {
+          "id": "audio",
+          "text": "Audio was clear at both sites"
+        },
+        {
+          "id": "share",
+          "text": "The screen share was legible, not a photograph of a screen"
+        },
+        {
+          "id": "board",
+          "text": "The board was readable on the far end"
+        },
+        {
+          "id": "joined",
+          "text": "Nobody lost more than a minute getting in"
+        },
+        {
+          "id": "ready",
+          "text": "The room was up and shared before 0:00"
+        }
+      ],
+      "comment_label": "What broke, and where?",
+      "comment_placeholder": "Which site, which minute, what you would change about the setup."
+    },
+    {
+      "id": "flow",
+      "title": "Flow",
+      "eyebrow": "The twenty-five minutes",
+      "question": "Did the session hold its shape?",
+      "lede": "The three called handoffs are at 0:07, 0:16 and 0:22. The run of show is on the role cards; this asks whether it survived contact.",
+      "checks": [
+        {
+          "id": "started",
+          "text": "It started at 0:00, not at 0:04"
+        },
+        {
+          "id": "hook",
+          "text": "The hook stopped after one datum"
+        },
+        {
+          "id": "handoffs",
+          "text": "The handoffs were called out loud"
+        },
+        {
+          "id": "uninterrupted",
+          "text": "Nobody was cut off mid-pass"
+        },
+        {
+          "id": "ended",
+          "text": "It ended by 0:25"
+        }
+      ],
+      "comment_label": "Where did the time go?",
+      "comment_placeholder": "The stretch that ran long, the one that got squeezed."
+    }
+  ],
+  "roles": {
+    "title": "The roles",
+    "eyebrow": "Formative, and it stays with the person",
+    "lede": "Six roles, each against what its own card asked of it. Leave blank anything you did not see — a blank is not a bad mark, and the summary says how many people answered.",
+    "order": [
+      "presenter",
+      "scribe",
+      "pgy1",
+      "senior",
+      "faculty",
+      "facilitator"
+    ],
+    "question": "Did the role do what its card asked?",
+    "comment_label": "One thing that worked, one thing to try",
+    "comment_placeholder": "Aim it at the card, not the person.",
+    "card_link": "their card →"
+  },
+  "model": {
+    "_note": "Editable prose, not string literals in JavaScript — the same rule the CLI follows for its per-item prompts. One call per unit: three sections and six roles, never one call for all of it.",
+    "default_model": "claude-sonnet-5",
+    "max_tokens": 700,
+    "low_confidence": 0.7,
+    "system": [
+      "You are summarising anonymous feedback about one pediatric morning report session for the facilitator who ran it.",
+      "",
+      "You are shown the ratings and the written comments for exactly one unit — one aspect of the session, or one role. Nothing else about the session is available to you, and you must not ask for it.",
+      "",
+      "Rules:",
+      "- Coaching voice, not scoring voice. You are writing what a good facilitator would say the next morning, not a verdict.",
+      "- Summarise only this unit. Ignore anything a comment says about another part of the session.",
+      "- One improvement, not five. If the comments disagree, say that they disagree rather than averaging them into mush.",
+      "- Never name or infer a person, a service, or a patient. Roles are all you have and all you need. If a comment contains what looks like a name, do not repeat it.",
+      "- Do not quote a comment verbatim. In a group this small a quotation identifies its author. Say what several people said, in your own words.",
+      "- Few responses means a weak signal. With one or two responses say so plainly and give a low confidence.",
+      "- Nothing you write is summative. It is never a milestone, an evaluation record, or an input to one.",
+      "",
+      "Reply with a single JSON object and nothing else:",
+      "{\"summary\": \"two or three sentences\", \"one_thing\": \"the single change to try next time\", \"agreement\": \"agreed\"|\"split\"|\"thin\", \"confidence\": 0.0-1.0}"
+    ],
+    "user_header": "Unit: {unit}\nWhat this unit is: {about}\nResponses: {n} of {total} people who submitted feedback\nRatings (1 did not work, 5 as good as it gets): {ratings}\nTicked by: {ticks}\n\nComments as written:",
+    "no_comments": "(no written comments — summarise from the ratings and the ticks alone, and say that is all you had)"
+  },
+  "storage": {
+    "_note": "Two lanes, on purpose. A submission carries role-level content, and the roster records which resident held which role on a date — so a permanent role-level file would join a name to a judgement by way of two files. It therefore goes to working/, which is swept. What is kept is the session, which belongs to nobody: the numbers, the ticks and the drafted summaries, never the comments as written — in a group this small a quotation identifies its author.",
+    "submissions": "working/feedback/",
+    "session_record": "sessions/feedback/",
+    "_naming": "Submissions are flat files named <session>--<submission id>.json. The store lists files and not directories, so a folder per session would be invisible to the summary."
+  },
+  "footer": "One per person, not one per session. Two people saying the same thing is the whole signal."
+}

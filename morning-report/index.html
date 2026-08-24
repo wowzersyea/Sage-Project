@@ -106,6 +106,14 @@
         <h3>Capture case</h3>
         <p>The case bank entry, pre-filled from the board and checked for identifiers. Under sixty seconds or it will not happen.</p>
       </a>
+      <a class="tool" href="feedback/">
+        <h3>Feedback</h3>
+        <p>Ninety seconds, anonymous: the technology, the flow, the six roles, and the one thing to change. Say it into the microphone if typing is what stops you.</p>
+      </a>
+      <a class="tool" href="feedback/summary/">
+        <h3>Feedback summary</h3>
+        <p>What came back, rolled up and — if you set a key — drafted into a summary of each section and each role, one call at a time.</p>
+      </a>
     </div>
 
     <div class="stage-head later">
@@ -145,8 +153,10 @@
   roster.json          names and the participation log — the one file with names in it
   casebank/            de-identified cases, permanent
   sessions/            de-identified scorecards, permanent
+    feedback/          what the group said about the session, permanent
   board-archive/       de-identified board contents, permanent
-  working/             identified, ephemeral, CLI only, swept after 7 days</pre>
+  working/             identified, ephemeral, CLI and feedback only, swept after 7 days
+    feedback/          the role half of the feedback — handed over, then gone</pre>
       <p class="hint">Folder access needs Chrome or Edge. In any other browser the tools fall back to
         explicit Download JSON and Load JSON buttons, and the bar says so.</p>
     </div>

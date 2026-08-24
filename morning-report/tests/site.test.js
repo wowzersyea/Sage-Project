@@ -23,7 +23,8 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
     '/morning-report/roles/run-of-show/', '/morning-report/roles/presenter/',
     '/morning-report/roles/scribe/', '/morning-report/roles/pgy1/',
     '/morning-report/roles/senior/', '/morning-report/roles/faculty/',
-    '/morning-report/roles/facilitator/', '/morning-report/learn/specificity/'
+    '/morning-report/roles/facilitator/', '/morning-report/learn/specificity/',
+    '/morning-report/feedback/', '/morning-report/feedback/summary/'
   ];
   for (const p of PAGES) {
     const before = errs.length;
@@ -106,6 +107,37 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   }
   const ls = await page.evaluate(() => Object.keys(localStorage).filter(k => !k.startsWith('__fakefs')));
   t('nothing in the module writes localStorage', ls.length === 0, ls);
+
+  /* The feedback half is the one exception, and a narrow one: an
+     unsent draft and the API key are the two things that must not go
+     into a folder two sites share. Everything else it knows still
+     lives in the folder. */
+  await page.evaluate(() => localStorage.clear());
+  for (const p of ['/morning-report/feedback/', '/morning-report/feedback/summary/']) {
+    await page.goto(BASE + p, { waitUntil: 'networkidle' });
+    await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
+    await page.waitForTimeout(300);
+  }
+  await page.goto(BASE + '/morning-report/feedback/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => {
+    document.querySelector('input[name="r-overall"][value="4"]').click();
+    const box = document.getElementById('c-overall');
+    box.value = 'Ran long, but the intern committed.';
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForTimeout(150);
+  const fb = await page.evaluate(() => {
+    const keys = Object.keys(localStorage).filter(k => !k.startsWith('__fakefs'));
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem('mr.feedback.draft')); } catch (e) { /* none */ }
+    return { keys, draft };
+  });
+  t('the feedback half writes nothing but its own draft and key',
+     fb.keys.every(k => /^mr\.(feedback|model)\./.test(k)), fb.keys);
+  t('the draft it keeps is the form, and says nothing about who filled it in',
+     fb.draft && fb.draft.overall.rating === 4 &&
+     !Object.keys(fb.draft).some(k => /name|resident|author|user/i.test(k)),
+     fb.draft && Object.keys(fb.draft));
 
   let failed = 0;
   for (const r of out) { if (!r.pass) failed++; console.log((r.pass?'PASS  ':'FAIL  ') + r.name + (r.extra?'   '+r.extra:'')); }
