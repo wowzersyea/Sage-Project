@@ -93,7 +93,7 @@
 
 </main>
 
-<script src="../assets/remote.js"></script>
+<script src="../assets/remote.js?v=1"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script>
@@ -102,6 +102,17 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var folder = { roster: null, rotations: null };
+
+  /* Same guard as the settings page: without remote.js there is nothing
+     to publish to, and a silent dead button is worse than a sentence. */
+  if (!window.MRRemote) {
+    $("out").innerHTML = "<span style='color:var(--red)'>The script this page needs " +
+      "(assets/remote.js) did not load, so there is nothing to publish to. Reload with a hard " +
+      "refresh; if it persists, the file is being blocked between you and the site.</span>";
+    $("go").disabled = true;
+    MRStore.mountBar("mr-bar");
+    return;
+  }
 
   function card(el, title, ok, msg) {
     el.className = "card " + (ok ? "have" : "none");

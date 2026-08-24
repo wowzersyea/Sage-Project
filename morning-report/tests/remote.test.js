@@ -338,6 +338,48 @@ const stub = `
   t('settings lists the endpoint warnings',
     /Nobody Here/.test(await page.textContent('#warns')));
 
+  /* ---- 12. remote.js itself failing to load ------------------------
+
+     It happened: a 404 was cached at the CDN for the four hours after
+     a deploy, and every page fetched it. The tools shrugged, because
+     every call site guards — but the two pages built around it threw
+     on the first line and left a dead form with no explanation.
+
+     Blocking the request reproduces exactly that.
+     ------------------------------------------------------------------- */
+
+  {
+    const ctx = await b.newContext();
+    const p2 = await ctx.newPage();
+    const broke = [];
+    p2.on('pageerror', e => broke.push(e.message));
+    await p2.route('**/assets/remote.js*', route => route.fulfill({ status: 404, body: 'not found' }));
+
+    for (const path of ['/morning-report/', '/morning-report/draw/', '/morning-report/roster/']) {
+      broke.length = 0;
+      await p2.goto(BASE + path, { waitUntil: 'networkidle' });
+      t('without remote.js, ' + path + ' still works', broke.length === 0, broke);
+      t('and its bar still renders',
+        (await p2.textContent('#mr-bar')).trim().length > 0);
+    }
+
+    broke.length = 0;
+    await p2.goto(BASE + '/morning-report/settings/', { waitUntil: 'networkidle' });
+    t('without remote.js, settings says so instead of throwing', broke.length === 0, broke);
+    t('and names the file that did not load',
+      /remote\.js/.test(await p2.textContent('#state-txt')), await p2.textContent('#state-txt'));
+    t('and disables the controls rather than leaving them dead',
+      await p2.isDisabled('#save'));
+    t('and keeps its way back', (await p2.textContent('#mr-bar')).trim().length > 0);
+
+    broke.length = 0;
+    await p2.goto(BASE + '/morning-report/publish/', { waitUntil: 'networkidle' });
+    t('without remote.js, publish says so instead of throwing', broke.length === 0, broke);
+    t('and refuses to publish', await p2.isDisabled('#go'));
+
+    await ctx.close();
+  }
+
   /* ---- report ------------------------------------------------------- */
 
   await b.close();
