@@ -275,15 +275,67 @@ function wedgePath(a, b){
   return "M " + CX + " " + CY + " L " + p1[0].toFixed(2) + " " + p1[1].toFixed(2) +
          " A " + R + " " + R + " 0 " + large + " 1 " + p2[0].toFixed(2) + " " + p2[1].toFixed(2) + " Z";
 }
-function fitLabel(name, count){
-  var size = 17;
-  if (count > 6) size = 15.5;
-  if (count > 9) size = 14;
-  if (count > 13) size = 12.5;
-  if (count > 18) size = 11;
-  var maxChars = count > 13 ? 15 : 19;
-  var shown = name.length > maxChars ? name.slice(0, maxChars - 1) + "…" : name;
-  return { size: size, shown: shown };
+/* A wheel label runs along a radius: it is anchored at the rim and
+   reads inward, so the room it has is the distance from the rim to the
+   hub — about 140px — whatever the wedge count. The old fixed 19-character
+   cap ignored that twice over: at 17px nineteen characters is roughly
+   165px, so long names were drawn over the hub, and short rosters were
+   truncated even with the whole radius free.
+
+   Measure instead. Take the largest size the name fits at; failing that,
+   and where the wedges are wide enough to carry it, break it over two
+   lines; only truncate when nothing else works. */
+var LABEL_SPACE = 132;                       /* rim to hub, less a margin */
+var LABEL_SIZES = [17, 16, 15, 14, 13, 12, 11];
+var TWO_LINE_UP_TO = 8;                      /* wedges wide enough for two lines */
+
+function layoutLabel(svg, name, count){
+  var probe = document.createElementNS(SVG_NS, "text");
+  probe.setAttribute("class", "seg-label");
+  probe.setAttribute("visibility", "hidden");
+  svg.appendChild(probe);
+
+  function width(str, size){
+    probe.setAttribute("font-size", size);
+    probe.textContent = str;
+    try { return probe.getComputedTextLength(); }
+    catch (e) { return str.length * size * 0.55; }   /* detached svg */
+  }
+
+  var out = null;
+
+  for (var i = 0; i < LABEL_SIZES.length && !out; i++){
+    if (width(name, LABEL_SIZES[i]) <= LABEL_SPACE) out = { size: LABEL_SIZES[i], lines: [name] };
+  }
+
+  if (!out && count <= TWO_LINE_UP_TO){
+    var parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length > 1){
+      /* split at whichever space leaves the two halves most even */
+      var best = null;
+      for (var s = 1; s < parts.length; s++){
+        var a = parts.slice(0, s).join(" "), b = parts.slice(s).join(" ");
+        var diff = Math.abs(a.length - b.length);
+        if (!best || diff < best.diff) best = { a: a, b: b, diff: diff };
+      }
+      for (var j = 0; j < LABEL_SIZES.length && !out; j++){
+        if (width(best.a, LABEL_SIZES[j]) <= LABEL_SPACE &&
+            width(best.b, LABEL_SIZES[j]) <= LABEL_SPACE){
+          out = { size: LABEL_SIZES[j], lines: [best.a, best.b] };
+        }
+      }
+    }
+  }
+
+  if (!out){
+    var size = LABEL_SIZES[LABEL_SIZES.length - 1];
+    var shown = name;
+    while (shown.length > 1 && width(shown + "…", size) > LABEL_SPACE) shown = shown.slice(0, -1);
+    out = { size: size, lines: [shown.replace(/\s+$/, "") + "…"], truncated: true };
+  }
+
+  svg.removeChild(probe);
+  return out;
 }
 
 function Wheel(section){
@@ -378,7 +430,7 @@ Wheel.prototype.render = function(){
     if (isDrawn && !isWinner) path.setAttribute("opacity", ".34");
     rotor.appendChild(path);
 
-    var fit = fitLabel(MRRoster.displayName(person), n);
+    var fit = layoutLabel(svg, MRRoster.displayName(person), n);
     var text = document.createElementNS(SVG_NS, "text");
     text.setAttribute("class", "seg-label");
     text.setAttribute("font-size", fit.size);
@@ -394,7 +446,17 @@ Wheel.prototype.render = function(){
       text.setAttribute("text-anchor", "end");
       text.setAttribute("transform", "rotate(" + mid + " " + CX + " " + CY + ") translate(" + (CX + R - 16) + " " + CY + ")");
     }
-    text.textContent = fit.shown;
+    if (fit.lines.length === 1){
+      text.textContent = fit.lines[0];
+    } else {
+      fit.lines.forEach(function(line, li){
+        var ts = document.createElementNS(SVG_NS, "tspan");
+        ts.setAttribute("x", "0");
+        ts.setAttribute("dy", li === 0 ? "-0.52em" : "1.04em");
+        ts.textContent = line;
+        text.appendChild(ts);
+      });
+    }
     rotor.appendChild(text);
   });
 
