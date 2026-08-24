@@ -15,6 +15,7 @@
   "use strict";
 
   var PATH = "roster.json";
+  var ROTATIONS_PATH = "rotations.json";
 
   var ROLES = [
     { id: "presenter",         label: "Presenter" },
@@ -26,6 +27,82 @@
 
   var DISCUSSANT_ROLES = ["pgy1_discussant", "senior_discussant"];
   var LEVELS = ["PGY-1", "PGY-2", "PGY-3"];
+
+  /* ---------- the rotation ------------------------------------------
+
+     rotations.json says who is on service each day, and which tasks make
+     up each site's ward team. On a presenting day that site's ward team
+     is off the wheels — they are the ones presenting — and everyone else
+     on service is a candidate.
+
+     It is entirely optional. With no file, or on a date the file does not
+     cover, nothing is filtered and the whole roster is eligible, which is
+     how this behaved before rotations existed.
+     ------------------------------------------------------------------- */
+
+  var rotations = null;
+
+  function setRotations(data) {
+    rotations = (data && data.days) ? data : null;
+    return rotations;
+  }
+
+  function loadRotations() {
+    return MRStore.read(ROTATIONS_PATH).then(setRotations);
+  }
+
+  function hasRotations() { return !!rotations; }
+
+  function rotationMeta() { return rotations; }
+
+  function siteList() {
+    if (!rotations || !rotations.sites) return [];
+    return Object.keys(rotations.sites).map(function (id) {
+      return { id: id, label: rotations.sites[id].label || id };
+    });
+  }
+
+  function rotationDay(date) {
+    if (!rotations || !rotations.days) return null;
+    return rotations.days[date] || null;
+  }
+
+  /* The people the presenting site is fielding — off the wheels. */
+  function presentingTeam(date, site) {
+    var day = rotationDay(date);
+    if (!day || !site || !rotations.sites || !rotations.sites[site]) return [];
+    var out = [];
+    (rotations.sites[site].ward || []).forEach(function (task) {
+      (day[task] || []).forEach(function (id) {
+        if (out.indexOf(id) === -1) out.push(id);
+      });
+    });
+    return out;
+  }
+
+  /* Everyone on service that day who is not on the presenting ward team.
+     null when the rotation says nothing about this date. */
+  function onDuty(date, site) {
+    var day = rotationDay(date);
+    if (!day) return null;
+    var ward = presentingTeam(date, site);
+    var out = [];
+    Object.keys(day).forEach(function (task) {
+      (day[task] || []).forEach(function (id) {
+        if (ward.indexOf(id) === -1 && out.indexOf(id) === -1) out.push(id);
+      });
+    });
+    return out;
+  }
+
+  /* Which tasks a person is on that day — for a chip tooltip. */
+  function tasksOn(date, residentId) {
+    var day = rotationDay(date);
+    if (!day) return [];
+    return Object.keys(day).filter(function (task) {
+      return (day[task] || []).indexOf(residentId) !== -1;
+    });
+  }
 
   /* ---------- academic blocks -------------------------------------
      Calendar arithmetic only. What each block *asks* of the intern,
@@ -87,6 +164,37 @@
     };
   }
 
+  /* What to show where space is tight — a wheel wedge, a pool chip.
+     A real roster carries four-part names, and two people who share a
+     given name are common. Truncated to fit a wedge, both can render as
+     the same string — which is worse than useless on a wheel whose whole
+     job is to name one person. `short` is optional and falls back to the
+     full name, so a roster without one still works. */
+  function displayName(res) {
+    if (!res) return "";
+    var s = (res.short || "").trim();
+    return s || res.name || "";
+  }
+
+  /* How a residency list is always ordered: by surname. `sort_name` is
+     optional and holds "Surname, Given"; without it we fall back to the
+     displayed name, which sorts by given name — better than nothing but
+     not what anyone scanning a roster expects. */
+  function sortKey(res) {
+    if (!res) return "";
+    return ((res.sort_name || res.name || "") + "").toLowerCase();
+  }
+
+  /* First given name plus the surname's initial. Used to propose a
+     short name in the editor; the user can always overrule it. */
+  function suggestShort(name) {
+    var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return parts[0] || "";
+    var first = parts[0];
+    var last = parts[parts.length - 1].replace(/^-+/, "");
+    return first + " " + (last.charAt(0) || "").toUpperCase() + ".";
+  }
+
   function normalise(r) {
     if (!r || typeof r !== "object") return blank();
     r.residents = Array.isArray(r.residents) ? r.residents : [];
@@ -98,6 +206,8 @@
     r.residents.forEach(function (p) {
       if (!Array.isArray(p.unavailable)) p.unavailable = [];
       if (typeof p.active !== "boolean") p.active = true;
+      if (typeof p.short !== "string") p.short = "";
+      if (typeof p.sort_name !== "string") p.sort_name = "";
     });
     return r;
   }
@@ -202,9 +312,12 @@
   /* Everyone who could be drawn today: on the roster, active, the
      right level, and not away. Benching and the drawn cycle are
      applied on top of this by pool(). */
-  function eligible(r, role, date) {
+  function eligible(r, role, date, opts) {
+    var duty = onDuty(date, (opts || {}).site);
     return r.residents.filter(function (p) {
-      return p.active && levelMatches(p, role) && !isUnavailable(p, date);
+      if (!p.active || !levelMatches(p, role) || isUnavailable(p, date)) return false;
+      if (duty && duty.indexOf(p.id) === -1) return false;
+      return true;
     });
   }
 
@@ -216,9 +329,9 @@
      The wheel still spins over the whole eligible list, so it stays
      visibly random — it just stops the same three people carrying
      the year. */
-  function pool(r, role, date) {
+  function pool(r, role, date, opts) {
     var c = cycleFor(r, role);
-    var all = eligible(r, role, date);
+    var all = eligible(r, role, date, opts);
     var open = all.filter(function (p) { return c.benched.indexOf(p.id) === -1; });
 
     var remaining = open.filter(function (p) { return c.drawn.indexOf(p.id) === -1; });
@@ -232,7 +345,8 @@
       open: open,           // minus the benched
       remaining: remaining, // minus those already drawn this cycle
       candidates: candidates,
-      refilled: refilled
+      refilled: refilled,
+      rotationApplied: !!onDuty(date, (opts || {}).site)
     };
   }
 
@@ -254,9 +368,9 @@
      is the one that refills it — clear the cycle first, or `drawn`
      grows without bound and every chip stays struck off for the rest
      of the year. */
-  function recordDraw(r, role, residentId, date, site) {
+  function recordDraw(r, role, residentId, date, site, opts) {
     var c = cycleFor(r, role);
-    var open = eligible(r, role, date).filter(function (p) {
+    var open = eligible(r, role, date, opts).filter(function (p) {
       return c.benched.indexOf(p.id) === -1;
     });
     var exhausted = open.length > 0 && open.every(function (p) {
@@ -334,6 +448,8 @@
       return {
         id: p.id,
         name: p.name,
+        display: displayName(p),
+        sort_key: sortKey(p),
         level: p.level,
         counts: counts,
         total: total,
@@ -378,7 +494,7 @@
        is who you draw next. */
     rows.sort(function (a, b) {
       if (a.active_weeks_since !== b.active_weeks_since) return b.active_weeks_since - a.active_weeks_since;
-      return a.name.localeCompare(b.name);
+      return a.sort_key.localeCompare(b.sort_key);
     });
 
     return { rows: rows, medians: med, overdue_weeks: overdueWeeks };
@@ -483,6 +599,19 @@
     daysBetween: daysBetween,
     parseDate: parseDate,
     academicYearOf: academicYearOf,
+    displayName: displayName,
+    suggestShort: suggestShort,
+    sortKey: sortKey,
+    ROTATIONS_PATH: ROTATIONS_PATH,
+    loadRotations: loadRotations,
+    setRotations: setRotations,
+    hasRotations: hasRotations,
+    rotationMeta: rotationMeta,
+    rotationDay: rotationDay,
+    siteList: siteList,
+    presentingTeam: presentingTeam,
+    onDuty: onDuty,
+    tasksOn: tasksOn,
     roleLabel: function (id) {
       var r = ROLES.filter(function (x) { return x.id === id; })[0];
       return r ? r.label : id;

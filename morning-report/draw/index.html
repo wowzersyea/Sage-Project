@@ -25,9 +25,33 @@
     font-size:13.5px;padding:6px 9px;border-radius:4px;width:170px;
   }
   .session input:focus{outline:2px solid var(--amber);outline-offset:-1px}
+  .session .seg{display:flex;gap:0;border:1px solid rgba(255,255,255,.28);border-radius:4px;overflow:hidden}
+  .session .seg button{
+    background:transparent;border:none;color:#BFD0E0;font-size:12.5px;font-weight:600;
+    padding:6px 13px;cursor:pointer;white-space:nowrap;
+  }
+  .session .seg button + button{border-left:1px solid rgba(255,255,255,.22)}
+  .session .seg button:hover{background:rgba(255,255,255,.10);color:#fff}
+  .session .seg button[aria-pressed="true"]{background:var(--amber);color:var(--navy)}
+  .session .acting{display:flex;align-items:center;gap:8px}
+  .session .acting label.tog{
+    display:flex;align-items:center;gap:6px;font-size:12.5px;color:#BFD0E0;
+    cursor:pointer;white-space:nowrap;
+  }
+  .session .acting input[type=checkbox]{width:auto;accent-color:var(--amber);cursor:pointer}
+  .session .acting input[type=text]{width:190px}
+  .session .acting input[type=text][disabled]{opacity:.4;cursor:not-allowed}
   .session .blocknote{color:#9FB4C8;font-size:12.5px;margin-left:auto;max-width:34ch;line-height:1.45}
   .session .blocknote b{color:var(--amber);display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
 
+  .dutybar{
+    background:var(--navy-2);color:#BFD0E0;padding:9px 32px;font-size:12.5px;line-height:1.5;
+    border-bottom:1px solid rgba(255,255,255,.10);
+  }
+  .dutybar[hidden]{display:none}
+  .dutybar b{color:#fff}
+  .dutybar .off{color:#8FA6BC}
+  .dutybar .warn{color:var(--amber);font-weight:600}
   .stage{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
   .column{padding:26px 32px 34px;background:var(--paper);display:flex;flex-direction:column;align-items:center}
   .column + .column{border-left:1px solid var(--line-2)}
@@ -140,8 +164,21 @@
 <div class="session">
   <div class="f"><label for="s-date">Date</label><input type="date" id="s-date"></div>
   <div class="f"><label for="s-site">Site</label><input type="text" id="s-site" list="sitelist" placeholder="Galveston"><datalist id="sitelist"></datalist></div>
+  <div class="f" id="presenting-wrap" hidden>
+    <label>Presenting today</label>
+    <div class="seg" id="presenting" role="group" aria-label="Which site is presenting"></div>
+  </div>
+  <div class="f acting" id="acting-wrap">
+    <label for="acting-name">Acting intern</label>
+    <div class="acting">
+      <label class="tog"><input type="checkbox" id="acting-on"> on the wheel</label>
+      <input type="text" id="acting-name" placeholder="4th-year student's name" disabled>
+    </div>
+  </div>
   <div class="blocknote" id="blocknote"></div>
 </div>
+
+<div class="dutybar" id="dutybar" hidden></div>
 
 <main class="stage">
 
@@ -255,8 +292,24 @@ var CX = 200, CY = 200, R = 196;
 
 var roster = null;
 var wheels = {};
+var presenting = null;      /* which site is presenting today, if known */
+var acting = { on: false, name: "" };
+
+/* The acting intern is a 4th-year student on rotation — usually present in
+   Galveston, sometimes at Clear Lake, never guaranteed. They are not on the
+   roster and are not logged: this is a per-session addition to the wheel,
+   not a roster change. */
+function actingPerson(){
+  var n = (acting.name || "").trim();
+  return acting.on && n ? { id: "__acting__", name: n, short: n, level: "PGY-1", acting: true } : null;
+}
 var els = {
   date: document.getElementById("s-date"),
+  presentingWrap: document.getElementById("presenting-wrap"),
+  presenting: document.getElementById("presenting"),
+  actingOn: document.getElementById("acting-on"),
+  actingName: document.getElementById("acting-name"),
+  dutybar: document.getElementById("dutybar"),
   site: document.getElementById("s-site"),
   sitelist: document.getElementById("sitelist"),
   blocknote: document.getElementById("blocknote"),
@@ -275,15 +328,67 @@ function wedgePath(a, b){
   return "M " + CX + " " + CY + " L " + p1[0].toFixed(2) + " " + p1[1].toFixed(2) +
          " A " + R + " " + R + " 0 " + large + " 1 " + p2[0].toFixed(2) + " " + p2[1].toFixed(2) + " Z";
 }
-function fitLabel(name, count){
-  var size = 17;
-  if (count > 6) size = 15.5;
-  if (count > 9) size = 14;
-  if (count > 13) size = 12.5;
-  if (count > 18) size = 11;
-  var maxChars = count > 13 ? 15 : 19;
-  var shown = name.length > maxChars ? name.slice(0, maxChars - 1) + "…" : name;
-  return { size: size, shown: shown };
+/* A wheel label runs along a radius: it is anchored at the rim and
+   reads inward, so the room it has is the distance from the rim to the
+   hub — about 140px — whatever the wedge count. The old fixed 19-character
+   cap ignored that twice over: at 17px nineteen characters is roughly
+   165px, so long names were drawn over the hub, and short rosters were
+   truncated even with the whole radius free.
+
+   Measure instead. Take the largest size the name fits at; failing that,
+   and where the wedges are wide enough to carry it, break it over two
+   lines; only truncate when nothing else works. */
+var LABEL_SPACE = 132;                       /* rim to hub, less a margin */
+var LABEL_SIZES = [17, 16, 15, 14, 13, 12, 11];
+var TWO_LINE_UP_TO = 8;                      /* wedges wide enough for two lines */
+
+function layoutLabel(svg, name, count){
+  var probe = document.createElementNS(SVG_NS, "text");
+  probe.setAttribute("class", "seg-label");
+  probe.setAttribute("visibility", "hidden");
+  svg.appendChild(probe);
+
+  function width(str, size){
+    probe.setAttribute("font-size", size);
+    probe.textContent = str;
+    try { return probe.getComputedTextLength(); }
+    catch (e) { return str.length * size * 0.55; }   /* detached svg */
+  }
+
+  var out = null;
+
+  for (var i = 0; i < LABEL_SIZES.length && !out; i++){
+    if (width(name, LABEL_SIZES[i]) <= LABEL_SPACE) out = { size: LABEL_SIZES[i], lines: [name] };
+  }
+
+  if (!out && count <= TWO_LINE_UP_TO){
+    var parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length > 1){
+      /* split at whichever space leaves the two halves most even */
+      var best = null;
+      for (var s = 1; s < parts.length; s++){
+        var a = parts.slice(0, s).join(" "), b = parts.slice(s).join(" ");
+        var diff = Math.abs(a.length - b.length);
+        if (!best || diff < best.diff) best = { a: a, b: b, diff: diff };
+      }
+      for (var j = 0; j < LABEL_SIZES.length && !out; j++){
+        if (width(best.a, LABEL_SIZES[j]) <= LABEL_SPACE &&
+            width(best.b, LABEL_SIZES[j]) <= LABEL_SPACE){
+          out = { size: LABEL_SIZES[j], lines: [best.a, best.b] };
+        }
+      }
+    }
+  }
+
+  if (!out){
+    var size = LABEL_SIZES[LABEL_SIZES.length - 1];
+    var shown = name;
+    while (shown.length > 1 && width(shown + "…", size) > LABEL_SPACE) shown = shown.slice(0, -1);
+    out = { size: size, lines: [shown.replace(/\s+$/, "") + "…"], truncated: true };
+  }
+
+  svg.removeChild(probe);
+  return out;
 }
 
 function Wheel(section){
@@ -330,8 +435,15 @@ Wheel.prototype.bind = function(){
    whenever the date or site changes. */
 Wheel.prototype.refresh = function(){
   if (!roster) return;
-  var p = MRRoster.pool(roster, this.role, els.date.value || MRStore.today());
-  this.people = p.eligible;
+  var p = MRRoster.pool(roster, this.role, els.date.value || MRStore.today(), { site: presenting });
+  this.people = p.eligible.slice();
+  var extra = this.role === "pgy1_discussant" ? actingPerson() : null;
+  if (extra){
+    this.people.push(extra);
+    if (p.candidates.length === 0 || p.remaining.length === 0) p.candidates = [extra];
+    else p.candidates = p.candidates.concat([extra]);
+    p.remaining = p.remaining.concat([extra]);
+  }
   this.candidates = p.candidates;
   this.poolState = p;
   this.render();
@@ -378,7 +490,7 @@ Wheel.prototype.render = function(){
     if (isDrawn && !isWinner) path.setAttribute("opacity", ".34");
     rotor.appendChild(path);
 
-    var fit = fitLabel(person.name, n);
+    var fit = layoutLabel(svg, MRRoster.displayName(person), n);
     var text = document.createElementNS(SVG_NS, "text");
     text.setAttribute("class", "seg-label");
     text.setAttribute("font-size", fit.size);
@@ -394,7 +506,17 @@ Wheel.prototype.render = function(){
       text.setAttribute("text-anchor", "end");
       text.setAttribute("transform", "rotate(" + mid + " " + CX + " " + CY + ") translate(" + (CX + R - 16) + " " + CY + ")");
     }
-    text.textContent = fit.shown;
+    if (fit.lines.length === 1){
+      text.textContent = fit.lines[0];
+    } else {
+      fit.lines.forEach(function(line, li){
+        var ts = document.createElementNS(SVG_NS, "tspan");
+        ts.setAttribute("x", "0");
+        ts.setAttribute("dy", li === 0 ? "-0.52em" : "1.04em");
+        ts.textContent = line;
+        text.appendChild(ts);
+      });
+    }
     rotor.appendChild(text);
   });
 
@@ -417,7 +539,13 @@ Wheel.prototype.spin = function(){
   var self = this;
 
   var date = els.date.value || MRStore.today();
-  var p = MRRoster.pool(roster, this.role, date);
+  var p = MRRoster.pool(roster, this.role, date, { site: presenting });
+  var extra = this.role === "pgy1_discussant" ? actingPerson() : null;
+  if (extra){
+    /* the acting intern has no participation history, so they simply join
+       the candidates rather than competing on longest-gap */
+    p.candidates = p.candidates.concat([extra]);
+  }
   if (!p.candidates.length) return;
 
   /* The winner is drawn from the neglect-weighted candidates, but the
@@ -453,7 +581,22 @@ Wheel.prototype.spin = function(){
     self.winnerIndex = idx;
     self.winner = winner;
 
-    MRRoster.recordDraw(roster, self.role, winner.id, date, els.site.value.trim());
+    if (winner.acting){
+      /* nothing to record: they are not on the roster, and the equity
+         table counts residents' turns, not students' */
+      self.refresh();
+      self.winnerIndex = idx;
+      self.render();
+      self.nameEl.classList.remove("placeholder");
+      self.nameEl.textContent = winner.name;
+      self.whyEl.textContent = "Acting intern — drawn for today, not added to the roster or the log.";
+      self.readout.classList.remove("landed");
+      void self.readout.offsetWidth;
+      self.readout.classList.add("landed");
+      renderHandoff();
+      return;
+    }
+    MRRoster.recordDraw(roster, self.role, winner.id, date, els.site.value.trim(), { site: presenting });
     MRRoster.save(roster).then(function(){
       self.refresh();
       self.winnerIndex = idx;
@@ -497,7 +640,7 @@ Wheel.prototype.renderLedger = function(){
     var benched = cycle.benched.indexOf(person.id) !== -1;
     var drawn = cycle.drawn.indexOf(person.id) !== -1;
     chip.className = "chip" + (benched ? " benched" : (drawn ? " done" : (nextIds.indexOf(person.id) !== -1 ? " next" : "")));
-    chip.textContent = person.name;
+    chip.textContent = MRRoster.displayName(person);
     var last = MRRoster.lastServed(roster, person.id, self.role);
     chip.title = person.name + " — " + (last
       ? "last took this role " + last
@@ -622,11 +765,87 @@ document.getElementById("startSession").addEventListener("click", function(){
   });
 });
 
+/* ---------- the rotation ------------------------------------------------ */
+
+function renderPresenting(){
+  var sites = MRRoster.siteList();
+  els.presentingWrap.hidden = sites.length === 0;
+  if (!sites.length){ presenting = null; return; }
+
+  els.presenting.innerHTML = "";
+  sites.forEach(function(site){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = site.label;
+    b.title = site.label + " is presenting, so its ward team is off both wheels";
+    b.setAttribute("aria-pressed", presenting === site.id ? "true" : "false");
+    b.addEventListener("click", function(){
+      presenting = (presenting === site.id) ? null : site.id;
+      renderPresenting();
+      refreshAll();
+    });
+    els.presenting.appendChild(b);
+  });
+}
+
+function renderDutyBar(){
+  var date = els.date.value || MRStore.today();
+  var bar = els.dutybar;
+
+  if (!MRRoster.hasRotations()){ bar.hidden = true; return; }
+  if (!MRRoster.rotationDay(date)){
+    bar.hidden = false;
+    bar.innerHTML = "<span class='warn'>No rotation for " + MRStore.esc(date) +
+      "</span> — the rota covers " + MRStore.esc(MRRoster.rotationMeta().from) + " to " +
+      MRStore.esc(MRRoster.rotationMeta().to) + ", so the wheels fall back to the whole roster.";
+    return;
+  }
+
+  bar.hidden = false;
+  var meta = MRRoster.rotationMeta();
+  var nameOf = function(id){
+    var p = roster.residents.filter(function(x){ return x.id === id; })[0];
+    return p ? p.name : id;
+  };
+
+  var bits = [];
+  if (presenting){
+    var team = MRRoster.presentingTeam(date, presenting).map(nameOf);
+    var label = (meta.sites[presenting] || {}).label || presenting;
+    bits.push("<b>" + MRStore.esc(label) + " presenting</b>" +
+      (team.length ? " — <span class='off'>" + MRStore.esc(team.join(", ")) + " are off the wheels</span>" : ""));
+  } else {
+    bits.push("<span class='warn'>Pick who is presenting</span> — until then nobody is excluded");
+  }
+
+  var i = wheels.pgy1 ? wheels.pgy1.people.length : 0;
+  var s2 = wheels.senior ? wheels.senior.people.length : 0;
+  bits.push("<b>" + i + "</b> on the intern wheel, <b>" + s2 + "</b> on the senior wheel");
+  if (i < 2 || s2 < 2){
+    bits.push("<span class='warn'>" +
+      (i < 2 && s2 < 2 ? "both wheels are" : (i < 2 ? "the intern wheel is" : "the senior wheel is")) +
+      " down to one — there is nothing to draw</span>");
+  }
+  bar.innerHTML = bits.join(" &nbsp;·&nbsp; ");
+}
+
+els.actingOn.addEventListener("change", function(){
+  acting.on = els.actingOn.checked;
+  els.actingName.disabled = !acting.on;
+  if (acting.on) els.actingName.focus();
+  refreshAll();
+});
+els.actingName.addEventListener("input", function(){
+  acting.name = els.actingName.value;
+  refreshAll();
+});
+
 /* ---------- boot ------------------------------------------------------ */
 
 function refreshAll(){
   Object.keys(wheels).forEach(function(k){ wheels[k].refresh(); });
   renderBlockNote();
+  renderDutyBar();
 }
 
 function renderBlockNote(){
@@ -649,6 +868,8 @@ els.site.addEventListener("change", refreshAll);
 
 Promise.all([MRStore.whenReady, MRContent.load()]).then(function(){
   MRStore.mountBar("mr-bar");
+  return MRStore.status().ready ? MRRoster.loadRotations() : null;
+}).then(function(){
   return MRRoster.load();
 }).then(function(r){
   roster = r;
@@ -661,11 +882,15 @@ Promise.all([MRStore.whenReady, MRContent.load()]).then(function(){
 
   wheels.pgy1 = new Wheel(document.getElementById("col-pgy1"));
   wheels.senior = new Wheel(document.getElementById("col-senior"));
+  renderPresenting();
   refreshAll();
 });
 
 MRStore.onChange(function(){
-  MRRoster.load().then(function(r){ roster = r; refreshAll(); });
+  if (!MRStore.status().ready) return;
+  MRRoster.loadRotations()
+    .then(function(){ return MRRoster.load(); })
+    .then(function(r){ roster = r; renderPresenting(); refreshAll(); });
 });
 </script>
 </body>

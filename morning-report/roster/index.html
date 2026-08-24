@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../assets/mr.css">
 <style>
   .res-row{
-    display:grid;grid-template-columns:1fr 110px 100px 1fr auto;gap:10px;align-items:center;
+    display:grid;grid-template-columns:1fr 130px 110px 100px 1fr auto;gap:10px;align-items:center;
     padding:10px 0;border-bottom:1px solid var(--line);
   }
   .res-row.inactive{opacity:.5}
@@ -17,7 +17,7 @@
   .res-row .acts{display:flex;gap:6px;justify-content:flex-end}
   .res-row .acts button{padding:5px 10px;font-size:12px}
   .res-head{
-    display:grid;grid-template-columns:1fr 110px 100px 1fr auto;gap:10px;
+    display:grid;grid-template-columns:1fr 130px 110px 100px 1fr auto;gap:10px;
     font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
     color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--line);
   }
@@ -127,7 +127,7 @@
       <p class="lede" id="yearline"></p>
 
       <div class="res-head">
-        <span>Name</span><span>Level</span><span>Status</span><span>Unavailable</span><span></span>
+        <span>Name</span><span>On the wheel</span><span>Level</span><span>Status</span><span>Unavailable</span><span></span>
       </div>
       <div id="residents"></div>
 
@@ -221,7 +221,7 @@ function render(){
   roster.residents.slice().sort(function(a,b){
     if (a.active !== b.active) return a.active ? -1 : 1;
     if (a.level !== b.level) return MRRoster.LEVELS.indexOf(a.level) - MRRoster.LEVELS.indexOf(b.level);
-    return a.name.localeCompare(b.name);
+    return MRRoster.sortKey(a).localeCompare(MRRoster.sortKey(b));
   }).forEach(function(p){
     host.appendChild(residentRow(p));
   });
@@ -388,6 +388,14 @@ function residentRow(p){
   last.textContent = lastServedNote(p);
   left.appendChild(nm); left.appendChild(last);
 
+  var shortIn = document.createElement("input");
+  shortIn.type = "text";
+  shortIn.value = p.short || "";
+  shortIn.placeholder = MRRoster.suggestShort(p.name);
+  shortIn.title = "What the wheel and the pool chips show. Long names do not fit a wedge. " +
+                  "Leave blank to use the full name.";
+  shortIn.addEventListener("change", function(){ p.short = shortIn.value.trim(); save(); });
+
   var lvl = document.createElement("select");
   MRRoster.LEVELS.forEach(function(L){
     var o = document.createElement("option"); o.value = L; o.textContent = L;
@@ -438,7 +446,8 @@ function residentRow(p){
   });
   acts.appendChild(del);
 
-  row.appendChild(left); row.appendChild(lvl); row.appendChild(status); row.appendChild(away); row.appendChild(acts);
+  row.appendChild(left); row.appendChild(shortIn); row.appendChild(lvl);
+  row.appendChild(status); row.appendChild(away); row.appendChild(acts);
   return row;
 }
 
@@ -476,8 +485,8 @@ $("add").addEventListener("click", function(){
   var name = $("new-name").value.trim();
   if (!name){ $("new-name").focus(); return; }
   roster.residents.push({
-    id: MRRoster.nextId(roster), name: name, level: $("new-level").value,
-    active: true, unavailable: []
+    id: MRRoster.nextId(roster), name: name, short: MRRoster.suggestShort(name),
+    level: $("new-level").value, active: true, unavailable: []
   });
   $("new-name").value = "";
   save();
