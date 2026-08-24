@@ -217,17 +217,35 @@
 
   /* ---------- read / write / list / remove --------------------------- */
 
+  /* The optional shared endpoint, consulted only where the folder has
+     no answer. MRRemote decides which paths it will serve — the store
+     does not need to know, and asks about every path it cannot find.
+
+     The order matters and is deliberate: the folder wins. Someone who
+     has connected a folder is holding the authoritative copy for their
+     own site, and a stale endpoint must never quietly overwrite what
+     they can see in front of them. */
+  function remoteRead(path) {
+    if (!global.MRRemote) return Promise.resolve(null);
+    return global.MRRemote.get(path).catch(function () { return null; });
+  }
+
   function read(path) {
     if (state.mode === "fallback" || !state.ready) {
-      return Promise.resolve(Object.prototype.hasOwnProperty.call(state.cache, path) ? state.cache[path] : null);
+      if (Object.prototype.hasOwnProperty.call(state.cache, path)) {
+        return Promise.resolve(state.cache[path]);
+      }
+      /* No folder at all: the endpoint is the only source there is. */
+      return remoteRead(path);
     }
     return dirFor(path, false)
       .then(function (d) { return d.getFileHandle(leaf(path)); })
       .then(function (fh) { return fh.getFile(); })
       .then(function (f) { return f.text(); })
       .then(function (t) { return t.trim() ? JSON.parse(t) : null; })
+      .then(function (obj) { return obj === null ? remoteRead(path) : obj; })
       .catch(function (err) {
-        if (err && (err.name === "NotFoundError")) return null;   // absent is not an error
+        if (err && (err.name === "NotFoundError")) return remoteRead(path);   // absent is not an error
         if (err instanceof SyntaxError) {
           fail("The file " + path + " is not valid JSON", err);
           return null;
@@ -400,6 +418,19 @@
       st.appendChild(btn);
     }
 
+    /* The shared roster, when one is configured. It is a second source,
+       not a second folder, so it gets a word rather than a control —
+       the controls live on the settings page. */
+    var rem = global.MRRemote && global.MRRemote.summary && global.MRRemote.summary();
+    if (rem) {
+      var chip = document.createElement("a");
+      chip.className = "mr-remote " + rem.kind;
+      chip.href = b + "settings/";
+      chip.textContent = rem.text;
+      chip.title = "Shared roster settings";
+      st.appendChild(chip);
+    }
+
     inner.appendChild(st);
     el.appendChild(inner);
   }
@@ -471,7 +502,15 @@
     whenReady: null
   };
 
-  api.whenReady = restore().then(function () { return api.status(); });
+  /* Wired after restore() rather than at load, so the script order of
+     remote.js and store.js on a page does not matter. */
+  api.whenReady = restore().then(function () {
+    if (global.MRRemote) {
+      global.MRRemote.onChange(renderBars);
+      if (global.MRRemote.configured()) global.MRRemote.fetchAll().then(renderBars);
+    }
+    return api.status();
+  });
 
   global.MRStore = api;
 })(window);

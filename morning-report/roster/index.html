@@ -125,6 +125,12 @@
     <div class="panel">
       <h2>Residents</h2>
       <p class="lede" id="yearline"></p>
+      <div class="privacy" id="sharedwarn" hidden style="margin:0 0 16px">
+        <b>These people come from the shared sheet</b>
+        Editing a name, level or status here will be replaced the next time this page loads.
+        Edit the <b>Roster</b> tab in the sheet instead. Unavailable windows are the exception —
+        they are kept here, because the sheet has no column for them.
+      </div>
 
       <div class="res-head">
         <span>Name</span><span>On the wheel</span><span>Level</span><span>Status</span><span>Unavailable</span><span></span>
@@ -193,6 +199,7 @@
   <div class="wrap"><p>Sage Project — Morning Report. <code>roster.json</code> is the one file in this module that contains names.</p></div>
 </footer>
 
+<script src="../assets/remote.js"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script>
@@ -204,6 +211,7 @@ function save(){ return MRRoster.save(roster).then(render); }
 /* ---------- residents ------------------------------------------------ */
 
 function render(){
+  $("sharedwarn").hidden = !MRRoster.residentsAreShared(roster);
   $("yearline").textContent = "Academic year " + roster.academic_year + " · " +
     roster.residents.filter(function(p){ return p.active; }).length + " active, " +
     roster.residents.length + " on the roster.";

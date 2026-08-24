@@ -151,6 +151,22 @@
         explicit Download JSON and Load JSON buttons, and the bar says so.</p>
     </div>
 
+    <div class="setup panel">
+      <h2>Optional: a shared roster</h2>
+      <p class="lede">The folder is per-machine. If you would rather have one live answer to
+        <em>who is on service today</em> — editable by a chief from a phone, picked up by every
+        browser without anyone re-exporting anything — the roster and rota can come from a
+        Google Sheet behind a keyed endpoint instead.</p>
+      <ol>
+        <li><a href="settings/">Settings</a> — paste the endpoint URL and key, once per browser.</li>
+        <li><a href="publish/">Publish</a> — seed the sheet from the folder you already have.</li>
+        <li>After that, a chief edits the sheet. Swaps and sick calls need no export.</li>
+      </ol>
+      <p class="hint">Entirely optional, and it degrades rather than misleads: with no endpoint,
+        or one that cannot be reached, everything falls back to the folder exactly as before.
+        The folder always wins over the endpoint, and the participation log never leaves it.</p>
+    </div>
+
     <div class="privacy setup">
       <b>What this module will not do</b>
       Everything in <code>casebank/</code>, <code>sessions/</code> and <code>board-archive/</code> is
@@ -170,6 +186,7 @@
   </div>
 </footer>
 
+<script src="assets/remote.js"></script>
 <script src="assets/store.js"></script>
 <script>MRStore.mountBar("mr-bar");</script>
 </body>
