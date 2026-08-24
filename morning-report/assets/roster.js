@@ -212,8 +212,57 @@
     return r;
   }
 
+  /* ---------- the shared roster -------------------------------------
+
+     When an endpoint is configured it owns the PEOPLE and the folder
+     owns the LOG. That split is the whole rule, and it is what keeps a
+     shared roster from being dangerous: the endpoint can rewrite who
+     is in the programme, and can never touch the record of who has
+     already served.
+
+     Unavailable windows come back from the folder too. They are edited
+     on the roster page and the sheet has no column for them, so taking
+     the endpoint's list wholesale would quietly wipe a leave block
+     every time the page loaded.
+     ------------------------------------------------------------------- */
+
+  function mergeRoster(local, shared) {
+    if (!shared || !Array.isArray(shared.residents) || !shared.residents.length) return local;
+    if (!local) return shared;
+
+    var wasUnavailable = {};
+    (local.residents || []).forEach(function (p) {
+      if (p && p.id && Array.isArray(p.unavailable) && p.unavailable.length) {
+        wasUnavailable[p.id] = p.unavailable;
+      }
+    });
+
+    var out = {};
+    Object.keys(local).forEach(function (k) { out[k] = local[k]; });
+    out.residents = shared.residents.map(function (p) {
+      var copy = {};
+      Object.keys(p).forEach(function (k) { copy[k] = p[k]; });
+      copy.unavailable = wasUnavailable[p.id] || (Array.isArray(p.unavailable) ? p.unavailable : []);
+      return copy;
+    });
+    out.residents_source = "shared";
+    return out;
+  }
+
   function load() {
-    return MRStore.read(PATH).then(normalise);
+    return MRStore.read(PATH).then(function (local) {
+      var remote = global.MRRemote;
+      if (!remote || !remote.configured()) return normalise(local);
+      return remote.get(PATH)
+        .then(function (shared) { return normalise(mergeRoster(local, shared)); })
+        .catch(function () { return normalise(local); });
+    });
+  }
+
+  /* True when the people on this roster came from the endpoint, so the
+     editor can say that editing them here will not stick. */
+  function residentsAreShared(r) {
+    return !!(r && r.residents_source === "shared");
   }
 
   function save(r) {
@@ -574,6 +623,8 @@
     normalise: normalise,
     load: load,
     save: save,
+    mergeRoster: mergeRoster,
+    residentsAreShared: residentsAreShared,
     nextId: nextId,
     isUnavailable: isUnavailable,
     unavailableDaysBetween: unavailableDaysBetween,

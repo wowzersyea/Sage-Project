@@ -191,7 +191,7 @@ const FAKE_API = `
   ];
   for (const o of others) {
     await page.goto(BASE + '/morning-report/feedback/', { waitUntil: 'networkidle' });
-    await page.evaluate(() => { try { localStorage.removeItem('mr.feedback.draft'); } catch(e){} });
+    await page.evaluate(() => { try { sessionStorage.removeItem('mr.feedback.draft'); } catch(e){} });
     await page.reload({ waitUntil: 'networkidle' });
     await fill('2026-09-03', 'Galveston');
     await page.evaluate((o) => {
@@ -315,7 +315,7 @@ const FAKE_API = `
 
   // ---- a second session does not bleed into the first --------------------
   await page.goto(BASE + '/morning-report/feedback/', { waitUntil: 'networkidle' });
-  await page.evaluate(() => { try { localStorage.removeItem('mr.feedback.draft'); } catch(e){} });
+  await page.evaluate(() => { try { sessionStorage.removeItem('mr.feedback.draft'); } catch(e){} });
   await page.reload({ waitUntil: 'networkidle' });
   await fill('2026-09-10', 'Houston');
   await page.evaluate(() => {

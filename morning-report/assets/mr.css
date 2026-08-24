@@ -67,6 +67,15 @@ body{
 .mr-bar button.solid{background:var(--amber);color:var(--navy);border-color:var(--amber)}
 .mr-bar button.solid:hover{background:#d8942f}
 .mr-bar .why{color:#7D93A8;font-size:11.5px}
+.mr-remote{
+  font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:3px 8px;border-radius:3px;text-decoration:none;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.2);color:#C6D4E0;
+}
+.mr-remote:hover{border-color:rgba(255,255,255,.45);color:#fff}
+.mr-remote.ok{background:rgba(90,160,110,.22);border-color:rgba(90,160,110,.5);color:#BFE3C9}
+.mr-remote.warn{background:rgba(224,160,58,.2);border-color:rgba(224,160,58,.55);color:#F2D9A8}
+.mr-remote.err{background:rgba(190,74,86,.24);border-color:rgba(190,74,86,.6);color:#F3C3C9}
 
 /* ---------- error / notice banners -------------------------------- */
 

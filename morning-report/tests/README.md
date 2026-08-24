@@ -25,6 +25,8 @@ Each suite exits non-zero on a failure or on any console error.
 | `report.test.js` | The four-session floor, cell suppression, and that no session or role is ever named |
 | `equity.test.js` | The four flags, the away adjustment, the CSV, and that nothing here reads `sessions/` |
 | `site.test.js` | Every page loads clean, every internal link resolves, and nothing writes `localStorage` |
+| `remote.test.js` | The optional shared endpoint: that the folder always wins, that the endpoint owns the people while the folder owns the log, that a refused key or a dead endpoint degrades instead of breaking, that only the two name-bearing paths are ever fetched, and that the key is not persisted unless asked |
+| `appsscript.test.js` | `server/Code.gs` run in node with the four Google globals stubbed: the key gate, name resolution in every form a chief might type, date cells, and the seed round-trip. No browser and no network — run it with plain `node`. |
 | `feedback.test.js` | Dictation into the boxes, the identifier gate, the rollup arithmetic, one model call per unit, and that the kept record carries no comment and nothing role-level |
 
 ## The fake file system

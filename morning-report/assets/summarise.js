@@ -37,44 +37,56 @@
   var KEY_STORE = "mr.model.key";
   var MODEL_STORE = "mr.model.name";
 
-  var memoryKey = null;     /* when the user declines to keep it */
+  /* ---------- the key ------------------------------------------------
 
-  /* ---------- the key ---------------------------------------------- */
+     Where the key is kept follows remote.js, and for the same reason:
+
+       sessionStorage — the default. Gone when the tab closes, which is
+       the right default for a shared workroom machine.
+
+       localStorage — only when the user ticks "keep it in this
+       browser". Their own laptop, their call.
+
+     The ban on localStorage in this module is about DATA, none of
+     which may live there because it is invisible to the other site and
+     to the folder. A key the user typed and can retype is not data.
+     -------------------------------------------------------------------- */
+
+  function read(store, name) {
+    try { return store.getItem(name) || ""; } catch (e) { return ""; }
+  }
+
+  function drop(name) {
+    try { global.sessionStorage.removeItem(name); } catch (e) { /* private mode */ }
+    try { global.localStorage.removeItem(name); } catch (e) { /* private mode */ }
+  }
 
   function key() {
-    if (memoryKey) return memoryKey;
-    try { return global.localStorage.getItem(KEY_STORE) || ""; }
-    catch (e) { return ""; }
+    return read(global.localStorage, KEY_STORE) || read(global.sessionStorage, KEY_STORE);
   }
 
   function setKey(k, remember) {
     k = (k || "").trim();
-    memoryKey = k;
-    if (!remember) { clearStored(); return; }
-    try { global.localStorage.setItem(KEY_STORE, k); } catch (e) { /* private mode */ }
+    drop(KEY_STORE);
+    if (!k) return;
+    try {
+      (remember ? global.localStorage : global.sessionStorage).setItem(KEY_STORE, k);
+    } catch (e) { /* private mode: it lives for this page only */ }
   }
 
-  function clearStored() {
-    try { global.localStorage.removeItem(KEY_STORE); } catch (e) { /* nothing to do */ }
-  }
+  function clearKey() { drop(KEY_STORE); }
 
-  function clearKey() { memoryKey = null; clearStored(); }
-
-  function remembered() {
-    try { return !!global.localStorage.getItem(KEY_STORE); } catch (e) { return false; }
-  }
+  function remembered() { return !!read(global.localStorage, KEY_STORE); }
 
   function model(content) {
     var fallback = (content && content.model && content.model.default_model) || "claude-sonnet-5";
-    try { return global.localStorage.getItem(MODEL_STORE) || fallback; }
-    catch (e) { return fallback; }
+    return read(global.localStorage, MODEL_STORE) || read(global.sessionStorage, MODEL_STORE) || fallback;
   }
 
   function setModel(m) {
-    try {
-      if (m) global.localStorage.setItem(MODEL_STORE, m);
-      else global.localStorage.removeItem(MODEL_STORE);
-    } catch (e) { /* private mode */ }
+    drop(MODEL_STORE);
+    if (!m) return;
+    try { global.sessionStorage.setItem(MODEL_STORE, m); } catch (e) { /* private mode */ }
   }
 
   /* ---------- the arithmetic --------------------------------------- */

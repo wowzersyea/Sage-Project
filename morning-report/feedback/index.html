@@ -172,6 +172,7 @@
   </div>
 </footer>
 
+<script src="../assets/remote.js?v=1"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/phi.js"></script>
 <script src="../assets/voice.js"></script>
@@ -501,18 +502,23 @@ function paintSend(){
 
 /* ---------- draft, so a reload does not cost the typing ------------------ */
 
+/* sessionStorage, not localStorage: a half-finished form should
+   survive a reload and a mis-click, and should not be sitting there
+   for whoever opens the browser next on a shared workroom machine.
+   Nothing that matters lives here either way — the moment it is sent
+   it is a file in the folder. */
 function saveDraft(){
   if (!content) return;
-  try { localStorage.setItem(DRAFT, JSON.stringify(record())); } catch (e) { /* private mode */ }
+  try { sessionStorage.setItem(DRAFT, JSON.stringify(record())); } catch (e) { /* private mode */ }
 }
 
 function clearDraft(){
-  try { localStorage.removeItem(DRAFT); } catch (e) { /* nothing to do */ }
+  try { sessionStorage.removeItem(DRAFT); } catch (e) { /* nothing to do */ }
 }
 
 function restoreDraft(){
   var raw = null;
-  try { raw = localStorage.getItem(DRAFT); } catch (e) { return; }
+  try { raw = sessionStorage.getItem(DRAFT); } catch (e) { return; }
   if (!raw) return;
   var d;
   try { d = JSON.parse(raw); } catch (e) { return; }
@@ -544,18 +550,21 @@ function restoreDraft(){
   revalidate();
 }
 
+/* Also the tab, and for the same reason: on the workroom machine the
+   next person to sit down is a different person, and telling them they
+   have already sent feedback would be a lie. */
 function alreadySent(session){
   try {
-    var seen = JSON.parse(localStorage.getItem(SENT) || "[]");
+    var seen = JSON.parse(sessionStorage.getItem(SENT) || "[]");
     return seen.indexOf(session) !== -1;
   } catch (e) { return false; }
 }
 
 function markSent(session){
   try {
-    var seen = JSON.parse(localStorage.getItem(SENT) || "[]");
+    var seen = JSON.parse(sessionStorage.getItem(SENT) || "[]");
     if (seen.indexOf(session) === -1) seen.push(session);
-    localStorage.setItem(SENT, JSON.stringify(seen.slice(-40)));
+    sessionStorage.setItem(SENT, JSON.stringify(seen.slice(-40)));
   } catch (e) { /* private mode */ }
 }
 

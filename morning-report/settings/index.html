@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shared roster settings | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .state-line{
+    display:flex;align-items:center;gap:9px;font-size:13.5px;
+    padding:11px 14px;border-radius:6px;border:1px solid var(--line);background:#F7F9FB;
+  }
+  .state-line .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+  .state-line.ok{background:#EEF6F0;border-color:#BFDCC8}
+  .state-line.ok .dot{background:var(--green)}
+  .state-line.warn{background:#FBF0DE;border-color:var(--amber)}
+  .state-line.warn .dot{background:var(--amber)}
+  .state-line.err{background:#F7EAEC;border-color:#E3C2C7}
+  .state-line.err .dot{background:var(--red)}
+  .warn-list{margin:12px 0 0;padding-left:20px;font-size:13px;color:#8A6014;line-height:1.6}
+  .warn-list li{margin-bottom:3px}
+  label.check{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer}
+  label.check input{width:auto;margin:0}
+  code.url{
+    font-family:var(--mono);font-size:12px;background:#F2F6F8;border:1px solid var(--line);
+    padding:2px 6px;border-radius:3px;word-break:break-all;
+  }
+  ol.steps{margin:0;padding-left:20px;font-size:13.5px;color:#3D4855;line-height:1.65}
+  ol.steps li{margin-bottom:9px}
+  ol.steps code{font-family:var(--mono);background:#F2F6F8;border:1px solid var(--line);
+    padding:1px 5px;border-radius:3px;font-size:12.5px}
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3KEGTRRS0Z');
+</script>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning Report · Setup</p>
+    <h1>Shared roster</h1>
+    <p class="sub">Point this browser at the sheet that says who is on service. One endpoint,
+      one key, entered once. Nothing here is stored in the site's code — this repository is
+      public, and the roster must not be.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="panel">
+    <h2>Status</h2>
+    <div id="state" class="state-line"><span class="dot"></span><span id="state-txt">Checking…</span></div>
+    <ul id="warns" class="warn-list" hidden></ul>
+    <div class="bar" style="margin-top:14px">
+      <button type="button" class="ghost" id="recheck">Check again</button>
+      <a class="btn ghost" href="../publish/">Publish from my data folder →</a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Endpoint</h2>
+    <div class="field">
+      <label for="endpoint">Web app URL</label>
+      <input type="url" id="endpoint" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+      <p class="hint">The <code>/exec</code> URL from the Apps Script deployment. Must be https.</p>
+    </div>
+    <div class="field">
+      <label for="key">Key</label>
+      <input type="password" id="key" placeholder="The MR_KEY you set in Script Properties" autocomplete="off">
+      <p class="hint">This is what actually gates the data. The URL alone is not a secret.</p>
+    </div>
+    <div class="field">
+      <label class="check">
+        <input type="checkbox" id="remember">
+        Remember on this device
+      </label>
+      <p class="hint">Off by default: the key is forgotten when this tab closes, which is right for a
+        shared workroom machine. Tick it on your own laptop.</p>
+    </div>
+    <p id="err" class="hint" style="color:var(--red)"></p>
+    <div class="bar">
+      <button type="button" class="primary" id="save">Save and connect</button>
+      <button type="button" class="danger" id="forget">Forget on this device</button>
+      <button type="button" class="ghost" id="copylink">Copy setup link</button>
+    </div>
+    <p class="hint" id="copied" style="margin-top:9px"></p>
+  </section>
+
+  <section class="panel privacy">
+    <b>Why the roster is not in this repository</b>
+    This site is public. Everything committed to it is served to anyone who asks, and a password on
+    the pages would not change that — the JSON would be its own URL. So the roster lives behind this
+    endpoint instead, and the pages stay public and empty. The endpoint holds who is on service; it
+    never holds a score, and the participation log stays in your data folder.
+  </section>
+
+  <section class="panel">
+    <h2>Setting up the sheet</h2>
+    <ol class="steps">
+      <li>Create a Google Sheet, then <b>Extensions → Apps Script</b>.</li>
+      <li>Paste in <code>morning-report/server/Code.gs</code> from this repository and save.</li>
+      <li>Run <code>setUpSheets()</code> once from the editor and grant the permissions it asks for.
+        Three tabs appear: <b>Roster</b>, <b>Rota</b>, <b>Sites</b>.</li>
+      <li><b>Project Settings → Script Properties</b>, add <code>MR_KEY</code> with a long random
+        string. Without it the endpoint refuses everyone, including you.</li>
+      <li><b>Deploy → New deployment → Web app</b>, execute as <b>Me</b>, access <b>Anyone</b>.
+        "Anyone" is what lets a browser reach it at all; <code>MR_KEY</code> is the gate. Copy the
+        <code>/exec</code> URL.</li>
+      <li>Paste the URL and key above, then use <a href="../publish/">Publish</a> to fill the sheet
+        from the data folder you already have.</li>
+    </ol>
+    <p class="hint" style="margin-top:14px">After that, a chief edits the <b>Rota</b> tab — one cell per
+      task per day, names written as they appear on the Roster tab, two people separated by a
+      semicolon — and every browser picks it up on the next load. Swaps and sick calls do not need
+      anyone to re-export anything. Commas and surname-first names are understood too, since that is
+      what a pasted QGenda cell looks like; anything unrecognised is listed above rather than
+      silently dropped.</p>
+  </section>
+
+</main>
+
+<script src="../assets/remote.js?v=1"></script>
+<script src="../assets/store.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* remote.js is the only script this page cannot do without. A blocked
+     CDN, a stale cache entry or an extension that ate the request would
+     otherwise leave a dead form with no explanation. */
+  if (!window.MRRemote) {
+    $("state").className = "state-line err";
+    $("state-txt").textContent =
+      "The script this page needs (assets/remote.js) did not load, so nothing here will work. " +
+      "Reload with a hard refresh; if it persists, the file is being blocked between you and the site.";
+    ["save", "forget", "recheck", "copylink"].forEach(function (id) { $(id).disabled = true; });
+    MRStore.mountBar("mr-bar");
+    return;
+  }
+
+  function renderStatus() {
+    var s = MRRemote.status();
+    var line = $("state"), txt = $("state-txt"), warns = $("warns");
+    line.className = "state-line";
+    warns.hidden = true;
+    warns.innerHTML = "";
+
+    if (!s.configured) {
+      txt.textContent = "No shared roster configured. This browser uses the data folder only.";
+      return;
+    }
+    if (!s.tried) { txt.textContent = "Checking the endpoint…"; return; }
+
+    if (!s.ok) {
+      line.className = "state-line err";
+      txt.textContent = s.denied
+        ? "The endpoint refused that key."
+        : "Could not reach the endpoint — " + s.error;
+      return;
+    }
+
+    var bits = [];
+    if (s.warnings.length) bits.push(s.warnings.length + " warning" + (s.warnings.length === 1 ? "" : "s"));
+    if (s.generated) bits.push("read " + new Date(s.generated).toLocaleString());
+    line.className = "state-line " + (s.warnings.length ? "warn" : "ok");
+    txt.textContent = "Connected" + (bits.length ? " — " + bits.join(", ") : "") + ".";
+
+    if (s.warnings.length) {
+      s.warnings.forEach(function (w) {
+        var li = document.createElement("li");
+        li.textContent = w;
+        warns.appendChild(li);
+      });
+      warns.hidden = false;
+    }
+  }
+
+  function fill() {
+    var s = MRRemote.settings();
+    $("endpoint").value = s.endpoint;
+    $("key").value = s.key;
+    $("remember").checked = s.remember;
+  }
+
+  $("save").addEventListener("click", function () {
+    var url = $("endpoint").value.trim();
+    var msg = MRRemote.validate(url);
+    $("err").textContent = msg;
+    if (msg) return;
+    MRRemote.setSettings({ endpoint: url, key: $("key").value, remember: $("remember").checked });
+    renderStatus();
+    if (MRRemote.configured()) MRRemote.fetchAll().then(renderStatus);
+  });
+
+  $("forget").addEventListener("click", function () {
+    MRRemote.forget();
+    fill();
+    renderStatus();
+    MRStore.notify("ok", "The endpoint and key are gone from this device.");
+  });
+
+  $("recheck").addEventListener("click", function () {
+    MRRemote.reload();
+    renderStatus();
+    if (MRRemote.configured()) MRRemote.fetchAll().then(renderStatus);
+  });
+
+  /* A link that carries the endpoint but never the key — enough for a
+     colleague to skip the typing, not enough to read anything. */
+  $("copylink").addEventListener("click", function () {
+    var url = $("endpoint").value.trim();
+    if (!url) { $("copied").textContent = "Fill in the endpoint first."; return; }
+    var link = location.origin + location.pathname + "#e=" + encodeURIComponent(url);
+    var done = function () { $("copied").textContent = "Copied. They will still need the key from you."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(done, function () { $("copied").textContent = link; });
+    } else { $("copied").textContent = link; }
+  });
+
+  MRRemote.onChange(renderStatus);
+  MRStore.mountBar("mr-bar");
+  fill();
+
+  /* Pre-fill from a setup link. */
+  var m = /[#&]e=([^&]+)/.exec(location.hash || "");
+  if (m && !$("endpoint").value) {
+    try { $("endpoint").value = decodeURIComponent(m[1]); } catch (e) { /* malformed link */ }
+  }
+
+  renderStatus();
+  if (MRRemote.configured()) MRRemote.fetchAll().then(renderStatus);
+})();
+</script>
+</body>
+</html>

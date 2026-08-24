@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publish the roster | Morning Report</title>
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  .src{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+  .src .card{border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:#F7F9FB}
+  .src .card h3{margin:0 0 5px;font-size:14px}
+  .src .card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .src .card.have{background:#EEF6F0;border-color:#BFDCC8}
+  .src .card.have p{color:#2F6B44}
+  .src .card.none{background:#F7EAEC;border-color:#E3C2C7}
+  .src .card.none p{color:var(--red)}
+  .warn-list{margin:12px 0 0;padding-left:20px;font-size:13px;color:#8A6014;line-height:1.6}
+  #out{margin-top:14px;font-size:13.5px}
+  textarea.tsv{
+    width:100%;min-height:150px;font-family:var(--mono);font-size:11.5px;line-height:1.5;
+    white-space:pre;margin-top:8px;
+  }
+  details.fallback{margin-top:18px}
+  details.fallback summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--teal)}
+  details.fallback > div{margin-top:10px}
+  @media(max-width:760px){.src{grid-template-columns:1fr}}
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3KEGTRRS0Z');
+</script>
+</head>
+<body>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning Report · Setup</p>
+    <h1>Publish the roster</h1>
+    <p class="sub">A one-way copy from your data folder into the shared sheet, so you do not
+      retype a year of rota by hand. Run it once to seed the sheet — after that the sheet is
+      the live copy and you edit it there.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="panel">
+    <h2>What is in your folder</h2>
+    <div class="src">
+      <div class="card" id="c-roster"><h3>roster.json</h3><p>Checking…</p></div>
+      <div class="card" id="c-rot"><h3>rotations.json</h3><p>Checking…</p></div>
+    </div>
+    <div class="bar" style="margin-top:16px">
+      <button type="button" class="primary" id="go" disabled>Publish to the sheet</button>
+      <a class="btn ghost" href="../settings/">Endpoint settings →</a>
+    </div>
+    <div id="out"></div>
+    <ul id="warns" class="warn-list" hidden></ul>
+  </section>
+
+  <section class="panel privacy">
+    <b>This sends names to your endpoint</b>
+    That is the point of it, and it is the only thing here that sends names anywhere. It goes to
+    the Apps Script URL you configured and nowhere else — not to this site, not into the repository.
+    Publishing <b>replaces</b> the three tabs in the sheet; anything a chief has edited there since
+    the last publish is overwritten.
+  </section>
+
+  <section class="panel">
+    <h2>If the publish is blocked</h2>
+    <p class="lede">Some networks block <code>script.google.com</code> outright. The same data as
+      tab-separated text is below — select a block, copy, and paste it into cell A1 of the matching
+      tab in the sheet.</p>
+    <details class="fallback">
+      <summary>Roster tab</summary>
+      <div><textarea class="tsv" id="tsv-roster" readonly></textarea></div>
+    </details>
+    <details class="fallback">
+      <summary>Rota tab</summary>
+      <div><textarea class="tsv" id="tsv-rota" readonly></textarea></div>
+    </details>
+    <details class="fallback">
+      <summary>Sites tab</summary>
+      <div><textarea class="tsv" id="tsv-sites" readonly></textarea></div>
+    </details>
+  </section>
+
+</main>
+
+<script src="../assets/remote.js?v=1"></script>
+<script src="../assets/store.js"></script>
+<script src="../assets/roster.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var folder = { roster: null, rotations: null };
+
+  /* Same guard as the settings page: without remote.js there is nothing
+     to publish to, and a silent dead button is worse than a sentence. */
+  if (!window.MRRemote) {
+    $("out").innerHTML = "<span style='color:var(--red)'>The script this page needs " +
+      "(assets/remote.js) did not load, so there is nothing to publish to. Reload with a hard " +
+      "refresh; if it persists, the file is being blocked between you and the site.</span>";
+    $("go").disabled = true;
+    MRStore.mountBar("mr-bar");
+    return;
+  }
+
+  function card(el, title, ok, msg) {
+    el.className = "card " + (ok ? "have" : "none");
+    el.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = title;
+    var p = document.createElement("p"); p.textContent = msg;
+    el.appendChild(h); el.appendChild(p);
+  }
+
+  /* Read straight off the folder, never through MRStore.read — that
+     falls back to the endpoint, and publishing the endpoint's own copy
+     back to itself would be a very confusing no-op. */
+  function readFolder(path) {
+    var st = MRStore.status();
+    if (!st.ready) return Promise.resolve(null);
+    return MRStore.read(path).then(function (o) {
+      /* If the endpoint answered instead of the folder, it is not ours
+         to publish. A folder copy always carries a log array. */
+      if (o && o.source === "sheet") return null;
+      return o;
+    });
+  }
+
+  function tsv(rows) {
+    return rows.map(function (r) {
+      return r.map(function (c) { return String(c == null ? "" : c).replace(/[\t\n\r]+/g, " "); }).join("\t");
+    }).join("\n");
+  }
+
+  function buildTsv() {
+    var r = folder.roster, rot = folder.rotations;
+
+    if (r && r.residents) {
+      $("tsv-roster").value = tsv([["id", "name", "sort_name", "level", "active", "short"]].concat(
+        r.residents.map(function (p) {
+          return [p.id, p.name, p.sort_name || "", p.level || "", p.active === false ? "no" : "yes", p.short || ""];
+        })));
+    }
+
+    if (rot && rot.days) {
+      var byId = {};
+      ((r && r.residents) || []).forEach(function (p) { byId[p.id] = p.name || p.id; });
+      var tasks = (rot.tasks && rot.tasks.length) ? rot.tasks.slice() : (function () {
+        var seen = {};
+        Object.keys(rot.days).forEach(function (d) {
+          Object.keys(rot.days[d] || {}).forEach(function (t) { seen[t] = true; });
+        });
+        return Object.keys(seen);
+      })();
+
+      $("tsv-rota").value = tsv([["date"].concat(tasks)].concat(
+        Object.keys(rot.days).sort().map(function (d) {
+          var day = rot.days[d] || {};
+          /* Semicolons: a name may itself contain a comma, and the
+             endpoint reads these back. */
+          return [d].concat(tasks.map(function (t) {
+            return (day[t] || []).map(function (id) { return byId[id] || id; }).join("; ");
+          }));
+        })));
+
+      var sites = rot.sites || {};
+      $("tsv-sites").value = tsv([["site", "label", "ward_tasks", "other_tasks"]].concat(
+        Object.keys(sites).map(function (id) {
+          return [id, sites[id].label || id, (sites[id].ward || []).join(", "), (sites[id].other || []).join(", ")];
+        })));
+    }
+  }
+
+  function refresh() {
+    return Promise.all([readFolder("roster.json"), readFolder("rotations.json")]).then(function (pair) {
+      folder.roster = pair[0];
+      folder.rotations = pair[1];
+
+      var n = folder.roster && folder.roster.residents ? folder.roster.residents.length : 0;
+      card($("c-roster"), "roster.json", n > 0,
+        n ? n + " residents ready to publish" : "Not in this folder — nothing to publish");
+
+      var days = folder.rotations && folder.rotations.days ? Object.keys(folder.rotations.days).length : 0;
+      card($("c-rot"), "rotations.json", days > 0,
+        days ? days + " days ready to publish" : "Not in this folder — nothing to publish");
+
+      $("go").disabled = !(n || days) || !MRRemote.configured();
+      if (!MRRemote.configured()) {
+        $("out").innerHTML = "<span style='color:var(--red)'>No endpoint is configured yet — " +
+          "set one on the <a href='../settings/'>settings page</a> first.</span>";
+      } else {
+        $("out").textContent = "";
+      }
+      buildTsv();
+    });
+  }
+
+  $("go").addEventListener("click", function () {
+    $("go").disabled = true;
+    $("out").textContent = "Publishing…";
+    $("warns").hidden = true;
+    $("warns").innerHTML = "";
+
+    MRRemote.publish({ roster: folder.roster, rotations: folder.rotations }).then(function (r) {
+      $("go").disabled = false;
+      if (!r.ok) {
+        $("out").innerHTML = "<span style='color:var(--red)'>Publish failed — " +
+          MRStore.esc(r.error) + "</span>";
+        return;
+      }
+      var bits = [];
+      if (r.wrote.roster) bits.push(r.wrote.roster + " residents");
+      if (r.wrote.rota) bits.push(r.wrote.rota + " days");
+      if (r.wrote.sites) bits.push(r.wrote.sites + " sites");
+      $("out").innerHTML = "<span style='color:var(--green);font-weight:600'>Published " +
+        bits.join(", ") + ".</span> The sheet is now the live copy.";
+      if (r.warnings.length) {
+        r.warnings.forEach(function (w) {
+          var li = document.createElement("li"); li.textContent = w; $("warns").appendChild(li);
+        });
+        $("warns").hidden = false;
+      }
+    });
+  });
+
+  MRStore.mountBar("mr-bar");
+  MRStore.onChange(refresh);
+  MRRemote.onChange(refresh);
+  MRStore.whenReady.then(refresh);
+})();
+</script>
+</body>
+</html>
