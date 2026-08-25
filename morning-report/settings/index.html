@@ -94,6 +94,25 @@
     <p class="hint" id="copied" style="margin-top:9px"></p>
   </section>
 
+  <section class="panel">
+    <h2>The feedback link</h2>
+    <p class="hint" style="margin-top:0">Feedback filled in on a phone, or on any machine without the
+      data folder, waits at the endpoint until this machine collects it. That needs a second key —
+      <code>MR_FEEDBACK_KEY</code> in Script Properties — which submits feedback and can do nothing
+      else. It is the one that travels; the key above never leaves this device.</p>
+    <div class="field">
+      <label for="fbkey">Feedback key</label>
+      <input type="password" id="fbkey" placeholder="The MR_FEEDBACK_KEY you set in Script Properties" autocomplete="off">
+      <p class="hint">Anyone with the link can send feedback and read nothing. If you paste
+        <code>MR_KEY</code> here by mistake you have handed out the roster, so do not.</p>
+    </div>
+    <div class="bar">
+      <button type="button" class="primary" id="savefb">Save the feedback key</button>
+      <button type="button" class="ghost" id="copyfb">Copy the feedback link</button>
+    </div>
+    <p class="hint" id="fbcopied" style="margin-top:9px"></p>
+  </section>
+
   <section class="panel privacy">
     <b>Why the roster is not in this repository</b>
     This site is public. Everything committed to it is served to anyone who asks, and a password on
@@ -129,6 +148,7 @@
 
 <script src="../assets/remote.js?v=1"></script>
 <script src="../assets/store.js"></script>
+<script src="../assets/relay.js"></script>
 <script>
 (function () {
   "use strict";
@@ -189,6 +209,7 @@
     var s = MRRemote.settings();
     $("endpoint").value = s.endpoint;
     $("key").value = s.key;
+    $("fbkey").value = MRRelay.shareKey();
     $("remember").checked = s.remember;
   }
 
@@ -217,6 +238,32 @@
 
   /* A link that carries the endpoint but never the key — enough for a
      colleague to skip the typing, not enough to read anything. */
+  $("savefb").addEventListener("click", function () {
+    var k = $("fbkey").value.trim();
+    if (k && k === $("key").value.trim()) {
+      $("fbcopied").textContent = "That is the roster key. The feedback key has to be the other one.";
+      return;
+    }
+    MRRelay.setShareKey(k, $("remember").checked);
+    $("fbcopied").textContent = k
+      ? ($("remember").checked ? "Saved on this device." : "Saved for this tab.")
+      : "Forgotten.";
+  });
+
+  $("copyfb").addEventListener("click", function () {
+    var link = MRRelay.linkFor(location.origin + MRStore.base() + "feedback/");
+    if (!link) {
+      $("fbcopied").textContent = MRRelay.shareKey()
+        ? "Fill in and save the endpoint first."
+        : "Save a feedback key first.";
+      return;
+    }
+    var done = function () { $("fbcopied").textContent = "Copied. That link carries the feedback key and nothing else."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(done, function () { $("fbcopied").textContent = link; });
+    } else { $("fbcopied").textContent = link; }
+  });
+
   $("copylink").addEventListener("click", function () {
     var url = $("endpoint").value.trim();
     if (!url) { $("copied").textContent = "Fill in the endpoint first."; return; }

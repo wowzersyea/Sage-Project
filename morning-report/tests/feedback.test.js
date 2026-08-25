@@ -27,6 +27,92 @@ const FAKE_SPEECH = `
 })();
 `;
 
+/* A microphone that records silence. MediaRecorder and getUserMedia
+   both stubbed, so the recorder half runs with no device and no
+   permission prompt. */
+const FAKE_RECORDER = `
+(function(){
+  window.__recorders = [];
+  function Fake(stream, opts){
+    this.state = 'inactive';
+    this.mimeType = (opts && opts.mimeType) || 'audio/webm';
+    this.stream = stream;
+    this.ondataavailable = null;
+    this.onstop = null;
+    window.__recorders.push(this);
+  }
+  Fake.isTypeSupported = function(){ return true; };
+  Fake.prototype.start = function(){ this.state = 'recording'; };
+  Fake.prototype.stop = function(){
+    this.state = 'inactive';
+    if (this.ondataavailable) this.ondataavailable({ data: new Blob(['fake-audio-bytes'], { type: this.mimeType }) });
+    if (this.onstop) this.onstop();
+  };
+  window.MediaRecorder = Fake;
+  var tracks = [{ stop: function(){ window.__micReleased = (window.__micReleased||0)+1; } }];
+  Object.defineProperty(navigator, 'mediaDevices', {
+    configurable: true,
+    value: { getUserMedia: function(){ return Promise.resolve({ getTracks: function(){ return tracks; } }); } }
+  });
+})();
+`;
+
+/* The post box, in memory. Mirrors what Code.gs does with a row and a
+   Drive file, so the browser half can be driven end to end without a
+   Google account. */
+const FAKE_BOX = `
+(function(){
+  window.__box = { rows: [], files: {}, next: 1, calls: [] };
+  var real = window.fetch;
+  window.fetch = function(url, opts){
+    var u = String(url);
+    if (u.indexOf('endpoint.test') === -1) return real.apply(this, arguments);
+    var box = window.__box;
+
+    if (!opts || opts.method !== 'POST'){
+      return Promise.resolve({ ok: true, status: 200,
+        json: function(){ return Promise.resolve({ status: 'ok', data: {} }); } });
+    }
+    var body = JSON.parse(opts.body);
+    box.calls.push(body.action || 'seed');
+    var reply;
+    if (body.action === 'feedback'){
+      if (body.key !== 'submit-key' && body.key !== 'roster-key') reply = { status: 'denied' };
+      else {
+        var ids = (body.audio || []).map(function(clip){
+          var id = 'file-' + (box.next++);
+          box.files[id] = { id: id, mime: clip.mime, data: clip.data,
+            name: body.record.session + '--' + body.record.id + '--' + clip.unit + '.webm' };
+          return id;
+        });
+        box.rows.push({ session: body.record.session, submission: body.record.id,
+          recordings: ids, record: body.record });
+        reply = { status: 'ok', id: body.record.id, recordings: ids.length };
+      }
+    } else if (body.key !== 'roster-key'){
+      reply = { status: 'denied' };
+    } else if (body.action === 'collect'){
+      reply = { status: 'ok', pending: box.rows.slice(), unreadable: [] };
+    } else if (body.action === 'recording'){
+      var f = box.files[body.id];
+      reply = f ? { status: 'ok', id: f.id, name: f.name, mime: f.mime, data: f.data }
+                : { status: 'error', message: 'gone' };
+    } else if (body.action === 'collected'){
+      var want = body.submissions || [];
+      var kept = box.rows.filter(function(r){ return want.indexOf(r.submission) === -1; });
+      box.rows.filter(function(r){ return want.indexOf(r.submission) !== -1; })
+        .forEach(function(r){ r.recordings.forEach(function(id){ delete box.files[id]; }); });
+      var dropped = box.rows.length - kept.length;
+      box.rows = kept;
+      reply = { status: 'ok', dropped: dropped };
+    } else {
+      reply = { status: 'ok', wrote: {} };
+    }
+    return Promise.resolve({ ok: true, status: 200, json: function(){ return Promise.resolve(reply); } });
+  };
+})();
+`;
+
 /* Stubbed model replies: the first confident, the rest under the
    confidence floor, so both sides of the flag are exercised. */
 const FAKE_API = `
@@ -60,7 +146,9 @@ const FAKE_API = `
   page.on('console', m => { const u=(m.location()&&m.location().url)||''; if (m.type()==='error' && !/googletagmanager|favicon|ERR_CONNECTION_RESET/.test(m.text()+' '+u)) errs.push('console: ' + m.text()); });
   await page.addInitScript(fake);
   await page.addInitScript(FAKE_SPEECH);
+  await page.addInitScript(FAKE_RECORDER);
   await page.addInitScript(FAKE_API);
+  await page.addInitScript(FAKE_BOX);
   await page.goto(BASE + '/morning-report/', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
 
@@ -358,6 +446,203 @@ const FAKE_API = `
      handed.date === '2026-09-17' && handed.site === 'Houston' &&
      /2026-09-17-houston/.test(handed.note) &&
      /session=2026-09-17-houston/.test(handed.summaryHref), handed);
+
+  // ---- the recorder, and what happens to a clip -------------------------
+  await page.goto(BASE + '/morning-report/feedback/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => { try { sessionStorage.removeItem('mr.feedback.draft'); } catch(e){} });
+  await page.reload({ waitUntil: 'networkidle' });
+  await fill('2026-10-01', 'Galveston');
+
+  const recorded = await page.evaluate(async () => {
+    const box = document.getElementById('c-overall');
+    const mic = box.parentNode.querySelector('button.mic');
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));      // getUserMedia resolves
+    const running = window.__recorders.length;
+    mic.click();                                     // stop
+    await new Promise(r => setTimeout(r, 60));
+    const chip = box.parentNode.querySelector('.clip');
+    return {
+      running,
+      chipShown: chip && !chip.hidden,
+      chipText: chip ? chip.textContent : '',
+      panelShown: !document.getElementById('audiopanel').hidden,
+      keepDefault: document.getElementById('keepaudio').checked,
+      micReleased: window.__micReleased || 0
+    };
+  });
+  t('pressing the microphone starts a recorder', recorded.running === 1, recorded.running);
+  t('stopping it leaves a clip on the box', recorded.chipShown && /held/i.test(recorded.chipText), recorded.chipText);
+  t('and the microphone is released again', recorded.micReleased >= 1, recorded.micReleased);
+  t('the keep-it question only appears once there is something to keep', recorded.panelShown);
+  t('and keeping is off unless asked for', recorded.keepDefault === false);
+
+  const discarded = await page.evaluate(() => {
+    document.querySelector('.clip .link-btn').click();
+    const chip = document.querySelector('.clip');
+    return { hidden: chip.hidden, panel: document.getElementById('audiopanel').hidden };
+  });
+  t('discarding a clip takes it and the question away', discarded.hidden && discarded.panel, discarded);
+
+  // ---- unticked: the recording does not survive the send ----------------
+  const beforeAudio = await page.evaluate(async () => {
+    const box = document.getElementById('c-overall');
+    box.value = 'Worth keeping the words.';
+    const mic = box.parentNode.querySelector('button.mic');
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));
+    document.querySelector('input[name="r-overall"][value="4"]').click();
+    revalidate();
+    return !document.getElementById('audiopanel').hidden;
+  });
+  t('a clip is waiting again before the send', beforeAudio);
+
+  await page.click('#send');
+  await page.waitForTimeout(400);
+  const noAudio = await page.evaluate(async () => ({
+    audio: await MRStore.list('working/feedback/audio'),
+    note: document.getElementById('donenote').textContent
+  }));
+  t('an unticked send keeps the words and no recording',
+     noAudio.audio.length === 0 && /discarded/i.test(noAudio.note), noAudio);
+
+  // ---- ticked: the recording lands in the folder beside it --------------
+  await page.goto(BASE + '/morning-report/feedback/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => { try { sessionStorage.removeItem('mr.feedback.draft'); } catch(e){} });
+  await page.reload({ waitUntil: 'networkidle' });
+  await fill('2026-10-08', 'Galveston');
+  await page.evaluate(async () => {
+    const box = document.getElementById('c-overall');
+    box.value = 'Say it out loud.';
+    const mic = box.parentNode.querySelector('button.mic');
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));
+    document.querySelector('input[name="r-overall"][value="5"]').click();
+    document.getElementById('keepaudio').checked = true;
+    revalidate();
+  });
+  await page.click('#send');
+  await page.waitForTimeout(500);
+
+  const withClip = await page.evaluate(async () => ({
+    audio: await MRStore.list('working/feedback/audio'),
+    subs: await MRStore.list('working/feedback'),
+    note: document.getElementById('donenote').textContent
+  }));
+  t('a ticked send writes the recording next to the submission',
+     withClip.audio.length === 1 && /^2026-10-08-galveston--fb-.*\.webm$/.test(withClip.audio[0]), withClip.audio);
+  t('the recording is named for its session, submission and box',
+     /--overall\.webm$/.test(withClip.audio[0] || ''), withClip.audio[0]);
+  t('and the send says how many went with it', /1 recording/.test(withClip.note), withClip.note);
+
+  // ---- a device with no folder: the post box takes it -------------------
+  /* Its own context, so it has no folder, no connected handle and no
+     shared storage — which is exactly what a phone is. */
+  const phoneCtx = await browser.newContext();
+  await phoneCtx.addInitScript(FAKE_SPEECH);
+  await phoneCtx.addInitScript(FAKE_RECORDER);
+  await phoneCtx.addInitScript(FAKE_BOX);
+  const phone = await phoneCtx.newPage();
+  phone.on('pageerror', e => errs.push('pageerror(phone): ' + e.message));
+  phone.on('console', m => { const u=(m.location()&&m.location().url)||''; if (m.type()==='error' && !/googletagmanager|favicon|ERR_CONNECTION_RESET/.test(m.text()+' '+u)) errs.push('console(phone): ' + m.text()); });
+  const LINK = '/morning-report/feedback/?relay=' + encodeURIComponent('https://endpoint.test/exec') + '&k=submit-key';
+  await phone.goto(BASE + LINK, { waitUntil: 'networkidle' });
+  await phone.waitForTimeout(300);
+
+  const phoneState = await phone.evaluate(() => ({
+    ready: MRStore.status().ready,
+    canSubmit: MRRelay.canSubmit(),
+    canDrain: MRRelay.canDrain(),
+    note: document.getElementById('sessionnote').textContent
+  }));
+  t('a link carrying the endpoint configures a device that has no folder',
+     phoneState.canSubmit && !phoneState.ready, phoneState);
+  t('and a device holding only the submit key cannot drain the post box', !phoneState.canDrain);
+  t('the form says where it is going', /collection point/i.test(phoneState.note), phoneState.note);
+
+  await phone.fill('#date', '2026-10-15');
+  await phone.fill('#site', 'Houston');
+  await phone.evaluate(async () => {
+    document.querySelector('input[name="r-overall"][value="3"]').click();
+    document.getElementById('c-overall').value = 'Filled in on the way out of the room.';
+    const mic = document.getElementById('c-overall').parentNode.querySelector('button.mic');
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));
+    mic.click();
+    await new Promise(r => setTimeout(r, 60));
+    document.getElementById('keepaudio').checked = true;
+    revalidate();
+  });
+  await phone.click('#send');
+  await phone.waitForTimeout(500);
+
+  const posted = await phone.evaluate(() => ({
+    rows: window.__box.rows.length,
+    session: window.__box.rows[0] && window.__box.rows[0].session,
+    clips: window.__box.rows[0] ? window.__box.rows[0].recordings.length : 0,
+    audioHeld: Object.keys(window.__box.files).length,
+    done: !document.getElementById('done').hidden,
+    note: document.getElementById('donenote').textContent
+  }));
+  t('the submission reaches the post box rather than a download',
+     posted.rows === 1 && posted.session === '2026-10-15-houston', posted);
+  t('the recording travels with it', posted.clips === 1 && posted.audioHeld === 1, posted);
+  t('and the person is told it is waiting to be collected',
+     posted.done && /collect/i.test(posted.note), posted.note);
+
+  /* What the endpoint is now holding, carried over verbatim to the
+     facilitator's page — the fake post box cannot span two browser
+     contexts, but the rows it hands over are the real shape. */
+  const heldAtEndpoint = await phone.evaluate(() => ({
+    rows: window.__box.rows, files: window.__box.files, next: window.__box.next
+  }));
+  await phoneCtx.close();
+
+  // ---- the facilitator drains it into the folder ------------------------
+  await page.goto(BASE + '/morning-report/feedback/summary/', { waitUntil: 'networkidle' });
+  await page.evaluate(async () => {
+    await MRStore.whenReady;
+    await MRStore.connect();
+    MRRemote.setSettings({ endpoint: 'https://endpoint.test/exec', key: 'roster-key', remember: false });
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
+  await page.waitForTimeout(400);
+
+  await page.evaluate((held) => {
+    window.__box.rows = held.rows;
+    window.__box.files = held.files;
+    window.__box.next = held.next;
+    window.__box.calls = [];
+  }, heldAtEndpoint);
+
+  const panel = await page.evaluate(() => !document.getElementById('collectpanel').hidden);
+  t('the collect panel appears on a machine that has both the folder and the key', panel);
+
+  await page.click('#collect');
+  await page.waitForTimeout(900);
+
+  const drained = await page.evaluate(async () => ({
+    subs: await MRStore.list('working/feedback'),
+    audio: await MRStore.list('working/feedback/audio'),
+    left: window.__box.rows.length,
+    files: Object.keys(window.__box.files).length,
+    note: document.getElementById('collectnote').textContent,
+    calls: window.__box.calls.slice()
+  }));
+  t('collecting writes the submission into the folder',
+     drained.subs.some(n => /^2026-10-15-houston--fb-.*\.json$/.test(n)), drained.subs);
+  t('and the recording with it',
+     drained.audio.some(n => /^2026-10-15-houston--fb-.*--overall\.webm$/.test(n)), drained.audio);
+  t('the post box is emptied once the folder has it',
+     drained.left === 0 && drained.files === 0, drained);
+  t('and it says what happened', /in the folder/.test(drained.note) && /emptied/.test(drained.note), drained.note);
+  t('the drain asks in the right order',
+     drained.calls.join(',') === 'collect,recording,collected', drained.calls);
 
   let failed = 0;
   for (const r of out) { if (!r.pass) failed++; console.log((r.pass?'PASS  ':'FAIL  ') + r.name + (r.extra?'   '+r.extra:'')); }

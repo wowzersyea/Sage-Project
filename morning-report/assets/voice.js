@@ -4,8 +4,13 @@
    The feedback that never gets written is the feedback nobody had
    ninety seconds to type. This puts a microphone next to every
    comment box: press it, say the thing, press it again. What comes
-   back is text in the box, editable like anything else — there is no
-   audio file, and nothing is uploaded by this module.
+   back is text in the box, editable like anything else.
+
+   The audio is kept too, but only in the tab, and only until the form
+   is sent: a transcript can be wrong in ways nobody notices, and the
+   recording is the thing that settles it. On send it is discarded
+   unless the person ticked the box that keeps it. Nothing here
+   uploads anything — the page decides what happens to a clip.
 
    Where the words are turned into text is the browser's business,
    not ours. In Chrome and Edge that means the vendor's speech
@@ -13,6 +18,13 @@
    page that mounts a microphone, and it is the reason the identifier
    check still runs on whatever the dictation produced. Never dictate
    a name, an MRN or a date of service into any box in this module.
+
+   And note what the identifier check cannot do: it reads the words,
+   so it can clean a transcript, and it cannot touch what is in the
+   recording. A name said out loud is in the audio whatever the text
+   ends up saying. A kept recording also identifies its speaker —
+   everyone in a group this small knows everyone's voice — which is
+   why keeping one is a deliberate tick and not the default.
 
    Firefox and Safari have no SpeechRecognition worth the name, so
    there the button is not rendered at all and the box is simply
@@ -31,7 +43,28 @@
      device rather than the speaker. */
   var RESTART_LIMIT = 40;
 
+  /* Long enough for anything anyone should be saying into a feedback
+     box, short enough that a microphone left on by accident is not a
+     twenty-minute file. */
+  var MAX_SECONDS = 180;
+
+  var PREFERRED = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+
   var live = null;      /* the one session that may be running */
+
+  function recorderSupported() {
+    return typeof global.MediaRecorder === "function" &&
+      !!(global.navigator && global.navigator.mediaDevices &&
+         global.navigator.mediaDevices.getUserMedia);
+  }
+
+  function bestMime() {
+    if (!global.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
+    for (var i = 0; i < PREFERRED.length; i++) {
+      if (MediaRecorder.isTypeSupported(PREFERRED[i])) return PREFERRED[i];
+    }
+    return "";
+  }
 
   function supported() { return !!Rec; }
 
@@ -77,7 +110,8 @@
     live = null;
     s.wanted = false;
     s.setState("off");
-    try { s.rec.stop(); } catch (e) { /* already ended */ }
+    if (s.stopRecorder) s.stopRecorder();
+    if (s.rec) { try { s.rec.stop(); } catch (e) { /* already ended */ } }
   }
 
   function start(session) {
@@ -85,6 +119,7 @@
     live = session;
     session.wanted = true;
     session.restarts = 0;
+    if (!session.rec) return;          /* recording only; nothing to transcribe with */
     try {
       session.rec.start();
     } catch (e) {
@@ -99,13 +134,23 @@
      a browser that cannot do this, so the caller can decide what to
      say in its place. */
   function mount(field, opts) {
-    if (!Rec || !field) return null;
     opts = opts || {};
+    var recognises = !!Rec;
+    var records = opts.record !== false && recorderSupported();
+    /* Either half is worth having. A browser that transcribes and
+       cannot record still fills the box; one that records and cannot
+       transcribe — an iPhone, most days — still catches what was
+       said, and the person types the gist. */
+    if (!field || (!recognises && !records)) return null;
+
+    var startText = opts.startText || (recognises ? "Dictate" : "Record");
+    var stopText = opts.stopText || "Stop";
 
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "mic";
-    btn.setAttribute("aria-label", "Dictate into " + (opts.label || "this box"));
+    btn.setAttribute("aria-label",
+      (recognises ? "Dictate into " : "Record a note for ") + (opts.label || "this box"));
 
     var dot = document.createElement("span");
     dot.className = "mic-dot";
@@ -115,25 +160,96 @@
     btn.appendChild(txt);
 
     var interim = null;
-    if (opts.interim !== false) {
+    if (opts.interim !== false && recognises) {
       interim = document.createElement("p");
       interim.className = "mic-interim";
       interim.hidden = true;
     }
 
-    var rec = new Rec();
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.lang = opts.lang || global.navigator.language || "en-US";
+    var rec = null;
+    if (recognises) {
+      rec = new Rec();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = opts.lang || global.navigator.language || "en-US";
+    }
+
+    var clip = null;        /* { blob, mime, seconds } once something was said */
+    var media = null;       /* the live MediaRecorder, while running */
+    var stream = null;      /* its microphone stream, so it can be released */
+    var chunks = [];
+    var startedAt = 0;
+    var capTimer = null;
+
+    function clipChanged() { if (opts.onclip) opts.onclip(clip); }
+
+    /* The recorder is a second, independent listener on the same
+       microphone. If it cannot start — no permission, no device, a
+       browser without MediaRecorder — dictation still runs and the
+       page simply has no recording to offer. */
+    function startRecorder() {
+      if (opts.record === false || !recorderSupported()) return;
+      var mime = bestMime();
+      global.navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
+        if (!session.wanted) {                       /* stopped while asking */
+          s.getTracks().forEach(function (t) { t.stop(); });
+          return;
+        }
+        stream = s;
+        chunks = [];
+        media = mime ? new MediaRecorder(s, { mimeType: mime }) : new MediaRecorder(s);
+        media.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        media.onstop = function () {
+          var seconds = Math.round((Date.now() - startedAt) / 1000);
+          var type = (media && media.mimeType) || mime || "audio/webm";
+          releaseStream();
+          if (chunks.length) {
+            clip = { blob: new Blob(chunks, { type: type }), mime: type, seconds: seconds };
+            clipChanged();
+          }
+          chunks = [];
+          media = null;
+        };
+        startedAt = Date.now();
+        media.start();
+        capTimer = global.setTimeout(function () {
+          if (live === session) {
+            stop();
+            notify("warn", "Three minutes is the limit for one recording, so it was stopped there.");
+          }
+        }, MAX_SECONDS * 1000);
+      }).catch(function (err) {
+        notify("warn", "Dictation is running, but nothing is being recorded — " +
+          (err && err.name === "NotAllowedError"
+            ? "the microphone was refused for recording."
+            : (err && err.message ? err.message : err)));
+      });
+    }
+
+    function releaseStream() {
+      if (capTimer) { global.clearTimeout(capTimer); capTimer = null; }
+      if (stream) {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        stream = null;
+      }
+    }
+
+    function stopRecorder() {
+      if (media && media.state !== "inactive") {
+        try { media.stop(); return; } catch (e) { /* fall through and release */ }
+      }
+      releaseStream();
+    }
 
     var session = {
       rec: rec,
       wanted: false,
       restarts: 0,
+      stopRecorder: stopRecorder,
       setState: function (state) {
         btn.setAttribute("data-state", state);
         btn.setAttribute("aria-pressed", state === "on" ? "true" : "false");
-        txt.textContent = state === "on" ? (opts.stopText || "Stop") : (opts.startText || "Dictate");
+        txt.textContent = state === "on" ? stopText : startText;
         if (interim) {
           if (state !== "on") { interim.hidden = true; interim.textContent = ""; }
         }
@@ -142,7 +258,7 @@
     };
     session.setState("off");
 
-    rec.onresult = function (e) {
+    if (rec) rec.onresult = function (e) {
       var pending = "";
       for (var i = e.resultIndex; i < e.results.length; i++) {
         var r = e.results[i];
@@ -161,7 +277,7 @@
       }
     };
 
-    rec.onerror = function (e) {
+    if (rec) rec.onerror = function (e) {
       if (e.error === "no-speech") return;        /* onend will restart it */
       var msg = why(e.error);
       if (msg) {
@@ -170,7 +286,7 @@
       }
     };
 
-    rec.onend = function () {
+    if (rec) rec.onend = function () {
       if (session.wanted && session.restarts < RESTART_LIMIT) {
         session.restarts++;
         try { rec.start(); return; } catch (e) { /* fall through to off */ }
@@ -187,16 +303,28 @@
       if (live === session && session.wanted) { stop(); return; }
       session.setState("on");
       start(session);
+      if (session.wanted) startRecorder();
       field.focus();
     });
 
-    return { button: btn, interim: interim, stop: function () { if (live === session) stop(); } };
+    return {
+      button: btn,
+      interim: interim,
+      stop: function () { if (live === session) stop(); },
+      clip: function () { return clip; },
+      discard: function () {
+        clip = null;
+        clipChanged();
+      }
+    };
   }
 
   global.MRVoice = {
     supported: supported,
+    records: recorderSupported,
     mount: mount,
     stop: stop,
+    MAX_SECONDS: MAX_SECONDS,
     NOTE: "Dictation uses the browser's own speech service, so the audio leaves this machine. " +
           "Say nothing you would not put in the box by hand — no names, no MRNs, no dates of service.",
     UNSUPPORTED: "This browser has no dictation, so the boxes are typed into. Chrome or Edge if you want the microphone."

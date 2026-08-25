@@ -167,7 +167,25 @@
     "_note": "Two lanes, on purpose. A submission carries role-level content, and the roster records which resident held which role on a date — so a permanent role-level file would join a name to a judgement by way of two files. It therefore goes to working/, which is swept. What is kept is the session, which belongs to nobody: the numbers, the ticks and the drafted summaries, never the comments as written — in a group this small a quotation identifies its author.",
     "submissions": "working/feedback/",
     "session_record": "sessions/feedback/",
-    "_naming": "Submissions are flat files named <session>--<submission id>.json. The store lists files and not directories, so a folder per session would be invisible to the summary."
+    "_naming": "Submissions are flat files named <session>--<submission id>.json. The store lists files and not directories, so a folder per session would be invisible to the summary.",
+    "audio": "working/feedback/audio/"
   },
-  "footer": "One per person, not one per session. Two people saying the same thing is the whole signal."
+  "footer": "One per person, not one per session. Two people saying the same thing is the whole signal.",
+  "audio": {
+    "_note": "The recorder runs while the microphone does, and what it catches is held in the tab. On send it is discarded unless the tick is on. Nothing about a recording is anonymous, which is why the default is off and the hint says why.",
+    "keep_label": "Keep the recordings with this feedback",
+    "keep_hint": "Off by default, and worth a thought before you turn it on. A recording is not anonymous — in a group this size everyone knows everyone's voice — and the identifier check can clean the words but never the audio. Kept recordings go to working/ with the role notes and are swept on the same seven-day clock.",
+    "kept_note": "Recording held for this box",
+    "discard": "discard it",
+    "unsupported": "This browser will not record, so the text is all there is.",
+    "dropped": "The recordings were discarded, as the box was left unticked."
+  },
+  "send": {
+    "_note": "Three ways out, in the order the form tries them: the folder if this machine has one, the collection point if it does not, and a download if there is neither.",
+    "folder": "Written to {path}.",
+    "relay": "Sent to the collection point — it lands in the folder when the facilitator collects it.",
+    "relay_failed": "The collection point could not be reached, so the file was downloaded instead. Hand it over and it can be dropped in by hand.",
+    "download": "No folder and no collection point on this device, so the file was downloaded.",
+    "audio_lost": "Recordings cannot travel that way, so they were discarded rather than left lying about."
+  }
 }

@@ -46,6 +46,16 @@
     color:var(--teal);text-decoration:none;margin-left:auto}
   .roles .who a:hover{text-decoration:underline}
 
+  .clip{
+    display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:8px;
+    font-size:12.5px;color:var(--muted);
+  }
+  .clip .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex:none}
+  .clip b{color:var(--ink);font-weight:600}
+  .clip audio{height:32px;max-width:260px}
+  .keep{display:flex;gap:9px;align-items:flex-start;font-size:14px;font-weight:600;cursor:pointer}
+  .keep input{width:auto;flex:none;margin-top:3px}
+
   .phi{margin-top:16px}
   .phi[hidden]{display:none}
   .finding{
@@ -133,6 +143,14 @@
         <div id="findings"></div>
       </div>
 
+      <div class="panel" id="audiopanel" hidden style="margin-top:16px">
+        <label class="keep">
+          <input type="checkbox" id="keepaudio">
+          <span id="keeplabel"></span>
+        </label>
+        <p class="hint" id="keephint"></p>
+      </div>
+
       <div class="savebar">
         <button class="amber" id="send">Send it</button>
         <button class="ghost" id="clear">Clear the form</button>
@@ -141,13 +159,19 @@
       </div>
 
       <div class="privacy" style="margin-top:20px">
-        <b>Anonymous, and the role notes are not kept</b>
+        <b>Anonymous, unless you keep a recording</b>
         Nothing here asks who you are, and there is no account. What you write about the session —
         the technology, the flow, the overall — is kept with the session and belongs to nobody in
         particular. What you write about a <em>role</em> goes to <code>working/</code>, which is
         identified by inference and is swept after seven days: the roster records who held which role
         on a date, so a permanent role file would join a name to a judgement. Role feedback is
         formative, it is handed to the person, and it is never filed or reported.
+        <br><br>
+        A <em>recording</em> is a different matter, and the one thing on this page that is not
+        anonymous: everybody here knows everybody's voice. Recordings are discarded when you press
+        send unless you tick the box that keeps them, and a kept one goes to <code>working/</code>
+        and is swept on the same clock. The identifier check reads the words, so it can stop you
+        sending a written MRN — it cannot take one out of the audio.
       </div>
 
     </div>
@@ -176,12 +200,14 @@
 <script src="../assets/store.js"></script>
 <script src="../assets/phi.js"></script>
 <script src="../assets/voice.js"></script>
+<script src="../assets/relay.js"></script>
 <script>
 var $ = function(id){ return document.getElementById(id); };
 var content = null;
 var roles = [];               /* [{slug,name,tagline}] in the order content asks for */
 var acked = {};
 var findings = [];
+var mics = {};            /* unit id -> the mounted microphone */
 var DRAFT = "mr.feedback.draft";
 var SENT = "mr.feedback.sent";
 
@@ -305,13 +331,80 @@ function commentBox(id, label, placeholder){
 
   var row = document.createElement("div");
   row.className = "mic-row";
-  var mic = MRVoice.mount(ta, { label: label, startText: "Dictate", stopText: "Stop" });
+
+  var chip = document.createElement("div");
+  chip.className = "clip";
+  chip.hidden = true;
+
+  var mic = MRVoice.mount(ta, {
+    label: label,
+    onclip: function(clip){ paintClip(chip, clip, id); }
+  });
   if (mic){
+    mics[id] = mic;
     row.appendChild(mic.button);
     box.appendChild(row);
     if (mic.interim) box.appendChild(mic.interim);
+    box.appendChild(chip);
   }
   return box;
+}
+
+/* What the recorder caught, and the one-click way to change your mind
+   about it. The audio never leaves the tab from here — the send does
+   that, and only if the box below is ticked. */
+function paintClip(chip, clip, id){
+  chip.innerHTML = "";
+  chip.hidden = !clip;
+  if (!clip) { paintAudioPanel(); return; }
+
+  var dot = document.createElement("span");
+  dot.className = "dot";
+  var label = document.createElement("span");
+  var mins = Math.floor(clip.seconds / 60);
+  var secs = String(clip.seconds % 60).padStart(2, "0");
+  label.innerHTML = "<b>" + MRStore.esc(content.audio.kept_note) + "</b> · " + mins + ":" + secs;
+
+  var player = document.createElement("audio");
+  player.controls = true;
+  player.preload = "none";
+  player.src = URL.createObjectURL(clip.blob);
+
+  var drop = document.createElement("button");
+  drop.type = "button";
+  drop.className = "link-btn";
+  drop.textContent = content.audio.discard;
+  drop.addEventListener("click", function(){
+    URL.revokeObjectURL(player.src);
+    if (mics[id]) mics[id].discard();
+  });
+
+  chip.appendChild(dot);
+  chip.appendChild(label);
+  chip.appendChild(player);
+  chip.appendChild(drop);
+  paintAudioPanel();
+}
+
+/* The tick only appears once there is something for it to decide. */
+function paintAudioPanel(){
+  var any = clips().length > 0;
+  $("audiopanel").hidden = !any;
+}
+
+function clips(){
+  var out = [];
+  Object.keys(mics).forEach(function(id){
+    var c = mics[id].clip && mics[id].clip();
+    if (c) out.push({ unit: id, mime: c.mime, blob: c.blob, seconds: c.seconds });
+  });
+  return out;
+}
+
+function dropClips(){
+  Object.keys(mics).forEach(function(id){
+    if (mics[id].discard) mics[id].discard();
+  });
 }
 
 function renderSections(){
@@ -574,15 +667,66 @@ function summaryHref(session){
   return "summary/?session=" + encodeURIComponent(session);
 }
 
-function finish(r, path){
+function finish(r, where){
   MRVoice.stop();
+  dropClips();
   markSent(r.session);
   clearDraft();
   $("form").hidden = true;
   $("done").hidden = false;
-  $("donenote").textContent = "Written to " + path + ". " + content.footer;
+  $("donenote").textContent = where + " " + content.footer;
   $("toSummary2").href = summaryHref(r.session);
   window.scrollTo(0, 0);
+}
+
+function audioPath(r, clip){
+  var ext = clip.mime.indexOf("mp4") !== -1 ? "mp4"
+          : clip.mime.indexOf("ogg") !== -1 ? "ogg" : "webm";
+  return content.storage.audio + r.session + "--" + r.id + "--" + clip.unit + "." + ext;
+}
+
+/* Flat, not one directory per session: the store lists files and not
+   directories, so a session folder would be invisible to the summary
+   page. The session is in the filename instead. */
+function submissionPath(r){
+  return content.storage.submissions + r.session + "--" + r.id + ".json";
+}
+
+/* Three ways out, tried in this order: the folder on this machine,
+   the collection point for a device that has none, and a download
+   when there is neither. */
+function sendIt(r, keep){
+  var path = submissionPath(r);
+  var carry = keep ? clips() : [];
+
+  if (MRStore.status().ready){
+    return MRStore.write(path, r).then(function(ok){
+      if (!ok) return null;
+      return Promise.all(carry.map(function(clip){
+        return MRStore.writeBlob(audioPath(r, clip), clip.blob);
+      })).then(function(written){
+        var n = written.filter(Boolean).length;
+        return content.send.folder.replace("{path}", path) +
+          (n ? " " + n + (n === 1 ? " recording with it." : " recordings with it.") : "");
+      });
+    });
+  }
+
+  if (MRRelay.canSubmit()){
+    return MRRelay.submit(r, carry).then(function(res){
+      if (res.ok){
+        return content.send.relay +
+          (res.recordings ? " " + res.recordings +
+            (res.recordings === 1 ? " recording went with it." : " recordings went with it.") : "");
+      }
+      MRStore.notify("warn", res.error, true);
+      MRStore.download(path, r);
+      return content.send.relay_failed + (carry.length ? " " + content.send.audio_lost : "");
+    });
+  }
+
+  MRStore.download(path, r);
+  return Promise.resolve(content.send.download + (carry.length ? " " + content.send.audio_lost : ""));
 }
 
 $("send").addEventListener("click", function(){
@@ -596,20 +740,20 @@ $("send").addEventListener("click", function(){
     return;
   }
 
-  /* Flat, not one directory per session: the store lists files and
-     not directories, so a session folder would be invisible to the
-     summary page. The session is in the filename instead. */
-  var path = content.storage.submissions + r.session + "--" + r.id + ".json";
-  if (!MRStore.status().ready){
-    MRStore.download(path, r);
-    MRStore.notify("warn", "No folder connected, so the feedback was downloaded instead. " +
-      "Put it in " + path + " by hand.", true);
-    finish(r, path);
-    return;
-  }
-  MRStore.write(path, r).then(function(ok){
-    if (!ok) return;
-    finish(r, path);
+  var keep = $("keepaudio").checked;
+  var had = clips().length;
+  var btn = $("send");
+  btn.disabled = true;
+  $("sendnote").textContent = "Sending…";
+
+  sendIt(r, keep).then(function(where){
+    if (where === null){ btn.disabled = false; $("sendnote").textContent = ""; return; }
+    finish(r, where + (had && !keep ? " " + content.audio.dropped : ""));
+  }).catch(function(err){
+    btn.disabled = false;
+    $("sendnote").textContent = "";
+    MRStore.notify("err", "The feedback did not send — " +
+      (err && err.message ? err.message : err), true);
   });
 });
 
@@ -646,6 +790,8 @@ Promise.all([
   $("lede").textContent = content.lede;
   $("footnote").textContent = content.footer;
   $("voicenote").textContent = MRVoice.supported() ? MRVoice.NOTE : MRVoice.UNSUPPORTED;
+  $("keeplabel").textContent = content.audio.keep_label;
+  $("keephint").textContent = MRVoice.records() ? content.audio.keep_hint : content.audio.unsupported;
 
   renderSections();
   renderRoles();
@@ -676,7 +822,9 @@ Promise.all([
   }
 
   if (!MRStore.status().ready){
-    note("No data folder connected, so sending will download the file instead.");
+    note(MRRelay.canSubmit()
+      ? "No data folder on this device, so this goes to the collection point and lands in the folder when the facilitator collects it."
+      : "No data folder and no collection point on this device, so sending will download the file for somebody to drop in by hand.");
     afterMeta();
     return;
   }

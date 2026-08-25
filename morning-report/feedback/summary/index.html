@@ -143,6 +143,17 @@
       <p class="hint" id="stock"></p>
     </div>
 
+    <div class="panel" id="collectpanel" hidden style="margin-bottom:16px">
+      <h2>Collect what came in from elsewhere</h2>
+      <p class="lede">Feedback filled in on a phone, or on any machine without the data folder, waits
+        at the endpoint until this machine fetches it. Collecting writes it into the folder and then
+        tells the endpoint to forget it — so the folder is the only place any of it lives.</p>
+      <div class="bar">
+        <button class="teal" id="collect">Collect into the folder</button>
+        <span class="hint" id="collectnote" style="margin:0"></span>
+      </div>
+    </div>
+
     <div class="panel" style="margin-bottom:16px">
       <h2>The key stays in this browser</h2>
       <p class="lede">There is no server in this module, so a summary is a call your browser makes
@@ -193,6 +204,7 @@
 
 <script src="../../assets/remote.js?v=1"></script>
 <script src="../../assets/store.js"></script>
+<script src="../../assets/relay.js"></script>
 <script src="../../assets/phi.js"></script>
 <script src="../../assets/summarise.js"></script>
 <script>
@@ -684,6 +696,106 @@ $("model").addEventListener("change", function(){
 });
 $("runall").addEventListener("click", runAll);
 
+/* ---------- collecting from the endpoint ---------------------------------
+
+   The drain, and the only reason the endpoint exists. Everything
+   waiting is written into the folder — the submission and any
+   recording that travelled with it — and only once that has happened
+   is the endpoint told to drop it. A collection that fails halfway
+   leaves the endpoint holding what it held, which is the safe way for
+   it to fail: collecting again is harmless, because a submission
+   carries its own id and lands on the same path twice.
+   ------------------------------------------------------------------ */
+
+function safeName(name){
+  return String(name || "").replace(/[\\/]+/g, "-").replace(/^\.+/, "");
+}
+
+function collectOne(row){
+  var session = row.session || (row.record && row.record.session) || "undated";
+  var path = content.storage.submissions + session + "--" + row.submission + ".json";
+  return MRStore.write(path, row.record).then(function(ok){
+    if (!ok) throw new Error("could not write " + path);
+    var ids = row.recordings || [];
+    return ids.reduce(function(chain, id){
+      return chain.then(function(n){
+        return MRRelay.recording(id).then(function(res){
+          if (!res.ok){
+            MRStore.notify("warn", "A recording did not come across — " + res.error);
+            return n;
+          }
+          var blob = MRRelay.decode(res.data, res.mime);
+          return MRStore.writeBlob(content.storage.audio + safeName(res.name), blob)
+            .then(function(wrote){ return wrote ? n + 1 : n; });
+        });
+      });
+    }, Promise.resolve(0));
+  }).then(function(recordings){
+    return { submission: row.submission, recordings: recordings };
+  });
+}
+
+function collect(){
+  var btn = $("collect");
+  btn.disabled = true;
+  $("collectnote").textContent = "Asking the endpoint…";
+
+  return MRRelay.pending().then(function(res){
+    if (!res.ok){
+      $("collectnote").textContent = res.error;
+      btn.disabled = false;
+      return;
+    }
+    var rows = res.pending || [];
+    if (!rows.length){
+      $("collectnote").textContent = "Nothing waiting.";
+      btn.disabled = false;
+      return;
+    }
+
+    $("collectnote").textContent = "Writing " + rows.length +
+      (rows.length === 1 ? " submission…" : " submissions…");
+
+    return rows.reduce(function(chain, row){
+      return chain.then(function(done){
+        return collectOne(row).then(function(one){ done.push(one); return done; });
+      });
+    }, Promise.resolve([])).then(function(done){
+      var clips = done.reduce(function(n, d){ return n + d.recordings; }, 0);
+      return MRRelay.collected(done.map(function(d){ return d.submission; })).then(function(drop){
+        var said = done.length + (done.length === 1 ? " submission" : " submissions") +
+          (clips ? " and " + clips + (clips === 1 ? " recording" : " recordings") : "") +
+          " are in the folder";
+        said += drop.ok
+          ? ", and the endpoint has been emptied."
+          : ". The endpoint could not be told to drop them — " + drop.error +
+            " Collecting again is harmless.";
+        if ((res.unreadable || []).length){
+          said += " " + res.unreadable.length + " row" +
+            (res.unreadable.length === 1 ? " was" : "s were") +
+            " unreadable and left where they are.";
+        }
+        $("collectnote").textContent = said;
+        btn.disabled = false;
+        return load();
+      });
+    });
+  }).catch(function(err){
+    $("collectnote").textContent = "The collection stopped — " +
+      (err && err.message ? err.message : err) + ". Nothing was dropped from the endpoint.";
+    btn.disabled = false;
+  });
+}
+
+$("collect").addEventListener("click", collect);
+
+function paintCollect(){
+  $("collectpanel").hidden = !(MRRelay.canDrain() && MRStore.status().ready);
+  if (MRRelay.canDrain() && !MRStore.status().ready){
+    $("collectnote").textContent = "";
+  }
+}
+
 /* ---------- loading ------------------------------------------------------ */
 
 function group(){
@@ -710,6 +822,23 @@ function fillPicker(want){
   });
   current = want && bySession[want] ? want : ids[0];
   sel.value = current;
+}
+
+/* Read the folder and repaint. Called on boot, and again after a
+   collection has put new files in it. */
+function load(want){
+  return MRStore.readAll(content.storage.submissions.replace(/\/*$/, "")).then(function(rows){
+    subs = rows.map(function(r){ return r.data; }).filter(Boolean);
+    group();
+    fillPicker(want || current);
+    var sessions = Object.keys(bySession).length;
+    $("stock").textContent = subs.length
+      ? subs.length + (subs.length === 1 ? " submission" : " submissions") + " in " +
+        content.storage.submissions + ", across " + sessions +
+        (sessions === 1 ? " session." : " sessions.")
+      : "Nothing in " + content.storage.submissions + " yet.";
+    recompute();
+  });
 }
 
 function recompute(){
@@ -743,22 +872,13 @@ Promise.all([
   MRStore.mountBar("mr-bar");
   if (!MRStore.status().ready){
     $("stock").textContent = "No data folder connected, so there is nothing to read. " +
-      "Connect it in the bar at the top.";
+      "Connect it in the bar at the top." +
+      (MRRelay.canDrain() ? " Anything waiting at the endpoint can be collected once it is." : "");
     render();
     return;
   }
-  return MRStore.readAll(content.storage.submissions.replace(/\/*$/, "")).then(function(rows){
-    subs = rows.map(function(r){ return r.data; }).filter(Boolean);
-    group();
-    var want = new URLSearchParams(location.search).get("session") || "";
-    fillPicker(want);
-    $("stock").textContent = subs.length
-      ? subs.length + (subs.length === 1 ? " submission" : " submissions") + " in " +
-        content.storage.submissions + ", across " + Object.keys(bySession).length +
-        (Object.keys(bySession).length === 1 ? " session." : " sessions.")
-      : "Nothing in " + content.storage.submissions + " yet.";
-    recompute();
-  });
+  paintCollect();
+  return load(new URLSearchParams(location.search).get("session") || "");
 })
 .catch(function(err){
   MRStore.notify("err", "Could not load the summary — " +
