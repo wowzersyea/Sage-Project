@@ -171,9 +171,14 @@
   .err button{background:transparent;border:1px solid #fff;color:#fff;font-size:11px;
     padding:3px 9px;border-radius:3px;cursor:pointer;margin-left:auto}
 
+  .printlink{
+    color:#9FB4C8;font-size:12px;text-decoration:none;align-self:center;
+    padding:0 4px;white-space:nowrap;
+  }
+  .printlink:hover{color:#fff;text-decoration:underline}
   @media print{
     html,body{height:auto;overflow:visible}
-    .top,.addin,.hint,.veil,.err{display:none !important}
+    .top,.addin,.hint,.veil,.err,.printlink{display:none !important}
     .app{height:auto}
     .body,.sbody{overflow:visible}
     @page{size:landscape;margin:10mm}
@@ -200,6 +205,7 @@
       <button id="resetBtn">Reset</button>
       <button id="copyBtn">Copy</button>
       <button class="solid" id="printBtn">Save board</button>
+      <a href="#" id="printLink" class="printlink" title="Print or save a local copy">Print</a>
       <button class="finish" id="finishBtn">Finish session</button>
     </div>
   </div>
@@ -639,7 +645,85 @@ function fallbackCopy(t){
   try { document.execCommand("copy"); } catch (err) { /* nothing more to try */ }
   ta.remove();
 }
-$("printBtn").addEventListener("click", function(){ window.print(); });
+/* ---------- the board as a filed PDF -----------------------------------
+
+   Save used to be window.print(): a dialog, a choice of folder, and a
+   board that ended up wherever the person at the keyboard pointed it,
+   if they saved it at all.
+
+   Now the board renders its own printable markup and the endpoint turns
+   it into a PDF beside the archives. Google's converter is not a
+   browser, so this is deliberately plain HTML with inline styles rather
+   than the live page — boxes and text, which is what it renders well.
+   Print is still there for anyone who wants exactly what is on screen.
+   ------------------------------------------------------------------ */
+
+function pdfName(){
+  var g = function(id){ return ($(id).value || "").trim(); };
+  var date = g("date") || MRStore.today();
+  var site = MRStore.slug(g("site"));
+  return "board-" + date + (site ? "-" + site : "") + ".pdf";
+}
+
+function pdfHtml(){
+  var g = function(id){ return ($(id).value || "").trim(); };
+  var esc = MRStore.esc;
+  var lines = boardText().split("\n");
+
+  var body = lines.map(function(l){
+    if (!l.trim()) return '<div class="sp"></div>';
+    if (/^[A-Z][A-Z ]+$/.test(l.trim())) return '<h2>' + esc(l.trim()) + '</h2>';
+    return '<div class="l">' + esc(l).replace(/^ +/, function(m){
+      return new Array(m.length + 1).join("&nbsp;");
+    }) + '</div>';
+  }).join("\n");
+
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
+    esc(pdfName()) + '</title><style>' +
+    'body{font-family:Georgia,serif;font-size:11pt;line-height:1.45;color:#1B2733;margin:18mm 14mm}' +
+    'h1{font-size:16pt;margin:0 0 2mm;color:#16283C}' +
+    '.meta{font-size:9.5pt;color:#6B7885;margin:0 0 6mm}' +
+    'h2{font-size:10pt;letter-spacing:.08em;text-transform:uppercase;color:#2E7D8F;' +
+    'margin:6mm 0 1.5mm;border-bottom:1px solid #D3DCE4;padding-bottom:1mm}' +
+    '.l{font-family:Consolas,monospace;font-size:9.5pt;white-space:pre-wrap;margin:0 0 .8mm}' +
+    '.sp{height:2mm}' +
+    '.foot{margin-top:10mm;font-size:8.5pt;color:#6B7885;border-top:1px solid #D3DCE4;padding-top:2mm}' +
+    '</style></head><body>' +
+    '<h1>Morning Report board</h1>' +
+    '<p class="meta">' + esc(g("date") || MRStore.today()) +
+    (g("site") ? " &middot; " + esc(g("site")) : "") +
+    (g("caseid") ? " &middot; case " + esc(g("caseid")) : "") + '</p>' +
+    body +
+    '<p class="foot">De-identified board contents. No participant names.</p>' +
+    '</body></html>';
+}
+
+function saveBoardPdf(){
+  var btn = $("printBtn");
+  var was = btn.textContent;
+
+  if (!window.MRRemote || !MRRemote.configured()){
+    showErr("No shared store is set up on this browser, so there is nowhere to file the PDF. " +
+            "Set one up on the settings page, or use Print for a local copy.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Filing…";
+  MRRemote.renderPdf(pdfName(), pdfHtml()).then(function(r){
+    btn.disabled = false;
+    btn.textContent = was;
+    MRStore.notify("ok", "Filed as " + r.name + " in the shared store, next to the archives.");
+  }, function(err){
+    btn.disabled = false;
+    btn.textContent = was;
+    showErr("The PDF was not filed — " + ((err && err.message) || "the endpoint did not answer") +
+            ". The board itself is untouched; Print still works.");
+  });
+}
+
+$("printBtn").addEventListener("click", saveBoardPdf);
+$("printLink").addEventListener("click", function(e){ e.preventDefault(); window.print(); });
 
 /* ---------- serialise / restore ---------------------------------------- */
 
@@ -876,6 +960,19 @@ $("finishBtn").addEventListener("click", function(){
       return;
     }
     finished = true;
+    /* File the PDF too, without being asked. Finishing is the moment
+       the board is done, and a session that nobody pressed Save on
+       should still leave one. A failure here must not undo the archive,
+       which is the record that matters — so it is reported and the
+       finish carries on. */
+    if (window.MRRemote && MRRemote.configured()){
+      MRRemote.renderPdf(pdfName(), pdfHtml()).then(function(r){
+        MRStore.notify("ok", "Filed as " + r.name + " in the shared store.");
+      }, function(err){
+        MRStore.notify("warn", "The archive is written, but the PDF was not filed — " +
+          ((err && err.message) || "the endpoint did not answer") + ". Press Save board to retry.");
+      });
+    }
     return MRStore.remove(WORKING).then(function(){
       showFinish(archive, path, d);
     });

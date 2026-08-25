@@ -51,7 +51,7 @@ function makeContext(sheets, key, tz, feedbackKey) {
   const byName = {};
   const seen = { zones: [] };
   /* A fake Drive: files by id, and a note of what got binned. */
-  const drive = { files: {}, folders: {}, next: 1, trashed: [] };
+  const drive = { files: {}, folders: {}, next: 1, trashed: [], converted: [] };
   sheets.forEach(s => { byName[s.name] = s; });
   const ss = {
     getSheetByName: (n) => byName[n] || null,
@@ -59,19 +59,50 @@ function makeContext(sheets, key, tz, feedbackKey) {
     getSpreadsheetTimeZone: () => tz,
   };
   const props = { MR_KEY: key, MR_FEEDBACK_KEY: feedbackKey === undefined ? null : feedbackKey };
-  const makeFile = (name, mime, bytes) => {
+  /* Files carry a parent so the document store's folders can be walked
+     by name, which is how the real DriveApp is used and the only way
+     doclist means anything. */
+  const makeFile = (name, mime, bytes, parent, text) => {
     const id = 'file-' + (drive.next++);
-    drive.files[id] = { id, name, mime, bytes, trashed: false };
+    drive.files[id] = { id, name, mime, bytes, text, parent: parent || null, trashed: false };
     return fileHandle(id);
   };
   const fileHandle = (id) => ({
     getId: () => id,
     getName: () => drive.files[id].name,
+    getUrl: () => 'https://drive.test/' + id,
     getBlob: () => ({
       getContentType: () => drive.files[id].mime,
       getBytes: () => drive.files[id].bytes,
+      getDataAsString: () => drive.files[id].text,
     }),
+    setContent: (t) => { drive.files[id].text = t; },
     setTrashed: (v) => { drive.files[id].trashed = !!v; if (v) drive.trashed.push(id); },
+  });
+
+  const iter = (list) => {
+    let i = 0;
+    return { hasNext: () => i < list.length, next: () => list[i++] };
+  };
+  const live = (pred) => Object.values(drive.files).filter(f => !f.trashed && pred(f)).map(f => fileHandle(f.id));
+
+  const folderHandle = (id) => ({
+    getId: () => id,
+    getName: () => drive.folders[id].name,
+    createFile: function (a, b, c) {
+      // DriveApp has two shapes: createFile(blob) and createFile(name, content, mime)
+      if (a && typeof a === 'object') return makeFile(a.__name, a.__mime, a.__bytes, id);
+      return makeFile(a, c || 'text/plain', null, id, b);
+    },
+    createFolder: (name) => {
+      const fid = 'folder-' + (drive.next++);
+      drive.folders[fid] = { id: fid, name, parent: id };
+      return folderHandle(fid);
+    },
+    getFoldersByName: (name) => iter(Object.values(drive.folders)
+      .filter(f => f.parent === id && f.name === name).map(f => folderHandle(f.id))),
+    getFilesByName: (name) => iter(live(f => f.parent === id && f.name === name)),
+    getFiles: () => iter(live(f => f.parent === id)),
   });
   const sandbox = {
     SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert: () => {} }) },
@@ -84,12 +115,12 @@ function makeContext(sheets, key, tz, feedbackKey) {
     DriveApp: {
       createFolder: (name) => {
         const id = 'folder-' + (drive.next++);
-        drive.folders[id] = { id, name };
-        return { getId: () => id, createFile: (blob) => makeFile(blob.__name, blob.__mime, blob.__bytes) };
+        drive.folders[id] = { id, name, parent: null };
+        return folderHandle(id);
       },
       getFolderById: (id) => {
         if (!drive.folders[id]) throw new Error('no such folder');
-        return { getId: () => id, createFile: (blob) => makeFile(blob.__name, blob.__mime, blob.__bytes) };
+        return folderHandle(id);
       },
       getFileById: (id) => {
         if (!drive.files[id] || drive.files[id].trashed) throw new Error('no such file');
@@ -101,7 +132,20 @@ function makeContext(sheets, key, tz, feedbackKey) {
       createTextOutput: (s) => ({ setMimeType: () => ({ __text: s }) }),
     },
     Utilities: {
-      newBlob: (bytes, mime, name) => ({ __bytes: bytes, __mime: mime, __name: name }),
+      newBlob: (bytes, mime, name) => ({
+        __bytes: bytes, __mime: mime, __name: name,
+        /* Google converts HTML to PDF here. The stub records that it
+           was asked and hands back a blob that behaves like one, so the
+           test covers the plumbing rather than pretending to render. */
+        getAs: function (target) {
+          if (target !== 'application/pdf') throw new Error('unsupported conversion: ' + target);
+          drive.converted.push({ mime: this.__mime, name: this.__name, length: String(this.__bytes).length });
+          const out = { __bytes: 'PDF:' + this.__bytes, __mime: target, __name: this.__name,
+                        getBytes: () => 'PDF:' + this.__bytes,
+                        setName: function (n) { this.__name = n; return this; } };
+          return out;
+        },
+      }),
       base64Decode: (data) => 'bytes:' + data,
       base64Encode: (bytes) => String(bytes).replace(/^bytes:/, ''),
       formatDate: (d, zone, fmt) => {
@@ -564,6 +608,120 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
     seeded.status === 'ok' && seeded.wrote.roster === 1, seeded);
   t('and the roster sheet actually changed',
     byName.Roster.__rows()[1][1] === 'Wren Halloway', byName.Roster.__rows()[1]);
+}
+
+
+/* ---------- the shared document store -------------------------------------
+
+   The half that lets a device with no data folder read and write the
+   permanent artifacts. What matters most here is what it REFUSES: the
+   identified lanes must not be storable, or a bug on the browser side
+   would put working notes in Drive where the seven-day sweep cannot
+   reach them.
+   -------------------------------------------------------------------------- */
+
+{
+  const { sandbox, drive } = fresh('k');
+  const post = (body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(
+    Object.assign({ key: 'k' }, body)) } }));
+
+  const BOARD = { objective: 'Fever and a limp', struck: ['transient synovitis'], derived: {} };
+
+  let res = post({ action: 'docput', path: 'board-archive/2026-09-03.json', data: BOARD });
+  t('a board archive is stored', res.status === 'ok', res);
+
+  res = post({ action: 'docget', path: 'board-archive/2026-09-03.json' });
+  t('and comes back byte for byte', JSON.stringify(res.data) === JSON.stringify(BOARD), res);
+
+  res = post({ action: 'docget', path: 'board-archive/never-written.json' });
+  t('an absent document is null, not an error', res.status === 'ok' && res.data === null, res);
+
+  post({ action: 'docput', path: 'sessions/2026-09-03.json', data: { items: [] } });
+  post({ action: 'docput', path: 'casebank/a-limping-toddler.json', data: { tags: ['ortho'] } });
+
+  res = post({ action: 'doclist', dir: 'board-archive' });
+  t('a directory lists only its own files', res.names.join() === '2026-09-03.json', res.names);
+  res = post({ action: 'doclist', dir: 'sessions' });
+  t('and the other directory lists its own', res.names.join() === '2026-09-03.json', res.names);
+
+  post({ action: 'docput', path: 'sessions/2026-09-03.json', data: { items: [1, 2] } });
+  res = post({ action: 'doclist', dir: 'sessions' });
+  t('rewriting a path does not make a second file', res.names.length === 1, res.names);
+  res = post({ action: 'docget', path: 'sessions/2026-09-03.json' });
+  t('and the rewrite is what comes back', res.data.items.length === 2, res.data);
+
+  res = post({ action: 'docdel', path: 'casebank/a-limping-toddler.json' });
+  t('a document can be removed', res.status === 'ok' && res.removed === true, res);
+  t('and is gone from the listing',
+    post({ action: 'doclist', dir: 'casebank' }).names.length === 0);
+  t('removing something absent is not an error',
+    post({ action: 'docdel', path: 'casebank/never-there.json' }).removed === false);
+
+  for (const bad of ['working/2026-09-03.json', 'manifests/2026-09-03.json',
+                     'roster.json', 'working-board.json']) {
+    t('refuses to store ' + bad,
+      post({ action: 'docput', path: bad, data: { x: 1 } }).status === 'error');
+  }
+  t('refuses a path that climbs out',
+    post({ action: 'docput', path: 'board-archive/../working/x.json', data: {} }).status === 'error');
+  t('refuses a nested path',
+    post({ action: 'docput', path: 'sessions/deeper/x.json', data: {} }).status === 'error');
+  t('refuses a listing of a directory it does not keep',
+    post({ action: 'doclist', dir: 'working' }).status === 'error');
+  t('refuses to store nothing',
+    post({ action: 'docput', path: 'sessions/x.json' }).status === 'error');
+
+  const roots = Object.values(drive.folders).filter(f => f.parent === null);
+  t('one root folder, whatever was written', roots.length === 1, roots.map(f => f.name));
+  t('named so it is recognisable in Drive', roots[0].name === 'MorningReport data', roots[0].name);
+}
+
+
+/* ---------- the board as a PDF --------------------------------------------
+
+   Google does the rendering, so what is worth holding down here is
+   everything around it: the name, that a re-save replaces rather than
+   piles up, that it lands somewhere docput cannot reach, and that a
+   refusal is a sentence rather than a platform error.
+   -------------------------------------------------------------------------- */
+
+{
+  const { sandbox, drive } = fresh('k');
+  const post = (body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(
+    Object.assign({ key: 'k' }, body)) } }));
+
+  const HTML = '<!DOCTYPE html><html><body><h1>Morning Report board</h1></body></html>';
+
+  let res = post({ action: 'pdf', name: 'board-2026-09-03-galveston', html: HTML });
+  t('a board is rendered and filed', res.status === 'ok', res);
+  t('the extension is added if it was left off', res.name === 'board-2026-09-03-galveston.pdf', res.name);
+  t('it came back with somewhere to open it', /drive\.test/.test(res.url || ''), res.url);
+  t('and Google was actually asked to convert HTML',
+    drive.converted.length === 1 && drive.converted[0].mime === 'text/html', drive.converted);
+
+  /* Saving twice in a morning is normal — the board changes as it fills
+     in — and should leave one file, not a pile. */
+  post({ action: 'pdf', name: 'board-2026-09-03-galveston.pdf', html: HTML });
+  const live = Object.values(drive.files).filter(f => !f.trashed && f.name.indexOf('board-') === 0);
+  t('re-saving replaces rather than accumulating', live.length === 1, live.map(f => f.name));
+
+  /* It lives outside the document directories, so the store's own
+     put/get/list cannot reach or overwrite it. */
+  t('the pdf directory is not one docput will write to',
+    post({ action: 'docput', path: 'board-pdf/x.json', data: {} }).status === 'error');
+  t('nor one doclist will read',
+    post({ action: 'doclist', dir: 'board-pdf' }).status === 'error');
+
+  t('a name with a path in it is refused',
+    post({ action: 'pdf', name: '../escape', html: HTML }).status === 'error');
+  t('an empty board is refused', post({ action: 'pdf', name: 'x', html: '' }).status === 'error');
+  t('an enormous board is refused with a sentence',
+    post({ action: 'pdf', name: 'x', html: 'y'.repeat(2 * 1024 * 1024 + 1) }).status === 'error');
+
+  const { sandbox: s3 } = makeContext([makeSheet('Roster', ROSTER_ROWS)], 'k', undefined, 'fb');
+  t('the feedback key cannot render a PDF',
+    parse(s3.doPost({ postData: { contents: JSON.stringify(
+      { key: 'fb', action: 'pdf', name: 'x', html: HTML }) } })).status === 'denied');
 }
 
 /* ---------- report -------------------------------------------------------- */

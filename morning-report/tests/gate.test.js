@@ -17,6 +17,22 @@ const PAGES = [
   '/morning-report/', '/morning-report/draw/', '/morning-report/roster/',
   '/morning-report/board/', '/morning-report/settings/', '/morning-report/publish/',
   '/morning-report/roles/', '/morning-report/learn/specificity/',
+  '/morning-report/feedback/summary/',
+];
+
+/* Two pages under the module are deliberately NOT gated, and the reason
+   is the same for both: they are the anonymous form a resident opens on
+   their phone from a QR code at the end of the session, and the short
+   address that redirects to it.
+
+   A code prompt there costs responses at exactly the moment you want
+   none — somebody standing up to leave, phone in hand, is not going to
+   go and ask what the code is. And there is nothing behind it to guard:
+   a blank feedback form gives a stranger nothing. The summary, which
+   shows what people actually wrote, is gated. */
+const OPEN = [
+  '/morning-report/feedback/',
+  '/feedback/',
 ];
 
 (async () => {
@@ -38,6 +54,14 @@ const PAGES = [
   for (const path of PAGES) {
     await p1.goto(BASE + path, { waitUntil: 'domcontentloaded' });
     t('locked: ' + path, await p1.isVisible('.mr-gate'));
+  }
+
+  /* The exceptions, asserted rather than left to drift: somebody adding
+     the gate to the feedback form later should have to delete a test
+     that says why not. */
+  for (const path of OPEN) {
+    await p1.goto(BASE + path, { waitUntil: 'domcontentloaded' });
+    t('deliberately open: ' + path, !(await p1.isVisible('.mr-gate').catch(() => false)));
   }
 
   /* Locked means the page underneath is not readable, not merely

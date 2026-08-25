@@ -98,8 +98,31 @@
       <button type="button" class="primary" id="save">Save and connect</button>
       <button type="button" class="danger" id="forget">Forget on this device</button>
       <button type="button" class="ghost" id="copylink">Copy setup link</button>
+      <button type="button" class="teal" id="copyfull">Copy one-tap link (contains the key)</button>
     </div>
     <p class="hint" id="copied" style="margin-top:9px"></p>
+    <div id="rosterqrwrap" hidden>
+      <h3 style="margin-top:20px">Or point a phone at this</h3>
+      <p class="hint" style="margin-top:0">The same one-tap link as a code. Scan it and that device is
+        connected — nothing typed, no settings page, and it stays connected. It carries the key, so
+        it belongs in a message to your chiefs and not on a slide.</p>
+      <div class="qrbox">
+        <div id="rosterqr"></div>
+        <div class="qrside">
+          <div class="bar">
+            <button type="button" class="ghost" id="rosterqrpng">Download PNG</button>
+          </div>
+          <p class="hint" id="rosterqrnote"></p>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">A <b>setup link</b> fills in the address and asks for the key. A
+      <b>one-tap link</b> carries the key too: whoever opens it is connected, with nothing to type
+      and no settings page. That is the point of it and also the whole risk — anyone who can read
+      the link can read the roster, so send it somewhere private and never post it where residents
+      forward things. Change <code>MR_KEY</code> in Script Properties if a link gets out; every
+      device then needs a new one.</p>
   </section>
 
   <section class="panel">
@@ -259,6 +282,7 @@
     $("err").textContent = msg;
     if (msg) return;
     MRRemote.setSettings({ endpoint: url, key: $("key").value, remember: $("remember").checked });
+    paintRosterQr();
     renderStatus();
     paintQr();                       /* the code carries the endpoint too */
     if (MRRemote.configured()) MRRemote.fetchAll().then(renderStatus);
@@ -375,26 +399,112 @@
     } else { $("fbcopied").textContent = link; }
   });
 
-  $("copylink").addEventListener("click", function () {
-    var url = $("endpoint").value.trim();
-    if (!url) { $("copied").textContent = "Fill in the endpoint first."; return; }
-    var link = location.origin + location.pathname + "#e=" + encodeURIComponent(url);
-    var done = function () { $("copied").textContent = "Copied. They will still need the key from you."; };
+  function offerLink(link, message) {
+    var done = function () { $("copied").textContent = message; };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(link).then(done, function () { $("copied").textContent = link; });
     } else { $("copied").textContent = link; }
+  }
+
+  $("copylink").addEventListener("click", function () {
+    var url = $("endpoint").value.trim();
+    if (!url) { $("copied").textContent = "Fill in the endpoint first."; return; }
+    offerLink(location.origin + location.pathname + "#e=" + encodeURIComponent(url),
+      "Copied. They will still need the key from you.");
+  });
+
+  /* The one-tap link. Opening it connects the device and nothing is
+     typed, which is the only version of this anybody will actually do
+     on a phone before rounds. The key rides in the fragment rather than
+     the query string, so it is not sent to the server and does not land
+     in a proxy log — which does nothing about the person the link was
+     forwarded to, and that is the part to be honest about rather than
+     engineer around. */
+  function oneTapLink() {
+    var url = $("endpoint").value.trim();
+    var key = $("key").value;
+    if (!url || !key) return "";
+    return location.origin + location.pathname +
+      "#e=" + encodeURIComponent(url) + "&k=" + encodeURIComponent(key);
+  }
+
+  $("copyfull").addEventListener("click", function () {
+    var link = oneTapLink();
+    if (!link) { $("copied").textContent = "Fill in both the endpoint and the key first."; return; }
+    offerLink(link, "Copied — anyone who opens this is connected. Send it privately.");
+  });
+
+  /* The same link as a code, because on a phone even pasting a link is
+     more than anybody will do before rounds. */
+  function paintRosterQr() {
+    var link = oneTapLink();
+    var wrap = $("rosterqrwrap");
+    wrap.hidden = !link || typeof MRQr === "undefined";
+    if (wrap.hidden) return;
+    try {
+      $("rosterqr").innerHTML = MRQr.svg(link, { scale: 6, quiet: 4 });
+      $("rosterqrnote").textContent =
+        "Encodes the endpoint and the key. Scanning it connects a device for good.";
+    } catch (err) {
+      wrap.hidden = true;
+    }
+  }
+
+  $("rosterqrpng").addEventListener("click", function () {
+    var svg = $("rosterqr").querySelector("svg");
+    if (!svg) return;
+    var img = new Image();
+    var blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" });
+    var src = URL.createObjectURL(blob);
+    img.onload = function () {
+      var c = document.createElement("canvas");
+      c.width = img.width || 512; c.height = img.height || 512;
+      var ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(src);
+      var a = document.createElement("a");
+      a.href = c.toDataURL("image/png");
+      a.download = "morning-report-setup.png";
+      document.body.appendChild(a); a.click(); a.remove();
+    };
+    img.src = src;
   });
 
   MRRemote.onChange(renderStatus);
   MRStore.mountBar("mr-bar");
   fill();
 
-  /* Pre-fill from a setup link. */
-  var m = /[#&]e=([^&]+)/.exec(location.hash || "");
-  if (m && !$("endpoint").value) {
-    try { $("endpoint").value = decodeURIComponent(m[1]); } catch (e) { /* malformed link */ }
-  }
+  /* Arriving on a setup link. A link with a key connects the device
+     there and then — the whole point is that nothing is typed — and the
+     fragment is cleared afterwards so a shoulder-surfer or a screenshot
+     does not carry it on. */
+  (function fromLink() {
+    var hash = location.hash || "";
+    var e = /[#&]e=([^&]*)/.exec(hash);
+    var k = /[#&]k=([^&]*)/.exec(hash);
+    if (!e) return;
 
+    var url = "";
+    try { url = decodeURIComponent(e[1]); } catch (err) { return; }
+    if (MRRemote.validate(url)) return;              // not a usable endpoint; leave the form alone
+
+    if (!k) {
+      if (!$("endpoint").value) $("endpoint").value = url;
+      return;
+    }
+
+    var key = "";
+    try { key = decodeURIComponent(k[1]); } catch (err) { return; }
+    if (!key) return;
+
+    MRRemote.setSettings({ endpoint: url, key: key, remember: true });
+    fill();
+    history.replaceState(null, "", location.pathname);
+    MRStore.notify("ok", "Connected from a setup link. This device will remember it.");
+  })();
+
+  paintRosterQr();
   renderStatus();
   if (MRRemote.configured()) MRRemote.fetchAll().then(renderStatus);
 })();

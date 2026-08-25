@@ -310,6 +310,105 @@
       });
   }
 
+  /* ---------- the shared document store -------------------------------
+
+     The permanent artifacts, for a device that has no data folder and
+     cannot get one: a phone, an iPad, a borrowed laptop. The folder is
+     still the store where there is one — these are the same documents,
+     kept somewhere every device can reach.
+
+     Only these three directories, and the endpoint refuses anything
+     else independently. working/ and manifests/ are identified and
+     swept at seven days, and a central copy would outlive the sweep;
+     working-board.json writes every few seconds during a session and
+     is crash recovery for the machine driving the board, not something
+     anyone else reads.
+     ------------------------------------------------------------------- */
+
+  var DOC_DIRS = ["board-archive/", "sessions/", "casebank/"];
+
+  function docBacked(path) {
+    var p = String(path || "");
+    for (var i = 0; i < DOC_DIRS.length; i++) {
+      if (p.indexOf(DOC_DIRS[i]) !== 0) continue;
+      var rest = p.slice(DOC_DIRS[i].length);
+      return rest.length > 0 && rest.indexOf("/") === -1;     // dir/name.json, no deeper
+    }
+    return false;
+  }
+
+  function docDirBacked(dir) {
+    var d = String(dir || "").replace(/\/*$/, "/");
+    return DOC_DIRS.indexOf(d) !== -1;
+  }
+
+  function docAction(action, extra) {
+    if (!configured()) return Promise.resolve(null);
+    var body = { key: state.key, action: action };
+    Object.keys(extra || {}).forEach(function (k) { body[k] = extra[k]; });
+
+    return global.fetch(state.endpoint, {
+      method: "POST",
+      credentials: "omit",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
+        return res.json();
+      })
+      .then(function (r) {
+        if (!r || r.status !== "ok") {
+          throw new Error((r && (r.message || (r.status === "denied" ? "That key was not accepted." : ""))) ||
+            "The endpoint refused it.");
+        }
+        return r;
+      });
+  }
+
+  /* Reads are best-effort: a document that cannot be fetched is the
+     same as one that is not there, because the caller's next move is
+     identical either way. Writes are not — see docPut. */
+  function docGet(path) {
+    if (!docBacked(path) || !configured()) return Promise.resolve(null);
+    return docAction("docget", { path: path })
+      .then(function (r) { return r ? r.data : null; })
+      .catch(function () { return null; });
+  }
+
+  /* A failed write must reach the caller. Losing a scorecard quietly is
+     the one outcome worth being noisy about. */
+  function docPut(path, data) {
+    if (!docBacked(path) || !configured()) return Promise.resolve(false);
+    return docAction("docput", { path: path, data: data }).then(function () { return true; });
+  }
+
+  function docList(dir) {
+    if (!docDirBacked(dir) || !configured()) return Promise.resolve([]);
+    return docAction("doclist", { dir: String(dir).replace(/\/*$/, "") })
+      .then(function (r) { return (r && r.names) || []; })
+      .catch(function () { return []; });
+  }
+
+  function docRemove(path) {
+    if (!docBacked(path) || !configured()) return Promise.resolve(false);
+    return docAction("docdel", { path: path })
+      .then(function () { return true; })
+      .catch(function () { return false; });
+  }
+
+  /* The board as a PDF, made by Google and kept beside the archives.
+     A failure reaches the caller: the point of this is that the board
+     is filed without anybody choosing a folder, so silently not filing
+     it is the one outcome that would be worse than the old dialog. */
+  function renderPdf(name, html) {
+    if (!configured()) {
+      return Promise.reject(new Error("No shared store is set up on this browser."));
+    }
+    return docAction("pdf", { name: name, html: html })
+      .then(function (r) { return { name: r.name, url: r.url, bytes: r.bytes }; });
+  }
+
   /* ---------- status for the bar -------------------------------------- */
 
   function status() {
@@ -365,6 +464,14 @@
     get: get,
     publish: publish,
     confirmDraw: confirmDraw,
+    docBacked: docBacked,
+    docDirBacked: docDirBacked,
+    docGet: docGet,
+    docPut: docPut,
+    docList: docList,
+    docRemove: docRemove,
+    renderPdf: renderPdf,
+    DOC_DIRS: DOC_DIRS,
     status: status,
     isEmpty: isEmpty,
     summary: summary,
