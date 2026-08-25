@@ -20,6 +20,18 @@
   table.mr td.score{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
   table.mr td.sup{color:var(--muted);font-style:italic;text-align:right}
 
+  /* What kind of measure a domain is. Worth carrying onto the page rather
+     than leaving in the content file: a read-out that shows only the
+     things the change was for has not measured the change. */
+  .kind{
+    display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;padding:1px 6px;border-radius:3px;margin-left:8px;
+    vertical-align:2px;white-space:nowrap;border:1px solid;
+  }
+  .kind.outcome{color:#2C5F49;background:#E9F2ED;border-color:#A8CBBA}
+  .kind.process{color:#1F5866;background:#EDF4F6;border-color:#B6D2DA}
+  .kind.balancing{color:#8A6014;background:#FBF0DE;border-color:var(--amber)}
+
   .bars{display:flex;height:15px;border-radius:3px;overflow:hidden;border:1px solid var(--line);min-width:130px}
   .bars i{display:block;height:100%}
   .bars i.v1{background:#B23A48}
@@ -98,10 +110,11 @@
     </div>
 
     <div class="panel" id="domainpanel">
-      <h2>The five domains</h2>
+      <h2 id="domainhead">The domains</h2>
       <p class="lede">One score per person per domain, then the average of those — so somebody who
         answered two items counts once, not twice. Reversed items are turned round first, so every
         number on this page runs the same way: 5 is the favourable end.</p>
+      <p class="lede" id="kindlede"></p>
       <div style="overflow-x:auto"><table class="mr" id="domaintable"></table></div>
       <p class="hint" id="supnote"></p>
     </div>
@@ -109,10 +122,14 @@
     <div id="items"></div>
 
     <div class="panel" id="measurepanel">
-      <h2>The countable part</h2>
-      <p class="lede">Minutes are reported as a median rather than a mean: one person who spends
-        four hours preparing would otherwise move the average for everybody, and the median says
-        what a typical person does.</p>
+      <h2>The counted part</h2>
+      <p class="lede">Minutes and headcounts are reported as a median rather than a mean: one person
+        who spends four hours preparing would otherwise move the average for everybody, and the
+        median says what a typical person does.</p>
+      <p class="lede">These are the rows worth asking every round rather than once before and once
+        after. Three or four rounds of <em>speakers per session</em> plotted in order say something
+        a single before-and-after pair cannot: whether the number moved when the change landed, or
+        had already been drifting.</p>
       <div style="overflow-x:auto"><table class="mr" id="measuretable"></table></div>
     </div>
 
@@ -260,8 +277,31 @@ function scoreCell(tr, list, domain){
   tr.appendChild(td);
 }
 
+function kindPill(kind){
+  if (!kind) return "";
+  return " <span class='kind " + MRStore.esc(kind) + "'>" + MRStore.esc(kind) + "</span>";
+}
+
+var KINDS = {
+  outcome: "what the change is for",
+  process: "whether the change actually happened",
+  balancing: "what the change might cost"
+};
+
 function paintDomains(){
   var table = $("domaintable");
+  /* Spelled out, because "The 6 domains" reads like a spreadsheet
+     heading and this is prose. Counted rather than written down, so it
+     cannot go stale when a domain is added to the content file. */
+  var WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+  var n = content.domains.length;
+  $("domainhead").textContent = "The " + (WORDS[n] || n) + " domains";
+  $("kindlede").innerHTML = "Each domain is tagged with what kind of measure it is — " +
+    Object.keys(KINDS).map(function(k){
+      return "<b>" + k + "</b>, " + KINDS[k];
+    }).join("; ") + ". A read-out that showed only the outcome rows would be advertising " +
+    "the change rather than measuring it, which is why the balancing rows are on the same table " +
+    "and not in an appendix.";
   table.innerHTML = "";
 
   var thead = document.createElement("thead");
@@ -278,7 +318,8 @@ function paintDomains(){
   content.domains.forEach(function(d){
     var tr = document.createElement("tr");
     var name = document.createElement("td");
-    name.innerHTML = "<b>" + MRStore.esc(d.title) + "</b><br><span style='color:var(--muted);font-size:11.5px'>" +
+    name.innerHTML = "<b>" + MRStore.esc(d.title) + "</b>" + kindPill(d.measure_type) +
+      "<br><span style='color:var(--muted);font-size:11.5px'>" +
       MRStore.esc(d.eyebrow) + "</span>";
     tr.appendChild(name);
     scoreCell(tr, rows, d);
@@ -320,7 +361,7 @@ function paintItems(){
     panel.className = "panel";
 
     var h2 = document.createElement("h2");
-    h2.textContent = d.title + " — item by item";
+    h2.innerHTML = MRStore.esc(d.title) + " — item by item" + kindPill(d.measure_type);
     panel.appendChild(h2);
 
     var head = document.createElement("div");
@@ -400,7 +441,7 @@ function paintMeasures(){
   content.measures.items.forEach(function(it){
     var tr = document.createElement("tr");
     var name = document.createElement("td");
-    name.textContent = it.label;
+    name.innerHTML = MRStore.esc(it.label) + kindPill(it.measure_type);
     tr.appendChild(name);
 
     function cell(list){

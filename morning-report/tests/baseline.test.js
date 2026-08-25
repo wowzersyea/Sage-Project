@@ -116,6 +116,36 @@ const FAKE_BOX = `
      content.domains.every(d => d.items.some(i => i.reverse) || d.id === 'overall'),
      content.domains.map(d => d.id + ':' + d.items.filter(i => i.reverse).length));
 
+  /* All three kinds of measure, or the instrument is advertising the
+     change rather than measuring it. Balancing is the one that goes
+     missing first, and the one whose absence nobody notices until the
+     write-up: forcing people to speak has a price, and if nothing here
+     can fall, nothing here can report that it was paid. */
+  const kinds = content.domains.map(d => d.measure_type)
+    .concat(content.measures.items.map(m => m.measure_type));
+  t('every domain and every counted quantity says what kind of measure it is',
+     kinds.every(Boolean), content.domains.map(d => d.id + ':' + d.measure_type));
+  t('and all three kinds are represented, balancing included',
+     ['outcome', 'process', 'balancing'].every(k => kinds.indexOf(k) !== -1), kinds);
+  t('the balancing measures are not all in one domain',
+     content.measures.items.filter(m => m.measure_type === 'balancing').length >= 2 &&
+     content.domains.some(d => d.measure_type === 'balancing'),
+     kinds);
+
+  /* Everybody is virtual across two sites. An item that talks about a
+     room, or about the far end being at a disadvantage, describes a
+     different morning report than this one — it is the wording most
+     likely to drift back in from a generic template. */
+  const everyWord = content.domains.flatMap(d => d.items.map(i => i.text))
+    .concat(content.measures.items.map(m => m.label))
+    .concat(content.context.items.map(c => c.label));
+  const roomish = everyWord.filter(x => /\bin the room\b|\bfar end\b|\bthe room\b/i.test(x));
+  t('no item assumes anybody is in a room — everybody is on the call',
+     roomish.length === 0, roomish);
+  t('the burden items are asked against three mornings a week, not in the abstract',
+     content.domains.find(d => d.id === 'burden').items.some(i => /three mornings/i.test(i.text)),
+     content.domains.find(d => d.id === 'burden').items.map(i => i.text));
+
   // ---- a group has to be chosen, and nothing else has to be -------------
   await page.click('#send');
   const empty = await page.evaluate(() => document.getElementById('sendnote').textContent);
@@ -158,8 +188,8 @@ const FAKE_BOX = `
   await answer('pgy1', {
     answers: {
       'q-technical-audio': 4, 'q-technical-legible': 4, 'q-technical-joining': 4,
-      'q-technical-interrupt': 2, 'q-technical-parity': 4, 'q-technical-setup': 2,
-      'q-engagement-spoke': 3, 'q-engagement-safe': '', 'global': 7
+      'q-technical-interrupt': 2, 'q-technical-bothatonce': 4, 'q-technical-latestart': 2,
+      'q-participation-spoke': 3, 'q-participation-safe': '', 'global': 7
     },
     numbers: { prep_off: 15, prep_on: 90 },
     open: { keep: 'The board being up before people walk in.', change: 'Start on time.' }
@@ -169,7 +199,7 @@ const FAKE_BOX = `
   t('the reversed item is stored exactly as it was ticked, not pre-turned',
      draft.domains.technical.interrupt === 2, draft.domains.technical);
   t('"no basis to judge" is stored as no answer, never as a middle one',
-     draft.domains.engagement.safe === null, draft.domains.engagement);
+     draft.domains.participation.safe === null, draft.domains.participation);
 
   const progress = await page.evaluate(() => document.getElementById('progtext').textContent);
   t('the progress count treats a deliberate skip as answered',
@@ -222,7 +252,7 @@ const FAKE_BOX = `
   await send('pgy1', {
     answers: {
       'q-technical-audio': 2, 'q-technical-legible': 2, 'q-technical-joining': 2,
-      'q-technical-interrupt': 4, 'q-technical-parity': 2, 'q-technical-setup': 4,
+      'q-technical-interrupt': 4, 'q-technical-bothatonce': 2, 'q-technical-latestart': 4,
       'global': 3
     },
     numbers: { prep_off: 45 },
@@ -235,7 +265,7 @@ const FAKE_BOX = `
   await send('pgy1', {
     answers: {
       'q-technical-audio': 3, 'q-technical-legible': 3, 'q-technical-joining': 3,
-      'q-technical-interrupt': 3, 'q-technical-parity': 3, 'q-technical-setup': 3,
+      'q-technical-interrupt': 3, 'q-technical-bothatonce': 3, 'q-technical-latestart': 3,
       'global': 5
     },
     numbers: {},
@@ -286,6 +316,16 @@ const FAKE_BOX = `
      /^score:3\.00/.test(pgy1Cell), read.technical);
   t('a group under the threshold is suppressed rather than printed',
      read.technical.filter(c => /^sup:/.test(c)).length === 2, read.technical);
+
+  const tags = await page.evaluate(() => ({
+    domain: [].map.call(document.querySelectorAll('#domaintable tbody .kind'), e => e.textContent),
+    measure: [].map.call(document.querySelectorAll('#measuretable tbody .kind'), e => e.textContent)
+  }));
+  t('the read-out tags every domain row with its kind of measure',
+     tags.domain.length === content.domains.length, tags.domain);
+  t('and puts the balancing rows on the same table as the outcome ones',
+     tags.domain.indexOf('balancing') !== -1 && tags.measure.indexOf('balancing') !== -1,
+     tags);
 
   t('the straight-lined form is counted and named as one',
      /Straight-lined forms: 1 of 5/.test(read.flags.join(' ')), read.flags);
