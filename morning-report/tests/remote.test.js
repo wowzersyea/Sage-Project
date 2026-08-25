@@ -664,6 +664,51 @@ const stub = `
     t('the wheel has people on a device with nothing set up',
       await p7.evaluate(() => wheels.pgy1.people.length > 0 && wheels.senior.people.length > 0));
 
+    /* the rota window: the endpoint now publishes the next seven days,
+       so the site toggle and duty filter work on a device with nothing
+       set up. The fixture serves one day — today — the way the real
+       window always contains today. */
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 10);
+    const PUB_ROTA = Object.assign({}, PUB_BODY, {
+      rotations: {
+        source: 'sheet', academic_year: '2026-2027',
+        from: today, to: today, window_days: 7,
+        tasks: SHARED_ROTATIONS.tasks,
+        sites: SHARED_ROTATIONS.sites,
+        days: { [today]: { 'GAL Ward Int': ['r-1'], 'GAL Ward Sr': ['r-2'], 'CLC Ward Sr': ['r-3'] } },
+      },
+    });
+    await p7.evaluate(d => { window.__mr.body = d; }, PUB_ROTA);
+    await p7.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
+    await p7.waitForFunction(() => window.wheels && wheels.pgy1 && wheels.pgy1.people.length > 0,
+      null, { timeout: 8000 });
+    t('the presenting toggle appears on a bare device once the rota is public',
+      await p7.isVisible('#presenting-wrap'));
+    t('with a button per site',
+      await p7.evaluate(() =>
+        Array.from(document.querySelectorAll('#presenting button'))
+          .map(x => x.textContent).join(',')) === 'Galveston,Clear Lake',
+      await p7.evaluate(() =>
+        Array.from(document.querySelectorAll('#presenting button')).map(x => x.textContent)));
+
+    /* both wheels landed on a public device: the confirm bar explains
+       view-only instead of blaming a folder nobody was asked to pick */
+    const hint = await p7.evaluate(() => {
+      wheels.pgy1.winner = wheels.pgy1.people[0];
+      wheels.senior.winner = wheels.senior.people[0];
+      renderConfirm();
+      return {
+        visible: !document.getElementById('confirm').hidden,
+        disabled: document.getElementById('confirmBtn').disabled,
+        note: document.getElementById('confirm-note').textContent,
+      };
+    });
+    t('a finished draw still shows the confirm bar', hint.visible === true);
+    t('but the button is off', hint.disabled === true);
+    t('and the sentence says view-only, and where the key goes',
+      /view-only/.test(hint.note) && /settings/.test(hint.note), hint.note);
+
     /* it must never write: no doc actions, no draw confirmations */
     const wrote = await p7.evaluate(async () => {
       window.__mr.calls.length = 0;
