@@ -516,6 +516,17 @@
       chip.textContent = rem.text;
       chip.title = "Shared roster settings";
       st.appendChild(chip);
+    } else if (global.MRRemote && !state.ready) {
+      /* No folder AND no shared roster: this device has no source of
+         data at all, and saying only "no folder connected" points at
+         the one thing a phone can never have. Silence was worse — an
+         empty wheel with nothing to explain it reads as broken. */
+      var setup = document.createElement("a");
+      setup.className = "mr-remote";
+      setup.href = b + "settings/";
+      setup.textContent = "Set up shared roster";
+      setup.title = "This device has no roster. Point it at the shared sheet.";
+      st.appendChild(setup);
     }
 
     inner.appendChild(st);

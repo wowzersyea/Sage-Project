@@ -335,6 +335,74 @@ const CARD = { session: '2026-09-03', items: [{ code: 'A1', met: true }] };
     await ctx.close();
   }
 
+
+  /* ---- a device with nothing set up says what to do --------------
+
+     Reported twice from a phone: an empty wheel, a bar mentioning only
+     the data folder, and no way to tell whether it was broken or just
+     not configured. Silence was the bug.
+     ------------------------------------------------------------------ */
+
+  {
+    const ctx = await b.newContext();
+    const p = await ctx.newPage();
+    p.on('pageerror', e => errs.push('pageerror: ' + e.message));
+    await p.addInitScript(fake);
+    await p.addInitScript(stub);
+    /* no folder, no endpoint — exactly what a phone opens with */
+    await p.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
+
+    t('a device with no source is not configured',
+      await p.evaluate(() => MRRemote.configured() === false && MRStore.status().ready === false));
+
+    const bar = await p.textContent('#mr-bar');
+    t('the bar offers the setup rather than only naming the folder',
+      /Set up shared roster/.test(bar), bar.trim().slice(0, 120));
+    t('and it links to the settings page',
+      await p.evaluate(() => {
+        const a = [].slice.call(document.querySelectorAll('#mr-bar a'))
+          .filter(x => /Set up shared roster/.test(x.textContent))[0];
+        return !!a && /settings\/$/.test(a.getAttribute('href') || '');
+      }));
+
+    await p.waitForFunction(() => {
+      const n = document.querySelector('#col-pgy1 .ledger .note');
+      return n && n.textContent.length > 0;
+    }, null, { timeout: 5000 });
+    const note = await p.textContent('#col-pgy1 .ledger .note');
+    t('the empty wheel says why it is empty', /no shared roster is set up/i.test(note), note);
+    t('and does not tell a phone to add residents', !/Add residents/.test(note), note);
+
+    await ctx.close();
+  }
+
+  {
+    /* Configured but unreachable is a different sentence again. */
+    const ctx = await b.newContext();
+    const p = await ctx.newPage();
+    p.on('pageerror', e => errs.push('pageerror: ' + e.message));
+    await p.addInitScript(fake);
+    await p.addInitScript(stub);
+    await p.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
+    await p.evaluate(d => MRRemote.setSettings({ endpoint: d.e, key: d.k, remember: true }),
+      { e: ENDPOINT, k: KEY });
+    await p.reload({ waitUntil: 'networkidle' });
+    /* __doc.fail is a plain property and does not survive a reload, so
+       the endpoint answers — with an empty roster, which is its own
+       state and the one setup actually passes through. */
+    await p.waitForFunction(() => {
+      const n = document.querySelector('#col-pgy1 .ledger .note');
+      return n && n.textContent.length > 0;
+    }, null, { timeout: 8000 });
+
+    const note = await p.textContent('#col-pgy1 .ledger .note');
+    t('a connected but empty sheet says so, rather than blaming the roster',
+      /connected but empty/i.test(note), note);
+    t('and points at Publish rather than at adding residents by hand',
+      /Publish from a data folder/.test(note) && !/Add residents/.test(note), note);
+    await ctx.close();
+  }
+
   await b.close();
   let bad = 0;
   for (const o of out) {
