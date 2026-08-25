@@ -836,6 +836,22 @@ const FAKE_API = `
   t('and the copyable one is offered alongside it',
      veil.copyShown && /phone/.test(veil.note), veil.note);
 
+  // ---- the front door, and the one page deliberately outside it ---------
+  const strangerCtx = await browser.newContext();     /* no fakefs, so no code */
+  const stranger = await strangerCtx.newPage();
+  await stranger.goto(BASE + '/morning-report/feedback/summary/', { waitUntil: 'domcontentloaded' });
+  const gatedSummary = await stranger.isVisible('.mr-gate');
+  await stranger.goto(BASE + '/morning-report/feedback/', { waitUntil: 'domcontentloaded' });
+  await stranger.waitForTimeout(200);
+  const gatedForm = await stranger.isVisible('.mr-gate');
+  const formUsable = await stranger.evaluate(() =>
+    !!document.querySelector('input[name="r-overall"]'));
+  await strangerCtx.close();
+
+  t('the read-out sits behind the front-door code like every other tool', gatedSummary);
+  t('the form does not, because it is scanned off a slide by people leaving the room',
+     !gatedForm && formUsable, { gatedForm, formUsable });
+
   let failed = 0;
   for (const r of out) { if (!r.pass) failed++; console.log((r.pass?'PASS  ':'FAIL  ') + r.name + (r.extra?'   '+r.extra:'')); }
   if (errs.length) { console.log('\nERRORS:'); errs.forEach(e => console.log('  ' + e)); }

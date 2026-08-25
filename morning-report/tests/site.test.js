@@ -100,13 +100,20 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   t('and stops the auto-redirect so it can be copied', rescue.refreshRemoved === true);
 
   // ---- the module never writes localStorage ----------------------------------
+  // Two keys are allowed there on purpose and neither is data: the
+  // front-door code, and the shared-roster endpoint settings when
+  // someone ticks "remember on this device". Everything else would be
+  // state that the other site and the folder cannot see, which is the
+  // thing this assertion exists to prevent.
+  const ALLOWED = ['sage-mr-gate', 'sage-mr-remote'];
   await page.evaluate(() => localStorage.clear());
   for (const p of ['/morning-report/draw/', '/morning-report/board/', '/morning-report/roster/']) {
     await page.goto(BASE + p, { waitUntil: 'networkidle' });
     await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
     await page.waitForTimeout(300);
   }
-  const ls = await page.evaluate(() => Object.keys(localStorage).filter(k => !k.startsWith('__fakefs')));
+  const ls = await page.evaluate((allowed) => Object.keys(localStorage)
+    .filter(k => !k.startsWith('__fakefs') && allowed.indexOf(k) === -1), ALLOWED);
   t('nothing in the module writes localStorage', ls.length === 0, ls);
 
   /* The feedback half keeps to the same rule, the way remote.js does:
@@ -126,13 +133,14 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
     box.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await page.waitForTimeout(150);
-  const fb = await page.evaluate(() => {
-    const local = Object.keys(localStorage).filter(k => !k.startsWith('__fakefs'));
+  const fb = await page.evaluate((allowed) => {
+    const local = Object.keys(localStorage)
+      .filter(k => !k.startsWith('__fakefs') && allowed.indexOf(k) === -1);
     const session = Object.keys(sessionStorage).filter(k => !k.startsWith('__fake'));
     let draft = null;
     try { draft = JSON.parse(sessionStorage.getItem('mr.feedback.draft')); } catch (e) { /* none */ }
     return { local, session, draft };
-  });
+  }, ALLOWED);
   t('the feedback half writes nothing to localStorage of its own', fb.local.length === 0, fb.local);
   t('the unsent draft is the tab\'s, and goes when the tab does',
      fb.session.every(k => /^mr\.(feedback|model)\./.test(k)) &&
@@ -145,21 +153,20 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   /* And the key only when asked. */
   await page.goto(BASE + '/morning-report/feedback/summary/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(200);
-  const keyed = await page.evaluate(() => {
+  const keyed = await page.evaluate((allowed) => {
+    const mine = (store) => Object.keys(store)
+      .filter(k => !k.startsWith('__fake') && allowed.indexOf(k) === -1);
     const set = (remember) => {
       document.getElementById('remember').checked = remember;
       document.getElementById('key').value = 'sk-ant-not-a-real-key';
       document.getElementById('key').dispatchEvent(new Event('input', { bubbles: true }));
-      return {
-        local: Object.keys(localStorage).filter(k => !k.startsWith('__fakefs')),
-        session: Object.keys(sessionStorage).filter(k => !k.startsWith('__fake'))
-      };
+      return { local: mine(localStorage), session: mine(sessionStorage) };
     };
     const tabOnly = set(false);
     const kept = set(true);
     document.getElementById('forget').click();
-    return { tabOnly, kept, after: Object.keys(localStorage).filter(k => !k.startsWith('__fakefs')) };
-  });
+    return { tabOnly, kept, after: mine(localStorage) };
+  }, ALLOWED);
   t('an unticked key lives in the tab and nowhere else',
      keyed.tabOnly.local.length === 0 && keyed.tabOnly.session.indexOf('mr.model.key') !== -1, keyed.tabOnly);
   t('a ticked key is the one thing written to the machine',

@@ -99,6 +99,23 @@
 </script>
 </head>
 <body>
+<!-- No gate.js here, and that is deliberate.
+
+     Every other page in this module sits behind the shared front-door
+     code. This one is the exception, because it is the only page in
+     the module meant for somebody who is not in the workroom: it is
+     reached by scanning a code off a slide while standing up to leave,
+     and a four-digit prompt at that moment costs more feedback than it
+     protects.
+
+     Nothing is lost by leaving it open. The page holds no roster and
+     no session data, and it cannot post anywhere without the submit
+     key that arrives in the link — which is the gate that actually
+     matters here. A stranger who opened this URL would find an empty
+     form that can do nothing but download its own answers.
+
+     The read-out at feedback/summary/, which does show what people
+     wrote, is gated like everything else. -->
 
 <div id="mr-bar"></div>
 
