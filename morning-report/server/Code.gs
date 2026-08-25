@@ -11,7 +11,30 @@
      POST {key, action:'draw', ...}  record today's discussants
      POST {key, roster, rotations}   seed the sheets from a data folder
 
-   Both are gated on a key held in Script Properties, never in here.
+   and it holds a third, which is a post box rather than a store:
+
+     POST {key, action:"feedback"}   take one feedback submission
+     POST {key, action:"collect"}    list what has not been collected
+     POST {key, action:"recording"}  hand over one recording
+     POST {key, action:"collected"}  forget what was just collected
+
+   The post box exists because a phone cannot write to a laptop's disk.
+   A submission waits here until the facilitator's browser drains it
+   into the data folder and tells this script to drop it. Nothing is
+   meant to live here: the folder is the permanent home, and a drained
+   endpoint is an empty one.
+
+   All of it is gated on a key held in Script Properties, never in here.
+
+   ---- Two keys, and why ---------------------------------------------
+
+   MR_KEY is the facilitator's key. It reads the roster, seeds the
+   sheets, and drains the post box.
+
+   MR_FEEDBACK_KEY, if set, submits feedback and does nothing else. It
+   is the one that goes in a link handed round a room, because the
+   roster is the file with the names in it and a resident filling in a
+   form has no business reading it. Set both; hand out only the second.
 
    ---- Setting it up -------------------------------------------------
 
@@ -20,7 +43,8 @@
    2. Run setUpSheets() once from the editor. It creates the four tabs
       with their headers. Grant the permissions it asks for.
    3. Project Settings -> Script Properties -> add:
-         MR_KEY   a long random string you will paste into the module
+         MR_KEY            a long random string, for the facilitator
+         MR_FEEDBACK_KEY   a second one, for the feedback link
    4. Deploy -> New deployment -> Web app
          Execute as:      Me
          Who has access:  Anyone
@@ -67,12 +91,19 @@ var SHEETS = {
   roster: 'Roster',
   rota: 'Rota',
   sites: 'Sites',
+  feedback: 'Feedback',
   draws: 'Draws'
 };
 
 var ROSTER_HEADERS = ['id', 'name', 'sort_name', 'level', 'active', 'short'];
 var SITES_HEADERS = ['site', 'label', 'ward_tasks', 'other_tasks'];
+var FEEDBACK_HEADERS = ['received', 'session', 'submission', 'recordings', 'payload'];
 var DRAWS_HEADERS = ['date', 'site', 'presenting', 'role', 'resident_id', 'name', 'confirmed_at'];
+
+/* A recording is capped in the browser long before it gets here. This
+   is the backstop, in base64 characters, so a runaway upload is
+   refused with a sentence rather than a platform error. */
+var MAX_CLIP = 8 * 1024 * 1024;
 
 /* ---------- entry points -------------------------------------------- */
 
@@ -89,9 +120,22 @@ function doPost(e) {
   try {
     var body = {};
     try { body = JSON.parse(e.postData.contents); } catch (parseErr) { body = {}; }
+
+    /* Submitting feedback is the one thing the weaker key may do, and
+       it may do it whether or not the stronger key was configured. */
+    if (body.action === 'feedback') {
+      if (!maySubmit(body.key)) return json({ status: 'denied' });
+      return json(takeFeedback(body));
+    }
+
     if (!authorised(body.key)) return json({ status: 'denied' });
+
+    if (body.action === 'collect') return json(pendingFeedback());
+    if (body.action === 'recording') return json(oneRecording(body.id));
+    if (body.action === 'collected') return json(dropCollected(body.submissions));
     if (body.action === 'draw') return json(recordDraw(body));
-    return json(seedFrom(body));
+
+    return json(seedFrom(body));                 // no action: the original seed
   } catch (err) {
     return json({ status: 'error', message: String(err && err.message || err) });
   }
@@ -103,10 +147,156 @@ function authorised(key) {
   return String(key || '') === String(want);
 }
 
+/* The feedback key submits and nothing else. The facilitator's key
+   also submits, so a machine that only has the one still works. */
+function maySubmit(key) {
+  if (authorised(key)) return true;
+  var want = PropertiesService.getScriptProperties().getProperty('MR_FEEDBACK_KEY');
+  if (!want) return false;
+  return String(key || '') === String(want);
+}
+
 function json(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ---------- the post box ---------------------------------------------
+
+   Feedback arrives here from whatever device it was filled in on, and
+   waits. It is not a record: the facilitator's browser collects it
+   into the data folder and calls "collected", which drops the row and
+   bins the recordings. A drained post box holds nothing.
+
+   Recordings go to a Drive folder rather than into a cell, because a
+   cell holds 50,000 characters and a minute of speech is more than
+   that in base64.
+   ------------------------------------------------------------------ */
+
+function audioFolder() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('MR_AUDIO_FOLDER');
+  if (id) {
+    try { return DriveApp.getFolderById(id); }
+    catch (e) { /* someone deleted it; fall through and make another */ }
+  }
+  var made = DriveApp.createFolder('MorningReport feedback audio');
+  props.setProperty('MR_AUDIO_FOLDER', made.getId());
+  return made;
+}
+
+function clipName(rec, clip) {
+  var mime = String(clip.mime || 'audio/webm');
+  var ext = mime.indexOf('mp4') !== -1 ? 'mp4' : mime.indexOf('ogg') !== -1 ? 'ogg' : 'webm';
+  return rec.session + '--' + rec.id + '--' + (clip.unit || 'note') + '.' + ext;
+}
+
+function takeFeedback(body) {
+  var rec = body.record;
+  if (!rec || !rec.id || !rec.session) {
+    return { status: 'error', message: 'A submission needs an id and a session.' };
+  }
+
+  var clips = Array.isArray(body.audio) ? body.audio : [];
+  for (var i = 0; i < clips.length; i++) {
+    if (clips[i] && typeof clips[i].data === 'string' && clips[i].data.length > MAX_CLIP) {
+      return { status: 'error', message: 'A recording was too large to accept. Send the feedback without it.' };
+    }
+  }
+
+  /* The row goes in before the recordings, so a Drive failure loses
+     the audio and never the words. */
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = sheetFor(ss, SHEETS.feedback, FEEDBACK_HEADERS);
+  var ids = [];
+  var warning = '';
+  try {
+    clips.forEach(function (clip) {
+      if (!clip || !clip.data) return;
+      var blob = Utilities.newBlob(Utilities.base64Decode(clip.data), clip.mime || 'audio/webm', clipName(rec, clip));
+      ids.push(audioFolder().createFile(blob).getId());
+    });
+  } catch (err) {
+    warning = 'The words were taken; a recording was not: ' + String(err && err.message || err);
+  }
+
+  sh.appendRow([new Date().toISOString(), rec.session, rec.id, ids.join(','), JSON.stringify(rec)]);
+  return { status: 'ok', id: rec.id, recordings: ids.length, warning: warning };
+}
+
+/* Everything waiting, oldest first. The payload is parsed here so a
+   row somebody hand-edited into nonsense is reported rather than
+   quietly dropped on the floor. */
+function pendingFeedback() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEETS.feedback);
+  if (!sh) return { status: 'ok', pending: [], unreadable: [] };
+
+  var rows = sh.getDataRange().getValues();
+  var pending = [];
+  var unreadable = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    if (!r || !String(r[2] || '').trim()) continue;
+    var record = null;
+    try { record = JSON.parse(r[4]); } catch (e) { record = null; }
+    if (!record) { unreadable.push(String(r[2])); continue; }
+    pending.push({
+      received: String(r[0] || ''),
+      session: String(r[1] || ''),
+      submission: String(r[2] || ''),
+      recordings: splitList(r[3]),
+      record: record
+    });
+  }
+  return { status: 'ok', pending: pending, unreadable: unreadable };
+}
+
+function oneRecording(id) {
+  if (!id) return { status: 'error', message: 'No recording was named.' };
+  try {
+    var file = DriveApp.getFileById(String(id));
+    var blob = file.getBlob();
+    return {
+      status: 'ok',
+      id: String(id),
+      name: file.getName(),
+      mime: blob.getContentType(),
+      data: Utilities.base64Encode(blob.getBytes())
+    };
+  } catch (err) {
+    return { status: 'error', message: 'That recording is not there any more.' };
+  }
+}
+
+/* Called once the folder has the lot. Rows go from the bottom up so
+   the indexes underneath do not shift as they are removed.
+
+   Recordings are binned rather than shredded — Apps Script can only
+   trash a file. Empty the Drive bin if you want them gone today. */
+function dropCollected(submissions) {
+  var want = {};
+  (Array.isArray(submissions) ? submissions : []).forEach(function (id) { want[String(id)] = true; });
+  if (!Object.keys(want).length) return { status: 'ok', dropped: 0, binned: 0 };
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEETS.feedback);
+  if (!sh) return { status: 'ok', dropped: 0, binned: 0 };
+
+  var rows = sh.getDataRange().getValues();
+  var dropped = 0;
+  var binned = 0;
+  for (var i = rows.length - 1; i >= 1; i--) {
+    if (!want[String(rows[i][2] || '')]) continue;
+    splitList(rows[i][3]).forEach(function (id) {
+      try { DriveApp.getFileById(id).setTrashed(true); binned++; }
+      catch (e) { /* already gone, which is the state we wanted */ }
+    });
+    sh.deleteRow(i + 1);
+    dropped++;
+  }
+  return { status: 'ok', dropped: dropped, binned: binned };
 }
 
 /* ---------- reading the sheets --------------------------------------- */
@@ -451,11 +641,15 @@ function setUpSheets() {
   sheetFor(ss, SHEETS.roster, ROSTER_HEADERS);
   sheetFor(ss, SHEETS.rota, ['date']);
   sheetFor(ss, SHEETS.sites, SITES_HEADERS);
+  sheetFor(ss, SHEETS.feedback, FEEDBACK_HEADERS);
   sheetFor(ss, SHEETS.draws, DRAWS_HEADERS);
   SpreadsheetApp.getUi().alert(
-    'Four tabs are ready.\n\n' +
+    'Five tabs are ready.\n\n' +
     'Set MR_KEY in Project Settings -> Script Properties, deploy as a web app, ' +
-    'then use the Publish page in Morning Report to fill these in from your data folder.');
+    'then use the Publish page in Morning Report to fill these in from your data folder.\n\n' +
+    'Feedback is a post box, not a record: it fills up as people submit and empties ' +
+    'when the facilitator collects it into the data folder. Add MR_FEEDBACK_KEY as well ' +
+    'and hand that one out, so a feedback link cannot read the roster.');
 }
 
 function sheetFor(ss, name, headers) {

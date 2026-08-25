@@ -24,7 +24,8 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
     '/morning-report/roles/scribe/', '/morning-report/roles/pgy1/',
     '/morning-report/roles/senior/', '/morning-report/roles/faculty/',
     '/morning-report/roles/facilitator/', '/morning-report/learn/specificity/',
-    '/morning-report/settings/', '/morning-report/publish/'
+    '/morning-report/settings/', '/morning-report/publish/',
+    '/morning-report/feedback/', '/morning-report/feedback/summary/'
   ];
   for (const p of PAGES) {
     const before = errs.length;
@@ -114,6 +115,63 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   const ls = await page.evaluate((allowed) => Object.keys(localStorage)
     .filter(k => !k.startsWith('__fakefs') && allowed.indexOf(k) === -1), ALLOWED);
   t('nothing in the module writes localStorage', ls.length === 0, ls);
+
+  /* The feedback half keeps to the same rule, the way remote.js does:
+     the tab holds an unsent draft, localStorage holds nothing at all
+     unless a key was explicitly asked to be remembered. */
+  await page.evaluate(() => localStorage.clear());
+  for (const p of ['/morning-report/feedback/', '/morning-report/feedback/summary/']) {
+    await page.goto(BASE + p, { waitUntil: 'networkidle' });
+    await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
+    await page.waitForTimeout(300);
+  }
+  await page.goto(BASE + '/morning-report/feedback/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => {
+    document.querySelector('input[name="r-overall"][value="4"]').click();
+    const box = document.getElementById('c-overall');
+    box.value = 'Ran long, but the intern committed.';
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForTimeout(150);
+  const fb = await page.evaluate((allowed) => {
+    const local = Object.keys(localStorage)
+      .filter(k => !k.startsWith('__fakefs') && allowed.indexOf(k) === -1);
+    const session = Object.keys(sessionStorage).filter(k => !k.startsWith('__fake'));
+    let draft = null;
+    try { draft = JSON.parse(sessionStorage.getItem('mr.feedback.draft')); } catch (e) { /* none */ }
+    return { local, session, draft };
+  }, ALLOWED);
+  t('the feedback half writes nothing to localStorage of its own', fb.local.length === 0, fb.local);
+  t('the unsent draft is the tab\'s, and goes when the tab does',
+     fb.session.every(k => /^mr\.(feedback|model)\./.test(k)) &&
+     fb.session.indexOf('mr.feedback.draft') !== -1, fb.session);
+  t('the draft it keeps is the form, and says nothing about who filled it in',
+     fb.draft && fb.draft.overall.rating === 4 &&
+     !Object.keys(fb.draft).some(k => /name|resident|author|user/i.test(k)),
+     fb.draft && Object.keys(fb.draft));
+
+  /* And the key only when asked. */
+  await page.goto(BASE + '/morning-report/feedback/summary/', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(200);
+  const keyed = await page.evaluate((allowed) => {
+    const mine = (store) => Object.keys(store)
+      .filter(k => !k.startsWith('__fake') && allowed.indexOf(k) === -1);
+    const set = (remember) => {
+      document.getElementById('remember').checked = remember;
+      document.getElementById('key').value = 'sk-ant-not-a-real-key';
+      document.getElementById('key').dispatchEvent(new Event('input', { bubbles: true }));
+      return { local: mine(localStorage), session: mine(sessionStorage) };
+    };
+    const tabOnly = set(false);
+    const kept = set(true);
+    document.getElementById('forget').click();
+    return { tabOnly, kept, after: mine(localStorage) };
+  }, ALLOWED);
+  t('an unticked key lives in the tab and nowhere else',
+     keyed.tabOnly.local.length === 0 && keyed.tabOnly.session.indexOf('mr.model.key') !== -1, keyed.tabOnly);
+  t('a ticked key is the one thing written to the machine',
+     keyed.kept.local.join(',') === 'mr.model.key', keyed.kept.local);
+  t('and forgetting it takes it off the machine', keyed.after.length === 0, keyed.after);
 
   let failed = 0;
   for (const r of out) { if (!r.pass) failed++; console.log((r.pass?'PASS  ':'FAIL  ') + r.name + (r.extra?'   '+r.extra:'')); }

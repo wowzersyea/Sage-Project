@@ -270,6 +270,22 @@
       .catch(function (err) { fail("Could not save " + path, err); return false; });
   }
 
+  /* A recording is bytes, not JSON. Same folder, same failure
+     handling, no cache — holding an audio blob in the tab's cache
+     would be a memory leak with no reader. */
+  function writeBlob(path, blob) {
+    if (state.mode === "fallback" || !state.ready) {
+      notify("warn", "No folder connected, so " + path + " could not be written.");
+      return Promise.resolve(false);
+    }
+    return dirFor(path, true)
+      .then(function (d) { return d.getFileHandle(leaf(path), { create: true }); })
+      .then(function (fh) { return fh.createWritable(); })
+      .then(function (w) { return w.write(blob).then(function () { return w.close(); }); })
+      .then(function () { return true; })
+      .catch(function (err) { fail("Could not save " + path, err); return false; });
+  }
+
   function list(dir) {
     if (state.mode === "fallback" || !state.ready) {
       var pre = dir.replace(/\/*$/, "/");
@@ -329,6 +345,15 @@
 
   function download(path, obj) {
     var blob = new Blob([JSON.stringify(obj, null, 2) + "\n"], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = String(path).replace(/\//g, "-");
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  function downloadBlob(path, blob) {
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = String(path).replace(/\//g, "-");
@@ -448,6 +473,21 @@
 
   /* ---------- small shared helpers ----------------------------------- */
 
+  /* base() is relative, which is what a link inside a page wants. A
+     link that will be copied into an email, a slide or a QR code has
+     to be absolute — and this site is served both from its own domain
+     and from /Sage-Project/ on github.io, so neither prefix can be
+     assumed. Derive both from where this page actually is. */
+  function siteRoot() {
+    var path = location.pathname;
+    var cut = path.indexOf("/morning-report/");
+    return location.origin + (cut === -1 ? path.replace(/[^/]*$/, "") : path.slice(0, cut + 1));
+  }
+
+  function moduleRoot() {
+    return siteRoot() + "morning-report/";
+  }
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -480,15 +520,19 @@
     restore: restore,
     read: read,
     write: write,
+    writeBlob: writeBlob,
     list: list,
     readAll: readAll,
     remove: remove,
     download: download,
+    downloadBlob: downloadBlob,
     upload: upload,
     notify: notify,
     fail: fail,
     mountBar: mountBar,
     base: base,
+    siteRoot: siteRoot,
+    moduleRoot: moduleRoot,
     esc: esc,
     slug: slug,
     today: today,

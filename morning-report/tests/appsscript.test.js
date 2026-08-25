@@ -37,6 +37,8 @@ function makeSheet(name, rows) {
     }),
     clear: () => { data = []; },
     setFrozenRows: () => {},
+    appendRow: (row) => { data.push(row.slice()); },
+    deleteRow: (n) => { data.splice(n - 1, 1); },
     __rows: () => data,
   };
 }
@@ -44,24 +46,64 @@ function makeSheet(name, rows) {
 /* Minutes each zone is offset from UTC, for the formatDate stub. */
 const ZONES = { 'America/Chicago': -5 * 60, 'Asia/Tokyo': 9 * 60 };
 
-function makeContext(sheets, key, tz) {
+function makeContext(sheets, key, tz, feedbackKey) {
   tz = tz || 'America/Chicago';
   const byName = {};
   const seen = { zones: [] };
+  /* A fake Drive: files by id, and a note of what got binned. */
+  const drive = { files: {}, folders: {}, next: 1, trashed: [] };
   sheets.forEach(s => { byName[s.name] = s; });
   const ss = {
     getSheetByName: (n) => byName[n] || null,
     insertSheet: (n) => { const s = makeSheet(n, []); byName[n] = s; return s; },
     getSpreadsheetTimeZone: () => tz,
   };
+  const props = { MR_KEY: key, MR_FEEDBACK_KEY: feedbackKey === undefined ? null : feedbackKey };
+  const makeFile = (name, mime, bytes) => {
+    const id = 'file-' + (drive.next++);
+    drive.files[id] = { id, name, mime, bytes, trashed: false };
+    return fileHandle(id);
+  };
+  const fileHandle = (id) => ({
+    getId: () => id,
+    getName: () => drive.files[id].name,
+    getBlob: () => ({
+      getContentType: () => drive.files[id].mime,
+      getBytes: () => drive.files[id].bytes,
+    }),
+    setTrashed: (v) => { drive.files[id].trashed = !!v; if (v) drive.trashed.push(id); },
+  });
   const sandbox = {
     SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert: () => {} }) },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'MR_KEY' ? key : null) }) },
+    PropertiesService: {
+      getScriptProperties: () => ({
+        getProperty: (k) => (k in props ? props[k] : null),
+        setProperty: (k, v) => { props[k] = v; },
+      }),
+    },
+    DriveApp: {
+      createFolder: (name) => {
+        const id = 'folder-' + (drive.next++);
+        drive.folders[id] = { id, name };
+        return { getId: () => id, createFile: (blob) => makeFile(blob.__name, blob.__mime, blob.__bytes) };
+      },
+      getFolderById: (id) => {
+        if (!drive.folders[id]) throw new Error('no such folder');
+        return { getId: () => id, createFile: (blob) => makeFile(blob.__name, blob.__mime, blob.__bytes) };
+      },
+      getFileById: (id) => {
+        if (!drive.files[id] || drive.files[id].trashed) throw new Error('no such file');
+        return fileHandle(id);
+      },
+    },
     ContentService: {
       MimeType: { JSON: 'json' },
       createTextOutput: (s) => ({ setMimeType: () => ({ __text: s }) }),
     },
     Utilities: {
+      newBlob: (bytes, mime, name) => ({ __bytes: bytes, __mime: mime, __name: name }),
+      base64Decode: (data) => 'bytes:' + data,
+      base64Encode: (bytes) => String(bytes).replace(/^bytes:/, ''),
       formatDate: (d, zone, fmt) => {
         seen.zones.push(zone);
         const off = ZONES[zone];
@@ -73,7 +115,7 @@ function makeContext(sheets, key, tz) {
   };
   vm.createContext(sandbox);
   vm.runInContext(SRC, sandbox);
-  return { sandbox, ss, byName, seen };
+  return { sandbox, ss, byName, seen, drive };
 }
 
 /* What Sheets actually hands back for a date cell: midnight in the
@@ -377,6 +419,151 @@ function fresh(key = 'k') {
     parse(sandbox.doPost({ postData: { contents: JSON.stringify({ key: 'no' }) } })).status === 'denied');
   t('unparseable post data is denied rather than crashing',
     parse(sandbox.doPost({ postData: { contents: 'not json' } })).status === 'denied');
+}
+
+/* ---------- the post box -------------------------------------------------
+
+   The half that takes feedback from a phone and hands it to the
+   facilitator's browser. Two keys, and the weaker one must not be
+   able to read the roster or drain anything.
+   ------------------------------------------------------------------ */
+
+const SUBMISSION = {
+  id: 'fb-abc123',
+  session: '2026-09-03-galveston',
+  date: '2026-09-03',
+  site: 'Galveston',
+  overall: { rating: 4, checks: { learned: true }, comment: 'The take-homes landed.' },
+  roles: { pgy1: { rating: 5, comment: 'Committed early and said why.' } }
+};
+
+const post = (sandbox, body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(body) } }));
+
+function withPostBox(key = 'k', feedbackKey = 'fk') {
+  return makeContext([
+    makeSheet('Roster', ROSTER_ROWS),
+    makeSheet('Rota', ROTA_ROWS),
+    makeSheet('Sites', SITES_ROWS),
+  ], key, 'America/Chicago', feedbackKey);
+}
+
+{
+  const { sandbox } = withPostBox();
+
+  t('the feedback key may submit',
+    post(sandbox, { key: 'fk', action: 'feedback', record: SUBMISSION }).status === 'ok');
+  t('the feedback key may not collect',
+    post(sandbox, { key: 'fk', action: 'collect' }).status === 'denied');
+  t('the feedback key may not drop anything',
+    post(sandbox, { key: 'fk', action: 'collected', submissions: ['fb-abc123'] }).status === 'denied');
+  t('the feedback key may not seed the sheets',
+    post(sandbox, { key: 'fk', roster: { residents: [] } }).status === 'denied');
+  t('the feedback key cannot read the roster',
+    parse(sandbox.doGet({ parameter: { key: 'fk' } })).status === 'denied');
+  t('a wrong key submits nothing',
+    post(sandbox, { key: 'nope', action: 'feedback', record: SUBMISSION }).status === 'denied');
+}
+
+{
+  /* No MR_FEEDBACK_KEY set: the facilitator's key still submits, so a
+     single-key deployment is not broken by this feature existing. */
+  const { sandbox } = withPostBox('k', null);
+  t('with no feedback key set, the roster key still submits',
+    post(sandbox, { key: 'k', action: 'feedback', record: SUBMISSION }).status === 'ok');
+  t('and an unset feedback key does not become a skeleton key',
+    post(sandbox, { key: '', action: 'feedback', record: SUBMISSION }).status === 'denied');
+}
+
+{
+  const { sandbox, byName } = withPostBox();
+  const res = post(sandbox, { key: 'fk', action: 'feedback', record: SUBMISSION });
+  t('a submission becomes one row', byName.Feedback.__rows().length === 2, byName.Feedback.__rows().length);
+  t('the row carries the session and the id',
+    byName.Feedback.__rows()[1][1] === '2026-09-03-galveston' &&
+    byName.Feedback.__rows()[1][2] === 'fb-abc123', byName.Feedback.__rows()[1].slice(0, 3));
+  t('with no recordings, nothing went to Drive', res.recordings === 0, res);
+
+  const junk = post(sandbox, { key: 'fk', action: 'feedback', record: { comment: 'no id' } });
+  t('a submission with no id is refused, not stored',
+    junk.status === 'error' && byName.Feedback.__rows().length === 2, junk);
+}
+
+{
+  const { sandbox, drive } = withPostBox();
+  const res = post(sandbox, {
+    key: 'fk', action: 'feedback', record: SUBMISSION,
+    audio: [{ unit: 'overall', mime: 'audio/webm', data: 'AAAA' }]
+  });
+  t('a recording goes to Drive and the row keeps its id', res.recordings === 1, res);
+
+  const ids = Object.keys(drive.files);
+  t('the file is named for its session, submission and box',
+    drive.files[ids[0]].name === '2026-09-03-galveston--fb-abc123--overall.webm',
+    drive.files[ids[0]].name);
+
+  const pending = post(sandbox, { key: 'k', action: 'collect' });
+  t('collecting returns it, with the record parsed back into an object',
+    pending.pending.length === 1 && pending.pending[0].record.overall.rating === 4,
+    pending.pending && pending.pending.length);
+  t('and names the recording that goes with it',
+    pending.pending[0].recordings.length === 1, pending.pending[0].recordings);
+
+  const clip = post(sandbox, { key: 'k', action: 'recording', id: pending.pending[0].recordings[0] });
+  t('the recording comes back as it went in', clip.status === 'ok' && clip.data === 'AAAA', clip);
+
+  const dropped = post(sandbox, { key: 'k', action: 'collected', submissions: ['fb-abc123'] });
+  t('dropping it clears the row and bins the file',
+    dropped.dropped === 1 && dropped.binned === 1, dropped);
+  t('and the post box is then empty',
+    post(sandbox, { key: 'k', action: 'collect' }).pending.length === 0);
+  t('a binned recording is no longer served',
+    post(sandbox, { key: 'k', action: 'recording', id: ids[0] }).status === 'error');
+}
+
+{
+  const { sandbox, byName } = withPostBox();
+  post(sandbox, { key: 'fk', action: 'feedback', record: SUBMISSION });
+  post(sandbox, { key: 'fk', action: 'feedback', record: Object.assign({}, SUBMISSION, { id: 'fb-def456' }) });
+  post(sandbox, { key: 'fk', action: 'feedback', record: Object.assign({}, SUBMISSION, { id: 'fb-ghi789' }) });
+
+  const dropped = post(sandbox, { key: 'k', action: 'collected', submissions: ['fb-abc123', 'fb-ghi789'] });
+  t('dropping two of three takes exactly those two', dropped.dropped === 2, dropped);
+  const left = post(sandbox, { key: 'k', action: 'collect' }).pending;
+  t('and leaves the third where it was',
+    left.length === 1 && left[0].submission === 'fb-def456', left.map(r => r.submission));
+}
+
+{
+  const { sandbox, byName } = withPostBox();
+  byName.Feedback = makeSheet('Feedback', [
+    ['received', 'session', 'submission', 'recordings', 'payload'],
+    ['2026-09-03T12:00:00Z', '2026-09-03-galveston', 'fb-broken', '', '{not json'],
+  ]);
+  const pending = post(sandbox, { key: 'k', action: 'collect' });
+  t('a row somebody hand-edited into nonsense is reported, not silently dropped',
+    pending.pending.length === 0 && pending.unreadable.join(',') === 'fb-broken', pending);
+}
+
+{
+  const { sandbox } = withPostBox();
+  const big = post(sandbox, {
+    key: 'fk', action: 'feedback', record: SUBMISSION,
+    audio: [{ unit: 'overall', mime: 'audio/webm', data: 'x'.repeat(9 * 1024 * 1024) }]
+  });
+  t('an oversized recording is refused with a sentence', big.status === 'error' && /too large/.test(big.message), big.message);
+}
+
+{
+  /* The original seed path must still work exactly as it did. */
+  const { sandbox, byName } = withPostBox();
+  const seeded = post(sandbox, {
+    key: 'k',
+    roster: { residents: [{ id: 'r-9', name: 'Wren Halloway', level: 'PGY-2', active: true }] }
+  });
+  t('a POST with no action still seeds the sheets',
+    seeded.status === 'ok' && seeded.wrote.roster === 1, seeded);
+  t('and the roster sheet actually changed',
+    byName.Roster.__rows()[1][1] === 'Wren Halloway', byName.Roster.__rows()[1]);
 }
 
 /* ---------- report -------------------------------------------------------- */

@@ -96,7 +96,7 @@
 
     <div class="stage-head after">
       <span class="when">After</span>
-      <span class="note">Both open themselves when the board finishes.</span>
+      <span class="note">The board hands these over when it finishes.</span>
     </div>
     <div class="tools">
       <a class="tool" href="scorecard/">
@@ -106,6 +106,14 @@
       <a class="tool" href="capture/">
         <h3>Capture case</h3>
         <p>The case bank entry, pre-filled from the board and checked for identifiers. Under sixty seconds or it will not happen.</p>
+      </a>
+      <a class="tool" href="feedback/">
+        <h3>Feedback</h3>
+        <p>Ninety seconds, anonymous: the technology, the flow, the six roles, and the one thing to change. Say it into the microphone if typing is what stops you. Works from a phone, and answers to the short address <code>sageproject.xyz/feedback</code>.</p>
+      </a>
+      <a class="tool" href="feedback/summary/">
+        <h3>Feedback summary</h3>
+        <p>What came back, rolled up and — if you set a key — drafted into a summary of each section and each role, one call at a time.</p>
       </a>
     </div>
 
@@ -146,8 +154,11 @@
   roster.json          names and the participation log — the one file with names in it
   casebank/            de-identified cases, permanent
   sessions/            de-identified scorecards, permanent
+    feedback/          what the group said about the session, permanent
   board-archive/       de-identified board contents, permanent
-  working/             identified, ephemeral, CLI only, swept after 7 days</pre>
+  working/             identified, ephemeral, CLI and feedback only, swept after 7 days
+    feedback/          the role half of the feedback — handed over, then gone
+      audio/           recordings, only the ones somebody chose to keep</pre>
       <p class="hint">Folder access needs Chrome or Edge. In any other browser the tools fall back to
         explicit Download JSON and Load JSON buttons, and the bar says so.</p>
     </div>
@@ -163,6 +174,9 @@
         <li><a href="publish/">Publish</a> — seed the sheet from the folder you already have.</li>
         <li>After that, a chief edits the sheet. Swaps and sick calls need no export.</li>
       </ol>
+      <p class="hint" style="margin-bottom:0"><a href="settings/">Settings</a> also draws the QR code for
+        the presenter template: scan it and a phone can send feedback without anyone typing a URL, and
+        the board puts the same code on screen at the end of a session.</p>
       <p class="hint">Entirely optional, and it degrades rather than misleads: with no endpoint,
         or one that cannot be reached, everything falls back to the folder exactly as before.
         The folder always wins over the endpoint, and the participation log never leaves it.</p>
@@ -175,6 +189,11 @@
       role on a date, for scheduling. Nothing here records how a named person performed, and no view,
       export or query joins a name to a score. Nothing here is summative, and nothing may be exported
       as a milestone or evaluation record.
+      <br><br>
+      One thing is deliberately not anonymous, and only if somebody chooses it: a feedback recording,
+      because a voice identifies its speaker. Those are never automatic, they live in
+      <code>working/</code> with the role notes, and they sweep on the same seven-day clock. They are
+      formative like the rest — not a record of anybody, and never an input to one.
     </div>
 
   </div>

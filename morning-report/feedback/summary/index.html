@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedback summary | Morning Report</title>
+<meta name="description" content="What came back from one morning report session: the numbers, the comments, and a drafted summary of each — three sections and six roles, one call each.">
+<link rel="stylesheet" href="../../assets/mr.css">
+<style>
+  .pickbar{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end}
+  .pickbar .bar{align-items:center}
+
+  .count{
+    position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:11px 0;margin-bottom:18px;
+  }
+  .count-in{
+    max-width:1100px;margin:0 auto;padding:0 28px;
+    display:flex;gap:18px;align-items:center;flex-wrap:wrap;
+  }
+  .count .n{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1}
+  .count .of{color:#9FB4C8;font-size:13px}
+  .count .thin{background:var(--amber);color:var(--navy);font-size:11px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:3px}
+  .count .who{margin-left:auto;font-size:12px;color:#9FB4C8}
+
+  .unit{margin-bottom:16px}
+  .unit .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .unit .head h2,.unit .head h3{margin:0}
+  .unit .head .n{font-size:12px;color:var(--muted);margin-left:auto}
+
+  .meanrow{display:flex;align-items:center;gap:14px;margin:12px 0 6px;flex-wrap:wrap}
+  .mean{font-family:var(--serif);font-size:31px;font-weight:700;line-height:1;color:var(--navy)}
+  .mean .out{font-size:13px;color:var(--muted);font-family:var(--sans);font-weight:400}
+  .dist{display:flex;gap:4px;align-items:flex-end;height:44px}
+  .dist .b{width:26px;background:#E4EBF1;border-radius:3px 3px 0 0;position:relative;min-height:3px}
+  .dist .b.on{background:var(--teal)}
+  .dist .b span{
+    position:absolute;bottom:-17px;left:0;right:0;text-align:center;
+    font-size:10.5px;color:var(--muted);
+  }
+  .distwrap{padding-bottom:18px}
+
+  .tallies{margin-top:14px;border-top:1px solid #EEF2F5;padding-top:10px}
+  .tally-row{display:flex;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+  .tally-row .frac{
+    font-family:var(--mono);font-size:12px;color:var(--muted);min-width:46px;flex:none;
+  }
+  .tally-row .track{flex:1;height:6px;background:#EEF2F5;border-radius:3px;overflow:hidden;max-width:170px}
+  .tally-row .fill{height:100%;background:var(--green)}
+  .tally-row.weak .fill{background:var(--red)}
+  .tally-row .txt{flex:2 1 240px}
+
+  .comments{margin-top:14px;border-top:1px solid #EEF2F5;padding-top:10px}
+  .comments p{margin:0 0 8px;font-size:13.5px;border-left:2px solid var(--line);padding-left:11px;color:#3D4855}
+  .comments .none{border:none;padding:0;color:var(--muted);font-style:italic}
+
+  .draft{
+    margin-top:14px;background:#F7F9FB;border:1px solid var(--line);border-left:3px solid var(--teal);
+    border-radius:6px;padding:14px 16px;
+  }
+  .draft.low{border-left-color:var(--amber);background:#FBF0DE}
+  .draft h4{margin:0 0 6px;font-family:var(--serif);font-size:15px;color:var(--navy)}
+  .draft p{margin:0 0 8px;font-size:13.5px;line-height:1.6}
+  .draft .one{font-weight:600;color:var(--navy)}
+  .draft .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--muted)}
+  .draft .bar{margin-top:10px}
+
+  .peek{
+    margin-top:10px;font-family:var(--mono);font-size:11.5px;line-height:1.5;white-space:pre-wrap;
+    background:#16283C;color:#D7E2EC;border-radius:6px;padding:12px 14px;overflow-x:auto;
+  }
+  .peek[hidden]{display:none}
+
+  .keybar{display:grid;grid-template-columns:2fr 1fr;gap:12px;align-items:end}
+  .keybar .row{display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:8px}
+  .keybar .row input[type=checkbox]{width:auto;flex:none}
+
+  .roles .unit{border-top:1px solid #EEF2F5;padding-top:16px;margin-top:16px}
+  .roles .unit:first-child{border-top:none;padding-top:0;margin-top:0}
+
+  .empty{text-align:center;color:var(--muted);padding:34px 0}
+  .empty h2{color:var(--navy)}
+
+  @media print{
+    .mr-bar,.count,.pickbar,.keybar,.savebar,footer.mr,.peek,.draft .bar,
+    header.hero .sub,header.hero .rule,.noprint{display:none !important}
+    body{background:#fff}
+    .panel{border:none;padding:0;margin-bottom:14px;break-inside:avoid}
+    @page{margin:14mm}
+  }
+  @media (max-width:820px){
+    .pickbar,.keybar{grid-template-columns:1fr}
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3KEGTRRS0Z');
+</script>
+</head>
+<body>
+<script src="../../assets/gate.js"></script>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · after</p>
+    <h1>What came back</h1>
+    <p class="sub">The numbers first, because they never fail. The drafted summary is a second reader of
+      comments you can read yourself in a minute — one call per section and per role, never one for all nine.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<div class="count">
+  <div class="count-in">
+    <span class="n" id="n">0</span><span class="of" id="ofnote">responses</span>
+    <span class="thin" id="thin" hidden>One voice, not the group</span>
+    <span class="who" id="when"></span>
+  </div>
+</div>
+
+<section class="band" style="padding-top:6px">
+  <div class="wrap">
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="pickbar">
+        <div>
+          <label class="f" for="session">Session</label>
+          <select id="session"><option value="">— nothing found —</option></select>
+        </div>
+        <div>
+          <label class="f" for="provider">Answered by</label>
+          <select id="provider"></select>
+        </div>
+        <div>
+          <label class="f" for="model">Model</label>
+          <input type="text" id="model" placeholder="claude-sonnet-5">
+        </div>
+        <div class="bar">
+          <button class="teal" id="runall">Summarise all nine</button>
+          <button class="ghost" id="print">Print</button>
+        </div>
+      </div>
+      <p class="hint" id="stock"></p>
+    </div>
+
+    <div class="panel" id="collectpanel" hidden style="margin-bottom:16px">
+      <h2>Collect what came in from elsewhere</h2>
+      <p class="lede">Feedback filled in on a phone, or on any machine without the data folder, waits
+        at the endpoint until this machine fetches it. Collecting writes it into the folder and then
+        tells the endpoint to forget it — so the folder is the only place any of it lives.</p>
+      <div class="bar">
+        <button class="teal" id="collect">Collect into the folder</button>
+        <span class="hint" id="collectnote" style="margin:0"></span>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>The key stays in this browser</h2>
+      <p class="lede">There is no server in this module, so a summary is a call your browser makes
+        straight to the API with your own key. Nothing is proxied through anything of ours, nothing is
+        stored anywhere else, and every payload can be read before it is sent.</p>
+      <div class="keybar">
+        <div>
+          <label class="f" for="key">API key</label>
+          <input type="text" id="key" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+        </div>
+        <div class="bar">
+          <button class="ghost" id="forget">Forget the key</button>
+        </div>
+      </div>
+      <label class="row" style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:8px">
+        <input type="checkbox" id="remember" style="width:auto;flex:none">
+        Keep it in this browser, so it is here next week
+      </label>
+      <p class="hint" id="keynote"></p>
+      <p class="hint" id="wherenote"></p>
+    </div>
+
+    <div id="body"></div>
+
+    <div class="savebar noprint" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px">
+      <button class="amber" id="save">Keep the session record</button>
+      <a class="btn ghost" href="../">Add feedback →</a>
+      <span class="hint" id="savenote" style="margin:0"></span>
+    </div>
+
+    <div class="privacy" style="margin-top:20px">
+      <b>What is kept, and what is not</b>
+      The session record holds the ratings, the ticks and the drafted summaries. It does not hold the
+      comments as written — in a group this small a quotation identifies its author — and it does not
+      hold anything about a role, because the roster already records who held which role on that date.
+      Role feedback lives in <code>working/</code>, is handed to the person it is about, and is swept.
+      None of this is summative. It is not a milestone, an evaluation record, or an input to one.
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — Morning Report. Submissions are read from <code>working/feedback/</code>;
+      the questions and the model's instructions live in <code>content/feedback.json</code>.</p>
+  </div>
+</footer>
+
+<script src="../../assets/remote.js?v=3"></script>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/relay.js"></script>
+<script src="../../assets/phi.js"></script>
+<script src="../../assets/summarise.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var content = null;
+var roleCards = {};
+var subs = [];            /* every submission in working/feedback/ */
+var bySession = {};
+var roll = null;
+var summaries = {};       /* unit id -> draft */
+var current = "";
+
+/* ---------- units ------------------------------------------------------- */
+
+function sectionUnit(sec){
+  var s = roll.sections[sec.id];
+  return {
+    id: sec.id, kind: "section", title: sec.title, about: sec.question,
+    n: s.n, total: roll.n, mean: s.mean, dist: s.dist, checks: s.checks, comments: s.comments
+  };
+}
+
+function roleUnit(slug){
+  var r = roll.roles[slug];
+  var card = roleCards[slug] || {};
+  return {
+    id: "role:" + slug, kind: "role", slug: slug,
+    title: card.name || slug,
+    about: (card.name || slug) + (card.tagline ? " — " + card.tagline : "") + ". " + content.roles.question,
+    n: r.n, total: roll.n, mean: r.mean, dist: r.dist, checks: null, comments: r.comments
+  };
+}
+
+function units(){
+  var out = content.sections.map(sectionUnit);
+  content.roles.order.forEach(function(slug){ out.push(roleUnit(slug)); });
+  return out;
+}
+
+/* ---------- render ------------------------------------------------------ */
+
+function distBlock(dist){
+  var wrap = document.createElement("div");
+  wrap.className = "distwrap";
+  var d = document.createElement("div");
+  d.className = "dist";
+  var top = Math.max.apply(null, dist.concat([1]));
+  dist.forEach(function(count, i){
+    var b = document.createElement("div");
+    b.className = "b" + (count ? " on" : "");
+    b.style.height = Math.round(6 + (count / top) * 38) + "px";
+    b.title = count + " rated it " + (i + 1);
+    var lab = document.createElement("span");
+    lab.textContent = String(i + 1);
+    b.appendChild(lab);
+    d.appendChild(b);
+  });
+  wrap.appendChild(d);
+  return wrap;
+}
+
+function meanRow(unit){
+  var row = document.createElement("div");
+  row.className = "meanrow";
+  var m = document.createElement("div");
+  m.className = "mean";
+  if (unit.mean === null){
+    m.textContent = "—";
+    var out0 = document.createElement("span");
+    out0.className = "out"; out0.textContent = " nobody rated this";
+    m.appendChild(out0);
+  } else {
+    m.textContent = String(unit.mean);
+    var out = document.createElement("span");
+    out.className = "out"; out.textContent = " of 5";
+    m.appendChild(out);
+  }
+  row.appendChild(m);
+  row.appendChild(distBlock(unit.dist));
+  return row;
+}
+
+function tallies(unit){
+  var host = document.createElement("div");
+  host.className = "tallies";
+  Object.keys(unit.checks).forEach(function(id){
+    var c = unit.checks[id];
+    var row = document.createElement("div");
+    var share = c.of ? c.ticked / c.of : 0;
+    row.className = "tally-row" + (c.of && share < 0.5 ? " weak" : "");
+
+    var frac = document.createElement("span");
+    frac.className = "frac";
+    frac.textContent = c.ticked + "/" + c.of;
+
+    var track = document.createElement("span");
+    track.className = "track";
+    var fill = document.createElement("span");
+    fill.className = "fill";
+    fill.style.width = Math.round(share * 100) + "%";
+    track.appendChild(fill);
+
+    var txt = document.createElement("span");
+    txt.className = "txt";
+    txt.textContent = c.text;
+
+    row.appendChild(frac); row.appendChild(track); row.appendChild(txt);
+    host.appendChild(row);
+  });
+  return host;
+}
+
+function commentList(unit){
+  var host = document.createElement("div");
+  host.className = "comments";
+  if (!unit.comments.length){
+    var none = document.createElement("p");
+    none.className = "none";
+    none.textContent = "No written comments — the numbers are all there is here.";
+    host.appendChild(none);
+    return host;
+  }
+  unit.comments.forEach(function(c){
+    var p = document.createElement("p");
+    p.textContent = c;
+    host.appendChild(p);
+  });
+  return host;
+}
+
+function draftBlock(unit){
+  var host = document.createElement("div");
+  host.id = "draft-" + unit.id.replace(":", "-");
+
+  var d = summaries[unit.id];
+  if (!d){
+    var bar = document.createElement("div");
+    bar.className = "bar noprint";
+    bar.style.marginTop = "12px";
+
+    var go = document.createElement("button");
+    go.className = "ghost";
+    go.textContent = "Summarise this";
+    go.addEventListener("click", function(){ runUnit(unit, go); });
+    bar.appendChild(go);
+
+    var peekBtn = document.createElement("button");
+    peekBtn.className = "link-btn";
+    peekBtn.textContent = "Show what would be sent";
+    bar.appendChild(peekBtn);
+
+    var peek = document.createElement("pre");
+    peek.className = "peek";
+    peek.hidden = true;
+    peekBtn.addEventListener("click", function(){
+      if (peek.hidden){
+        var p = MRSummarise.payload(unit, content);
+        peek.textContent = "POST " + p.endpoint + "\nmodel: " + p.model +
+          "\n\n--- system ---\n" + p.system + "\n\n--- user ---\n" + p.user;
+        peek.hidden = false;
+        peekBtn.textContent = "Hide the payload";
+      } else {
+        peek.hidden = true;
+        peekBtn.textContent = "Show what would be sent";
+      }
+    });
+
+    host.appendChild(bar);
+    host.appendChild(peek);
+    return host;
+  }
+
+  var box = document.createElement("div");
+  box.className = "draft" + (d.low ? " low" : "");
+
+  var h4 = document.createElement("h4");
+  h4.textContent = "Drafted summary";
+  box.appendChild(h4);
+
+  var p = document.createElement("p");
+  p.textContent = d.summary;
+  box.appendChild(p);
+
+  if (d.one_thing){
+    var one = document.createElement("p");
+    one.className = "one";
+    one.textContent = "The one thing: " + d.one_thing;
+    box.appendChild(one);
+  }
+
+  var meta = document.createElement("div");
+  meta.className = "meta";
+  var bits = [];
+  if (d.agreement) bits.push(d.agreement === "split" ? "the responses disagree" :
+    d.agreement === "thin" ? "thin signal" : "the responses agree");
+  if (d.confidence !== null) bits.push("confidence " + d.confidence.toFixed(2));
+  bits.push(d.model + (d.provider ? " · " + d.provider : ""));
+  meta.textContent = bits.join(" · ");
+  box.appendChild(meta);
+
+  if (d.low){
+    var warn = document.createElement("div");
+    warn.className = "meta";
+    warn.style.marginTop = "6px";
+    warn.textContent = "Low confidence. Read the comments yourself before you pass any of this on.";
+    box.appendChild(warn);
+  }
+
+  var bar2 = document.createElement("div");
+  bar2.className = "bar noprint";
+  var again = document.createElement("button");
+  again.className = "link-btn";
+  again.textContent = "Draft it again";
+  again.addEventListener("click", function(){
+    delete summaries[unit.id];
+    render();
+  });
+  bar2.appendChild(again);
+
+  if (unit.kind === "role"){
+    var copy = document.createElement("button");
+    copy.className = "link-btn";
+    copy.textContent = "Copy for handover";
+    copy.addEventListener("click", function(){ handover(unit, copy); });
+    bar2.appendChild(copy);
+  }
+  box.appendChild(bar2);
+
+  host.appendChild(box);
+  return host;
+}
+
+function unitPanel(unit, asRole){
+  var panel = document.createElement("div");
+  panel.className = "unit" + (asRole ? "" : " panel");
+
+  var head = document.createElement("div");
+  head.className = "head";
+  var h = document.createElement(asRole ? "h3" : "h2");
+  h.textContent = unit.title;
+  head.appendChild(h);
+
+  if (asRole && roleCards[unit.slug] && roleCards[unit.slug].tagline){
+    var tag = document.createElement("span");
+    tag.className = "hint";
+    tag.style.margin = "0";
+    tag.textContent = roleCards[unit.slug].tagline;
+    head.appendChild(tag);
+  }
+
+  var n = document.createElement("span");
+  n.className = "n";
+  n.textContent = unit.n + " of " + unit.total + " answered";
+  head.appendChild(n);
+  panel.appendChild(head);
+
+  if (!asRole){
+    var about = document.createElement("p");
+    about.className = "lede";
+    about.style.margin = "6px 0 0";
+    about.textContent = unit.about;
+    panel.appendChild(about);
+  }
+
+  panel.appendChild(meanRow(unit));
+  if (unit.checks) panel.appendChild(tallies(unit));
+  panel.appendChild(commentList(unit));
+  panel.appendChild(draftBlock(unit));
+  return panel;
+}
+
+function render(){
+  var host = $("body");
+  host.innerHTML = "";
+
+  if (!roll || !roll.n){
+    var empty = document.createElement("div");
+    empty.className = "panel empty";
+    var h2 = document.createElement("h2");
+    h2.textContent = "Nothing has come in yet";
+    var p = document.createElement("p");
+    p.textContent = current
+      ? "No submissions for " + current + " in " + content.storage.submissions + "."
+      : "Connect the data folder, or send the first piece of feedback.";
+    empty.appendChild(h2); empty.appendChild(p);
+    host.appendChild(empty);
+    paintCount();
+    return;
+  }
+
+  content.sections.forEach(function(sec){ host.appendChild(unitPanel(sectionUnit(sec), false)); });
+
+  var rolePanel = document.createElement("div");
+  rolePanel.className = "panel roles";
+  var rh = document.createElement("h2");
+  rh.textContent = content.roles.title;
+  var rl = document.createElement("p");
+  rl.className = "lede";
+  rl.textContent = "Formative, and it goes to the person it is about. Nothing on this half is kept.";
+  rolePanel.appendChild(rh); rolePanel.appendChild(rl);
+  content.roles.order.forEach(function(slug){ rolePanel.appendChild(unitPanel(roleUnit(slug), true)); });
+  host.appendChild(rolePanel);
+
+  paintCount();
+}
+
+function paintCount(){
+  var n = roll ? roll.n : 0;
+  $("n").textContent = String(n);
+  $("ofnote").textContent = n === 1 ? "response" : "responses";
+  $("thin").hidden = n !== 1;
+  if (roll && roll.submitted.length){
+    var first = roll.submitted[0].slice(0, 16).replace("T", " ");
+    var last = roll.submitted[roll.submitted.length - 1].slice(11, 16);
+    $("when").textContent = n === 1 ? "sent " + first : "from " + first + " to " + last;
+  } else {
+    $("when").textContent = "";
+  }
+}
+
+/* ---------- the model --------------------------------------------------- */
+
+function runUnit(unit, btn){
+  if (!MRSummarise.key()){
+    MRStore.notify("warn", "No API key, so nothing was sent. Paste one above, or read the comments as they are — " +
+      "they are right there.", true);
+    return Promise.resolve(null);
+  }
+  if (btn){ btn.disabled = true; btn.textContent = "Summarising…"; }
+  return MRSummarise.run(unit, content).then(function(draft){
+    summaries[unit.id] = draft;
+    render();
+    return draft;
+  }).catch(function(err){
+    MRStore.notify("err", "Could not summarise " + unit.title + " — " +
+      (err && err.message ? err.message : err), true);
+    if (btn){ btn.disabled = false; btn.textContent = "Summarise this"; }
+    return null;
+  });
+}
+
+/* One at a time, in order. Nine calls at once is how a rate limit is
+   found the hard way, and the order is the order of the page. */
+function runAll(){
+  if (!roll || !roll.n) return;
+  var list = units().filter(function(u){ return !summaries[u.id]; });
+  var btn = $("runall");
+  btn.disabled = true;
+  var i = 0;
+  function step(){
+    if (i >= list.length){
+      btn.disabled = false;
+      btn.textContent = "Summarise all nine";
+      return;
+    }
+    var u = list[i++];
+    btn.textContent = "Summarising " + u.title + " (" + i + " of " + list.length + ")…";
+    runUnit(u, null).then(function(ok){
+      if (ok === null && !MRSummarise.key()){
+        btn.disabled = false;
+        btn.textContent = "Summarise all nine";
+        return;
+      }
+      step();
+    });
+  }
+  step();
+}
+
+function handover(unit, btn){
+  var d = summaries[unit.id];
+  if (!d) return;
+  var lines = [
+    unit.title + " — morning report, " + current,
+    unit.n === 1 ? "One person answered about this role." : unit.n + " people answered about this role.",
+    unit.mean === null ? "" : "Rated " + unit.mean + " of 5.",
+    "",
+    d.summary,
+    "",
+    "The one thing to try: " + d.one_thing,
+    "",
+    "Formative only. Not filed, not reported, not part of any evaluation."
+  ].filter(function(l){ return l !== ""; }).join("\n");
+
+  var done = function(){
+    btn.textContent = "Copied";
+    setTimeout(function(){ btn.textContent = "Copy for handover"; }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(lines).then(done, function(){ fallbackCopy(lines, done); });
+  } else {
+    fallbackCopy(lines, done);
+  }
+}
+
+function fallbackCopy(text, done){
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) { MRStore.notify("warn", "Could not copy — select it by hand."); }
+  document.body.removeChild(ta);
+}
+
+/* ---------- the record kept --------------------------------------------- */
+
+function sessionRecord(){
+  var first = subs.filter(function(s){ return s.session === current; })[0] || {};
+  var rec = {
+    id: current,
+    date: first.date || current.slice(0, 10),
+    site: first.site || "",
+    feedback_version: content.version,
+    responses: roll.n,
+    sections: {},
+    saved: new Date().toISOString(),
+    _note: "Ratings, ticks and drafted summaries only. No comments as written, and nothing role-level: " +
+           "the roster records who held which role on this date."
+  };
+  content.sections.forEach(function(sec){
+    var s = roll.sections[sec.id];
+    var d = summaries[sec.id];
+    var checks = {};
+    Object.keys(s.checks).forEach(function(id){
+      checks[id] = { ticked: s.checks[id].ticked, of: s.checks[id].of };
+    });
+    rec.sections[sec.id] = {
+      n: s.n, mean: s.mean, dist: s.dist, checks: checks,
+      comments_written: s.comments.length,
+      summary: d ? {
+        text: d.summary, one_thing: d.one_thing, agreement: d.agreement,
+        confidence: d.confidence, low_confidence: d.low, model: d.model, drafted: d.drafted
+      } : null
+    };
+  });
+  return rec;
+}
+
+$("save").addEventListener("click", function(){
+  if (!roll || !roll.n){ $("savenote").textContent = "Nothing to keep yet."; return; }
+  var rec = sessionRecord();
+  var path = content.storage.session_record + rec.id + ".json";
+  if (!MRStore.status().ready){
+    MRStore.download(path, rec);
+    MRStore.notify("warn", "No folder connected, so the record was downloaded. Put it in " + path + " by hand.", true);
+    return;
+  }
+  MRStore.read(path).then(function(existing){
+    if (existing && !confirm("There is already a feedback record for " + rec.id + ". Overwrite it?")) return;
+    return MRStore.write(path, rec).then(function(ok){
+      if (!ok) return;
+      MRStore.notify("ok", "Kept in " + path + ".");
+      $("savenote").textContent = "Kept. The role half was not written to it.";
+    });
+  });
+});
+
+$("print").addEventListener("click", function(){ window.print(); });
+
+/* ---------- the key ------------------------------------------------------ */
+
+function fillProviders(){
+  var sel = $("provider");
+  sel.innerHTML = "";
+  MRSummarise.providers().forEach(function(p){
+    sel.appendChild(new Option(p.label, p.id));
+  });
+  sel.value = MRSummarise.provider();
+}
+
+function paintWhere(){
+  var name = MRSummarise.provider();
+  var label = (MRSummarise.providers().filter(function(p){ return p.id === name; })[0] || {}).label || name;
+  $("wherenote").textContent = "Summaries go to " + label + ", at " + MRSummarise.endpoint() +
+    ", and nowhere else.";
+}
+
+function paintKey(){
+  var has = !!MRSummarise.key();
+  paintWhere();
+  $("keynote").textContent = has
+    ? (MRSummarise.remembered()
+        ? "A key is set and kept in this browser. Anyone who uses this machine can summarise with it."
+        : "A key is set for this tab only. Close the tab and it is gone.")
+    : "No key set. The numbers and the comments below need none — only the drafted summaries do.";
+}
+
+/* A key knows which door it opens, so pasting one switches the
+   provider rather than making somebody find the menu. */
+$("key").addEventListener("input", function(){
+  var was = MRSummarise.provider();
+  MRSummarise.setKey($("key").value, $("remember").checked);
+  var guess = MRSummarise.providerOfKey($("key").value);
+  if (guess && guess !== was){
+    MRSummarise.setProvider(guess);
+    $("provider").value = guess;
+    $("model").value = MRSummarise.model(content);
+  }
+  paintKey();
+});
+
+$("provider").addEventListener("change", function(){
+  MRSummarise.setProvider($("provider").value);
+  $("model").value = MRSummarise.model(content);
+  paintKey();
+});
+$("remember").addEventListener("change", function(){
+  MRSummarise.setKey($("key").value, $("remember").checked);
+  paintKey();
+});
+$("forget").addEventListener("click", function(){
+  MRSummarise.clearKey();
+  $("key").value = "";
+  $("remember").checked = false;
+  paintKey();
+});
+$("model").addEventListener("change", function(){
+  MRSummarise.setModel($("model").value.trim());
+});
+$("runall").addEventListener("click", runAll);
+
+/* ---------- collecting from the endpoint ---------------------------------
+
+   The drain, and the only reason the endpoint exists. Everything
+   waiting is written into the folder — the submission and any
+   recording that travelled with it — and only once that has happened
+   is the endpoint told to drop it. A collection that fails halfway
+   leaves the endpoint holding what it held, which is the safe way for
+   it to fail: collecting again is harmless, because a submission
+   carries its own id and lands on the same path twice.
+   ------------------------------------------------------------------ */
+
+function safeName(name){
+  return String(name || "").replace(/[\\/]+/g, "-").replace(/^\.+/, "");
+}
+
+function collectOne(row){
+  var session = row.session || (row.record && row.record.session) || "undated";
+  var path = content.storage.submissions + session + "--" + row.submission + ".json";
+  return MRStore.write(path, row.record).then(function(ok){
+    if (!ok) throw new Error("could not write " + path);
+    var ids = row.recordings || [];
+    return ids.reduce(function(chain, id){
+      return chain.then(function(n){
+        return MRRelay.recording(id).then(function(res){
+          if (!res.ok){
+            MRStore.notify("warn", "A recording did not come across — " + res.error);
+            return n;
+          }
+          var blob = MRRelay.decode(res.data, res.mime);
+          return MRStore.writeBlob(content.storage.audio + safeName(res.name), blob)
+            .then(function(wrote){ return wrote ? n + 1 : n; });
+        });
+      });
+    }, Promise.resolve(0));
+  }).then(function(recordings){
+    return { submission: row.submission, recordings: recordings };
+  });
+}
+
+function collect(){
+  var btn = $("collect");
+  btn.disabled = true;
+  $("collectnote").textContent = "Asking the endpoint…";
+
+  return MRRelay.pending().then(function(res){
+    if (!res.ok){
+      $("collectnote").textContent = res.error;
+      btn.disabled = false;
+      return;
+    }
+    var rows = res.pending || [];
+    if (!rows.length){
+      $("collectnote").textContent = "Nothing waiting.";
+      btn.disabled = false;
+      return;
+    }
+
+    $("collectnote").textContent = "Writing " + rows.length +
+      (rows.length === 1 ? " submission…" : " submissions…");
+
+    return rows.reduce(function(chain, row){
+      return chain.then(function(done){
+        return collectOne(row).then(function(one){ done.push(one); return done; });
+      });
+    }, Promise.resolve([])).then(function(done){
+      var clips = done.reduce(function(n, d){ return n + d.recordings; }, 0);
+      return MRRelay.collected(done.map(function(d){ return d.submission; })).then(function(drop){
+        var said = done.length + (done.length === 1 ? " submission" : " submissions") +
+          (clips ? " and " + clips + (clips === 1 ? " recording" : " recordings") : "") +
+          " are in the folder";
+        said += drop.ok
+          ? ", and the endpoint has been emptied."
+          : ". The endpoint could not be told to drop them — " + drop.error +
+            " Collecting again is harmless.";
+        if ((res.unreadable || []).length){
+          said += " " + res.unreadable.length + " row" +
+            (res.unreadable.length === 1 ? " was" : "s were") +
+            " unreadable and left where they are.";
+        }
+        $("collectnote").textContent = said;
+        btn.disabled = false;
+        return load();
+      });
+    });
+  }).catch(function(err){
+    $("collectnote").textContent = "The collection stopped — " +
+      (err && err.message ? err.message : err) + ". Nothing was dropped from the endpoint.";
+    btn.disabled = false;
+  });
+}
+
+$("collect").addEventListener("click", collect);
+
+function paintCollect(){
+  $("collectpanel").hidden = !(MRRelay.canDrain() && MRStore.status().ready);
+  if (MRRelay.canDrain() && !MRStore.status().ready){
+    $("collectnote").textContent = "";
+  }
+}
+
+/* ---------- loading ------------------------------------------------------ */
+
+function group(){
+  bySession = {};
+  subs.forEach(function(s){
+    var id = s.session || (s.date || "") ;
+    if (!bySession[id]) bySession[id] = [];
+    bySession[id].push(s);
+  });
+}
+
+function fillPicker(want){
+  var sel = $("session");
+  var ids = Object.keys(bySession).sort().reverse();
+  sel.innerHTML = "";
+  if (!ids.length){
+    sel.appendChild(new Option("— nothing found —", ""));
+    current = "";
+    return;
+  }
+  ids.forEach(function(id){
+    sel.appendChild(new Option(id + " · " + bySession[id].length +
+      (bySession[id].length === 1 ? " response" : " responses"), id));
+  });
+  current = want && bySession[want] ? want : ids[0];
+  sel.value = current;
+}
+
+/* Read the folder and repaint. Called on boot, and again after a
+   collection has put new files in it. */
+function load(want){
+  return MRStore.readAll(content.storage.submissions.replace(/\/*$/, "")).then(function(rows){
+    subs = rows.map(function(r){ return r.data; }).filter(Boolean);
+    group();
+    fillPicker(want || current);
+    var sessions = Object.keys(bySession).length;
+    $("stock").textContent = subs.length
+      ? subs.length + (subs.length === 1 ? " submission" : " submissions") + " in " +
+        content.storage.submissions + ", across " + sessions +
+        (sessions === 1 ? " session." : " sessions.")
+      : "Nothing in " + content.storage.submissions + " yet.";
+    recompute();
+  });
+}
+
+function recompute(){
+  summaries = {};
+  var rows = bySession[current] || [];
+  roll = MRSummarise.rollup(rows, content);
+  render();
+}
+
+$("session").addEventListener("change", function(){
+  current = $("session").value;
+  recompute();
+});
+
+Promise.all([
+  fetch(MRStore.base() + "content/feedback.json", { cache: "no-cache" })
+    .then(function(r){ if (!r.ok) throw new Error("feedback.json — HTTP " + r.status); return r.json(); }),
+  fetch(MRStore.base() + "content/roles.json", { cache: "no-cache" })
+    .then(function(r){ if (!r.ok) throw new Error("roles.json — HTTP " + r.status); return r.json(); })
+])
+.then(function(both){
+  content = both[0];
+  (both[1].roles || []).forEach(function(c){ roleCards[c.slug] = c; });
+  $("key").value = MRSummarise.key();
+  $("remember").checked = MRSummarise.remembered();
+  fillProviders();
+  $("model").value = MRSummarise.model(content);
+  paintKey();
+  return MRStore.whenReady;
+})
+.then(function(){
+  MRStore.mountBar("mr-bar");
+  if (!MRStore.status().ready){
+    $("stock").textContent = "No data folder connected, so there is nothing to read. " +
+      "Connect it in the bar at the top." +
+      (MRRelay.canDrain() ? " Anything waiting at the endpoint can be collected once it is." : "");
+    render();
+    return;
+  }
+  paintCollect();
+  return load(new URLSearchParams(location.search).get("session") || "");
+})
+.catch(function(err){
+  MRStore.notify("err", "Could not load the summary — " +
+    (err && err.message ? err.message : err), true);
+});
+</script>
+</body>
+</html>

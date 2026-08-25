@@ -164,6 +164,34 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-o
 .field{margin-bottom:14px}
 .hint{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
 
+/* ---------- dictation microphone -------------------------------------
+   Mounted by voice.js next to a comment box. Rendered only where the
+   browser has SpeechRecognition; elsewhere the box is simply typed in.
+   ------------------------------------------------------------------ */
+
+button.mic{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  background:#fff;border:1px solid var(--line);color:var(--muted);
+  padding:6px 12px;border-radius:20px;
+}
+button.mic:hover{border-color:var(--teal);color:var(--teal)}
+button.mic .mic-dot{
+  width:9px;height:9px;border-radius:50%;background:#9FB0BE;flex:none;
+}
+button.mic[data-state=on]{
+  background:var(--red);border-color:var(--red);color:#fff;
+}
+button.mic[data-state=on]:hover{background:#9c313d;border-color:#9c313d;color:#fff}
+button.mic[data-state=on] .mic-dot{background:#fff;animation:mic-pulse 1.1s ease-in-out infinite}
+@keyframes mic-pulse{0%,100%{opacity:1}50%{opacity:.25}}
+p.mic-interim{
+  margin:6px 0 0;font-size:13px;font-style:italic;color:var(--muted);
+  border-left:2px solid var(--red);padding-left:9px;line-height:1.5;
+}
+.mic-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.mic-row .hint{margin:0}
+
 /* ---------- tables -------------------------------------------------- */
 
 table.mr{width:100%;border-collapse:collapse;font-size:13px;background:#fff}

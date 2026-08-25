@@ -356,10 +356,34 @@
       <a class="primary" id="toScore" href="#" target="_blank" rel="noopener">Score the session →</a>
       <button class="ghost" id="stayHere">Stay on the board</button>
     </div>
+    <p style="margin-top:14px">The third is for everybody else: send this link round while people are still
+      in the room, because feedback asked for tomorrow does not arrive.</p>
+    <div class="row">
+      <a class="teal" id="toFeedback" href="#" target="_blank" rel="noopener">Ask the room how it went →</a>
+      <button type="button" class="ghost" id="copyFeedback" hidden>Copy the link to send round</button>
+    </div>
+    <div class="fbqr" id="feedbackQr" hidden>
+      <div id="feedbackQrCode"></div>
+      <p class="hint">Point a phone at this before anybody leaves. It is this session's own link —
+        what they send waits at the endpoint until you collect it.</p>
+    </div>
+    <p class="hint" id="feedbackNote" style="margin-top:8px"></p>
   </div>
 </div>
 
+<style>
+  /* The finish veil is dark and a QR needs a light quiet zone around
+     it, so the code sits on its own white plate. Large enough to scan
+     from the back of the room off a shared screen. */
+  .fbqr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:16px}
+  .fbqr[hidden]{display:none}
+  .fbqr #feedbackQrCode{background:#fff;padding:10px;border-radius:8px;line-height:0}
+  .fbqr #feedbackQrCode svg{display:block;width:168px;height:168px}
+  .fbqr .hint{flex:1 1 220px;margin:0}
+</style>
 <script src="../assets/remote.js?v=3"></script>
+<script src="../assets/relay.js"></script>
+<script src="../assets/qr.js"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script src="../assets/content.js"></script>
@@ -882,6 +906,42 @@ function showFinish(archive, path, d){
 
   $("toCapture").href = "../capture/?session=" + encodeURIComponent(archive.id);
   $("toScore").href = "../scorecard/?session=" + encodeURIComponent(archive.id);
+  $("toFeedback").href = "../feedback/?session=" + encodeURIComponent(archive.id);
+
+  /* A phone has no data folder, so a bare link only works for whoever
+     is sitting at this machine. With a feedback key saved, the link
+     carries the collection point instead and anybody can fill it in
+     from wherever they are sitting. */
+  var share = window.MRRelay && MRRelay.canShare()
+    ? MRRelay.linkFor(MRStore.siteRoot() + "feedback/?session=" +
+        encodeURIComponent(archive.id))
+    : "";
+  $("copyFeedback").hidden = !share;
+
+  /* The code on the screen everybody is already looking at. Drawn only
+     when there is a configured link to put in it — a QR of a link that
+     cannot post anywhere would just waste the room's time. */
+  var qrBox = $("feedbackQr");
+  qrBox.hidden = true;
+  if (share && window.MRQr) {
+    try {
+      $("feedbackQrCode").innerHTML = MRQr.svg(share, { scale: 6, quiet: 4 });
+      qrBox.hidden = false;
+    } catch (err) {
+      qrBox.hidden = true;                 /* too long to encode; the link still works */
+    }
+  }
+
+  $("feedbackNote").textContent = share
+    ? "The copied link works from a phone: what people send waits at the endpoint until you collect it."
+    : "This link only works on a machine with the data folder. Save a feedback key in Settings and it will work from a phone too.";
+  $("copyFeedback").onclick = function(){
+    if (!share) return;
+    var done = function(){ $("feedbackNote").textContent = "Copied. Send it round now, not tomorrow."; };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(share).then(done, function(){ $("feedbackNote").textContent = share; });
+    } else { $("feedbackNote").textContent = share; }
+  };
   $("finishVeil").hidden = false;
 }
 
