@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseline | Morning Report</title>
+<meta name="description" content="A pre-intervention evaluation of morning report as it currently runs: the technical setup, engagement, learning, the time it costs, and the overall experience. Anonymous, five minutes, answered once before anything changes.">
+<link rel="stylesheet" href="../assets/mr.css">
+<style>
+  /* ---------- the cohort buttons -------------------------------------
+     The one control on the page that has to work while somebody is
+     standing up to leave, so it is sized for a thumb rather than for
+     a mouse: four targets, none under 64px tall, and no dropdown. */
+  .cohorts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+  .cohorts .who{
+    position:relative;cursor:pointer;border:1.5px solid var(--line);border-radius:8px;
+    background:#FCFDFE;padding:16px 10px;text-align:center;min-height:74px;
+    display:flex;flex-direction:column;justify-content:center;gap:3px;
+    transition:border-color .12s ease,background .12s ease;
+  }
+  .cohorts .who input{position:absolute;opacity:0;width:0;height:0}
+  .cohorts .who .lb{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--navy);line-height:1.1}
+  .cohorts .who .nt{font-size:11.5px;color:var(--muted);line-height:1.3}
+  .cohorts .who:hover{border-color:#9FB0BE}
+  .cohorts .who.on{background:var(--navy);border-color:var(--navy)}
+  .cohorts .who.on .lb,.cohorts .who.on .nt{color:#fff}
+  .cohorts .who:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+
+  /* ---------- the agree scale ----------------------------------------
+     Five points across, the skip set apart on its own row so it never
+     reads as a sixth point at the agreeable end of the line. */
+  .qrow{border-top:1px solid #EEF2F5;padding:15px 0 13px}
+  .qrow:first-child{border-top:none;padding-top:4px}
+  .qtext{font-size:14.5px;line-height:1.5;margin:0 0 2px;color:var(--ink)}
+  .qtext .rev{
+    font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--teal);border:1px solid #B6D2DA;background:#EDF4F6;
+    padding:1px 6px;border-radius:3px;margin-left:8px;white-space:nowrap;vertical-align:2px;
+  }
+
+  .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:9px 0 0}
+  .scale .opt{
+    position:relative;cursor:pointer;border:1px solid var(--line);border-radius:6px;
+    background:#FCFDFE;padding:8px 4px;text-align:center;min-height:52px;
+    display:flex;flex-direction:column;justify-content:center;gap:2px;
+  }
+  .scale .opt input{position:absolute;opacity:0;width:0;height:0}
+  .scale .opt .n{font-family:var(--serif);font-size:16px;font-weight:700;line-height:1;color:var(--navy)}
+  .scale .opt .lb{font-size:10.5px;color:var(--muted);line-height:1.25}
+  .scale .opt:hover{border-color:#9FB0BE}
+  .scale .opt.on{background:var(--navy);border-color:var(--navy)}
+  .scale .opt.on .n,.scale .opt.on .lb{color:#fff}
+  .scale .opt:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+
+  .skiprow{margin-top:6px}
+  .skiprow .opt{
+    position:relative;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    border:1px dashed var(--line);border-radius:20px;background:#F7F9FB;
+    padding:5px 13px;font-size:12px;color:var(--muted);
+  }
+  .skiprow .opt input{position:absolute;opacity:0;width:0;height:0}
+  .skiprow .opt:hover{border-color:#9FB0BE}
+  .skiprow .opt.on{background:var(--muted);border-color:var(--muted);border-style:solid;color:#fff}
+  .skiprow .opt:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+
+  /* ---------- choices, measures, the 0–10 ---------------------------- */
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+  .chips .opt{
+    position:relative;cursor:pointer;border:1px solid var(--line);border-radius:20px;
+    background:#FCFDFE;padding:7px 14px;font-size:13px;
+  }
+  .chips .opt input{position:absolute;opacity:0;width:0;height:0}
+  .chips .opt:hover{border-color:#9FB0BE}
+  .chips .opt.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .chips .opt:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+
+  .measure{border-top:1px solid #EEF2F5;padding:14px 0}
+  .measure:first-child{border-top:none;padding-top:2px}
+  .measure .numwrap{display:flex;align-items:center;gap:10px;max-width:280px}
+  .measure .numwrap input{max-width:130px}
+  .measure .numwrap .unit{font-size:13px;color:var(--muted)}
+
+  .ten{display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin:10px 0 0}
+  .ten .opt{
+    position:relative;cursor:pointer;border:1px solid var(--line);border-radius:5px;
+    background:#FCFDFE;padding:11px 0;text-align:center;
+    font-family:var(--serif);font-size:15px;font-weight:700;color:var(--navy);
+  }
+  .ten .opt input{position:absolute;opacity:0;width:0;height:0}
+  .ten .opt:hover{border-color:#9FB0BE}
+  .ten .opt.on{background:var(--amber);border-color:var(--amber)}
+  .ten .opt:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+  .ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:5px}
+
+  /* ---------- progress, identifiers, send ---------------------------- */
+  .prog{
+    position:sticky;top:0;z-index:9;background:var(--paper);
+    border-bottom:1px solid var(--line);padding:9px 0;margin-bottom:16px;
+  }
+  .prog .in{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+  .prog .track{flex:1 1 160px;height:5px;background:var(--line);border-radius:3px;overflow:hidden;min-width:120px}
+  .prog .fill{height:100%;width:0;background:var(--teal);transition:width .18s ease}
+
+  .phi[hidden]{display:none}
+  .finding{
+    border:1px solid var(--red);border-left-width:4px;border-radius:6px;background:#FDF6F7;
+    padding:11px 14px;margin-bottom:8px;font-size:13px;
+  }
+  .finding.check{border-color:var(--amber);background:#FBF0DE}
+  .finding .top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .finding .kind{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+  .finding.check .kind{color:#8A6014}
+  .finding .where{font-size:11.5px;color:var(--muted)}
+  .finding code{
+    font-family:var(--mono);background:#fff;border:1px solid var(--line);
+    padding:1px 5px;border-radius:3px;font-size:12.5px;
+  }
+  .finding .why{margin-top:5px;color:#3D4855}
+  .finding .ack{margin-top:8px;font-size:12.5px;display:flex;gap:7px;align-items:center}
+  .finding .ack input{width:auto;flex:none}
+
+  .savebar{
+    position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+    padding:14px 0;margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;z-index:10;
+  }
+  .savebar .hint{margin:0}
+  .metabar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+
+  .done{text-align:center;padding:26px 0}
+  .done h2{font-size:27px}
+  .done p{color:var(--muted);max-width:56ch;margin:0 auto 18px}
+  .done .bar{justify-content:center}
+
+  @media (max-width:820px){
+    .cohorts{grid-template-columns:repeat(2,1fr)}
+    .scale{grid-template-columns:repeat(5,1fr);gap:4px}
+    .scale .opt .lb{font-size:9.5px}
+    .ten{grid-template-columns:repeat(6,1fr)}
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3KEGTRRS0Z');
+</script>
+</head>
+<body>
+<!-- No gate.js, for the same reason the session feedback form has none:
+     this is the one kind of page in the module that is opened by
+     somebody outside the workroom, off a code on a slide, on a phone,
+     while standing up. A four-digit prompt at that moment costs more
+     responses than it protects, and there is nothing behind this door
+     to protect — the page holds no roster, and without the submit key
+     that arrives in the link it can do nothing but download its own
+     answers to the device that filled them in.
+
+     The read-out at baseline/summary/ is gated like everything else,
+     because that one does show what people said. -->
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 id="title"></h1>
+    <p class="sub" id="lede"></p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div id="form">
+
+      <div class="prog">
+        <div class="in">
+          <span id="progtext">&nbsp;</span>
+          <span class="track"><span class="fill" id="progfill"></span></span>
+          <span>Nothing on this page is required.</span>
+        </div>
+      </div>
+
+      <!-- Who is answering. First, alone on the page's mind, and the
+           only thing here that is asked about the respondent. -->
+      <div class="panel" id="cohortpanel">
+        <p class="eyebrow" id="cohorteyebrow"></p>
+        <h2 id="cohorttitle"></h2>
+        <p class="lede" id="cohortlede"></p>
+        <div class="cohorts" id="cohorts" role="radiogroup" aria-label="Which are you?"></div>
+      </div>
+
+      <div class="panel">
+        <div class="metabar">
+          <div>
+            <label class="f" for="wave" id="wavelabel"></label>
+            <input type="text" id="wave" autocomplete="off">
+          </div>
+          <div>
+            <label class="f" for="site" id="sitelabel"></label>
+            <input type="text" id="site" autocomplete="off">
+          </div>
+        </div>
+        <p class="hint" id="wavehint"></p>
+      </div>
+
+      <div class="panel" id="contextpanel">
+        <p class="eyebrow" id="contexteyebrow"></p>
+        <h2 id="contexttitle"></h2>
+        <p class="lede" id="contextlede"></p>
+        <div id="context"></div>
+      </div>
+
+      <div id="domains"></div>
+
+      <div class="panel" id="measurepanel">
+        <p class="eyebrow" id="measureeyebrow"></p>
+        <h2 id="measuretitle"></h2>
+        <p class="lede" id="measurelede"></p>
+        <div id="measures"></div>
+      </div>
+
+      <div class="panel" id="globalpanel">
+        <p class="eyebrow" id="globaleyebrow"></p>
+        <h2 id="globaltitle"></h2>
+        <p class="lede" id="globallede"></p>
+        <p class="f" id="globalq" style="margin-bottom:0"></p>
+        <div class="ten" id="ten" role="radiogroup" aria-label="Overall rating"></div>
+        <div class="ends"><span id="tenlow"></span><span id="tenhigh"></span></div>
+        <div class="skiprow" id="tenskip"></div>
+      </div>
+
+      <div class="panel" id="openpanel">
+        <p class="eyebrow" id="openeyebrow"></p>
+        <h2 id="opentitle"></h2>
+        <p class="lede" id="openlede"></p>
+        <div id="open"></div>
+      </div>
+
+      <div class="phi panel" id="phi" hidden>
+        <h2>Identifiers</h2>
+        <p class="lede">What is written here is read by other people. These have to be dealt with
+          before it can be sent.</p>
+        <div id="findings"></div>
+      </div>
+
+      <div class="savebar">
+        <button class="amber" id="send">Send it</button>
+        <button class="ghost" id="clear">Clear the form</button>
+        <span class="hint" id="sendnote"></span>
+      </div>
+
+      <div class="privacy" style="margin-top:20px">
+        <b>Anonymous, and it stays that way</b>
+        Nothing here asks who you are and there is no account. The one thing asked about you is
+        which of the four groups you are in, because a first-year and a faculty member are
+        describing different experiences of the same twenty-five minutes and averaging them
+        together would lose both.
+        <br><br>
+        That does have a limit, and it is worth saying out loud rather than burying: in a program
+        this size a group of one or two is not anonymous. The read-out therefore never breaks out a
+        group with fewer than three responses — those answers are counted in the total and nowhere
+        else. Written answers are shown without a group label attached, and out of the order they
+        arrived in.
+        <br><br>
+        This is a measurement of an <em>arrangement</em>, taken before that arrangement changes.
+        It is not an evaluation of any person, it never becomes one, and no view or export here
+        joins anything you write to a name.
+      </div>
+
+    </div>
+
+    <div class="done panel" id="done" hidden>
+      <h2 id="thanks"></h2>
+      <p id="donenote"></p>
+      <div class="bar">
+        <button class="ghost" id="another">Fill it in again</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — Morning Report. Every word on this page comes from
+      <code>content/baseline.json</code>, including the reasoning behind the way the scales are
+      built. Nothing about the instrument is written into this file.</p>
+    <p id="footnote"></p>
+  </div>
+</footer>
+
+<script src="../assets/remote.js?v=3"></script>
+<script src="../assets/store.js"></script>
+<script src="../assets/phi.js"></script>
+<script src="../assets/relay.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var content = null;
+var acked = {};
+var findings = [];
+var DRAFT = "mr.baseline.draft";
+var SENT = "mr.baseline.sent";
+
+/* ---------- reading the form ------------------------------------------- */
+
+function pick(name){
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  if (!el || el.value === "") return null;
+  return el.value;
+}
+
+function pickNum(name){
+  var v = pick(name);
+  return v === null ? null : parseInt(v, 10);
+}
+
+function numberOf(id){
+  var el = $("m-" + id);
+  if (!el || el.value.trim() === "") return null;
+  var n = parseFloat(el.value);
+  return isNaN(n) ? null : n;
+}
+
+function textOf(id){
+  var el = $("o-" + id);
+  return el ? el.value.trim() : "";
+}
+
+/* The wave is what a second round is compared against, so it is
+   normalised rather than taken as typed: two people writing
+   "Aug 2026" and "August 2026" would otherwise produce two baselines. */
+function waveId(){
+  var raw = ($("wave").value || "").trim();
+  return MRStore.slug(raw) || defaultWave();
+}
+
+function defaultWave(){
+  return MRStore.today().slice(0, 7);
+}
+
+function record(){
+  var r = {
+    id: "bl-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+    instrument: content.instrument,
+    baseline_version: content.version,
+    wave: waveId(),
+    /* The relay post box files a submission by session id, and it is
+       the same post box the session feedback uses. A wave-shaped
+       session id is what keeps the two apart on the way through. */
+    session: "baseline-" + waveId(),
+    site: ($("site").value || "").trim(),
+    cohort: pick("cohort"),
+    submitted: new Date().toISOString(),
+    context: {},
+    domains: {},
+    measures: {},
+    global: pickNum("global"),
+    open: {}
+  };
+  content.context.items.forEach(function(it){ r.context[it.id] = pick("ctx-" + it.id); });
+  content.domains.forEach(function(d){
+    var answers = {};
+    d.items.forEach(function(it){ answers[it.id] = pickNum("q-" + d.id + "-" + it.id); });
+    r.domains[d.id] = answers;
+  });
+  content.measures.items.forEach(function(it){
+    r.measures[it.id] = it.kind === "number" ? numberOf(it.id) : pickNum("m-" + it.id);
+  });
+  content.open.items.forEach(function(it){ r.open[it.id] = textOf(it.id); });
+  return r;
+}
+
+/* Every box that can hold an answer. Shown rather than enforced: a
+   baseline that only accepts complete forms collects the opinions of
+   the people who had time to finish one. */
+function boxes(){
+  var names = [];
+  content.context.items.forEach(function(it){ names.push("ctx-" + it.id); });
+  content.domains.forEach(function(d){
+    d.items.forEach(function(it){ names.push("q-" + d.id + "-" + it.id); });
+  });
+  content.measures.items.forEach(function(it){ names.push("m-" + it.id); });
+  names.push("global");
+  return names;
+}
+
+/* Counted off the page rather than off the record, and the difference
+   is the whole point of having a skip: "No basis to judge" is stored
+   as an absent rating, because it must never become a middle opinion
+   in the arithmetic — but it is an answer somebody gave, and a
+   progress bar that ignored it would tell a careful respondent they
+   had not finished. */
+function filledIn(){
+  var n = 0;
+  boxes().forEach(function(name){
+    if (document.querySelector('input[name="' + name + '"]:checked')) { n++; return; }
+    /* The two minute-counts are typed rather than tapped, and share
+       the m- prefix with the frequency rows: same key, different
+       control. */
+    var typed = $(name);
+    if (typed && typed.tagName === "INPUT" && typed.type === "number" &&
+        typed.value.trim() !== "") n++;
+  });
+  return n;
+}
+
+function answered(r){
+  var n = 0;
+  Object.keys(r.context).forEach(function(k){ if (r.context[k] !== null) n++; });
+  Object.keys(r.domains).forEach(function(d){
+    Object.keys(r.domains[d]).forEach(function(k){ if (r.domains[d][k] !== null) n++; });
+  });
+  Object.keys(r.measures).forEach(function(k){ if (r.measures[k] !== null) n++; });
+  if (r.global !== null) n++;
+  return n;
+}
+
+function anything(r){
+  if (r.cohort) return true;
+  if (answered(r) > 0) return true;
+  return content.open.items.some(function(it){ return !!r.open[it.id]; });
+}
+
+/* ---------- the controls ------------------------------------------------ */
+
+/* One radio group, rendered the same way everywhere it appears, so
+   that a scale point and a chip and a cohort button all behave
+   identically under the keyboard. */
+function radioGroup(host, name, options, klass, build){
+  var wrap = document.createElement("div");
+  wrap.className = klass;
+  wrap.setAttribute("role", "radiogroup");
+
+  options.forEach(function(o){
+    var lab = document.createElement("label");
+    lab.className = "opt";
+    var input = document.createElement("input");
+    input.type = "radio";
+    input.name = name;
+    input.value = String(o.value);
+    lab.appendChild(input);
+    build(lab, o);
+    input.addEventListener("change", function(){
+      Array.prototype.forEach.call(wrap.children, function(c){ c.classList.remove("on"); });
+      lab.classList.add("on");
+      touched();
+    });
+    wrap.appendChild(lab);
+  });
+  host.appendChild(wrap);
+  return wrap;
+}
+
+function textNode(lab, cls, text){
+  var s = document.createElement("span");
+  s.className = cls;
+  s.textContent = text;
+  lab.appendChild(s);
+}
+
+function renderCohorts(){
+  var c = content.cohort;
+  $("cohorteyebrow").textContent = c.eyebrow;
+  $("cohorttitle").textContent = c.title;
+  $("cohortlede").textContent = c.lede;
+
+  var host = $("cohorts");
+  host.innerHTML = "";
+  c.options.forEach(function(o){
+    var lab = document.createElement("label");
+    lab.className = "who";
+    var input = document.createElement("input");
+    input.type = "radio";
+    input.name = "cohort";
+    input.value = o.id;
+    lab.appendChild(input);
+    textNode(lab, "lb", o.label);
+    textNode(lab, "nt", o.note || "");
+    input.addEventListener("change", function(){
+      Array.prototype.forEach.call(host.children, function(x){ x.classList.remove("on"); });
+      lab.classList.add("on");
+      touched();
+    });
+    host.appendChild(lab);
+  });
+}
+
+/* Five points, then the skip on a row of its own. Keeping it off the
+   end of the line is not decoration: a sixth box next to "Strongly
+   agree" gets read as a seventh point of agreement, and the whole
+   purpose of the skip is that it is not on the scale at all. */
+function scaleRow(host, name, scale, label){
+  var wrap = radioGroup(host, name, scale.points, "scale", function(lab, p){
+    textNode(lab, "n", String(p.value));
+    textNode(lab, "lb", p.label);
+  });
+  wrap.setAttribute("aria-label", label);
+
+  var skip = document.createElement("div");
+  skip.className = "skiprow";
+  var lab = document.createElement("label");
+  lab.className = "opt";
+  var input = document.createElement("input");
+  input.type = "radio";
+  input.name = name;
+  input.value = "";
+  lab.appendChild(input);
+  lab.appendChild(document.createTextNode(scale.skip.label));
+  input.addEventListener("change", function(){
+    Array.prototype.forEach.call(wrap.children, function(c){ c.classList.remove("on"); });
+    lab.classList.add("on");
+    touched();
+  });
+  skip.appendChild(lab);
+  host.appendChild(skip);
+}
+
+function renderContext(){
+  var c = content.context;
+  $("contexteyebrow").textContent = c.eyebrow;
+  $("contexttitle").textContent = c.title;
+  $("contextlede").textContent = c.lede;
+
+  var host = $("context");
+  host.innerHTML = "";
+  c.items.forEach(function(it){
+    var box = document.createElement("div");
+    box.className = "measure";
+    var lab = document.createElement("p");
+    lab.className = "f";
+    lab.style.marginBottom = "0";
+    lab.textContent = it.label;
+    box.appendChild(lab);
+    radioGroup(box, "ctx-" + it.id, it.options, "chips", function(l, o){
+      l.appendChild(document.createTextNode(o.label));
+    }).setAttribute("aria-label", it.label);
+    host.appendChild(box);
+  });
+}
+
+function renderDomains(){
+  var host = $("domains");
+  host.innerHTML = "";
+  content.domains.forEach(function(d){
+    var panel = document.createElement("div");
+    panel.className = "panel";
+    panel.style.marginTop = "16px";
+
+    var eyebrow = document.createElement("p");
+    eyebrow.className = "eyebrow";
+    eyebrow.textContent = d.eyebrow;
+    panel.appendChild(eyebrow);
+
+    var h2 = document.createElement("h2");
+    h2.textContent = d.title;
+    panel.appendChild(h2);
+
+    var lede = document.createElement("p");
+    lede.className = "lede";
+    lede.textContent = d.lede;
+    panel.appendChild(lede);
+
+    var q = document.createElement("p");
+    q.className = "hint";
+    q.style.marginTop = "0";
+    q.textContent = content.scales.agree.question + " " + content.scales.agree.skip.hint;
+    panel.appendChild(q);
+
+    d.items.forEach(function(it){
+      var row = document.createElement("div");
+      row.className = "qrow";
+
+      var p = document.createElement("p");
+      p.className = "qtext";
+      p.textContent = it.text;
+      /* Reversed items are marked where they are answered rather than
+         quietly recoded later. Somebody working down a column deserves
+         to be told that this row runs the other way — hiding it would
+         collect a straight-lining pattern on purpose and then report
+         it as a finding. */
+      if (it.reverse){
+        var tag = document.createElement("span");
+        tag.className = "rev";
+        tag.textContent = "reversed";
+        tag.title = content.reverse_note;
+        p.appendChild(tag);
+      }
+      row.appendChild(p);
+
+      scaleRow(row, "q-" + d.id + "-" + it.id, content.scales.agree, d.title + " — " + it.text);
+      panel.appendChild(row);
+    });
+
+    host.appendChild(panel);
+  });
+}
+
+function renderMeasures(){
+  var m = content.measures;
+  $("measureeyebrow").textContent = m.eyebrow;
+  $("measuretitle").textContent = m.title;
+  $("measurelede").textContent = m.lede;
+
+  var host = $("measures");
+  host.innerHTML = "";
+  m.items.forEach(function(it){
+    var box = document.createElement("div");
+    box.className = "measure";
+
+    if (it.kind === "number"){
+      var lab = document.createElement("label");
+      lab.className = "f";
+      lab.setAttribute("for", "m-" + it.id);
+      lab.textContent = it.label;
+      box.appendChild(lab);
+
+      var wrap = document.createElement("div");
+      wrap.className = "numwrap";
+      var input = document.createElement("input");
+      input.type = "number";
+      input.id = "m-" + it.id;
+      input.min = it.min;
+      input.max = it.max;
+      input.step = "1";
+      input.inputMode = "numeric";
+      input.addEventListener("input", touched);
+      wrap.appendChild(input);
+      var unit = document.createElement("span");
+      unit.className = "unit";
+      unit.textContent = it.unit || "";
+      wrap.appendChild(unit);
+      box.appendChild(wrap);
+
+      if (it.hint){
+        var hint = document.createElement("p");
+        hint.className = "hint";
+        hint.textContent = it.hint;
+        box.appendChild(hint);
+      }
+    } else {
+      var p = document.createElement("p");
+      p.className = "f";
+      p.style.marginBottom = "0";
+      p.textContent = it.label;
+      box.appendChild(p);
+      scaleRow(box, "m-" + it.id, content.scales.frequency, it.label);
+    }
+
+    host.appendChild(box);
+  });
+}
+
+function renderGlobal(){
+  var g = content.global;
+  $("globaleyebrow").textContent = g.eyebrow;
+  $("globaltitle").textContent = g.title;
+  $("globallede").textContent = g.lede;
+  $("globalq").textContent = g.question;
+  $("tenlow").textContent = g.min + " — " + g.low;
+  $("tenhigh").textContent = g.high + " — " + g.max;
+
+  var host = $("ten");
+  host.innerHTML = "";
+  for (var v = g.min; v <= g.max; v++){
+    (function(value){
+      var lab = document.createElement("label");
+      lab.className = "opt";
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "global";
+      input.value = String(value);
+      input.setAttribute("aria-label", value + " out of " + g.max);
+      lab.appendChild(input);
+      lab.appendChild(document.createTextNode(String(value)));
+      input.addEventListener("change", function(){
+        Array.prototype.forEach.call(host.children, function(c){ c.classList.remove("on"); });
+        lab.classList.add("on");
+        touched();
+      });
+      host.appendChild(lab);
+    })(v);
+  }
+
+  var skip = $("tenskip");
+  skip.innerHTML = "";
+  var lab = document.createElement("label");
+  lab.className = "opt";
+  var input = document.createElement("input");
+  input.type = "radio";
+  input.name = "global";
+  input.value = "";
+  lab.appendChild(input);
+  lab.appendChild(document.createTextNode(g.skip));
+  input.addEventListener("change", function(){
+    Array.prototype.forEach.call(host.children, function(c){ c.classList.remove("on"); });
+    lab.classList.add("on");
+    touched();
+  });
+  skip.appendChild(lab);
+}
+
+function renderOpen(){
+  var o = content.open;
+  $("openeyebrow").textContent = o.eyebrow;
+  $("opentitle").textContent = o.title;
+  $("openlede").textContent = o.lede;
+
+  var host = $("open");
+  host.innerHTML = "";
+  o.items.forEach(function(it){
+    var box = document.createElement("div");
+    box.className = "field";
+    var lab = document.createElement("label");
+    lab.className = "f";
+    lab.setAttribute("for", "o-" + it.id);
+    lab.textContent = it.label;
+    var ta = document.createElement("textarea");
+    ta.id = "o-" + it.id;
+    ta.rows = 3;
+    ta.placeholder = it.placeholder || "";
+    ta.addEventListener("input", function(){ revalidate(); saveDraft(); });
+    box.appendChild(lab);
+    box.appendChild(ta);
+    host.appendChild(box);
+  });
+}
+
+/* ---------- progress ---------------------------------------------------- */
+
+function touched(){
+  paintProgress();
+  saveDraft();
+}
+
+function paintProgress(){
+  if (!content) return;
+  var total = boxes().length;
+  var n = filledIn();
+  $("progfill").style.width = Math.round((n / total) * 100) + "%";
+  $("progtext").textContent = n + " of " + total + " answered";
+}
+
+/* ---------- the identifier check ---------------------------------------- */
+
+function fields(){
+  var f = {};
+  content.open.items.forEach(function(it){
+    var v = textOf(it.id);
+    if (v) f[it.label] = v;
+  });
+  return f;
+}
+
+function keyOf(f){ return f.field + "|" + f.kind + "|" + f.match; }
+
+function revalidate(){
+  findings = MRPhi.scanAll(fields());
+  renderFindings();
+  paintSend();
+  paintProgress();
+}
+
+function renderFindings(){
+  var host = $("findings");
+  host.innerHTML = "";
+  $("phi").hidden = findings.length === 0;
+
+  findings.forEach(function(f){
+    var box = document.createElement("div");
+    box.className = "finding" + (f.severity === "check" ? " check" : "");
+
+    var top = document.createElement("div");
+    top.className = "top";
+    var kind = document.createElement("span");
+    kind.className = "kind"; kind.textContent = f.kind;
+    var code = document.createElement("code");
+    code.textContent = f.match;
+    var where = document.createElement("span");
+    where.className = "where"; where.textContent = "in " + f.field;
+    top.appendChild(kind); top.appendChild(code); top.appendChild(where);
+
+    var why = document.createElement("div");
+    why.className = "why"; why.textContent = f.why;
+
+    box.appendChild(top); box.appendChild(why);
+
+    if (f.severity === "check"){
+      var ack = document.createElement("label");
+      ack.className = "ack";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!acked[keyOf(f)];
+      cb.addEventListener("change", function(){
+        acked[keyOf(f)] = cb.checked;
+        paintSend();
+      });
+      ack.appendChild(cb);
+      ack.appendChild(document.createTextNode("This is clinical, not a person's name."));
+      box.appendChild(ack);
+    }
+
+    host.appendChild(box);
+  });
+}
+
+function unresolved(){
+  return {
+    blocks: MRPhi.blocking(findings),
+    checks: findings.filter(function(f){
+      return f.severity === "check" && !acked[keyOf(f)];
+    })
+  };
+}
+
+function paintSend(){
+  var u = unresolved();
+  var btn = $("send");
+  var note = $("sendnote");
+  if (u.blocks.length){
+    btn.disabled = true;
+    note.textContent = u.blocks.length + (u.blocks.length === 1 ? " identifier has" : " identifiers have") +
+      " to come out first.";
+    return;
+  }
+  if (u.checks.length){
+    btn.disabled = true;
+    note.textContent = u.checks.length + " possible " + (u.checks.length === 1 ? "name" : "names") +
+      " to confirm or edit.";
+    return;
+  }
+  btn.disabled = false;
+  note.textContent = "";
+}
+
+/* ---------- draft ------------------------------------------------------- */
+
+/* sessionStorage, not localStorage: a half-finished form should survive
+   a reload and a mis-tap, and should not be sitting there for whoever
+   picks up a shared workroom machine next. */
+function saveDraft(){
+  if (!content) return;
+  try { sessionStorage.setItem(DRAFT, JSON.stringify(record())); } catch (e) { /* private mode */ }
+}
+
+function clearDraft(){
+  try { sessionStorage.removeItem(DRAFT); } catch (e) { /* nothing to do */ }
+}
+
+function setRadio(name, value){
+  if (value === null || value === undefined) return;
+  var el = document.querySelector('input[name="' + name + '"][value="' + String(value) + '"]');
+  if (el){ el.checked = true; el.dispatchEvent(new Event("change")); }
+}
+
+function restoreDraft(){
+  var raw = null;
+  try { raw = sessionStorage.getItem(DRAFT); } catch (e) { return; }
+  if (!raw) return;
+  var d;
+  try { d = JSON.parse(raw); } catch (e) { return; }
+  if (!d || d.baseline_version !== content.version) return;
+
+  if (d.wave) $("wave").value = d.wave;
+  if (d.site) $("site").value = d.site;
+  setRadio("cohort", d.cohort);
+  Object.keys(d.context || {}).forEach(function(k){ setRadio("ctx-" + k, d.context[k]); });
+  Object.keys(d.domains || {}).forEach(function(dom){
+    Object.keys(d.domains[dom] || {}).forEach(function(k){
+      setRadio("q-" + dom + "-" + k, d.domains[dom][k]);
+    });
+  });
+  content.measures.items.forEach(function(it){
+    var v = (d.measures || {})[it.id];
+    if (v === null || v === undefined) return;
+    if (it.kind === "number") $("m-" + it.id).value = v;
+    else setRadio("m-" + it.id, v);
+  });
+  setRadio("global", d.global);
+  Object.keys(d.open || {}).forEach(function(k){
+    if ($("o-" + k) && d.open[k]) $("o-" + k).value = d.open[k];
+  });
+}
+
+function alreadySent(wave){
+  try {
+    var seen = JSON.parse(sessionStorage.getItem(SENT) || "[]");
+    return seen.indexOf(wave) !== -1;
+  } catch (e) { return false; }
+}
+
+function markSent(wave){
+  try {
+    var seen = JSON.parse(sessionStorage.getItem(SENT) || "[]");
+    if (seen.indexOf(wave) === -1) seen.push(wave);
+    sessionStorage.setItem(SENT, JSON.stringify(seen.slice(-20)));
+  } catch (e) { /* private mode */ }
+}
+
+/* ---------- send -------------------------------------------------------- */
+
+function responsePath(r){
+  return content.storage.responses + r.wave + "--" + r.id + ".json";
+}
+
+/* Three ways out, tried in this order: the folder on this machine, the
+   collection point for a device that has none, and a download when
+   there is neither. A phone scanning a code has the second one only,
+   which is why the link that made the code carries the submit key. */
+function sendIt(r){
+  var path = responsePath(r);
+
+  if (MRStore.status().ready){
+    return MRStore.write(path, r).then(function(ok){
+      return ok ? content.send.folder.replace("{path}", path) : null;
+    });
+  }
+
+  if (MRRelay.canSubmit()){
+    return MRRelay.submit(r, []).then(function(res){
+      if (res.ok) return content.send.relay;
+      MRStore.notify("warn", res.error, true);
+      MRStore.download(path, r);
+      return content.send.relay_failed;
+    });
+  }
+
+  MRStore.download(path, r);
+  return Promise.resolve(content.send.download);
+}
+
+function finish(r, where){
+  markSent(r.wave);
+  clearDraft();
+  $("form").hidden = true;
+  $("done").hidden = false;
+  $("thanks").textContent = content.thanks;
+  $("donenote").textContent = where + " " + content.thanks_note;
+  window.scrollTo(0, 0);
+}
+
+$("send").addEventListener("click", function(){
+  revalidate();
+  var u = unresolved();
+  if (u.blocks.length || u.checks.length) return;
+
+  var r = record();
+  if (!anything(r)){
+    $("sendnote").textContent = "Nothing has been filled in yet.";
+    return;
+  }
+  if (!r.cohort){
+    $("sendnote").textContent = content.cohort.required_note;
+    $("cohortpanel").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  var btn = $("send");
+  btn.disabled = true;
+  $("sendnote").textContent = "Sending…";
+
+  sendIt(r).then(function(where){
+    if (where === null){ btn.disabled = false; $("sendnote").textContent = ""; return; }
+    finish(r, where);
+  }).catch(function(err){
+    btn.disabled = false;
+    $("sendnote").textContent = "";
+    MRStore.notify("err", "It did not send — " + (err && err.message ? err.message : err), true);
+  });
+});
+
+$("clear").addEventListener("click", function(){
+  if (!confirm("Clear everything on this form?")) return;
+  clearDraft();
+  location.reload();
+});
+
+$("another").addEventListener("click", function(){
+  clearDraft();
+  location.reload();
+});
+
+/* ---------- boot -------------------------------------------------------- */
+
+fetch(MRStore.base() + "content/baseline.json", { cache: "no-cache" })
+  .then(function(res){
+    if (!res.ok) throw new Error("baseline.json — HTTP " + res.status);
+    return res.json();
+  })
+  .then(function(json){
+    content = json;
+
+    $("eyebrow").textContent = content.eyebrow;
+    $("title").textContent = content.title;
+    $("lede").textContent = content.lede;
+    $("footnote").textContent = content.footer;
+    $("wavelabel").textContent = content.wave.label;
+    $("wavehint").textContent = content.wave.hint;
+    $("sitelabel").textContent = content.site.label;
+    $("site").placeholder = content.site.placeholder || "";
+
+    renderCohorts();
+    renderContext();
+    renderDomains();
+    renderMeasures();
+    renderGlobal();
+    renderOpen();
+
+    /* The link a facilitator hands out configures the device it lands
+       on. Wave and site come across so that a round is named once, by
+       the person who decided what to call it, rather than twenty times
+       by twenty people typing from memory. Cohort deliberately does
+       not: which group somebody is in is theirs to tap. */
+    var q = new URLSearchParams(location.search);
+    $("wave").value = q.get("wave") || defaultWave();
+    if (q.get("site")) $("site").value = q.get("site");
+    ["wave", "site"].forEach(function(id){
+      $(id).addEventListener("input", saveDraft);
+    });
+
+    restoreDraft();
+    revalidate();
+    return MRStore.whenReady;
+  })
+  .then(function(){
+    MRStore.mountBar("mr-bar");
+    if (alreadySent(waveId())){
+      $("sendnote").textContent = "This browser has already sent a response for " + waveId() +
+        ". One per person is the point of it.";
+    }
+  })
+  .catch(function(err){
+    MRStore.notify("err", "Could not load the questions — " +
+      (err && err.message ? err.message : err) + ". The form cannot render without them.", true);
+  });
+</script>
+</body>
+</html>
