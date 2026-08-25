@@ -372,7 +372,10 @@
   function docGet(path) {
     if (!docBacked(path) || !configured()) return Promise.resolve(null);
     return docAction("docget", { path: path })
-      .then(function (r) { return r ? r.data : null; })
+      /* read() promises null for anything absent. An endpoint that
+         answers ok without a data field would otherwise hand back
+         undefined, and a caller testing === null would miss it. */
+      .then(function (r) { return (r && r.data !== undefined) ? r.data : null; })
       .catch(function () { return null; });
   }
 
