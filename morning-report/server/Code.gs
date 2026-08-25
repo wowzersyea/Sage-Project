@@ -835,13 +835,27 @@ function setUpSheets() {
   sheetFor(ss, SHEETS.sites, SITES_HEADERS);
   sheetFor(ss, SHEETS.draws, DRAWS_HEADERS);
   sheetFor(ss, SHEETS.feedback, FEEDBACK_HEADERS);
-  SpreadsheetApp.getUi().alert(
-    'Five tabs are ready.\n\n' +
-    'Set MR_KEY in Project Settings -> Script Properties, deploy as a web app, ' +
+
+  var next =
+    'Five tabs are ready: Roster, Rota, Sites, Draws, Feedback.\n\n' +
+    'Next: set MR_KEY in Project Settings -> Script Properties, deploy as a web app, ' +
     'then use the Publish page in Morning Report to fill these in from your data folder.\n\n' +
     'Feedback is a post box, not a record: it fills up as people submit and empties ' +
     'when the facilitator collects it into the data folder. Add MR_FEEDBACK_KEY as well ' +
-    'and hand that one out, so a feedback link cannot read the roster.');
+    'and hand that one out, so a feedback link cannot read the roster.';
+
+  /* The tabs are the job; the message is a courtesy. getUi() is not
+     available in every context this gets run from — a standalone
+     project, a trigger, some editor runs — and it threw AFTER the tabs
+     were made, which reads as a failure when the work had succeeded.
+     The log always works, so that is what this leans on. */
+  Logger.log(next);
+  try {
+    SpreadsheetApp.getUi().alert(next);
+  } catch (noUi) {
+    /* Nothing to do: it is in the execution log above. */
+  }
+  return next;
 }
 
 function sheetFor(ss, name, headers) {
