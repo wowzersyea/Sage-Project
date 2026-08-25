@@ -226,7 +226,10 @@
     warns.innerHTML = "";
 
     if (!s.configured) {
-      txt.textContent = "No shared roster configured. This browser uses the data folder only.";
+      txt.textContent = (s.sourced && s.tried && s.ok)
+        ? "Viewing the site's built-in roster, read-only. Add the facilitator key below to see the " +
+          "full rota, record draws, and publish."
+        : "No shared roster configured. This browser uses the data folder only.";
       return;
     }
     if (!s.tried) { txt.textContent = "Checking the endpoint…"; return; }

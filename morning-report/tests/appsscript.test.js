@@ -804,7 +804,9 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
   t('names and levels are there',
     pub.roster.residents.length === 3 &&
     pub.roster.residents.every(r => r.name && r.level), pub.roster.residents.length);
-  t('the rota is not', pub.rotations === null, pub.rotations);
+  t('the fixture rota, all in the past, is filtered to nothing',
+    pub.rotations !== null && Object.keys(pub.rotations.days).length === 0,
+    pub.rotations && Object.keys(pub.rotations.days));
   t('the draws are not', pub.roster.draws === undefined);
   t('leave windows are not', pub.roster.residents.every(r => r.unavailable.length === 0));
   t('warnings are not, because they can quote rota cells', pub.warnings.length === 0, pub.warnings);
@@ -816,6 +818,44 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
   t('the real key still gets everything',
     full.public === undefined && full.rotations !== null &&
     Array.isArray(full.roster.draws), [full.public, !!full.rotations]);
+}
+
+
+/* The rota window. Dates computed exactly as the endpoint computes
+   them — today in the spreadsheet's zone via the same formatDate stub —
+   so this does not rot with the calendar the way a fixed fixture would. */
+{
+  const off = ZONES['America/Chicago'];
+  const day = (n) => new Date(Date.now() + n * 86400000 + off * 60 * 1000)
+    .toISOString().slice(0, 10);
+
+  const rota = [
+    ['date', 'GAL Ward Int'],
+    [day(-1), 'Marisol Aguirre'],       // yesterday: out
+    [day(0), 'Marisol Aguirre'],        // today: in
+    [day(7), 'Teodoro Nunez'],          // the window's last day: in
+    [day(8), 'Teodoro Nunez'],          // beyond: out
+  ];
+  const { sandbox } = makeContext([
+    makeSheet('Roster', ROSTER_ROWS), makeSheet('Rota', rota), makeSheet('Sites', SITES_ROWS),
+  ], 'k');
+  sandbox.PropertiesService.getScriptProperties().setProperty('MR_PUBLIC_ROSTER', 'yes');
+
+  const pub = parse(sandbox.doGet({ parameter: {} }));
+  const got = Object.keys(pub.rotations.days).sort();
+  t('the public rota is exactly the window', got.join() === [day(0), day(7)].join(), got);
+  t('yesterday is not served', got.indexOf(day(-1)) === -1);
+  t('day eight is not served', got.indexOf(day(8)) === -1);
+  t('the sites config rides along, so the toggle can render',
+    !!pub.rotations.sites.GAL && pub.rotations.sites.GAL.ward.length === 2);
+  t('the window declares itself', pub.rotations.window_days === 7 &&
+    pub.rotations.from === day(0) && pub.rotations.to === day(7),
+    [pub.rotations.from, pub.rotations.to]);
+  t('and still no warnings, which can quote rota cells', pub.warnings.length === 0);
+
+  const full = parse(sandbox.doGet({ parameter: { key: 'k' } }));
+  t('the keyed payload still carries every day',
+    Object.keys(full.rotations.days).length === 4, Object.keys(full.rotations.days).length);
 }
 
 /* ---------- report -------------------------------------------------------- */

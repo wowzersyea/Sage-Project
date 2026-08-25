@@ -148,7 +148,10 @@ function doGet(e) {
    ever promised privacy beyond names:
 
      - names, levels, ids, short names, active flags
-     - NO rota (who is where on which day stays behind the key)
+     - the rota for a rolling window only — today plus the next
+       PUBLIC_ROTA_DAYS days, so the presenting toggle and duty filter
+       work everywhere without publishing a year-long map of where
+       every named resident will be
      - NO draws, NO leave windows, NO warnings (warnings can quote
        names from rota cells, so they stay keyed too)
    ------------------------------------------------------------------ */
@@ -158,22 +161,57 @@ function publicRosterEnabled() {
   return !!(v && String(v).trim());
 }
 
+/* The rota rides along, but only a rolling window: today plus the next
+   PUBLIC_ROTA_DAYS days. That is everything the wheel ever filters by —
+   the page's date is today or tomorrow — while refusing the thing that
+   would actually be new exposure: a downloadable year-long map of where
+   every named resident will be. What this serves is roughly the week's
+   assignments, which is what gets taped to a workroom door. */
+var PUBLIC_ROTA_DAYS = 7;
+
 function buildPublicPayload() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var residents = readRoster(ss, []).map(function (p) {
+  var full = readRoster(ss, []);
+  var residents = full.map(function (p) {
     return {
       id: p.id, name: p.name, sort_name: p.sort_name,
       level: p.level, short: p.short, active: p.active,
       unavailable: []
     };
   });
+
+  var tz = ss.getSpreadsheetTimeZone();
+  var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  var end = Utilities.formatDate(new Date(Date.now() + PUBLIC_ROTA_DAYS * 86400000), tz, 'yyyy-MM-dd');
+
+  /* Warnings from these reads can quote names out of rota cells, so
+     they go into throwaway arrays and never onto the public payload. */
+  var rota = readRota(ss, indexNames(full), []);
+  var rotations = null;
+  if (rota.days) {
+    var days = {};
+    Object.keys(rota.days).forEach(function (d) {
+      if (d >= today && d <= end) days[d] = rota.days[d];
+    });
+    rotations = {
+      source: 'sheet',
+      academic_year: academicYear(),
+      from: today,
+      to: end,
+      window_days: PUBLIC_ROTA_DAYS,
+      tasks: rota.tasks,
+      sites: readSites(ss, rota.tasks, []),
+      days: days
+    };
+  }
+
   return {
     status: 'ok',
     public: true,
     generated: new Date().toISOString(),
     warnings: [],
     roster: { source: 'sheet', academic_year: academicYear(), residents: residents },
-    rotations: null
+    rotations: rotations
   };
 }
 
