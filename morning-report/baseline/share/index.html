@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseline QR | Morning Report</title>
+<meta name="description" content="The QR code and short link for the pre-intervention morning report evaluation: put it on a slide, print it for the workroom door, or send the link.">
+<link rel="stylesheet" href="../../assets/mr.css">
+<style>
+  .split{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:22px;text-align:center;
+  }
+  .card .code{display:block;width:100%;max-width:280px;margin:0 auto}
+  .card .code svg{width:100%;height:auto;display:block}
+  .card .short{
+    font-family:var(--mono);font-size:15px;color:var(--navy);font-weight:700;
+    margin-top:14px;word-break:break-all;
+  }
+  .card .kicker{
+    font-family:var(--serif);font-size:19px;font-weight:700;color:var(--navy);
+    margin:0 0 4px;line-height:1.25;
+  }
+  .card .under{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+
+  .keystate{
+    display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.55;
+    border-radius:7px;padding:13px 15px;margin-bottom:14px;
+  }
+  .keystate.on{background:#EDF4F6;border:1px solid #B6D2DA;color:#1F5866}
+  .keystate.off{background:#FBF0DE;border:1px solid var(--amber);color:#5C4415}
+  .keystate .dot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px}
+  .keystate.on .dot{background:var(--teal)}
+  .keystate.off .dot{background:var(--amber)}
+  .keystate b{display:block;margin-bottom:3px}
+
+  .linkbox{
+    font-family:var(--mono);font-size:12.5px;background:#F7F9FB;border:1px solid var(--line);
+    border-radius:6px;padding:10px 12px;word-break:break-all;color:#3D4855;line-height:1.5;
+  }
+
+  /* The printed sheet. Everything that is scaffolding disappears and
+     what is left is the code, the address and one line saying what it
+     is — a page that has to work taped to a door with nobody standing
+     next to it to explain. */
+  @media print{
+    body{background:#fff}
+    header.hero,footer.mr,.mr-bar,#mr-bar,.noprint{display:none !important}
+    section.band{padding:0}
+    .split{display:block}
+    .card{border:none;padding:0}
+    .card .code{max-width:420px}
+    .card .short{font-size:19px}
+    .card .kicker{font-size:26px}
+  }
+
+  @media (max-width:820px){
+    .split{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div id="mr-bar" class="noprint"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · before any change</p>
+    <h1>The code to hand out</h1>
+    <p class="sub">One code, one short address, and the choice of what the link carries with it.
+      Drawn here rather than fetched from a QR service, because the link can hold the submit key
+      and handing that to a stranger's website to render would be an odd way to look after it.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="split">
+
+      <div class="card" id="card">
+        <p class="kicker" id="kicker">Morning report</p>
+        <p class="under" id="under">Five minutes, anonymous, before anything changes</p>
+        <div class="code" id="qr"></div>
+        <div class="short" id="short"></div>
+      </div>
+
+      <div>
+        <div class="panel noprint">
+          <h2>What the code points at</h2>
+          <p class="lede">The round is named here, once, by whoever hands the link out — rather
+            than twenty times by twenty people typing it from memory. Which of the four groups
+            somebody is in is the one thing the link never sets: that is theirs to tap.</p>
+
+          <div class="grid two">
+            <div class="field">
+              <label class="f" for="wave">Round</label>
+              <input type="text" id="wave" autocomplete="off">
+              <p class="hint">Goes in the link and into every response, and is what a later round
+                gets compared against.</p>
+            </div>
+            <div class="field">
+              <label class="f" for="site">Site</label>
+              <input type="text" id="site" placeholder="Galveston" autocomplete="off">
+              <p class="hint">Optional. Fills the site box in for whoever scans this particular
+                code — useful when the two sites get their own printout.</p>
+            </div>
+          </div>
+
+          <div class="keystate" id="keystate">
+            <span class="dot"></span>
+            <div><b id="keytitle"></b><span id="keybody"></span></div>
+          </div>
+
+          <div class="linkbox" id="linkbox"></div>
+
+          <div class="bar" style="margin-top:14px">
+            <button class="amber" id="copy">Copy the link</button>
+            <button class="ghost" id="svg">Download SVG</button>
+            <button class="ghost" id="png">Download PNG</button>
+            <button class="ghost" id="print">Print this sheet</button>
+            <a class="btn ghost" href="../" id="open">Open the form →</a>
+          </div>
+          <p class="hint" id="note"></p>
+        </div>
+
+        <div class="panel noprint">
+          <h2>Where to put it</h2>
+          <p class="lede">The code is the same wherever it goes; what changes is how long somebody
+            has to look at it.</p>
+          <ul style="font-size:13.5px;color:#3D4855;line-height:1.7;padding-left:20px;margin:0">
+            <li><b>On the last slide of report.</b> The PNG at this size stays crisp on a projector.
+              Leave it up while people are standing rather than flashing it at the end.</li>
+            <li><b>Taped in the workroom.</b> Print this sheet — everything but the code and the
+              address drops away on paper.</li>
+            <li><b>In a message.</b> Send the address; it is short enough to read out loud, and
+              nobody has to scan anything.</li>
+          </ul>
+          <p class="hint">Whichever way it goes out, the denominator goes with it: the read-out
+            can count responses and can never know how many people were asked. Note that number
+            down when you hand the code round, or the percentage cannot be worked out later.</p>
+        </div>
+
+        <div class="privacy noprint">
+          <b>The key that may be in this link</b>
+          A phone cannot write to the facilitator's laptop, so a response filled in on one has to
+          go to the collection point. The link carries the submit key that lets it — the weak key,
+          which can put a response in and can read nothing back, not the roster key.
+          <br><br>
+          It is still a key. A printed copy of this code is a printed copy of that key, so treat
+          the sheet the way you would treat the key itself, and set a new one in
+          <a href="../../settings/">settings</a> if a copy goes somewhere it should not have.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — Morning Report. The code is drawn by <code>assets/qr.js</code>, byte mode at
+      error-correction level M, checked module for module against a reference implementation in
+      <code>tests/qr.test.js</code>.</p>
+  </div>
+</footer>
+
+<script src="../../assets/remote.js?v=3"></script>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/relay.js"></script>
+<script src="../../assets/qr.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var content = null;
+
+function defaultWave(){ return MRStore.today().slice(0, 7); }
+
+/* The short address first, because it is the one somebody reads out
+   loud, and the module is served both from its own domain and from a
+   project path on github.io — so it is worked out from where this page
+   actually is rather than written down. */
+function target(){
+  var url = MRStore.siteRoot() + "baseline/";
+  var q = [];
+  var wave = ($("wave").value || "").trim();
+  var site = ($("site").value || "").trim();
+  if (wave && wave !== defaultWave()) q.push("wave=" + encodeURIComponent(wave));
+  if (site) q.push("site=" + encodeURIComponent(site));
+  return url + (q.length ? "?" + q.join("&") : "");
+}
+
+/* What actually goes in the code. With a submit key on this machine
+   the link carries it, and a phone can post; without one the same
+   link still opens the same form, and a response filled in on a phone
+   can only be downloaded to that phone — which is no use to anybody.
+   Both states are said out loud rather than left to be discovered. */
+function link(){
+  var plain = target();
+  var keyed = MRRelay.linkFor(plain);
+  return keyed || plain;
+}
+
+function paint(){
+  var url = link();
+  var keyed = url !== target();
+
+  $("short").textContent = target().replace(/^https?:\/\//, "");
+  $("linkbox").textContent = keyed ? url.replace(/([?&]k=)[^&]*/, "$1…") : url;
+
+  var state = $("keystate");
+  state.className = "keystate " + (keyed ? "on" : "off");
+  $("keytitle").textContent = keyed
+    ? "The link carries the submit key"
+    : "No submit key on this machine";
+  $("keybody").textContent = keyed
+    ? "A phone that scans this can send its answers straight to the collection point, and they " +
+      "land in the data folder when you collect them. The key is shown blanked above; it is in " +
+      "the code itself."
+    : "The code still opens the form, but a phone that fills it in will only be able to download " +
+      "the file to itself, which is no use to anybody. Set the endpoint and the feedback key in " +
+      "settings first, then come back — the code will be rebuilt with them in it.";
+
+  try {
+    $("qr").innerHTML = MRQr.svg(url, { scale: 6, quiet: 4 });
+    $("note").textContent = "";
+  } catch (err) {
+    $("qr").innerHTML = "";
+    $("note").textContent = "That link is too long to put in a QR code — " +
+      (err && err.message ? err.message : err) + " Shorten the round name and try again.";
+  }
+}
+
+function download(name, blob){
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+
+$("svg").addEventListener("click", function(){
+  try {
+    download("morning-report-baseline-qr.svg",
+      new Blob([MRQr.svg(link(), { scale: 12, quiet: 4 })], { type: "image/svg+xml" }));
+  } catch (err) { $("note").textContent = String(err && err.message || err); }
+});
+
+/* PNG for the deck: PowerPoint takes it without argument, and at this
+   size it is still crisp thrown on a wall. */
+$("png").addEventListener("click", function(){
+  var m;
+  try { m = MRQr.matrix(link()); }
+  catch (err) { $("note").textContent = String(err && err.message || err); return; }
+
+  var quiet = 4, scale = 16;
+  var side = (m.length + quiet * 2) * scale;
+  var canvas = document.createElement("canvas");
+  canvas.width = side;
+  canvas.height = side;
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, side, side);
+  ctx.fillStyle = "#16283C";
+  for (var r = 0; r < m.length; r++){
+    for (var c = 0; c < m.length; c++){
+      if (m[r][c]) ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+    }
+  }
+  canvas.toBlob(function(blob){ download("morning-report-baseline-qr.png", blob); });
+});
+
+$("copy").addEventListener("click", function(){
+  var url = link();
+  function said(text){ $("note").textContent = text; }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      said("Copied" + (url !== target() ? " — with the submit key in it." : "."));
+    }, function(){ said("Could not copy it. The link is in the box above."); });
+  } else {
+    said("This browser will not copy for us. The link is in the box above.");
+  }
+});
+
+$("print").addEventListener("click", function(){ window.print(); });
+
+["wave", "site"].forEach(function(id){
+  $(id).addEventListener("input", function(){
+    paint();
+    $("open").href = "../" + (target().split("baseline/")[1] || "");
+  });
+});
+
+fetch(MRStore.base() + "content/baseline.json", { cache: "no-cache" })
+  .then(function(res){
+    if (!res.ok) throw new Error("baseline.json — HTTP " + res.status);
+    return res.json();
+  })
+  .then(function(json){
+    content = json;
+    $("kicker").textContent = content.title;
+    $("under").textContent = content.lede.split(".")[0] + ".";
+    return MRStore.whenReady;
+  })
+  .then(function(){
+    MRStore.mountBar("mr-bar");
+    $("wave").value = defaultWave();
+    paint();
+  })
+  .catch(function(err){
+    /* The code is the point of the page and it does not need the
+       content file to be drawn, so a failed fetch costs the wording
+       and nothing else. */
+    MRStore.mountBar("mr-bar");
+    $("wave").value = defaultWave();
+    paint();
+    MRStore.notify("warn", "Could not load the wording — " +
+      (err && err.message ? err.message : err) + " The code itself is unaffected.", true);
+  });
+</script>
+</body>
+</html>

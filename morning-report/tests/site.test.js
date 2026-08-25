@@ -25,7 +25,9 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
     '/morning-report/roles/senior/', '/morning-report/roles/faculty/',
     '/morning-report/roles/facilitator/', '/morning-report/learn/specificity/',
     '/morning-report/settings/', '/morning-report/publish/',
-    '/morning-report/feedback/', '/morning-report/feedback/summary/'
+    '/morning-report/feedback/', '/morning-report/feedback/summary/',
+    '/morning-report/baseline/', '/morning-report/baseline/summary/',
+    '/morning-report/baseline/share/'
   ];
   for (const p of PAGES) {
     const before = errs.length;

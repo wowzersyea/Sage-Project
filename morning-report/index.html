@@ -25,6 +25,7 @@
   .stage-head.during .when{background:var(--amber);color:var(--navy)}
   .stage-head.after  .when{background:var(--teal)}
   .stage-head.later  .when{background:var(--green)}
+  .stage-head.measure .when{background:var(--red)}
   .stage-head .note{font-size:12.5px;color:var(--muted)}
   .setup{margin-top:30px}
   .setup ol{margin:0;padding-left:20px;font-size:13.5px;color:#3D4855}
@@ -63,6 +64,25 @@
 
 <section class="band">
   <div class="wrap">
+
+    <div class="stage-head measure">
+      <span class="when">Baseline</span>
+      <span class="note">Answered once, before any of this changes.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="baseline/">
+        <h3>Pre-intervention evaluation</h3>
+        <p>What the current arrangement is like, rated by the people in it: the technical setup, engagement, the education, what it costs in time, and the whole thing taken together. One tap says PGY-1, PGY-2, PGY-3 or faculty; nothing else is asked about the respondent. Five minutes, anonymous, and it answers to <code>sageproject.xyz/baseline</code>.</p>
+      </a>
+      <a class="tool" href="baseline/share/">
+        <h3>Baseline QR code</h3>
+        <p>The code and the short address to hand round — on a slide, taped to the workroom door, or sent as a link. Printable, and downloadable as SVG or PNG.</p>
+      </a>
+      <a class="tool" href="baseline/summary/">
+        <h3>Baseline read-out</h3>
+        <p>Domain scores by year group, the minute counts, and both open questions. Nothing is modelled and nothing is drafted: reversed items are turned round, groups of fewer than three are not broken out, and the arithmetic is the same arithmetic you could do in a spreadsheet — which the CSV button hands you.</p>
+      </a>
+    </div>
 
     <div class="stage-head before">
       <span class="when">Before</span>
@@ -153,6 +173,7 @@
       <pre class="tree">MorningReport/
   roster.json          names and the participation log — the one file with names in it
   casebank/            de-identified cases, permanent
+  baseline/            the pre-intervention evaluation, permanent — the before picture
   sessions/            de-identified scorecards, permanent
     feedback/          what the group said about the session, permanent
   board-archive/       de-identified board contents, permanent

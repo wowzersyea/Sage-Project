@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseline summary | Morning Report</title>
+<meta name="description" content="What the pre-intervention evaluation of morning report came back with: response counts, domain scores by year group, the countable measures, and the two open questions.">
+<link rel="stylesheet" href="../../assets/mr.css">
+<style>
+  .head{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+  .head .grow{flex:1 1 220px}
+
+  .counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}
+  .count{border:1px solid var(--line);border-radius:7px;background:#FCFDFE;padding:13px 15px}
+  .count .n{font-family:var(--serif);font-size:27px;font-weight:700;color:var(--navy);line-height:1}
+  .count .lb{font-size:12px;color:var(--muted);margin-top:3px}
+  .count.thin{background:#FBF0DE;border-color:var(--amber)}
+  .count.thin .n{color:#8A6014}
+
+  table.mr td.score{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  table.mr td.sup{color:var(--muted);font-style:italic;text-align:right}
+
+  .bars{display:flex;height:15px;border-radius:3px;overflow:hidden;border:1px solid var(--line);min-width:130px}
+  .bars i{display:block;height:100%}
+  .bars i.v1{background:#B23A48}
+  .bars i.v2{background:#D08A93}
+  .bars i.v3{background:#D3DCE4}
+  .bars i.v4{background:#8FB9A6}
+  .bars i.v5{background:#3F7D5C}
+  .key{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
+  .key span{display:flex;align-items:center;gap:5px}
+  .key i{width:11px;height:11px;border-radius:2px;display:block}
+
+  .item{border-top:1px solid #EEF2F5;padding:11px 0;display:grid;
+    grid-template-columns:1fr 150px 74px 52px;gap:14px;align-items:center}
+  .item:first-child{border-top:none}
+  .item .t{font-size:13.5px;line-height:1.45}
+  .item .t .rev{
+    font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--teal);border:1px solid #B6D2DA;background:#EDF4F6;
+    padding:1px 5px;border-radius:3px;margin-left:7px;white-space:nowrap;vertical-align:1px;
+  }
+  .item .sc{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--navy);text-align:right}
+  .item .nn{font-size:11.5px;color:var(--muted);text-align:right}
+  .itemhead{display:grid;grid-template-columns:1fr 150px 74px 52px;gap:14px;
+    font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--muted);padding-bottom:7px;border-bottom:1px solid var(--line)}
+  .itemhead span:not(:first-child){text-align:right}
+
+  .quote{border-left:3px solid var(--line);padding:2px 0 2px 13px;margin:0 0 13px;
+    font-size:13.5px;color:#3D4855;line-height:1.55;white-space:pre-wrap}
+
+  .flagbox{background:#F7F9FB;border:1px solid var(--line);border-radius:7px;padding:14px 16px;
+    font-size:13px;color:#3D4855;line-height:1.6}
+  .flagbox b{display:block;font-family:var(--serif);font-size:15px;color:var(--navy);margin-bottom:5px}
+
+  .empty{color:var(--muted);font-size:13.5px}
+
+  @media (max-width:820px){
+    .item,.itemhead{grid-template-columns:1fr 90px 44px}
+    .item .bars,.itemhead span:nth-child(2){display:none}
+  }
+</style>
+</head>
+<body>
+<script src="../../assets/gate.js"></script>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · before any change</p>
+    <h1>What the baseline says</h1>
+    <p class="sub">The before picture, read straight off the responses. Nothing here is modelled,
+      nothing is drafted, and no sentence has been written for you — a baseline is worth having
+      because it is arithmetic, and arithmetic is what this page does.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="panel">
+      <div class="head">
+        <div class="grow">
+          <label class="f" for="wave">Round</label>
+          <select id="wave"></select>
+        </div>
+        <div class="bar">
+          <button class="ghost" id="collect" hidden>Collect what is waiting</button>
+          <button class="ghost" id="csv">Download CSV</button>
+        </div>
+      </div>
+      <p class="hint" id="where"></p>
+      <p class="hint" id="collectnote"></p>
+      <div class="counts" id="counts"></div>
+    </div>
+
+    <div class="panel" id="domainpanel">
+      <h2>The five domains</h2>
+      <p class="lede">One score per person per domain, then the average of those — so somebody who
+        answered two items counts once, not twice. Reversed items are turned round first, so every
+        number on this page runs the same way: 5 is the favourable end.</p>
+      <div style="overflow-x:auto"><table class="mr" id="domaintable"></table></div>
+      <p class="hint" id="supnote"></p>
+    </div>
+
+    <div id="items"></div>
+
+    <div class="panel" id="measurepanel">
+      <h2>The countable part</h2>
+      <p class="lede">Minutes are reported as a median rather than a mean: one person who spends
+        four hours preparing would otherwise move the average for everybody, and the median says
+        what a typical person does.</p>
+      <div style="overflow-x:auto"><table class="mr" id="measuretable"></table></div>
+    </div>
+
+    <div class="panel" id="globalpanel">
+      <h2>The one number</h2>
+      <div id="globalout"></div>
+    </div>
+
+    <div class="panel" id="flagpanel">
+      <h2>Reading the responses carefully</h2>
+      <p class="lede">Three things worth knowing before anybody quotes a number off this page.
+        None of them is a fault in the people who answered; they are properties of every survey
+        ever run, and the instrument was built so that they can be seen rather than assumed away.</p>
+      <div id="flags"></div>
+    </div>
+
+    <div class="panel" id="openpanel">
+      <h2>In their own words</h2>
+      <p class="lede" id="openlede"></p>
+      <div id="open"></div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap">
+    <p>Sage Project — Morning Report. Reads <code id="dirnote"></code> out of the data folder.
+      The questions, the scales and the suppression threshold are all in
+      <code>content/baseline.json</code>.</p>
+  </div>
+</footer>
+
+<script src="../../assets/remote.js?v=3"></script>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/relay.js"></script>
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var content = null;
+var all = [];          /* every response in the folder, all waves */
+var rows = [];         /* the current wave */
+
+/* ---------- arithmetic --------------------------------------------------
+   Deliberately small and deliberately visible. Everything below works
+   on plain numbers, and there is not a weighting or an adjustment
+   anywhere in it — a baseline that needed explaining before it could
+   be read would not be much of a baseline. */
+
+function mean(xs){
+  if (!xs.length) return null;
+  return xs.reduce(function(a, b){ return a + b; }, 0) / xs.length;
+}
+
+function median(xs){
+  if (!xs.length) return null;
+  var s = xs.slice().sort(function(a, b){ return a - b; });
+  var m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function fmt(x, dp){
+  return x === null ? "—" : x.toFixed(dp === undefined ? 2 : dp);
+}
+
+/* The one recode on the page. A reversed item is worded so that
+   agreeing is the unfavourable answer; 6 minus the tick puts it on the
+   same footing as the rest, and after this line nothing else in the
+   file has to remember which items were which. */
+function recode(item, value){
+  if (value === null || value === undefined) return null;
+  return item.reverse ? 6 - value : value;
+}
+
+function itemsOf(domain){ return domain.items; }
+
+/* One person's score for one domain: the mean of the items they
+   actually answered, or nothing if they answered none of them. */
+function personDomain(r, domain){
+  var vals = [];
+  itemsOf(domain).forEach(function(it){
+    var v = recode(it, (r.domains || {})[domain.id] ? r.domains[domain.id][it.id] : null);
+    if (v !== null) vals.push(v);
+  });
+  return mean(vals);
+}
+
+function cohortsInPlay(){
+  return content.cohort.options.map(function(o){ return o.id; });
+}
+
+function labelFor(id){
+  var found = content.cohort.options.filter(function(o){ return o.id === id; })[0];
+  return found ? found.label : id;
+}
+
+function ofCohort(list, cohort){
+  return cohort === "all" ? list : list.filter(function(r){ return r.cohort === cohort; });
+}
+
+/* A group of one or two is not anonymous in a program this size,
+   whatever the front of the form promised. Under the threshold the
+   count is shown and nothing else — and the responses still count in
+   the all-respondents row, which is the point of suppressing the
+   breakout rather than dropping the data. */
+function suppressed(list){
+  return list.length > 0 && list.length < content.small_cell.min;
+}
+
+/* ---------- render ------------------------------------------------------ */
+
+function paintCounts(){
+  var host = $("counts");
+  host.innerHTML = "";
+
+  function card(n, label, thin){
+    var box = document.createElement("div");
+    box.className = "count" + (thin ? " thin" : "");
+    var big = document.createElement("div");
+    big.className = "n"; big.textContent = n;
+    var lb = document.createElement("div");
+    lb.className = "lb"; lb.textContent = label;
+    box.appendChild(big); box.appendChild(lb);
+    host.appendChild(box);
+  }
+
+  card(rows.length, "responses in all");
+  cohortsInPlay().forEach(function(c){
+    var list = ofCohort(rows, c);
+    card(list.length, labelFor(c), suppressed(list));
+  });
+}
+
+function scoreCell(tr, list, domain){
+  var td = document.createElement("td");
+  if (suppressed(list)){
+    td.className = "sup";
+    td.textContent = "n < " + content.small_cell.min;
+    tr.appendChild(td);
+    return;
+  }
+  var vals = list.map(function(r){ return personDomain(r, domain); })
+                 .filter(function(v){ return v !== null; });
+  td.className = "score";
+  td.textContent = vals.length ? fmt(mean(vals)) + "  (" + vals.length + ")" : "—";
+  tr.appendChild(td);
+}
+
+function paintDomains(){
+  var table = $("domaintable");
+  table.innerHTML = "";
+
+  var thead = document.createElement("thead");
+  var hr = document.createElement("tr");
+  ["Domain", "Everyone"].concat(cohortsInPlay().map(labelFor)).forEach(function(h){
+    var th = document.createElement("th");
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  var tbody = document.createElement("tbody");
+  content.domains.forEach(function(d){
+    var tr = document.createElement("tr");
+    var name = document.createElement("td");
+    name.innerHTML = "<b>" + MRStore.esc(d.title) + "</b><br><span style='color:var(--muted);font-size:11.5px'>" +
+      MRStore.esc(d.eyebrow) + "</span>";
+    tr.appendChild(name);
+    scoreCell(tr, rows, d);
+    cohortsInPlay().forEach(function(c){ scoreCell(tr, ofCohort(rows, c), d); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  $("supnote").textContent = "Each cell is the mean of the people who answered any of that domain, " +
+    "with that number of people in brackets. " + content.small_cell.note.replace("{n}", content.small_cell.min);
+}
+
+/* The distribution bar. Five widths, and the only place on the page
+   where a shape is easier to read than a number: a mean of 3 made of
+   two 1s and two 5s is a different session from a mean of 3 made of
+   four 3s, and the second one is not a disagreement. */
+function distribution(vals){
+  var counts = [0, 0, 0, 0, 0];
+  vals.forEach(function(v){ if (v >= 1 && v <= 5) counts[v - 1]++; });
+  var total = vals.length || 1;
+  var bar = document.createElement("div");
+  bar.className = "bars";
+  counts.forEach(function(n, i){
+    var seg = document.createElement("i");
+    seg.className = "v" + (i + 1);
+    seg.style.width = (n / total * 100) + "%";
+    seg.title = n + " at " + (i + 1);
+    bar.appendChild(seg);
+  });
+  return bar;
+}
+
+function paintItems(){
+  var host = $("items");
+  host.innerHTML = "";
+
+  content.domains.forEach(function(d){
+    var panel = document.createElement("div");
+    panel.className = "panel";
+
+    var h2 = document.createElement("h2");
+    h2.textContent = d.title + " — item by item";
+    panel.appendChild(h2);
+
+    var head = document.createElement("div");
+    head.className = "itemhead";
+    ["Item", "1 → 5 after recoding", "Mean", "n"].forEach(function(t){
+      var s = document.createElement("span");
+      s.textContent = t;
+      head.appendChild(s);
+    });
+    panel.appendChild(head);
+
+    d.items.forEach(function(it){
+      var vals = rows.map(function(r){
+        return recode(it, (r.domains || {})[d.id] ? r.domains[d.id][it.id] : null);
+      }).filter(function(v){ return v !== null; });
+
+      var row = document.createElement("div");
+      row.className = "item";
+
+      var t = document.createElement("div");
+      t.className = "t";
+      t.textContent = it.text;
+      if (it.reverse){
+        var tag = document.createElement("span");
+        tag.className = "rev";
+        tag.textContent = "reversed";
+        tag.title = content.reverse_note;
+        t.appendChild(tag);
+      }
+      row.appendChild(t);
+      row.appendChild(distribution(vals));
+
+      var sc = document.createElement("div");
+      sc.className = "sc";
+      sc.textContent = vals.length ? fmt(mean(vals), 1) : "—";
+      row.appendChild(sc);
+
+      var nn = document.createElement("div");
+      nn.className = "nn";
+      nn.textContent = vals.length;
+      row.appendChild(nn);
+
+      panel.appendChild(row);
+    });
+
+    var key = document.createElement("div");
+    key.className = "key";
+    [["#B23A48", "1 unfavourable"], ["#D3DCE4", "3 neither"], ["#3F7D5C", "5 favourable"]].forEach(function(p){
+      var s = document.createElement("span");
+      var i = document.createElement("i");
+      i.style.background = p[0];
+      s.appendChild(i);
+      s.appendChild(document.createTextNode(p[1]));
+      key.appendChild(s);
+    });
+    panel.appendChild(key);
+
+    host.appendChild(panel);
+  });
+}
+
+function paintMeasures(){
+  var table = $("measuretable");
+  table.innerHTML = "";
+
+  var thead = document.createElement("thead");
+  var hr = document.createElement("tr");
+  ["Measure", "Everyone"].concat(cohortsInPlay().map(labelFor)).forEach(function(h){
+    var th = document.createElement("th");
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  var tbody = document.createElement("tbody");
+  content.measures.items.forEach(function(it){
+    var tr = document.createElement("tr");
+    var name = document.createElement("td");
+    name.textContent = it.label;
+    tr.appendChild(name);
+
+    function cell(list){
+      var td = document.createElement("td");
+      if (suppressed(list)){
+        td.className = "sup";
+        td.textContent = "n < " + content.small_cell.min;
+        tr.appendChild(td);
+        return;
+      }
+      var vals = list.map(function(r){ return (r.measures || {})[it.id]; })
+                     .filter(function(v){ return v !== null && v !== undefined; });
+      td.className = "score";
+      if (!vals.length){ td.textContent = "—"; tr.appendChild(td); return; }
+      td.textContent = it.kind === "number"
+        ? fmt(median(vals), 0) + " min  (" + vals.length + ")"
+        : fmt(mean(vals), 1) + "  (" + vals.length + ")";
+      tr.appendChild(td);
+    }
+
+    cell(rows);
+    cohortsInPlay().forEach(function(c){ cell(ofCohort(rows, c)); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function paintGlobal(){
+  var host = $("globalout");
+  host.innerHTML = "";
+  var g = content.global;
+
+  var vals = rows.map(function(r){ return r.global; })
+                 .filter(function(v){ return v !== null && v !== undefined; });
+
+  var p = document.createElement("p");
+  p.className = "lede";
+  p.textContent = g.question + " " + g.min + " is " + g.low.toLowerCase() +
+    ", " + g.max + " is " + g.high.toLowerCase() + ".";
+  host.appendChild(p);
+
+  if (!vals.length){
+    var none = document.createElement("p");
+    none.className = "empty";
+    none.textContent = "Nobody has answered this one yet.";
+    host.appendChild(none);
+    return;
+  }
+
+  var table = document.createElement("table");
+  table.className = "mr";
+  var tb = document.createElement("tbody");
+
+  function row(label, value){
+    var tr = document.createElement("tr");
+    var a = document.createElement("td");
+    a.textContent = label;
+    var b = document.createElement("td");
+    b.className = "num";
+    b.textContent = value;
+    tr.appendChild(a); tr.appendChild(b);
+    tb.appendChild(tr);
+  }
+
+  row("Mean, everyone", fmt(mean(vals), 1) + " out of " + g.max);
+  row("Median, everyone", fmt(median(vals), 1));
+  row("Answered", String(vals.length) + " of " + rows.length);
+  cohortsInPlay().forEach(function(c){
+    var list = ofCohort(rows, c);
+    if (!list.length) return;
+    if (suppressed(list)){ row(labelFor(c), "n < " + content.small_cell.min); return; }
+    var v = list.map(function(r){ return r.global; })
+                .filter(function(x){ return x !== null && x !== undefined; });
+    row(labelFor(c), v.length ? fmt(mean(v), 1) + "  (" + v.length + ")" : "—");
+  });
+
+  table.appendChild(tb);
+  host.appendChild(table);
+}
+
+/* ---------- the three cautions -----------------------------------------
+
+   Every one of these is computed, not asserted, and each is here
+   because the instrument was built to make it visible. A baseline
+   that quietly averaged past them would read more confidently and
+   mean less. */
+
+function everyRating(r){
+  var out = [];
+  content.domains.forEach(function(d){
+    d.items.forEach(function(it){
+      var raw = (r.domains || {})[d.id] ? r.domains[d.id][it.id] : null;
+      if (raw !== null && raw !== undefined) out.push({ item: it, raw: raw });
+    });
+  });
+  return out;
+}
+
+function paintFlags(){
+  var host = $("flags");
+  host.innerHTML = "";
+
+  function box(title, body){
+    var div = document.createElement("div");
+    div.className = "flagbox";
+    div.style.marginBottom = "10px";
+    var b = document.createElement("b");
+    b.textContent = title;
+    div.appendChild(b);
+    div.appendChild(document.createTextNode(body));
+    host.appendChild(div);
+  }
+
+  /* 1. Straight-lining: one column, all the way down. With reversed
+        items in every domain this cannot be a coherent set of views,
+        so it is a count of forms to treat gently rather than a
+        judgement about anybody. */
+  var flat = rows.filter(function(r){
+    var vals = everyRating(r);
+    if (vals.length < 8) return false;
+    return vals.every(function(v){ return v.raw === vals[0].raw; });
+  }).length;
+
+  box("Straight-lined forms: " + flat + " of " + rows.length,
+    flat === 0
+      ? "Nobody ticked the same column the whole way down. Because reversed items are mixed into every domain, a form like that would have been agreeing and disagreeing with itself, and there are none."
+      : "These ticked the same column for every item. Reversed items are mixed into every domain, so such a form agrees and disagrees with itself — the responses are kept and counted, and they are worth remembering before anybody reads a difference of a tenth of a point as real.");
+
+  /* 2. Acquiescence: agreeing regardless of what was asked. Raw
+        agreement on the plainly-worded items against raw agreement on
+        the reversed ones. In a truthful set of answers the second is
+        the lower number; if both sit above the midpoint, the sample
+        is agreeing with the form rather than describing the mornings. */
+  var plain = [], rev = [];
+  rows.forEach(function(r){
+    everyRating(r).forEach(function(v){
+      (v.item.reverse ? rev : plain).push(v.raw);
+    });
+  });
+  var pm = mean(plain), rm = mean(rev);
+  box("Agreement before recoding: " + fmt(pm, 2) + " plain, " + fmt(rm, 2) + " reversed",
+    (pm === null || rm === null)
+      ? "Not enough answers yet to say."
+      : (pm > 3 && rm > 3
+          ? "Both sit above the midpoint, which is the signature of agreeing with a form rather than describing a morning. Read the domain scores as softer than they look, and lean on the written answers and the minute counts, which cannot be nodded along with."
+          : "These pull in opposite directions, which is what honest answering looks like: people who agreed with the plainly worded items disagreed with the ones worded the other way round."));
+
+  /* 3. How much of the room answered at all. A baseline is a claim
+        about a group, and the number that decides whether the claim
+        holds is this one — not any of the means above it. */
+  var mode = {};
+  rows.forEach(function(r){
+    var m = (r.context || {}).mode || "unsaid";
+    mode[m] = (mode[m] || 0) + 1;
+  });
+  var modeItem = content.context.items.filter(function(i){ return i.id === "mode"; })[0];
+  var modes = Object.keys(mode).map(function(k){
+    var opt = ((modeItem && modeItem.options) || []).filter(function(o){ return o.value === k; })[0];
+    return (opt ? opt.label : "not said") + " " + mode[k];
+  }).join(", ");
+
+  box("Who answered: " + rows.length + " responses" + (modes ? " — " + modes : ""),
+    "A baseline is a claim about a group, and this is the number that decides whether the claim holds. " +
+    "Nothing on this page knows how many people were asked; that denominator has to come from whoever handed the link out, and it belongs beside any figure quoted from here.");
+}
+
+function paintOpen(){
+  var host = $("open");
+  host.innerHTML = "";
+
+  if (rows.length < content.small_cell.min){
+    $("openlede").textContent = "Written answers are held back until there are at least " +
+      content.small_cell.min + " responses in a round. There are " + rows.length +
+      " so far, and in a group this size that is few enough for a turn of phrase to name its author.";
+    return;
+  }
+
+  $("openlede").textContent = "Both questions, without a group label and out of the order they " +
+    "arrived in — the order alone would pair a response with whoever was seen filling it in. " +
+    "Nothing here has been summarised or shortened.";
+
+  content.open.items.forEach(function(it){
+    var h3 = document.createElement("h3");
+    h3.textContent = it.label;
+    h3.style.marginTop = "18px";
+    host.appendChild(h3);
+
+    var said = rows.map(function(r){ return ((r.open || {})[it.id] || "").trim(); })
+                   .filter(Boolean)
+                   .sort();                 /* alphabetical: any order but the one they came in */
+
+    if (!said.length){
+      var none = document.createElement("p");
+      none.className = "empty";
+      none.textContent = "Nobody wrote anything here.";
+      host.appendChild(none);
+      return;
+    }
+    said.forEach(function(text){
+      var q = document.createElement("p");
+      q.className = "quote";
+      q.textContent = text;
+      host.appendChild(q);
+    });
+  });
+}
+
+function paintAll(){
+  paintCounts();
+  paintDomains();
+  paintItems();
+  paintMeasures();
+  paintGlobal();
+  paintFlags();
+  paintOpen();
+}
+
+/* ---------- CSV --------------------------------------------------------- */
+
+/* One row per response, raw values exactly as they were ticked. The
+   recoding this page does is not baked in: whoever opens this in R or
+   a spreadsheet should be able to reproduce the arithmetic above and
+   disagree with it, which they cannot do with numbers already turned
+   round for them. The reversed items are named in the header instead. */
+function csvText(){
+  var cols = ["response_id", "wave", "site", "cohort", "submitted"];
+  content.context.items.forEach(function(it){ cols.push("ctx_" + it.id); });
+  content.domains.forEach(function(d){
+    d.items.forEach(function(it){
+      cols.push(d.id + "_" + it.id + (it.reverse ? "_REV" : ""));
+    });
+  });
+  content.measures.items.forEach(function(it){ cols.push("measure_" + it.id); });
+  cols.push("global");
+  content.open.items.forEach(function(it){ cols.push("open_" + it.id); });
+
+  function cell(v){
+    if (v === null || v === undefined) return "";
+    var s = String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  var lines = [cols.join(",")];
+  rows.forEach(function(r){
+    var out = [r.id, r.wave, r.site, r.cohort, r.submitted];
+    content.context.items.forEach(function(it){ out.push((r.context || {})[it.id]); });
+    content.domains.forEach(function(d){
+      d.items.forEach(function(it){
+        out.push((r.domains || {})[d.id] ? r.domains[d.id][it.id] : null);
+      });
+    });
+    content.measures.items.forEach(function(it){ out.push((r.measures || {})[it.id]); });
+    out.push(r.global);
+    content.open.items.forEach(function(it){ out.push((r.open || {})[it.id]); });
+    lines.push(out.map(cell).join(","));
+  });
+  return lines.join("\n") + "\n";
+}
+
+$("csv").addEventListener("click", function(){
+  if (!rows.length){ $("collectnote").textContent = "Nothing to export for this round."; return; }
+  MRStore.downloadBlob("morning-report-baseline-" + currentWave() + ".csv",
+    new Blob([csvText()], { type: "text/csv;charset=utf-8" }));
+});
+
+/* ---------- collecting from the endpoint --------------------------------
+
+   The same post box the session feedback uses, so a phone with no
+   folder has somewhere to put a response. Two instruments share it,
+   and this page takes only its own: the rest is left exactly where it
+   was, for the feedback summary to collect. Nothing is dropped from
+   the endpoint until it is safely in the folder, and collecting twice
+   is harmless because a response carries its own id and lands on the
+   same path both times.
+   ------------------------------------------------------------------ */
+
+function isBaseline(row){
+  return !!(row && row.record && row.record.instrument === content.instrument);
+}
+
+function collect(){
+  var btn = $("collect");
+  btn.disabled = true;
+  $("collectnote").textContent = "Asking the endpoint…";
+
+  return MRRelay.pending().then(function(res){
+    if (!res.ok){
+      $("collectnote").textContent = res.error;
+      btn.disabled = false;
+      return;
+    }
+    var mine = (res.pending || []).filter(isBaseline);
+    var others = (res.pending || []).length - mine.length;
+    if (!mine.length){
+      $("collectnote").textContent = "Nothing waiting for the baseline." +
+        (others ? " " + others + " session-feedback " + (others === 1 ? "submission is" : "submissions are") +
+          " waiting — the feedback summary collects those." : "");
+      btn.disabled = false;
+      return;
+    }
+
+    $("collectnote").textContent = "Writing " + mine.length +
+      (mine.length === 1 ? " response…" : " responses…");
+
+    return mine.reduce(function(chain, row){
+      return chain.then(function(done){
+        var r = row.record;
+        var path = content.storage.responses + (r.wave || "undated") + "--" + r.id + ".json";
+        return MRStore.write(path, r).then(function(ok){
+          if (!ok) throw new Error("could not write " + path);
+          done.push(row.submission);
+          return done;
+        });
+      });
+    }, Promise.resolve([])).then(function(done){
+      return MRRelay.collected(done).then(function(drop){
+        $("collectnote").textContent = done.length +
+          (done.length === 1 ? " response is" : " responses are") + " in the folder" +
+          (drop.ok ? ", and the endpoint has been told to drop them." :
+            ". The endpoint could not be told to drop them — " + drop.error +
+            " Collecting again is harmless.") +
+          (others ? " " + others + " session-feedback " + (others === 1 ? "submission was" : "submissions were") +
+            " left where they are." : "");
+        btn.disabled = false;
+        return load();
+      });
+    });
+  }).catch(function(err){
+    $("collectnote").textContent = "The collection stopped — " +
+      (err && err.message ? err.message : err) + ". Nothing was dropped from the endpoint.";
+    btn.disabled = false;
+  });
+}
+
+$("collect").addEventListener("click", collect);
+
+/* ---------- loading ----------------------------------------------------- */
+
+function currentWave(){ return $("wave").value || ""; }
+
+function paintWaves(){
+  var waves = {};
+  all.forEach(function(r){ waves[r.wave || "undated"] = (waves[r.wave || "undated"] || 0) + 1; });
+  var names = Object.keys(waves).sort().reverse();
+
+  var sel = $("wave");
+  var had = sel.value;
+  sel.innerHTML = "";
+  names.forEach(function(w){
+    var opt = document.createElement("option");
+    opt.value = w;
+    opt.textContent = w + " — " + waves[w] + (waves[w] === 1 ? " response" : " responses");
+    sel.appendChild(opt);
+  });
+  if (had && names.indexOf(had) !== -1) sel.value = had;
+
+  var asked = new URLSearchParams(location.search).get("wave");
+  if (asked && names.indexOf(asked) !== -1) sel.value = asked;
+}
+
+function select(){
+  var w = currentWave();
+  rows = all.filter(function(r){ return (r.wave || "undated") === w; });
+  paintAll();
+}
+
+$("wave").addEventListener("change", select);
+
+function load(){
+  var dir = content.storage.responses.replace(/\/*$/, "");
+  $("dirnote").textContent = dir + "/";
+
+  if (!MRStore.status().ready){
+    $("where").textContent = "No data folder on this device. Connect one in the bar above to read " +
+      dir + "/, or collect from the endpoint on the machine that has the folder.";
+    all = [];
+    rows = [];
+    paintWaves();
+    paintAll();
+    return Promise.resolve();
+  }
+
+  return MRStore.readAll(dir).then(function(found){
+    all = found.map(function(f){ return f.data; })
+               .filter(function(d){ return d && d.instrument === content.instrument; });
+    $("where").textContent = all.length
+      ? all.length + (all.length === 1 ? " response" : " responses") + " in " + dir + "/."
+      : "Nothing in " + dir + "/ yet.";
+    paintWaves();
+    select();
+  });
+}
+
+function paintCollect(){
+  $("collect").hidden = !(MRRelay.canDrain() && MRStore.status().ready);
+}
+
+fetch(MRStore.base() + "content/baseline.json", { cache: "no-cache" })
+  .then(function(res){
+    if (!res.ok) throw new Error("baseline.json — HTTP " + res.status);
+    return res.json();
+  })
+  .then(function(json){
+    content = json;
+    return MRStore.whenReady;
+  })
+  .then(function(){
+    MRStore.mountBar("mr-bar");
+    MRStore.onChange(function(){ paintCollect(); load(); });
+    paintCollect();
+    return load();
+  })
+  .catch(function(err){
+    MRStore.notify("err", "Could not load the read-out — " +
+      (err && err.message ? err.message : err), true);
+  });
+</script>
+</body>
+</html>

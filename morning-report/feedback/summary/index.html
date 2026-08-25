@@ -784,9 +784,25 @@ function collect(){
       btn.disabled = false;
       return;
     }
-    var rows = res.pending || [];
+    /* Two instruments share the post box: this one and the
+       pre-intervention baseline at /morning-report/baseline/. A
+       baseline response is shaped nothing like a session submission
+       and belongs in a different folder, so it is left exactly where
+       it is for its own summary to collect. Dropping rows from the
+       endpoint is per-submission, so leaving some behind costs
+       nothing. */
+    var waiting = res.pending || [];
+    var rows = waiting.filter(function(row){
+      return !(row.record && row.record.instrument === "baseline");
+    });
+    var theirs = waiting.length - rows.length;
+    var alsoSaid = theirs
+      ? " " + theirs + " baseline " + (theirs === 1 ? "response was" : "responses were") +
+        " left for the baseline summary."
+      : "";
+
     if (!rows.length){
-      $("collectnote").textContent = "Nothing waiting.";
+      $("collectnote").textContent = "Nothing waiting." + alsoSaid;
       btn.disabled = false;
       return;
     }
@@ -813,7 +829,7 @@ function collect(){
             (res.unreadable.length === 1 ? " was" : "s were") +
             " unreadable and left where they are.";
         }
-        $("collectnote").textContent = said;
+        $("collectnote").textContent = said + alsoSaid;
         btn.disabled = false;
         return load();
       });

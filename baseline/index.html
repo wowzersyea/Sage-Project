@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseline | Morning Report</title>
+<meta name="description" content="The short way to the pre-intervention morning report evaluation.">
+<link rel="canonical" href="https://sageproject.xyz/morning-report/baseline/">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="../morning-report/assets/mr.css">
+<style>
+  .box{max-width:560px;margin:0 auto;padding:64px 28px;text-align:center}
+  .box h2{font-size:26px}
+  .box .bar{justify-content:center;margin-top:22px}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <p class="eyebrow">Sage Project</p>
+  <h2>Taking you to the morning report evaluation</h2>
+  <p class="lede" style="margin:0 auto">If nothing happens in a moment, the link below is the same place.</p>
+  <div class="bar">
+    <a class="btn amber" id="go" href="../morning-report/baseline/">Open the evaluation →</a>
+  </div>
+</div>
+
+<script>
+/* A short address worth saying out loud and worth putting on a slide:
+   sageproject.xyz/baseline. Same shape as the one in front of the
+   session feedback form, and for the same two reasons.
+
+   The query string is carried across, and that is the whole point of
+   doing this in script rather than with a meta refresh. The link a
+   facilitator hands out configures the device it lands on — which
+   round this is, which site, and which endpoint to post to — and a
+   redirect that dropped it would turn a working code into a form that
+   can only download a file nobody will ever file.
+
+   Relative, not absolute: this site is served both at its own domain
+   and under /Sage-Project/ on github.io, and an absolute path would be
+   wrong on one of them. */
+(function(){
+  var to = "../morning-report/baseline/" + window.location.search + window.location.hash;
+  document.getElementById("go").href = to;
+  window.location.replace(to);
+})();
+</script>
+<noscript>
+  <meta http-equiv="refresh" content="0; url=../morning-report/baseline/">
+</noscript>
+</body>
+</html>
