@@ -32,6 +32,18 @@
      the roster, not for the room. */
   var PATHS = ["roster.json", "rotations.json"];
 
+  /* Option A, chosen knowingly: with this set to the /exec URL, every
+     visitor's wheel loads names and levels with nothing configured —
+     the endpoint serves that subset to a keyless GET only when its
+     owner has also set MR_PUBLIC_ROSTER in Script Properties, so
+     either side can switch it off alone. The rota, the draws, leave
+     windows and every write stay behind the key.
+
+     Tests override via global.MR_PUBLIC_ENDPOINT before this loads. */
+  var PUBLIC_ENDPOINT = (global.MR_PUBLIC_ENDPOINT !== undefined)
+    ? global.MR_PUBLIC_ENDPOINT
+    : "";
+
   var STORE_KEY = "sage-mr-remote";
 
   var state = {
@@ -155,11 +167,17 @@
 
   function fetchAll() {
     if (state.pending) return state.pending;
-    if (!configured()) return Promise.resolve(null);
 
-    var url = state.endpoint +
-      (state.endpoint.indexOf("?") === -1 ? "?" : "&") +
-      "key=" + encodeURIComponent(state.key);
+    var url;
+    if (configured()) {
+      url = state.endpoint +
+        (state.endpoint.indexOf("?") === -1 ? "?" : "&") +
+        "key=" + encodeURIComponent(state.key);
+    } else if (PUBLIC_ENDPOINT) {
+      url = PUBLIC_ENDPOINT;              /* keyless: the public subset */
+    } else {
+      return Promise.resolve(null);
+    }
 
     state.pending = global.fetch(url, { method: "GET", credentials: "omit" })
       .then(function (res) {
@@ -169,7 +187,9 @@
       .then(function (body) {
         if (!body || typeof body !== "object") throw new Error("The endpoint did not return JSON.");
         if (body.status === "denied") {
-          return finish({ ok: false, denied: true, error: "That key was not accepted." });
+          return finish(configured()
+            ? { ok: false, denied: true, error: "That key was not accepted." }
+            : { ok: false, error: "The site's built-in roster is switched off at the endpoint." });
         }
         if (body.status !== "ok") {
           return finish({ ok: false, error: body.message || "The endpoint reported a problem." });
@@ -178,6 +198,7 @@
         var rotations = body.rotations || null;
         return finish({
           ok: true,
+          public: !!body.public,
           data: { "roster.json": roster, "rotations.json": rotations },
           counts: {
             residents: roster && Array.isArray(roster.residents) ? roster.residents.length : 0,
@@ -209,7 +230,7 @@
      means "I have nothing", which is what an absent file means too. */
   function get(path) {
     if (PATHS.indexOf(path) === -1) return Promise.resolve(null);
-    if (!configured()) return Promise.resolve(null);
+    if (!configured() && !PUBLIC_ENDPOINT) return Promise.resolve(null);
     return fetchAll().then(function (r) {
       if (!r || !r.ok || !r.data) return null;
       return r.data[path] || null;
@@ -423,6 +444,8 @@
       tried: state.tried,
       ok: !!(state.result && state.result.ok),
       denied: !!(state.result && state.result.denied),
+      public: !!(state.result && state.result.public),
+      sourced: configured() || !!PUBLIC_ENDPOINT,
       error: state.result && !state.result.ok ? state.result.error : "",
       warnings: (state.result && state.result.warnings) || [],
       counts: (state.result && state.result.counts) || { residents: 0, days: 0 },
@@ -441,10 +464,11 @@
   /* A short line for the shared bar. Null when there is nothing to say. */
   function summary() {
     var s = status();
-    if (!s.configured) return null;
+    if (!s.configured && !PUBLIC_ENDPOINT) return null;
     if (!s.tried) return { kind: "wait", text: "Checking the shared roster…" };
     if (s.ok) {
       if (isEmpty()) return { kind: "warn", text: "Shared roster: sheet is empty" };
+      if (s.public) return { kind: "ok", text: "Shared roster (view only)" };
       var n = s.warnings.length;
       return {
         kind: n ? "warn" : "ok",

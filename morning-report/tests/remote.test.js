@@ -615,6 +615,96 @@ const stub = `
     await ctx6.close();
   }
 
+  /* ---- 11f. the site's built-in roster (option A) ------------------
+
+     A device with nothing set up at all opens the wheel and sees the
+     names, because the site carries the public endpoint and the
+     endpoint owner switched the public subset on. What matters here:
+     it reads and never writes, a configured device is untouched, and
+     switching it off at the endpoint degrades with a sentence.
+     ------------------------------------------------------------------- */
+
+  {
+    const PUB_BODY = {
+      status: 'ok', public: true, generated: '2026-08-25T12:00:00Z', warnings: [],
+      roster: { source: 'sheet', academic_year: '2026-2027',
+        residents: SHARED_ROSTER.residents.map(r => Object.assign({}, r, { unavailable: [] })) },
+      rotations: null,
+    };
+
+    const ctx = await b.newContext();
+    const p7 = await ctx.newPage();
+    p7.on('pageerror', e => errs.push('pageerror: ' + e.message));
+    await p7.addInitScript(fake);
+    await p7.addInitScript('window.MR_PUBLIC_ENDPOINT = ' + JSON.stringify(ENDPOINT) + ';');
+    await p7.addInitScript(stub);
+    await p7.goto(BASE + '/morning-report/roster/', { waitUntil: 'networkidle' });
+    await p7.evaluate(d => { window.__mr.body = d; }, PUB_BODY);
+
+    const r7 = await p7.evaluate(async () => {
+      MRRemote.reload();
+      const roster = await MRRoster.load();
+      return {
+        configured: MRRemote.configured(),
+        names: roster.residents.length,
+        pub: MRRemote.status().public,
+        chip: MRRemote.summary(),
+      };
+    });
+    t('a bare device gets the roster from the site itself', r7.names === 3, r7.names);
+    t('without being configured', r7.configured === false);
+    t('and knows it is the public subset', r7.pub === true);
+    t('the bar says view only', /view only/.test((r7.chip || {}).text || ''), r7.chip);
+
+    /* the wheel itself */
+    await p7.evaluate(d => { window.__mr.body = d; }, PUB_BODY);
+    await p7.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
+    await p7.waitForFunction(() => window.wheels && wheels.pgy1 && wheels.pgy1.people.length > 0,
+      null, { timeout: 8000 });
+    t('the wheel has people on a device with nothing set up',
+      await p7.evaluate(() => wheels.pgy1.people.length > 0 && wheels.senior.people.length > 0));
+
+    /* it must never write: no doc actions, no draw confirmations */
+    const wrote = await p7.evaluate(async () => {
+      window.__mr.calls.length = 0;
+      await MRStore.write('sessions/x.json', { a: 1 });
+      const res = await MRRemote.confirmDraw({ date: '2026-09-03',
+        entries: [{ role: 'r', resident_id: 'r-1', name: 'n' }] });
+      return { calls: window.__mr.calls.map(c => c.method), confirm: res.ok };
+    });
+    t('a public device never writes to the endpoint', wrote.calls.length === 0, wrote.calls);
+    t('confirming a draw is refused with a sentence', wrote.confirm === false);
+
+    /* the endpoint owner switches it off: a sentence, not a blank */
+    const off = await p7.evaluate(async () => {
+      window.__mr.mode = 'denied';
+      MRRemote.reload();
+      await MRRemote.fetchAll();
+      return MRRemote.status().error;
+    });
+    t('switched off at the endpoint reads as switched off, not as a bad key',
+      /switched off/.test(off), off);
+    await p7.evaluate(() => { window.__mr.mode = 'ok'; });
+
+    /* a configured device on the same build is untouched */
+    await p7.evaluate(d => {
+      MRRemote.setSettings({ endpoint: d.e, key: d.k, remember: false });
+      window.__mr.body = d.body;
+    }, { e: ENDPOINT, k: KEY, body: okBody() });
+    const keyed = await p7.evaluate(async () => {
+      MRRemote.reload();
+      window.__mr.calls.length = 0;
+      const rot = await MRStore.read('rotations.json');
+      return { hasRota: !!(rot && rot.days), url: window.__mr.calls[0].url,
+               pub: MRRemote.status().public };
+    });
+    t('a configured device still sends its key', /key=/.test(keyed.url), keyed.url);
+    t('and still gets the rota', keyed.hasRota === true);
+    t('and is not marked public', keyed.pub === false);
+
+    await ctx.close();
+  }
+
   /* ---- 12. remote.js itself failing to load ------------------------
 
      It happened: a 404 was cached at the CDN for the four hours after
