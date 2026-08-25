@@ -246,7 +246,48 @@
       return copy;
     });
     out.residents_source = "shared";
+    out.log = mergeLog(local.log, shared.draws);
     return out;
+  }
+
+  /* Draws confirmed in the room, folded into the local log.
+
+     Without this the endpoint would know who was drawn and the equity
+     table would not, which is the worse half of both designs: a chief
+     on a borrowed laptop leaves a record nobody's equity view can see.
+
+     One entry per date-role-person, folder first. The folder copy is
+     the one that may carry feedback_sent, and the sheet has no column
+     for it — so a confirmed draw that is already logged locally is
+     skipped rather than replacing what is there. */
+  function mergeLog(localLog, draws) {
+    var log = Array.isArray(localLog) ? localLog.slice() : [];
+    if (!Array.isArray(draws) || !draws.length) return log;
+
+    var seen = {};
+    log.forEach(function (e) {
+      if (e) seen[logKey(e.date, e.role, e.resident_id)] = true;
+    });
+
+    draws.forEach(function (d) {
+      if (!d || !d.date || !d.role || !d.resident) return;   /* an acting intern has no id: not a resident, not logged */
+      var k = logKey(d.date, d.role, d.resident);
+      if (seen[k]) return;
+      seen[k] = true;
+      log.push({
+        date: d.date,
+        site: d.site || "",
+        resident_id: d.resident,
+        role: d.role,
+        feedback_sent: false,
+        source: "shared"
+      });
+    });
+    return log;
+  }
+
+  function logKey(date, role, residentId) {
+    return [date || "", role || "", residentId || ""].join("|");
   }
 
   function load() {
@@ -624,6 +665,7 @@
     load: load,
     save: save,
     mergeRoster: mergeRoster,
+    mergeLog: mergeLog,
     residentsAreShared: residentsAreShared,
     nextId: nextId,
     isUnavailable: isUnavailable,

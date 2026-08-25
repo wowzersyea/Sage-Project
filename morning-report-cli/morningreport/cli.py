@@ -22,7 +22,7 @@ import click
 from . import calibration as calib
 from . import feedback as fb
 from . import manifest as mf
-from . import model, rubric as rb, scoring, vtt
+from . import model, remote as rm, rubric as rb, scoring, vtt
 from .roles import NameBoundary
 from .store import Store, StoreError
 
@@ -76,16 +76,20 @@ def _mark(v):
 @click.option("--data", envvar="MORNINGREPORT_DATA", help="The data folder the browser tools use.")
 @click.option("--rubric", "rubric_path", type=click.Path(), help="Override content/rubric.json.")
 @click.option("--quiet", is_flag=True, help="Only errors.")
+@click.option("--endpoint", envvar="MORNINGREPORT_ENDPOINT",
+              help="The shared roster web app URL, for reading confirmed draws.")
+@click.option("--key", envvar="MORNINGREPORT_KEY", help="The endpoint key (MR_KEY).")
 @click.version_option(package_name="morningreport", prog_name="morningreport")
 @click.pass_context
-def cli(ctx, data, rubric_path, quiet):
+def cli(ctx, data, rubric_path, quiet, endpoint, key):
     """Local tooling for the Morning Report module.
 
     Reads and writes the same data folder as the browser tools. Identified
     work lives in working/ and is deleted after seven days regardless.
     """
     ctx.ensure_object(dict)
-    ctx.obj.update(data=data, rubric=rubric_path, quiet=quiet)
+    ctx.obj.update(data=data, rubric=rubric_path, quiet=quiet,
+                   endpoint=endpoint, key=key)
 
 
 # ---------------------------------------------------------------- manifest
@@ -93,9 +97,17 @@ def cli(ctx, data, rubric_path, quiet):
 @cli.command()
 @click.argument("session_id")
 @click.option("--force", is_flag=True, help="Overwrite an existing manifest.")
+@click.option("--from-draw/--no-from-draw", "from_draw", default=True,
+              help="Fill the discussants in from the confirmed draw, when an endpoint is set.")
 @click.pass_context
-def manifest(ctx, session_id, force):
-    """Write a manifest template for a session, to fill in."""
+def manifest(ctx, session_id, force, from_draw):
+    """Write a manifest template for a session, to fill in.
+
+    With an endpoint configured, the two discussants are filled in from
+    the draw that was confirmed in the room — which is the half most
+    likely to be misremembered a day later, and the half `score` will
+    silently drop if a name is spelled differently from the transcript.
+    """
     store = _store(ctx)
     path = store.path("manifests", f"{session_id}.json")
     if path.exists() and not force:
@@ -103,8 +115,10 @@ def manifest(ctx, session_id, force):
 
     template = dict(mf.TEMPLATE)
     parts = session_id.split("-")
+    date = ""
     if len(parts) >= 3:
-        template["session_date"] = "-".join(parts[:3])
+        date = "-".join(parts[:3])
+        template["session_date"] = date
         if len(parts) > 3:
             template["site"] = " ".join(parts[3:]).title()
 
@@ -116,9 +130,39 @@ def manifest(ctx, session_id, force):
             template["board_exported"] = True
         click.echo(f"Prefilled the objective and board flag from board-archive/{session_id}.json.")
 
+    filled_roles = False
+    endpoint, key = ctx.obj.get("endpoint"), ctx.obj.get("key")
+    if from_draw and rm.configured(endpoint, key) and date:
+        try:
+            payload = rm.fetch(endpoint, key)
+        except rm.RemoteError as exc:
+            # Never fatal: the template is still useful, it just has more
+            # blanks in it than it might have.
+            click.echo(f"Could not read the confirmed draw ({exc}). Fill the discussants in by hand.")
+        else:
+            roles, site, notes = rm.roles_for(payload, date)
+            for note in notes:
+                click.echo(note)
+            if roles:
+                keep = {n: r for n, r in template["roles"].items()
+                        if r not in ("PGY1", "SENIOR")}
+                keep.update(roles)
+                template["roles"] = keep
+                if site:
+                    template["site"] = site
+                filled_roles = True
+                who = ", ".join(f"{n} as {r}" for n, r in roles.items())
+                click.echo(f"Filled in from the confirmed draw on {date}: {who}.")
+            else:
+                click.echo(f"No draw has been confirmed for {date}. Fill the discussants in by hand.")
+
     store.write(template, "manifests", f"{session_id}.json")
     click.echo(f"Wrote {path}")
-    click.echo("Fill in the roles, the slide count and the de-identification attestation, then run score.")
+    if filled_roles:
+        click.echo("Check the names match how they appear in the transcript, fill in the rest of "
+                   "the room, the slide count and the de-identification attestation, then run score.")
+    else:
+        click.echo("Fill in the roles, the slide count and the de-identification attestation, then run score.")
 
 
 # ------------------------------------------------------------------- score

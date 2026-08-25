@@ -116,6 +116,28 @@
   .chip.next{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber);color:var(--ink)}
   .ledger .note{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.5}
 
+  .confirm{background:#12212F;border-top:1px solid rgba(255,255,255,.09);padding:18px 32px}
+  .confirm-in{
+    max-width:900px;margin:0 auto;display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  }
+  .confirm-who{flex:1 1 300px;min-width:0}
+  .confirm-eyebrow{
+    margin:0 0 3px;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--amber);font-weight:700;
+  }
+  .confirm-names{margin:0;color:#fff;font-size:15.5px;line-height:1.45;font-weight:600}
+  .confirm-names .role{color:#8FA6BB;font-weight:400}
+  .confirm-act{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+  .confirm-act .hint{margin:0;color:#8FA6BB;font-size:11.5px;max-width:34ch}
+  .confirm-act .hint.bad{color:#F3C3C9}
+  .confirm-act .hint.good{color:#BFE3C9}
+  .confirm.saved{background:#143324;border-top-color:rgba(120,200,150,.25)}
+  .confirm.saved .confirm-eyebrow{color:#8ED6A6}
+  @media(max-width:700px){
+    .confirm-in{flex-direction:column;align-items:stretch}
+    .confirm-act{align-items:stretch}
+    .confirm-act button{width:100%}
+  }
   .handoff{background:var(--paper);border-top:1px solid var(--line-2);padding:22px 32px 30px}
   .handoff-in{max-width:900px;margin:0 auto}
   .handoff h2{margin-bottom:4px}
@@ -251,6 +273,19 @@
 
 </main>
 
+<section class="confirm" id="confirm" hidden>
+  <div class="confirm-in">
+    <div class="confirm-who">
+      <p class="confirm-eyebrow">Both wheels have landed</p>
+      <p class="confirm-names" id="confirm-names"></p>
+    </div>
+    <div class="confirm-act">
+      <button class="amber" id="confirmBtn">Winner winner, chicken dinner 🍗</button>
+      <p class="hint" id="confirm-note"></p>
+    </div>
+  </div>
+</section>
+
 <section class="handoff" id="handoff" hidden>
   <div class="handoff-in">
     <h2>Send them the case</h2>
@@ -272,7 +307,7 @@
   </div>
 </section>
 
-<script src="../assets/remote.js?v=2"></script>
+<script src="../assets/remote.js?v=3"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script src="../assets/content.js"></script>
@@ -316,6 +351,10 @@ var els = {
   sitelist: document.getElementById("sitelist"),
   blocknote: document.getElementById("blocknote"),
   handoff: document.getElementById("handoff"),
+  confirm: document.getElementById("confirm"),
+  confirmNames: document.getElementById("confirm-names"),
+  confirmBtn: document.getElementById("confirmBtn"),
+  confirmNote: document.getElementById("confirm-note"),
   cards: document.getElementById("cards"),
   oneliner: document.getElementById("oneliner")
 };
@@ -669,9 +708,120 @@ Wheel.prototype.renderLedger = function(){
   this.noteEl.textContent = bits.join(" ");
 };
 
+/* ---------- confirming the morning ----------------------------------
+
+   The wheels record to the data folder as they land, which is where the
+   equity table reads from. This is the other half: one press that says
+   "these two, today" and writes it to the shared sheet, so a chief on a
+   borrowed laptop with no folder still leaves a record.
+
+   It is deliberately a separate press rather than automatic on the
+   second landing. A wheel gets re-spun — somebody is already presenting,
+   somebody went home sick — and the morning is not settled until a human
+   says it is. Confirming replaces that date at the far end, so a re-spin
+   corrects the record rather than adding to it.
+   ---------------------------------------------------------------- */
+
+var confirmedFor = null;      /* the date+people last written, so a re-spin re-arms the button */
+
+function sessionEntries(){
+  var out = [];
+  [["pgy1", "PGY-1 discussant"], ["senior", "Senior discussant"]].forEach(function(pair){
+    var w = wheels[pair[0]];
+    if (!w || !w.winner) return;
+    out.push({
+      role: w.role,
+      role_label: pair[1],
+      resident_id: w.winner.acting ? "" : w.winner.id,
+      name: w.winner.name,
+      acting: !!w.winner.acting
+    });
+  });
+  return out;
+}
+
+function confirmSignature(entries, date){
+  return date + "|" + entries.map(function(e){ return e.role + ":" + (e.resident_id || e.name); }).join(",");
+}
+
+function renderConfirm(){
+  var entries = sessionEntries();
+  var bothLanded = entries.length === 2;
+
+  if (!bothLanded){ els.confirm.hidden = true; return; }
+  els.confirm.hidden = false;
+
+  els.confirmNames.innerHTML = entries.map(function(e){
+    return "<span class='role'>" + MRStore.esc(e.role_label) + ":</span> " +
+           MRStore.esc(e.name) + (e.acting ? " <span class='role'>(acting intern)</span>" : "");
+  }).join("<br>");
+
+  var date = els.date.value || MRStore.today();
+  var sig = confirmSignature(entries, date);
+
+  if (confirmedFor === sig){
+    els.confirm.classList.add("saved");
+    els.confirmBtn.disabled = true;
+    els.confirmBtn.textContent = "Recorded ✓";
+    els.confirmNote.className = "hint good";
+    els.confirmNote.textContent = "Written to the shared sheet. Re-spin a wheel to change it.";
+    return;
+  }
+
+  els.confirm.classList.remove("saved");
+  els.confirmBtn.textContent = "Winner winner, chicken dinner 🍗";
+  els.confirmNote.className = "hint";
+
+  /* confirmDraw arrived after remote.js had already been cached once, so
+     a browser holding the older copy would throw on the press rather
+     than explain itself. Cheap to check, and it covers any future
+     version skew for free. */
+  if (!window.MRRemote || typeof MRRemote.confirmDraw !== "function"){
+    els.confirmBtn.disabled = true;
+    els.confirmNote.className = "hint bad";
+    els.confirmNote.textContent = "This page is running an older copy of its scripts. Reload with a hard refresh.";
+    return;
+  }
+  if (!MRRemote.configured()){
+    els.confirmBtn.disabled = true;
+    els.confirmNote.className = "hint bad";
+    els.confirmNote.textContent = "No shared sheet is set up on this browser, so there is nowhere to write it.";
+    return;
+  }
+  els.confirmBtn.disabled = false;
+  els.confirmNote.textContent = "Records these two as today's discussants in the shared sheet.";
+}
+
+if (els.confirmBtn) els.confirmBtn.addEventListener("click", function(){
+  var entries = sessionEntries();
+  if (entries.length !== 2) return;
+  var date = els.date.value || MRStore.today();
+
+  els.confirmBtn.disabled = true;
+  els.confirmNote.className = "hint";
+  els.confirmNote.textContent = "Writing…";
+
+  MRRemote.confirmDraw({
+    date: date,
+    site: els.site.value.trim(),
+    presenting: presenting || "",
+    entries: entries
+  }).then(function(r){
+    if (!r.ok){
+      els.confirmBtn.disabled = false;
+      els.confirmNote.className = "hint bad";
+      els.confirmNote.textContent = r.error;
+      return;
+    }
+    confirmedFor = confirmSignature(entries, date);
+    renderConfirm();
+  });
+});
+
 /* ---------- handoff ------------------------------------------------- */
 
 function renderHandoff(){
+  renderConfirm();      /* same triggers: a wheel landed, or the date changed */
   var drawn = [];
   ["pgy1", "senior"].forEach(function(k){
     if (wheels[k] && wheels[k].winner) drawn.push({ wheel: wheels[k], person: wheels[k].winner });
@@ -848,6 +998,7 @@ function refreshAll(){
   Object.keys(wheels).forEach(function(k){ wheels[k].refresh(); });
   renderBlockNote();
   renderDutyBar();
+  renderConfirm();      /* a new date is a different morning, so re-arm the press */
 }
 
 function renderBlockNote(){

@@ -7,7 +7,7 @@ const path = require('path');
 const SUITES = [
   'store', 'roster', 'board', 'capture', 'scorecard',
   'roles', 'review', 'report', 'equity', 'shortnames', 'wheellabels', 'rotation', 'site',
-  'remote', 'appsscript', 'gate', 'feedback', 'qr',
+  'remote', 'appsscript', 'gate', 'confirm', 'feedback', 'qr',
 ];
 
 let failed = [];

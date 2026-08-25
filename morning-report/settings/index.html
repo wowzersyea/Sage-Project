@@ -143,8 +143,8 @@
     <b>Why the roster is not in this repository</b>
     This site is public. Everything committed to it is served to anyone who asks, and a password on
     the pages would not change that — the JSON would be its own URL. So the roster lives behind this
-    endpoint instead, and the pages stay public and empty. The endpoint holds who is on service; it
-    never holds a score, and the participation log stays in your data folder.
+    endpoint instead, and the pages stay public and empty. The endpoint holds who is on service and who was drawn; it
+    never holds a score.
   </section>
 
   <section class="panel">
@@ -153,7 +153,7 @@
       <li>Create a Google Sheet, then <b>Extensions → Apps Script</b>.</li>
       <li>Paste in <code>morning-report/server/Code.gs</code> from this repository and save.</li>
       <li>Run <code>setUpSheets()</code> once from the editor and grant the permissions it asks for.
-        Three tabs appear: <b>Roster</b>, <b>Rota</b>, <b>Sites</b>.</li>
+        Four tabs appear: <b>Roster</b>, <b>Rota</b>, <b>Sites</b> and <b>Draws</b> — the last one fills itself in when a draw is confirmed.</li>
       <li><b>Project Settings → Script Properties</b>, add <code>MR_KEY</code> with a long random
         string. Without it the endpoint refuses everyone, including you.</li>
       <li><b>Deploy → New deployment → Web app</b>, execute as <b>Me</b>, access <b>Anyone</b>.
@@ -172,7 +172,7 @@
 
 </main>
 
-<script src="../assets/remote.js?v=2"></script>
+<script src="../assets/remote.js?v=3"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/relay.js"></script>
 <script src="../assets/qr.js"></script>

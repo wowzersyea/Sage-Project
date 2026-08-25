@@ -1,7 +1,12 @@
 name: Security Scan
 
+# push + workflow_dispatch for the same reason as ci-shared-template:
+# pull_request runs are silently skipped while a PR conflicts with main,
+# and a secret scan is the last check that should quietly not run.
 on:
   pull_request:
+  push:
+  workflow_dispatch:
   schedule:
     - cron: "30 10 * * 1"
 

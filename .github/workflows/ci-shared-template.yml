@@ -1,9 +1,16 @@
 name: CI Shared Template
 
+# Triggers on every push, not just pull_request events, and deliberately:
+# GitHub silently skips pull_request runs while a PR is conflicted with
+# its base, and with main moving several times a day a long-lived branch
+# spends much of its life conflicted — its pushes got no CI at all, with
+# nothing red to say so. A push run checks the branch head itself, so it
+# fires either way; a clean PR gets one extra short run, which is cheap.
+# workflow_dispatch is the manual lever for re-running without a push.
 on:
   pull_request:
   push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   lint-and-validate:

@@ -5,10 +5,11 @@
    spreadsheet this script is bound to, which is why this file can live
    in a public repository and the roster cannot.
 
-   It answers two things:
+   It answers three things:
 
-     GET  ?key=...    the roster and the rota, as the browser wants them
-     POST {key,...}   seed the sheets from an existing data folder
+     GET  ?key=...                   the roster, the rota and the draws
+     POST {key, action:'draw', ...}  record today's discussants
+     POST {key, roster, rotations}   seed the sheets from a data folder
 
    and it holds a third, which is a post box rather than a store:
 
@@ -39,7 +40,7 @@
 
    1. Create a Google Sheet. Extensions -> Apps Script. Paste this file
       over Code.gs and save.
-   2. Run setUpSheets() once from the editor. It creates the three tabs
+   2. Run setUpSheets() once from the editor. It creates the four tabs
       with their headers. Grant the permissions it asks for.
    3. Project Settings -> Script Properties -> add:
          MR_KEY            a long random string, for the facilitator
@@ -73,6 +74,14 @@
             on that site's presenting day those people come off the
             wheels. other_tasks stay eligible as discussants.
 
+   Draws    date | site | presenting | role | resident_id | name | confirmed_at
+            Written by the draw page, not by hand. One row per person
+            per morning, and confirming a date replaces that date's
+            rows — a re-spin should not read as four discussants.
+
+            This is the half that lets a chief on a borrowed laptop
+            leave a record without connecting a data folder.
+
    Names, not ids, in Rota and Sites on purpose — a chief editing this
    on their phone between patients should not have to know that Dr X is
    r-017.
@@ -82,12 +91,14 @@ var SHEETS = {
   roster: 'Roster',
   rota: 'Rota',
   sites: 'Sites',
-  feedback: 'Feedback'
+  feedback: 'Feedback',
+  draws: 'Draws'
 };
 
 var ROSTER_HEADERS = ['id', 'name', 'sort_name', 'level', 'active', 'short'];
 var SITES_HEADERS = ['site', 'label', 'ward_tasks', 'other_tasks'];
 var FEEDBACK_HEADERS = ['received', 'session', 'submission', 'recordings', 'payload'];
+var DRAWS_HEADERS = ['date', 'site', 'presenting', 'role', 'resident_id', 'name', 'confirmed_at'];
 
 /* A recording is capped in the browser long before it gets here. This
    is the backstop, in base64 characters, so a runaway upload is
@@ -122,6 +133,7 @@ function doPost(e) {
     if (body.action === 'collect') return json(pendingFeedback());
     if (body.action === 'recording') return json(oneRecording(body.id));
     if (body.action === 'collected') return json(dropCollected(body.submissions));
+    if (body.action === 'draw') return json(recordDraw(body));
 
     return json(seedFrom(body));                 // no action: the original seed
   } catch (err) {
@@ -297,6 +309,7 @@ function buildPayload() {
   var byName = indexNames(residents);
   var rota = readRota(ss, byName, warnings);
   var sites = readSites(ss, rota.tasks, warnings);
+  var draws = readDraws(ss);
 
   return {
     status: 'ok',
@@ -305,7 +318,8 @@ function buildPayload() {
     roster: {
       source: 'sheet',
       academic_year: academicYear(),
-      residents: residents
+      residents: residents,
+      draws: draws
     },
     rotations: rota.days === null ? null : {
       source: 'sheet',
@@ -494,6 +508,69 @@ function splitList(v) {
   return String(v || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
 }
 
+/* ---------- today's discussants ---------------------------------------
+
+   The one thing written from the room rather than from a data folder,
+   and the reason a chief on a borrowed laptop can still leave a record.
+
+   Confirming a date REPLACES that date's rows rather than appending to
+   them. A wheel gets re-spun — somebody is off sick, somebody was drawn
+   who is already presenting — and the last confirmation is the one that
+   describes the morning. Appending would make a re-spin look like four
+   discussants.
+   ------------------------------------------------------------------- */
+
+function recordDraw(body) {
+  var date = asDate(body.date);
+  if (!date) return { status: 'error', message: 'A draw needs a date as YYYY-MM-DD.' };
+
+  var entries = body.entries;
+  if (!entries || !entries.length) return { status: 'error', message: 'A draw needs at least one person.' };
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = sheetFor(ss, SHEETS.draws, DRAWS_HEADERS);
+  var stamp = new Date().toISOString();
+
+  var kept = [];
+  var values = sh.getDataRange().getValues();
+  for (var r = 1; r < values.length; r++) {
+    if (!String(values[r][0] || '').trim()) continue;
+    if (asDate(values[r][0]) === date) continue;          // this date is being rewritten
+    kept.push(values[r].slice(0, DRAWS_HEADERS.length));
+  }
+  var replaced = (values.length - 1) - kept.length;
+
+  var added = [];
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i] || {};
+    if (!e.name && !e.resident_id) continue;
+    added.push([date, String(body.site || ''), String(body.presenting || ''),
+      String(e.role || ''), String(e.resident_id || ''), String(e.name || ''), stamp]);
+  }
+  if (!added.length) return { status: 'error', message: 'A draw needs at least one named person.' };
+
+  writeTable(sh, DRAWS_HEADERS, kept.concat(added));
+  return { status: 'ok', date: date, wrote: added.length, replaced: replaced };
+}
+
+/* Every confirmed draw, for the browser to fold into its own log. */
+function readDraws(ss) {
+  var rows = tableOf(ss, SHEETS.draws);
+  var out = [];
+  rows.forEach(function (row) {
+    var date = asDate(row.date);
+    if (!date) return;
+    out.push({
+      date: date,
+      site: String(row.site || '').trim(),
+      role: String(row.role || '').trim(),
+      resident: String(row.resident_id || '').trim(),
+      name: String(row.name || '').trim()
+    });
+  });
+  return out;
+}
+
 /* ---------- seeding from the data folder ------------------------------ */
 
 function seedFrom(body) {
@@ -565,8 +642,9 @@ function setUpSheets() {
   sheetFor(ss, SHEETS.rota, ['date']);
   sheetFor(ss, SHEETS.sites, SITES_HEADERS);
   sheetFor(ss, SHEETS.feedback, FEEDBACK_HEADERS);
+  sheetFor(ss, SHEETS.draws, DRAWS_HEADERS);
   SpreadsheetApp.getUi().alert(
-    'Four tabs are ready.\n\n' +
+    'Five tabs are ready.\n\n' +
     'Set MR_KEY in Project Settings -> Script Properties, deploy as a web app, ' +
     'then use the Publish page in Morning Report to fill these in from your data folder.\n\n' +
     'Feedback is a post box, not a record: it fills up as people submit and empties ' +
