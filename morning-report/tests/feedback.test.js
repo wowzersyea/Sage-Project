@@ -733,6 +733,109 @@ const FAKE_API = `
   t('the drain asks in the right order',
      drained.calls.join(',') === 'collect,recording,collected', drained.calls);
 
+  // ---- the short link, and that it carries the query across -------------
+  const shortCtx = await browser.newContext();
+  await shortCtx.addInitScript(FAKE_SPEECH);
+  await shortCtx.addInitScript(FAKE_RECORDER);
+  await shortCtx.addInitScript(FAKE_BOX);
+  const short = await shortCtx.newPage();
+  short.on('pageerror', e => errs.push('pageerror(short): ' + e.message));
+
+  await short.goto(BASE + '/feedback/', { waitUntil: 'networkidle' });
+  t('the short link lands on the form',
+     /\/morning-report\/feedback\/$/.test(short.url()), short.url());
+
+  const CONFIG = '?relay=' + encodeURIComponent('https://endpoint.test/exec') +
+    '&k=submit-key&session=2026-11-05-galveston';
+  await short.goto(BASE + '/feedback/' + CONFIG, { waitUntil: 'networkidle' });
+  await short.waitForTimeout(300);
+  const carried = await short.evaluate(() => ({
+    url: location.href,
+    canSubmit: MRRelay.canSubmit(),
+    date: document.getElementById('date').value,
+    site: document.getElementById('site').value
+  }));
+  t('a configured short link still configures the device it lands on',
+     carried.canSubmit && /morning-report\/feedback\//.test(carried.url) &&
+     /k=submit-key/.test(carried.url), carried);
+  await shortCtx.close();
+
+  // ---- the link the facilitator hands out is absolute --------------------
+  await page.goto(BASE + '/morning-report/settings/', { waitUntil: 'networkidle' });
+  await page.evaluate(async () => {
+    await MRStore.whenReady;
+    MRRemote.setSettings({ endpoint: 'https://endpoint.test/exec', key: 'roster-key', remember: false });
+    MRRelay.setShareKey('submit-key', false);
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(300);
+
+  const shareLink = await page.evaluate(() => MRRelay.linkFor(MRStore.siteRoot() + 'feedback/'));
+  t('the shared link is an absolute URL, not a relative one glued to an origin',
+     /^http:\/\/localhost:8899\/feedback\/\?relay=/.test(shareLink), shareLink);
+  t('it carries the submit key and never the roster key',
+     /k=submit-key/.test(shareLink) && shareLink.indexOf('roster-key') === -1, shareLink);
+
+  const qrPanel = await page.evaluate(() => {
+    const wrap = document.getElementById('qrwrap');
+    const svg = document.querySelector('#qr svg');
+    return {
+      shown: !wrap.hidden,
+      hasSvg: !!svg,
+      modules: svg ? (svg.innerHTML.match(/h1v1h-1z/g) || []).length : 0,
+      note: document.getElementById('qrnote').textContent,
+      /* Compare the drawn modules, not the serialised markup: the
+         browser rewrites attribute order and namespaces when it
+         parses, and none of that is what is being checked. */
+      matchesLink: svg
+        ? svg.querySelector('path').getAttribute('d') ===
+          (MRQr.svg(MRRelay.linkFor(MRStore.siteRoot() + 'feedback/'), { scale: 6, quiet: 4 })
+            .match(/ d="([^"]+)"/) || [])[1]
+        : false
+    };
+  });
+  t('the settings page draws the code once there is a key for it',
+     qrPanel.shown && qrPanel.hasSvg && qrPanel.modules > 100, qrPanel.modules);
+  t('and it encodes the link it says it does', qrPanel.matchesLink);
+  t('the note masks the key rather than printing it',
+     /k=…/.test(qrPanel.note) && qrPanel.note.indexOf('submit-key') === -1, qrPanel.note);
+
+  const gone = await page.evaluate(() => {
+    MRRelay.setShareKey('', false);
+    document.getElementById('fbkey').value = '';
+    document.getElementById('savefb').click();
+    return document.getElementById('qrwrap').hidden;
+  });
+  t('and it goes away again when there is no key', gone);
+
+  // ---- the board puts the session's own code on the screen ---------------
+  await page.goto(BASE + '/morning-report/board/', { waitUntil: 'networkidle' });
+  await page.evaluate(async () => {
+    await MRStore.whenReady;
+    MRRemote.setSettings({ endpoint: 'https://endpoint.test/exec', key: 'roster-key', remember: false });
+    MRRelay.setShareKey('submit-key', false);
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(300);
+
+  const veil = await page.evaluate(() => {
+    showFinish({ id: '2026-11-12-houston', date: '2026-11-12', site: 'Houston' },
+      'board-archive/2026-11-12-houston.json', {});
+    const svg = document.querySelector('#feedbackQrCode svg');
+    return {
+      qrShown: !document.getElementById('feedbackQr').hidden,
+      hasSvg: !!svg,
+      href: document.getElementById('toFeedback').getAttribute('href'),
+      copyShown: !document.getElementById('copyFeedback').hidden,
+      note: document.getElementById('feedbackNote').textContent
+    };
+  });
+  t('finishing the board offers the session code on screen', veil.qrShown && veil.hasSvg, veil);
+  t('the in-page link stays relative, as a link on a page should',
+     veil.href === '../feedback/?session=2026-11-12-houston', veil.href);
+  t('and the copyable one is offered alongside it',
+     veil.copyShown && /phone/.test(veil.note), veil.note);
+
   let failed = 0;
   for (const r of out) { if (!r.pass) failed++; console.log((r.pass?'PASS  ':'FAIL  ') + r.name + (r.extra?'   '+r.extra:'')); }
   if (errs.length) { console.log('\nERRORS:'); errs.forEach(e => console.log('  ' + e)); }

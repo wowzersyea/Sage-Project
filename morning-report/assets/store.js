@@ -473,6 +473,21 @@
 
   /* ---------- small shared helpers ----------------------------------- */
 
+  /* base() is relative, which is what a link inside a page wants. A
+     link that will be copied into an email, a slide or a QR code has
+     to be absolute — and this site is served both from its own domain
+     and from /Sage-Project/ on github.io, so neither prefix can be
+     assumed. Derive both from where this page actually is. */
+  function siteRoot() {
+    var path = location.pathname;
+    var cut = path.indexOf("/morning-report/");
+    return location.origin + (cut === -1 ? path.replace(/[^/]*$/, "") : path.slice(0, cut + 1));
+  }
+
+  function moduleRoot() {
+    return siteRoot() + "morning-report/";
+  }
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -516,6 +531,8 @@
     fail: fail,
     mountBar: mountBar,
     base: base,
+    siteRoot: siteRoot,
+    moduleRoot: moduleRoot,
     esc: esc,
     slug: slug,
     today: today,

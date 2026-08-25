@@ -29,6 +29,13 @@
   ol.steps li{margin-bottom:9px}
   ol.steps code{font-family:var(--mono);background:#F2F6F8;border:1px solid var(--line);
     padding:1px 5px;border-radius:3px;font-size:12.5px}
+  .qrbox{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-top:14px}
+  .qrbox #qr{
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;line-height:0;
+  }
+  .qrbox #qr svg{display:block;width:190px;height:190px}
+  .qrside{flex:1 1 220px}
+  .qrside .hint{margin-top:10px}
 </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KEGTRRS0Z"></script>
 <script>
@@ -111,6 +118,24 @@
       <button type="button" class="ghost" id="copyfb">Copy the feedback link</button>
     </div>
     <p class="hint" id="fbcopied" style="margin-top:9px"></p>
+
+    <div id="qrwrap" hidden>
+      <h3 style="margin-top:22px">The code for the deck</h3>
+      <p class="hint" style="margin-top:0">Put this on a slide in the presenter template once and leave
+        it there. It carries the endpoint and the feedback key, so a phone that scans it can send
+        feedback without anybody typing a URL. It keeps working until you change the feedback key —
+        change that and come back here for a new one.</p>
+      <div class="qrbox">
+        <div id="qr"></div>
+        <div class="qrside">
+          <div class="bar">
+            <button type="button" class="ghost" id="qrpng">Download PNG</button>
+            <button type="button" class="ghost" id="qrsvg">Download SVG</button>
+          </div>
+          <p class="hint" id="qrnote"></p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="panel privacy">
@@ -149,6 +174,7 @@
 <script src="../assets/remote.js?v=2"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/relay.js"></script>
+<script src="../assets/qr.js"></script>
 <script>
 (function () {
   "use strict";
@@ -222,6 +248,7 @@
     $("endpoint").value = s.endpoint;
     $("key").value = s.key;
     $("fbkey").value = MRRelay.shareKey();
+    paintQr();
     $("remember").checked = s.remember;
   }
 
@@ -232,6 +259,7 @@
     if (msg) return;
     MRRemote.setSettings({ endpoint: url, key: $("key").value, remember: $("remember").checked });
     renderStatus();
+    paintQr();                       /* the code carries the endpoint too */
     if (MRRemote.configured()) MRRemote.fetchAll().then(renderStatus);
   });
 
@@ -239,6 +267,7 @@
     MRRemote.forget();
     fill();
     renderStatus();
+    paintQr();
     MRStore.notify("ok", "The endpoint and key are gone from this device.");
   });
 
@@ -260,10 +289,79 @@
     $("fbcopied").textContent = k
       ? ($("remember").checked ? "Saved on this device." : "Saved for this tab.")
       : "Forgotten.";
+    paintQr();
+  });
+
+  /* ---------- the QR for the slide deck -------------------------------
+
+     Drawn here rather than fetched from a QR service, because the URL
+     on it carries the feedback key and handing that to a third party
+     to render would be an odd way to look after it. */
+
+  function feedbackLink() {
+    return MRRelay.linkFor(MRStore.siteRoot() + "feedback/");
+  }
+
+  function paintQr() {
+    var link = feedbackLink();
+    var wrap = $("qrwrap");
+    wrap.hidden = !link;
+    if (!link) return;
+    try {
+      $("qr").innerHTML = MRQr.svg(link, { scale: 6, quiet: 4 });
+      $("qrnote").textContent = "Encodes " + link.replace(/([?&]k=)[^&]*/, "$1…") +
+        " — the key is in it, so treat a printed copy the way you would treat the key.";
+    } catch (err) {
+      wrap.hidden = true;
+      $("fbcopied").textContent = "That link is too long to put in a QR code — " +
+        (err && err.message ? err.message : err);
+    }
+  }
+
+  function download(name, blob) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  $("qrsvg").addEventListener("click", function () {
+    var link = feedbackLink();
+    if (!link) return;
+    download("morning-report-feedback-qr.svg",
+      new Blob([MRQr.svg(link, { scale: 12, quiet: 4 })], { type: "image/svg+xml" }));
+  });
+
+  /* PNG for the deck: PowerPoint handles it without argument, and at
+     this size it is still crisp on a projector. */
+  $("qrpng").addEventListener("click", function () {
+    var link = feedbackLink();
+    if (!link) return;
+    var m = MRQr.matrix(link);
+    var quiet = 4;
+    var scale = 16;
+    var side = (m.length + quiet * 2) * scale;
+    var canvas = document.createElement("canvas");
+    canvas.width = side;
+    canvas.height = side;
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, side, side);
+    ctx.fillStyle = "#16283C";
+    for (var r = 0; r < m.length; r++) {
+      for (var c = 0; c < m.length; c++) {
+        if (m[r][c]) ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+      }
+    }
+    canvas.toBlob(function (blob) {
+      download("morning-report-feedback-qr.png", blob);
+    }, "image/png");
   });
 
   $("copyfb").addEventListener("click", function () {
-    var link = MRRelay.linkFor(location.origin + MRStore.base() + "feedback/");
+    var link = MRRelay.linkFor(MRStore.siteRoot() + "feedback/");
     if (!link) {
       $("fbcopied").textContent = MRRelay.shareKey()
         ? "Fill in and save the endpoint first."

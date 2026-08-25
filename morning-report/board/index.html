@@ -361,12 +361,28 @@
       <a class="teal" id="toFeedback" href="#" target="_blank" rel="noopener">Ask the room how it went →</a>
       <button type="button" class="ghost" id="copyFeedback" hidden>Copy the link to send round</button>
     </div>
+    <div class="fbqr" id="feedbackQr" hidden>
+      <div id="feedbackQrCode"></div>
+      <p class="hint">Point a phone at this before anybody leaves. It is this session's own link —
+        what they send waits at the endpoint until you collect it.</p>
+    </div>
     <p class="hint" id="feedbackNote" style="margin-top:8px"></p>
   </div>
 </div>
 
+<style>
+  /* The finish veil is dark and a QR needs a light quiet zone around
+     it, so the code sits on its own white plate. Large enough to scan
+     from the back of the room off a shared screen. */
+  .fbqr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:16px}
+  .fbqr[hidden]{display:none}
+  .fbqr #feedbackQrCode{background:#fff;padding:10px;border-radius:8px;line-height:0}
+  .fbqr #feedbackQrCode svg{display:block;width:168px;height:168px}
+  .fbqr .hint{flex:1 1 220px;margin:0}
+</style>
 <script src="../assets/remote.js?v=2"></script>
 <script src="../assets/relay.js"></script>
+<script src="../assets/qr.js"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script src="../assets/content.js"></script>
@@ -896,10 +912,25 @@ function showFinish(archive, path, d){
      carries the collection point instead and anybody can fill it in
      from wherever they are sitting. */
   var share = window.MRRelay && MRRelay.canShare()
-    ? MRRelay.linkFor(location.origin + MRStore.base() + "feedback/?session=" +
+    ? MRRelay.linkFor(MRStore.siteRoot() + "feedback/?session=" +
         encodeURIComponent(archive.id))
     : "";
   $("copyFeedback").hidden = !share;
+
+  /* The code on the screen everybody is already looking at. Drawn only
+     when there is a configured link to put in it — a QR of a link that
+     cannot post anywhere would just waste the room's time. */
+  var qrBox = $("feedbackQr");
+  qrBox.hidden = true;
+  if (share && window.MRQr) {
+    try {
+      $("feedbackQrCode").innerHTML = MRQr.svg(share, { scale: 6, quiet: 4 });
+      qrBox.hidden = false;
+    } catch (err) {
+      qrBox.hidden = true;                 /* too long to encode; the link still works */
+    }
+  }
+
   $("feedbackNote").textContent = share
     ? "The copied link works from a phone: what people send waits at the endpoint until you collect it."
     : "This link only works on a machine with the data folder. Save a feedback key in Settings and it will work from a phone too.";
