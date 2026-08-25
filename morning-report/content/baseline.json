@@ -1,22 +1,40 @@
 {
-  "_source": "The pre-intervention evaluation at /morning-report/baseline/. Every word a respondent reads lives in this file — the cohorts, the two scales, the five domains, the measured quantities and the two open questions. The three pages restate none of it, which is what makes the instrument reviewable by somebody who does not read JavaScript.",
+  "_source": "The pre-intervention evaluation at /morning-report/baseline/. Every word a respondent reads lives in this file — the cohorts, the two scales, the six domains, the counted quantities and the two open questions. The three pages restate none of it, which is what makes the instrument reviewable by somebody who does not read JavaScript.",
 
-  "_why_this_is_separate_from_feedback": "feedback.json asks how one session went and is answered after it. This asks what the standing arrangement is like and is answered once, before anything changes. Sharing a file would have meant one of the two instruments bending to fit the other, and a baseline that bends is not a baseline.",
+  "_setting": [
+    "Written for this morning report and no other, and the specifics matter to how the items are worded:",
+    "- Two sites, and everybody virtual. There is no room and no far end, so nothing here asks whether the people on the call could take part as well as the people in the room — there are no people in the room.",
+    "- Three mornings a week. The burden items say three rather than asking in the abstract.",
+    "- Presentation format varies widely, from a shared chart to a built deck. That is a thing to measure, not a thing to complain about, so it has a domain of its own.",
+    "- Roles are not assigned in advance and nobody is called on by name.",
+    "- Faculty input tends to arrive at the end, and tends toward facts rather than a stated take-home point.",
+    "The planned change is forced discussants, clearly defined roles and two shared screens. Every item below is worded so that it can be asked again afterwards, unchanged, and so that it would move if that change works. An item that only makes sense after the change would have no baseline to compare against, and there are none of those here."
+  ],
+
+  "_why_this_is_separate_from_feedback": "feedback.json asks how one session went and is answered after it. This asks what the standing arrangement is like and is answered once a round, before and after a change. Sharing a file would have meant one of the two instruments bending to fit the other, and a baseline that bends is not a baseline.",
 
   "_neutrality": [
     "This instrument is meant to measure, not to argue. Four things keep it honest, and none of them may be quietly dropped when the wording is next edited:",
-    "1. Symmetric anchors. Strongly disagree and Strongly agree sit at equal distance either side of a stated midpoint. Neither end is the expected answer, and no item is introduced by a sentence that implies one.",
-    "2. Balanced polarity. The four descriptive domains each carry items worded so that agreeing is favourable and items worded so that agreeing is unfavourable — the ones marked reverse. Somebody who ticks the same column all the way down produces a flat score rather than a good one, and the summary counts those forms instead of hiding them. The overall domain is the deliberate exception: its three items are summary judgements rather than descriptions, and a reversed summary judgement reads as a trick question. The acquiescence check runs across the other four, which is where it has something to compare.",
+    "1. Symmetric anchors. Strongly disagree and Strongly agree sit at equal distance either side of a stated midpoint. Neither end is the expected answer, and no item is introduced by a sentence that implies one. This matters more than usual here, because whoever hands the form out already believes they know what is wrong — and an item written to confirm that belief will confirm it.",
+    "2. Balanced polarity. The five descriptive domains each carry items worded so that agreeing is favourable and items worded so that agreeing is unfavourable — the ones marked reverse. Somebody who ticks the same column all the way down produces a flat score rather than a good one, and the summary counts those forms instead of hiding them. The overall domain is the deliberate exception: its three items are summary judgements rather than descriptions, and a reversed summary judgement reads as a trick question.",
     "3. A way out that is not the midpoint. No basis to judge is not a 3. It is dropped from the arithmetic entirely, so that people who did not see a thing do not become mild opinion about it.",
-    "4. Quantities where a quantity exists. Preparation time is asked for in minutes, not as too much or about right, because the second question cannot be answered without first taking a side.",
-    "The open questions are a pair and stay a pair: one asks what should not change, one asks what should. Asking only the second would collect a list of complaints and call it a baseline."
+    "4. Quantities where a quantity exists. Preparation time is asked for in minutes and speakers are asked for as a count, not as too much or too few, because those questions cannot be answered without first taking a side.",
+    "The open questions are a pair and stay a pair: one asks what should not change, one asks what should. Asking only the second would collect a list of complaints and call it a baseline — and given what this project already suspects, it would collect a very convincing one."
   ],
 
-  "version": 1,
+  "_measures": [
+    "Every domain and every counted quantity is tagged with what kind of measure it is, because a QI project that reports only the things it hoped to improve has not measured its change — it has advertised it.",
+    "outcome — the thing the change is for: people taking part, and a take-home point that survives the morning.",
+    "process — whether the change actually happened: roles known in advance, people called on by name, two things visible at once, sessions that run alike.",
+    "balancing — what the change might cost. Forcing discussants raises the price of being wrong in front of two sites, and defined roles and a second screen can lengthen a session and add preparation. Those items are here so that a fall in them is visible rather than discovered later.",
+    "The counted quantities are the ones worth plotting over time rather than only before and against after: speakers per session, minutes of preparation, and how often a session overruns can each be asked every round and read as a run chart. Pre-and-post on its own is the weakest form this evidence takes."
+  ],
+
+  "version": 2,
   "instrument": "baseline",
 
   "title": "Morning report, as it runs today",
-  "lede": "A picture of the current arrangement, taken before anything about it changes. Five or six minutes, anonymous, and there is no answer here that anybody is hoping for.",
+  "lede": "A picture of the current arrangement, taken before anything about it changes. Six or seven minutes, anonymous, and there is no answer here that anybody is hoping for.",
   "eyebrow": "Morning report · before any change",
 
   "wave": {
@@ -27,14 +45,14 @@
 
   "site": {
     "label": "Site",
-    "hint": "Where you usually sit for report. Blank is fine.",
+    "hint": "Which of the two you are usually dialling in from. Blank is fine.",
     "placeholder": "Galveston"
   },
 
   "cohort": {
     "eyebrow": "One tap",
     "title": "Which are you?",
-    "lede": "The only thing this form asks about you. It is what makes the answers readable — a first-year and a faculty member are describing different experiences of the same twenty-five minutes, and averaging them together would lose both.",
+    "lede": "The only thing this form asks about you. It is what makes the answers readable — an intern and a faculty member are describing different experiences of the same mornings, and averaging them together would lose both.",
     "required_note": "Pick one to begin.",
     "options": [
       { "id": "pgy1", "label": "PGY-1", "note": "First year" },
@@ -47,28 +65,28 @@
   "context": {
     "title": "How you take part",
     "eyebrow": "Two facts, no opinions",
-    "lede": "Neither of these is a judgement about anything. They separate the person who is in the room three times a week from the person who dials in once.",
+    "lede": "Neither of these is a judgement about anything. They separate the person who is on all three mornings from the person who catches one, and the person who has presented from the person who has not.",
     "items": [
       {
         "id": "attendance",
-        "label": "Sessions you attend in a typical week",
+        "label": "Of the three sessions a week, how many you usually join",
         "kind": "choice",
         "options": [
           { "value": "0", "label": "None at the moment" },
           { "value": "1", "label": "About one" },
           { "value": "2", "label": "Two" },
-          { "value": "3", "label": "Three" },
-          { "value": "4+", "label": "Four or more" }
+          { "value": "3", "label": "All three" }
         ]
       },
       {
-        "id": "mode",
-        "label": "How you usually take part",
+        "id": "presented",
+        "label": "Times you have presented in the last three months",
         "kind": "choice",
         "options": [
-          { "value": "inperson", "label": "In the room" },
-          { "value": "remote", "label": "On the call" },
-          { "value": "both", "label": "Both, about equally" }
+          { "value": "0", "label": "Not yet" },
+          { "value": "1", "label": "Once" },
+          { "value": "2-3", "label": "Two or three" },
+          { "value": "4+", "label": "Four or more" }
         ]
       }
     ]
@@ -105,55 +123,74 @@
   "domains": [
     {
       "id": "technical",
-      "title": "Technical",
-      "eyebrow": "The room and the connection",
-      "lede": "Two sites on one call. This is the half that decides whether the far end could take part at all, and it is asked first because it is the easiest thing to be wrong about from one end of the wire.",
+      "title": "The call",
+      "eyebrow": "Two sites, everybody virtual",
+      "measure_type": "process",
+      "lede": "Nobody is in a room, so this is not about a far end being left out — it is about whether the call itself was good enough to hold a case discussion in. One item here asks whether you could see two things at once, which is the thing a second shared screen is meant to fix.",
       "items": [
-        { "id": "audio", "text": "I could hear everyone clearly, wherever I was taking part from." },
-        { "id": "legible", "text": "What was on the shared screen was legible from where I sat." },
-        { "id": "joining", "text": "Getting into the session took me under a minute." },
+        { "id": "audio", "text": "I could hear everyone at both sites clearly." },
+        { "id": "legible", "text": "What was shared on screen was legible without anyone having to ask for it to be made bigger." },
+        { "id": "bothatonce", "text": "I could see the case details and whatever was being discussed at the same time." },
         { "id": "interrupt", "text": "Technical problems interrupted the session.", "reverse": true },
-        { "id": "parity", "text": "People on the call could take part as readily as people in the room." },
-        { "id": "setup", "text": "The start was held up by setting the equipment up.", "reverse": true }
+        { "id": "joining", "text": "Getting into the call took me under a minute." },
+        { "id": "latestart", "text": "The start was held up by people joining or by getting a screen shared.", "reverse": true }
       ]
     },
     {
-      "id": "engagement",
-      "title": "Engagement",
-      "eyebrow": "Who speaks, and what it costs to",
-      "lede": "Not whether the session was lively. Whether the people in it took part, and what happened to the ones who got something wrong.",
+      "id": "format",
+      "title": "Shape and consistency",
+      "eyebrow": "What a morning looks like",
+      "measure_type": "process",
+      "lede": "How a case gets presented varies a great deal at the moment — a shared chart one morning, a built deck the next. These five ask what that variation is like to sit through, and whether anybody could say what is expected of a presenter.",
       "items": [
+        { "id": "shape", "text": "I knew what shape a session would take before it started." },
+        { "id": "consistent", "text": "Sessions ran in a similar way from one morning to the next." },
+        { "id": "varied", "text": "How much preparation went into a presentation varied a lot between presenters.", "reverse": true },
+        { "id": "follow", "text": "However the case was presented, it was easy to follow." },
+        { "id": "expected", "text": "I could say plainly what is expected of whoever is presenting." }
+      ]
+    },
+    {
+      "id": "participation",
+      "title": "Who takes part",
+      "eyebrow": "The half a redesign is usually for",
+      "measure_type": "outcome",
+      "lede": "Seven items, and the last two are the ones to answer most carefully: they ask what it costs to speak. A change that gets more people talking by making it harder to stay silent has to be checked against those two, not only against the first five.",
+      "items": [
+        { "id": "role", "text": "I knew what my part in the session was before it started." },
+        { "id": "byname", "text": "People were asked by name to give an answer." },
         { "id": "spoke", "text": "I said something out loud in most sessions I attended." },
-        { "id": "safe", "text": "It was safe to be wrong out loud." },
+        { "id": "silence", "text": "Long stretches passed with nobody speaking but the presenter.", "reverse": true },
         { "id": "few", "text": "The same few people did most of the talking.", "reverse": true },
-        { "id": "fair", "text": "I was asked questions I had a fair chance of answering." },
-        { "id": "drift", "text": "I found my attention going elsewhere.", "reverse": true },
-        { "id": "room", "text": "Senior input left room for someone junior to think out loud first." }
+        { "id": "safe", "text": "It was safe to be wrong out loud." },
+        { "id": "quiet", "text": "I would rather stay quiet than risk being wrong in front of both sites.", "reverse": true }
       ]
     },
     {
-      "id": "learning",
-      "title": "Learning and education",
-      "eyebrow": "What came out of it",
-      "lede": "The educational half: what was taught, at what level, and whether any of it survived the walk back to the wards.",
+      "id": "teaching",
+      "title": "Teaching and take-homes",
+      "eyebrow": "What was left at the end of it",
+      "measure_type": "outcome",
+      "lede": "Not how much was said, but what survived the morning — whether a point was named out loud, whether it was a way of thinking or a set of facts, and whether teaching arrived early enough to change the discussion rather than to close it.",
       "items": [
-        { "id": "usable", "text": "I left most sessions with something I could use on the wards." },
-        { "id": "reasoning", "text": "The reasoning was made visible, not just the answer." },
-        { "id": "level", "text": "The level was pitched about right for the people in the room." },
-        { "id": "covered", "text": "The discussion mostly covered ground I had already covered elsewhere.", "reverse": true },
-        { "id": "point", "text": "I could have said afterwards what the teaching point was." },
-        { "id": "specific", "text": "Comments on how the case was presented were specific enough to act on." }
+        { "id": "stated", "text": "Somebody said out loud what the take-home point was before the session ended." },
+        { "id": "recall", "text": "I could have said afterwards what the teaching point was." },
+        { "id": "reasoning", "text": "The reasoning behind the answer was made visible, not only the answer." },
+        { "id": "facts", "text": "The teaching was facts to remember more than a way of working through a case.", "reverse": true },
+        { "id": "early", "text": "Teaching input came early enough to change how the case was worked through." },
+        { "id": "usable", "text": "I left with something I could use on the wards that week." }
       ]
     },
     {
       "id": "burden",
       "title": "Time and burden",
       "eyebrow": "What it costs to be there",
-      "lede": "Time is the one thing here that can be counted rather than rated, so the counting is done a few boxes further down. These four are about the fit between report and the rest of the day.",
+      "measure_type": "balancing",
+      "lede": "Three mornings a week is a standing claim on everybody's time, and any change that adds preparation or length is spending more of it. These four, and the minutes counted further down, are what would show that.",
       "items": [
-        { "id": "afford", "text": "The time report takes is time I can afford." },
+        { "id": "afford", "text": "Three mornings a week is time I can afford." },
         { "id": "prep", "text": "Preparing to present takes more time than I have.", "reverse": true },
-        { "id": "collide", "text": "I have arrived late or left early because of clinical duties.", "reverse": true },
+        { "id": "collide", "text": "I have joined late or dropped off early because of clinical work.", "reverse": true },
         { "id": "ends", "text": "Report ends in time for me to get to where I am due next." }
       ]
     },
@@ -161,6 +198,7 @@
       "id": "overall",
       "title": "Overall experience",
       "eyebrow": "Taken as a whole",
+      "measure_type": "outcome",
       "lede": "The last three, and then one number. Answer these on the arrangement as it stands, not on what it could be.",
       "items": [
         { "id": "keep", "text": "I would keep morning report in its current form." },
@@ -171,33 +209,51 @@
   ],
 
   "measures": {
-    "title": "The countable part",
-    "eyebrow": "Minutes, not opinions",
-    "lede": "Estimates are fine and nobody checks them. A number that is roughly right is worth more here than a rating that is precisely agreeable — and unlike a rating, a number can be compared to the same number in six months.",
+    "title": "The counted part",
+    "eyebrow": "Numbers, not opinions",
+    "lede": "Estimates are fine and nobody checks them. A number that is roughly right is worth more here than a rating that is precisely agreeable — and unlike a rating, a number can be asked every round and read as a line over time rather than as one before against one after.",
     "items": [
+      {
+        "id": "speakers",
+        "kind": "number",
+        "measure_type": "outcome",
+        "label": "In a typical session, how many different people speak other than the presenter and the faculty",
+        "hint": "A headcount, not a guess at what it should be. 0 is an answer, and it is the single number most likely to move if discussants are named in advance.",
+        "min": 0, "max": 25, "unit": "people"
+      },
       {
         "id": "prep_off",
         "kind": "number",
-        "label": "Minutes you spend preparing on a day you are not presenting",
-        "hint": "Reading round the case, looking at the board, anything that counts as getting ready. 0 is an answer.",
+        "measure_type": "balancing",
+        "label": "Minutes you spend preparing on a morning you are not presenting",
+        "hint": "Reading round the case, looking at anything sent in advance. 0 is an answer.",
         "min": 0, "max": 300, "unit": "minutes"
       },
       {
         "id": "prep_on",
         "kind": "number",
-        "label": "Minutes you spend preparing on a day you are presenting",
-        "hint": "The whole preparation, however it is spread. Leave blank if you have never presented.",
+        "measure_type": "balancing",
+        "label": "Minutes you spend preparing on a morning you are presenting",
+        "hint": "The whole preparation, however it is spread, including building anything. Leave blank if you have not presented.",
         "min": 0, "max": 600, "unit": "minutes"
+      },
+      {
+        "id": "cameras",
+        "kind": "frequency",
+        "measure_type": "process",
+        "label": "Most people had their cameras on"
       },
       {
         "id": "displaced",
         "kind": "frequency",
-        "label": "Report collides with clinical work I have to deal with there and then"
+        "measure_type": "balancing",
+        "label": "Report collided with clinical work I had to deal with there and then"
       },
       {
         "id": "overran",
         "kind": "frequency",
-        "label": "Report runs past its finishing time"
+        "measure_type": "balancing",
+        "label": "Report ran past its finishing time"
       }
     ]
   },
@@ -206,6 +262,7 @@
     "id": "global",
     "title": "One number",
     "eyebrow": "The whole thing, on a line",
+    "measure_type": "outcome",
     "question": "Overall, morning report as it runs today:",
     "lede": "Zero and ten are both real answers, and the middle is not the safe one.",
     "min": 0,
@@ -223,7 +280,7 @@
       {
         "id": "keep",
         "label": "What works as it is, and should survive any change",
-        "placeholder": "The parts you would defend if somebody proposed dropping them."
+        "placeholder": "The parts you would defend if somebody proposed dropping them. Even on a morning that went badly there is usually something."
       },
       {
         "id": "change",
@@ -234,7 +291,7 @@
   },
 
   "storage": {
-    "_note": "One lane, not two. Nothing here is written about a named person and nothing joins to the roster, so unlike session feedback there is no half of this that has to be swept. It is a measurement, it is meant to be compared against a later one, and a measurement you delete after seven days cannot be.",
+    "_note": "One lane, not two. Nothing here is written about a named person and nothing joins to the roster, so unlike session feedback there is no half of this that has to be swept. It is a measurement, it exists to be compared against the next round, and a measurement deleted after seven days cannot be.",
     "responses": "baseline/",
     "_naming": "Flat files named <wave>--<response id>.json, because the store lists files and not directories."
   },
@@ -252,7 +309,7 @@
     "download": "No folder and no collection point on this device, so the file was downloaded."
   },
 
-  "footer": "One per person, once. This is the before picture — the point of it is that nothing has changed yet.",
+  "footer": "One per person, once a round. This is the before picture — the point of it is that nothing has changed yet.",
   "thanks": "That is the baseline. Thank you.",
   "thanks_note": "Nothing you answered is attached to your name, and nothing here is an evaluation of anybody."
 }
