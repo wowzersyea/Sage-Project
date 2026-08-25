@@ -338,6 +338,75 @@ const stub = `
   t('settings lists the endpoint warnings',
     /Nobody Here/.test(await page.textContent('#warns')));
 
+  /* ---- 11b. the two states setup actually passes through -----------
+
+     Both were reported from a real setup. Neither was wrong about the
+     facts; both described the situation in a way that sent someone
+     looking for a problem that was not there.
+     ------------------------------------------------------------------- */
+
+  {
+    /* A deployed script over a sheet nobody has published to yet. The
+       endpoint answers, correctly, that all three tabs are empty. */
+    await setBody({
+      status: 'ok', generated: '2026-08-24T12:00:00Z',
+      warnings: ['The Roster tab is empty.', 'The Rota tab has no rows.',
+                 'The Sites tab is empty, so no presenting-site filter will apply.'],
+      roster: { source: 'sheet', residents: [] }, rotations: null,
+    });
+    await page.goto(BASE + '/morning-report/settings/', { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => !/Checking/.test(document.getElementById('state-txt').textContent));
+
+    const txt = await page.textContent('#state-txt');
+    t('an empty sheet is not reported as N warnings', !/\d warnings/.test(txt), txt);
+    t('it says the sheet is empty', /empty/i.test(txt), txt);
+    t('and points at the fix', await page.isVisible("#state-txt a[href='../publish/']"));
+    t('isEmpty agrees', await page.evaluate(() => MRRemote.isEmpty()) === true);
+    t('the bar says so too',
+      (await page.evaluate(() => MRRemote.summary())).text === 'Shared roster: sheet is empty');
+
+    /* and once it has content, the count is the headline, not a warning count */
+    await setBody(okBody());
+    await page.click('#recheck');
+    await page.waitForFunction(() => /resident/.test(document.getElementById('state-txt').textContent));
+    const txt2 = await page.textContent('#state-txt');
+    t('a filled sheet reports what it holds', /3 residents/.test(txt2), txt2);
+    t('and how many days', /1 days/.test(txt2), txt2);
+    t('isEmpty disagrees now', await page.evaluate(() => MRRemote.isEmpty()) === false);
+  }
+
+  {
+    /* The publish page with no folder connected. It used to say the
+       files were "not in this folder", which is true of a folder that
+       does not exist and is not what anyone needs to hear. */
+    const ctx = await b.newContext();
+    const p3 = await ctx.newPage();
+    await p3.addInitScript(fake);
+    await p3.addInitScript(stub);
+    await p3.goto(BASE + '/morning-report/publish/', { waitUntil: 'networkidle' });
+    await p3.waitForFunction(() => !/Checking/.test(document.getElementById('c-roster').textContent));
+
+    t('with no folder, publish does not claim the file is missing',
+      !/Not in/.test(await p3.textContent('#c-roster')), await p3.textContent('#c-roster'));
+    t('it says it is waiting on the folder',
+      /Waiting for the data folder/.test(await p3.textContent('#c-roster')));
+    t('it explains that none is connected',
+      /No data folder is connected/.test(await p3.textContent('#out')), await p3.textContent('#out'));
+    t('and offers the button that fixes it',
+      /Connect data folder/.test(await p3.textContent('#out button')));
+    t('publishing is refused meanwhile', await p3.isDisabled('#go'));
+
+    /* connected, but genuinely without the files: a different sentence */
+    await p3.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
+    await p3.evaluate(() => window.dispatchEvent(new Event('resize')));
+    await p3.reload({ waitUntil: 'networkidle' });
+    await p3.waitForFunction(() => !/Checking|Waiting/.test(document.getElementById('c-roster').textContent));
+    t('with a folder but no roster.json, it says which folder it looked in',
+      /Not in/.test(await p3.textContent('#c-roster')), await p3.textContent('#c-roster'));
+
+    await ctx.close();
+  }
+
   /* ---- 12. remote.js itself failing to load ------------------------
 
      It happened: a 404 was cached at the CDN for the four hours after

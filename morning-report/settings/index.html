@@ -146,7 +146,7 @@
 
 </main>
 
-<script src="../assets/remote.js?v=1"></script>
+<script src="../assets/remote.js?v=2"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/relay.js"></script>
 <script>
@@ -189,11 +189,23 @@
       return;
     }
 
+    /* An empty sheet is where setup normally is between deploying the
+       script and publishing. Listing "3 warnings" for it reads as a
+       fault and sends people back through steps they got right. */
+    if (MRRemote.isEmpty()) {
+      line.className = "state-line warn";
+      txt.innerHTML = "Connected — the sheet is empty. " +
+        "<a href='../publish/'>Publish from your data folder</a> to fill it.";
+      return;
+    }
+
     var bits = [];
+    bits.push(s.counts.residents + " resident" + (s.counts.residents === 1 ? "" : "s"));
+    if (s.counts.days) bits.push(s.counts.days + " days");
     if (s.warnings.length) bits.push(s.warnings.length + " warning" + (s.warnings.length === 1 ? "" : "s"));
     if (s.generated) bits.push("read " + new Date(s.generated).toLocaleString());
     line.className = "state-line " + (s.warnings.length ? "warn" : "ok");
-    txt.textContent = "Connected" + (bits.length ? " — " + bits.join(", ") : "") + ".";
+    txt.textContent = "Connected — " + bits.join(", ") + ".";
 
     if (s.warnings.length) {
       s.warnings.forEach(function (w) {

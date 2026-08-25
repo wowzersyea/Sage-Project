@@ -522,7 +522,13 @@
     sessionId: sessionId,
     onChange: function (fn) { listeners.push(fn); return fn; },
     status: function () {
-      return { mode: state.mode, ready: state.ready, name: state.name, supported: supported };
+      /* `dir` distinguishes "never connected" from "connected but the
+         permission lapsed on reload" — different sentences, different
+         buttons, and the pages that ask cannot tell them apart without it. */
+      return {
+        mode: state.mode, ready: state.ready, name: state.name,
+        supported: supported, dir: !!state.dir
+      };
     },
     /* Resolve once the store has finished trying to restore, so a page
        can render against a known state instead of a guessed one. */

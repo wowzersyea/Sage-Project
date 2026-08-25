@@ -174,11 +174,14 @@
         if (body.status !== "ok") {
           return finish({ ok: false, error: body.message || "The endpoint reported a problem." });
         }
+        var roster = body.roster || null;
+        var rotations = body.rotations || null;
         return finish({
           ok: true,
-          data: {
-            "roster.json": body.roster || null,
-            "rotations.json": body.rotations || null
+          data: { "roster.json": roster, "rotations.json": rotations },
+          counts: {
+            residents: roster && Array.isArray(roster.residents) ? roster.residents.length : 0,
+            days: rotations && rotations.days ? Object.keys(rotations.days).length : 0
           },
           warnings: Array.isArray(body.warnings) ? body.warnings : [],
           generated: body.generated || ""
@@ -265,8 +268,17 @@
       denied: !!(state.result && state.result.denied),
       error: state.result && !state.result.ok ? state.result.error : "",
       warnings: (state.result && state.result.warnings) || [],
+      counts: (state.result && state.result.counts) || { residents: 0, days: 0 },
       generated: (state.result && state.result.generated) || ""
     };
+  }
+
+  /* Reached the endpoint, and there is nothing in it yet. Worth its own
+     answer: it is the normal state between deploying the script and
+     publishing, and reporting it as warnings reads as a fault. */
+  function isEmpty() {
+    var s = status();
+    return s.ok && !s.counts.residents && !s.counts.days;
   }
 
   /* A short line for the shared bar. Null when there is nothing to say. */
@@ -275,6 +287,7 @@
     if (!s.configured) return null;
     if (!s.tried) return { kind: "wait", text: "Checking the shared roster…" };
     if (s.ok) {
+      if (isEmpty()) return { kind: "warn", text: "Shared roster: sheet is empty" };
       var n = s.warnings.length;
       return {
         kind: n ? "warn" : "ok",
@@ -297,6 +310,7 @@
     get: get,
     publish: publish,
     status: status,
+    isEmpty: isEmpty,
     summary: summary,
     onChange: function (fn) { listeners.push(fn); return fn; }
   };

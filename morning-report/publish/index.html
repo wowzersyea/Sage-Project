@@ -93,7 +93,7 @@
 
 </main>
 
-<script src="../assets/remote.js?v=1"></script>
+<script src="../assets/remote.js?v=2"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script>
@@ -181,18 +181,52 @@
     }
   }
 
+  /* "There is no folder" and "the folder does not have that file" are
+     different problems with different fixes, and saying the second when
+     the first is true sends someone hunting through OneDrive for a file
+     that is sitting right where they left it. */
+  function offerConnect() {
+    var st = MRStore.status();
+    $("out").innerHTML = "";
+    var p = document.createElement("p");
+    p.style.margin = "0 0 10px";
+    p.textContent = st.dir
+      ? "Your browser has the folder but needs permission again after a reload."
+      : "No data folder is connected in this browser, so there is nothing to read.";
+    $("out").appendChild(p);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "primary";
+    btn.textContent = st.dir ? "Reconnect data folder" : "Connect data folder";
+    btn.addEventListener("click", function () {
+      (st.dir ? MRStore.reconnect() : MRStore.connect()).then(refresh);
+    });
+    $("out").appendChild(btn);
+  }
+
   function refresh() {
+    var st = MRStore.status();
+    if (!st.ready) {
+      card($("c-roster"), "roster.json", false, "Waiting for the data folder");
+      card($("c-rot"), "rotations.json", false, "Waiting for the data folder");
+      $("go").disabled = true;
+      offerConnect();
+      return Promise.resolve();
+    }
+
     return Promise.all([readFolder("roster.json"), readFolder("rotations.json")]).then(function (pair) {
       folder.roster = pair[0];
       folder.rotations = pair[1];
 
       var n = folder.roster && folder.roster.residents ? folder.roster.residents.length : 0;
       card($("c-roster"), "roster.json", n > 0,
-        n ? n + " residents ready to publish" : "Not in this folder — nothing to publish");
+        n ? n + " residents ready to publish"
+          : "Not in " + (st.name || "this folder") + " — nothing to publish");
 
       var days = folder.rotations && folder.rotations.days ? Object.keys(folder.rotations.days).length : 0;
       card($("c-rot"), "rotations.json", days > 0,
-        days ? days + " days ready to publish" : "Not in this folder — nothing to publish");
+        days ? days + " days ready to publish"
+             : "Not in " + (st.name || "this folder") + " — nothing to publish");
 
       $("go").disabled = !(n || days) || !MRRemote.configured();
       if (!MRRemote.configured()) {
