@@ -11,7 +11,16 @@
      POST {key, action:'draw', ...}  record today's discussants
      POST {key, roster, rotations}   seed the sheets from a data folder
 
-   and it holds a third, which is a post box rather than a store:
+   it keeps the permanent documents a device with no data folder still
+   has to read and write:
+
+     POST {key, action:"docput"}     store one board archive, scorecard
+     POST {key, action:"docget"}     or casebank case
+     POST {key, action:"doclist"}
+     POST {key, action:"docdel"}
+     POST {key, action:"pdf"}        render the board to a PDF in Drive
+
+   and it holds one thing that is a post box rather than a store:
 
      POST {key, action:"feedback"}   take one feedback submission
      POST {key, action:"collect"}    list what has not been collected
@@ -40,7 +49,7 @@
 
    1. Create a Google Sheet. Extensions -> Apps Script. Paste this file
       over Code.gs and save.
-   2. Run setUpSheets() once from the editor. It creates the four tabs
+   2. Run setUpSheets() once from the editor. It creates the five tabs
       with their headers. Grant the permissions it asks for.
    3. Project Settings -> Script Properties -> add:
          MR_KEY            a long random string, for the facilitator
@@ -91,14 +100,14 @@ var SHEETS = {
   roster: 'Roster',
   rota: 'Rota',
   sites: 'Sites',
-  feedback: 'Feedback',
-  draws: 'Draws'
+  draws: 'Draws',
+  feedback: 'Feedback'
 };
 
 var ROSTER_HEADERS = ['id', 'name', 'sort_name', 'level', 'active', 'short'];
 var SITES_HEADERS = ['site', 'label', 'ward_tasks', 'other_tasks'];
-var FEEDBACK_HEADERS = ['received', 'session', 'submission', 'recordings', 'payload'];
 var DRAWS_HEADERS = ['date', 'site', 'presenting', 'role', 'resident_id', 'name', 'confirmed_at'];
+var FEEDBACK_HEADERS = ['received', 'session', 'submission', 'recordings', 'payload'];
 
 /* A recording is capped in the browser long before it gets here. This
    is the backstop, in base64 characters, so a runaway upload is
@@ -130,10 +139,17 @@ function doPost(e) {
 
     if (!authorised(body.key)) return json({ status: 'denied' });
 
+    if (body.action === 'draw') return json(recordDraw(body));
+
+    if (body.action === 'docput') return json(docPut(body));
+    if (body.action === 'docget') return json(docGet(body));
+    if (body.action === 'doclist') return json(docList(body));
+    if (body.action === 'docdel') return json(docRemove(body));
+    if (body.action === 'pdf') return json(boardPdf(body));
+
     if (body.action === 'collect') return json(pendingFeedback());
     if (body.action === 'recording') return json(oneRecording(body.id));
     if (body.action === 'collected') return json(dropCollected(body.submissions));
-    if (body.action === 'draw') return json(recordDraw(body));
 
     return json(seedFrom(body));                 // no action: the original seed
   } catch (err) {
@@ -184,6 +200,182 @@ function audioFolder() {
   var made = DriveApp.createFolder('MorningReport feedback audio');
   props.setProperty('MR_AUDIO_FOLDER', made.getId());
   return made;
+}
+
+/* ---------- the shared document store ---------------------------------
+
+   Everything the module saves that is meant to be permanent and is not
+   a name: board archives, scorecards, casebank cases. A device with no
+   data folder — a phone, a borrowed laptop, an iPad — reads and writes
+   them here instead, which is the difference between the folder being
+   the store and the folder being one machine's copy of it.
+
+   Deliberately NOT here:
+
+     working/ and manifests/  identified, ephemeral, seven-day purge.
+                              They are the one lane that never leaves
+                              the machine doing the work, and a central
+                              copy would quietly outlive the sweep.
+
+     working-board.json       the live autosave during a session. It
+                              writes every few seconds, which would be
+                              hundreds of calls a morning for a file
+                              whose only job is crash recovery on the
+                              machine actually driving the board. The
+                              archive lands here when the session ends,
+                              and that is the copy anyone else wants.
+
+   Drive rather than a sheet tab, in folders that mirror the data
+   folder's own layout — so the store is browsable, and somebody opening
+   it in Drive sees the structure they already know rather than a
+   thousand files with mangled names.
+   ------------------------------------------------------------------ */
+
+var DOC_ROOT_PROP = 'MR_DOC_FOLDER';
+var DOC_ROOT_NAME = 'MorningReport data';
+
+/* Only these. A path outside them is refused rather than stored, so a
+   bug on the browser side cannot put identified work in Drive. */
+var DOC_DIRS = ['board-archive', 'sessions', 'casebank'];
+
+function docRoot() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty(DOC_ROOT_PROP);
+  if (id) {
+    try { return DriveApp.getFolderById(id); }
+    catch (e) { /* deleted; make another below */ }
+  }
+  var made = DriveApp.createFolder(DOC_ROOT_NAME);
+  props.setProperty(DOC_ROOT_PROP, made.getId());
+  return made;
+}
+
+/* A path the browser asked for, split and checked. Returns null when it
+   is not one this store will touch. */
+function docParts(path) {
+  var raw = String(path || '').replace(/^\/+|\/+$/g, '');
+  if (!raw || raw.indexOf('..') !== -1) return null;
+  var bits = raw.split('/').filter(function (b) { return b.length; });
+  if (bits.length !== 2) return null;                     // dir/name.json, no deeper
+  if (DOC_DIRS.indexOf(bits[0]) === -1) return null;
+  if (!/^[A-Za-z0-9._-]+$/.test(bits[1])) return null;
+  return { dir: bits[0], name: bits[1] };
+}
+
+function docDir(dir, create) {
+  var root = docRoot();
+  var it = root.getFoldersByName(dir);
+  if (it.hasNext()) return it.next();
+  return create ? root.createFolder(dir) : null;
+}
+
+function docFile(parts, create) {
+  var folder = docDir(parts.dir, create);
+  if (!folder) return null;
+  var it = folder.getFilesByName(parts.name);
+  return it.hasNext() ? it.next() : null;
+}
+
+function docPut(body) {
+  var parts = docParts(body.path);
+  if (!parts) return { status: 'error', message: 'That path is not one this store keeps.' };
+  if (body.data === undefined || body.data === null) {
+    return { status: 'error', message: 'Nothing to store.' };
+  }
+  var text = JSON.stringify(body.data);
+  var existing = docFile(parts, true);
+  if (existing) existing.setContent(text);
+  else docDir(parts.dir, true).createFile(parts.name, text, 'application/json');
+  return { status: 'ok', path: parts.dir + '/' + parts.name, bytes: text.length };
+}
+
+function docGet(body) {
+  var parts = docParts(body.path);
+  if (!parts) return { status: 'error', message: 'That path is not one this store keeps.' };
+  var file = docFile(parts, false);
+  if (!file) return { status: 'ok', path: body.path, data: null };   // absent is not an error
+  var raw = file.getBlob().getDataAsString();
+  var data = null;
+  try { data = raw ? JSON.parse(raw) : null; }
+  catch (e) { return { status: 'error', message: parts.name + ' in the store is not valid JSON.' }; }
+  return { status: 'ok', path: parts.dir + '/' + parts.name, data: data };
+}
+
+function docList(body) {
+  var dir = String(body.dir || '').replace(/^\/+|\/+$/g, '');
+  if (DOC_DIRS.indexOf(dir) === -1) {
+    return { status: 'error', message: 'That directory is not one this store keeps.' };
+  }
+  var folder = docDir(dir, false);
+  var names = [];
+  if (folder) {
+    var it = folder.getFiles();
+    while (it.hasNext()) names.push(it.next().getName());
+  }
+  names.sort();
+  return { status: 'ok', dir: dir, names: names };
+}
+
+function docRemove(body) {
+  var parts = docParts(body.path);
+  if (!parts) return { status: 'error', message: 'That path is not one this store keeps.' };
+  var file = docFile(parts, false);
+  if (file) file.setTrashed(true);         // Drive can bin, not shred; the bin holds it 30 days
+  return { status: 'ok', path: parts.dir + '/' + parts.name, removed: !!file };
+}
+
+/* ---------- the board as a PDF ----------------------------------------
+
+   "Save board" used to call window.print(), which is a dialog and a
+   choice of folder — so the board ended up wherever the person at the
+   keyboard happened to point it, if they saved it at all.
+
+   Google converts HTML to PDF natively, so the board sends its own
+   printable markup and the PDF is made here and kept beside the
+   archives. No library to vendor into a project that deliberately has
+   no dependencies, no canvas screenshot with soft text, and it works
+   the same from a phone.
+
+   The conversion is not a browser: ordinary CSS renders, exotic layout
+   does not. The board is boxes and text, which is the case it handles
+   well — but the result is close to the screen rather than identical
+   to it, and print-to-PDF is still the better tool if somebody needs
+   exactly what they can see.
+   ------------------------------------------------------------------ */
+
+var PDF_DIR = 'board-pdf';
+
+/* Big enough for a board with long lists, small enough that a runaway
+   page is refused with a sentence rather than a platform error. */
+var MAX_PDF_HTML = 2 * 1024 * 1024;
+
+function boardPdf(body) {
+  var name = String(body.name || '').trim();
+  if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+    return { status: 'error', message: 'That is not a usable file name.' };
+  }
+  if (name.slice(-4).toLowerCase() !== '.pdf') name += '.pdf';
+
+  var html = String(body.html || '');
+  if (!html) return { status: 'error', message: 'There is no board to render.' };
+  if (html.length > MAX_PDF_HTML) {
+    return { status: 'error', message: 'That board is too large to render as a PDF.' };
+  }
+
+  var pdf;
+  try {
+    pdf = Utilities.newBlob(html, 'text/html', name).getAs('application/pdf').setName(name);
+  } catch (err) {
+    return { status: 'error', message: 'Google could not render that as a PDF: ' +
+      String(err && err.message || err) };
+  }
+
+  var folder = docDir(PDF_DIR, true);
+  var existing = folder.getFilesByName(name);
+  while (existing.hasNext()) existing.next().setTrashed(true);   // a re-save replaces
+  var file = folder.createFile(pdf);
+
+  return { status: 'ok', name: name, id: file.getId(), url: file.getUrl(), bytes: pdf.getBytes().length };
 }
 
 function clipName(rec, clip) {
@@ -641,8 +833,8 @@ function setUpSheets() {
   sheetFor(ss, SHEETS.roster, ROSTER_HEADERS);
   sheetFor(ss, SHEETS.rota, ['date']);
   sheetFor(ss, SHEETS.sites, SITES_HEADERS);
-  sheetFor(ss, SHEETS.feedback, FEEDBACK_HEADERS);
   sheetFor(ss, SHEETS.draws, DRAWS_HEADERS);
+  sheetFor(ss, SHEETS.feedback, FEEDBACK_HEADERS);
   SpreadsheetApp.getUi().alert(
     'Five tabs are ready.\n\n' +
     'Set MR_KEY in Project Settings -> Script Properties, deploy as a web app, ' +

@@ -227,7 +227,28 @@
      they can see in front of them. */
   function remoteRead(path) {
     if (!global.MRRemote) return Promise.resolve(null);
+    if (global.MRRemote.docBacked && global.MRRemote.docBacked(path)) {
+      return global.MRRemote.docGet(path).catch(function () { return null; });
+    }
     return global.MRRemote.get(path).catch(function () { return null; });
+  }
+
+  /* The permanent documents also go OUT to the shared store, so a
+     machine with a folder keeps its local archive and every other
+     device can still read what happened. A folder write that succeeds
+     and a remote write that fails would leave the two disagreeing
+     silently, so that case says so. */
+  function remoteWrite(path, obj) {
+    if (!global.MRRemote || !global.MRRemote.docBacked) return Promise.resolve(null);
+    if (!global.MRRemote.docBacked(path) || !global.MRRemote.configured()) return Promise.resolve(null);
+    return global.MRRemote.docPut(path, obj)
+      .then(function () { return true; })
+      .catch(function (err) {
+        notify("warn", "Saved here, but the shared copy of " + path + " did not go through — " +
+          ((err && err.message) || "the endpoint did not answer") +
+          ". Other devices will not see it until this is saved again.", true);
+        return false;
+      });
   }
 
   function read(path) {
@@ -259,6 +280,17 @@
     var text = JSON.stringify(obj, null, 2) + "\n";
     if (state.mode === "fallback" || !state.ready) {
       state.cache[path] = obj;
+      /* No folder. For a document the shared store keeps, that is not a
+         problem to warn about — it is the whole point of having one. */
+      if (global.MRRemote && global.MRRemote.docBacked &&
+          global.MRRemote.docBacked(path) && global.MRRemote.configured()) {
+        return global.MRRemote.docPut(path, obj)
+          .then(function () { return true; })
+          .catch(function (err) {
+            fail("Could not save " + path + " to the shared store", err);
+            return false;
+          });
+      }
       notify("warn", "No folder connected — " + path + " is held in this tab only. Use Download JSON before you close it.");
       return Promise.resolve(false);
     }
@@ -266,7 +298,8 @@
       .then(function (d) { return d.getFileHandle(leaf(path), { create: true }); })
       .then(function (fh) { return fh.createWritable(); })
       .then(function (w) { return w.write(text).then(function () { return w.close(); }); })
-      .then(function () { state.cache[path] = obj; return true; })
+      .then(function () { state.cache[path] = obj; return remoteWrite(path, obj); })
+      .then(function () { return true; })
       .catch(function (err) { fail("Could not save " + path, err); return false; });
   }
 
@@ -286,12 +319,33 @@
       .catch(function (err) { fail("Could not save " + path, err); return false; });
   }
 
+  /* A directory the shared store keeps is the union of both: the folder
+     may hold sessions this device recorded, the store holds the ones
+     other devices did, and readAll wants all of them. */
+  function remoteList(dir) {
+    if (!global.MRRemote || !global.MRRemote.docDirBacked) return Promise.resolve([]);
+    if (!global.MRRemote.docDirBacked(dir) || !global.MRRemote.configured()) return Promise.resolve([]);
+    return global.MRRemote.docList(dir).catch(function () { return []; });
+  }
+
+  function union(a, b) {
+    var seen = {};
+    var out = [];
+    a.concat(b).forEach(function (n) {
+      if (seen[n]) return;
+      seen[n] = true;
+      out.push(n);
+    });
+    return out.sort();
+  }
+
   function list(dir) {
     if (state.mode === "fallback" || !state.ready) {
       var pre = dir.replace(/\/*$/, "/");
-      return Promise.resolve(Object.keys(state.cache)
+      var cached = Object.keys(state.cache)
         .filter(function (k) { return k.indexOf(pre) === 0 && k.slice(pre.length).indexOf("/") === -1; })
-        .map(function (k) { return k.slice(pre.length); }));
+        .map(function (k) { return k.slice(pre.length); });
+      return remoteList(dir).then(function (names) { return union(cached, names); });
     }
     var p = parts(dir);
     var h = Promise.resolve(state.dir);
@@ -307,12 +361,13 @@
         });
       }
       return step();
-    }).then(function (names) { return names.sort(); })
-      .catch(function (err) {
-        if (err && err.name === "NotFoundError") return [];   // folder not created yet
-        fail("Could not list " + dir, err);
-        return [];
-      });
+    }).catch(function (err) {
+      if (err && err.name === "NotFoundError") return [];     // folder not created yet
+      fail("Could not list " + dir, err);
+      return [];
+    }).then(function (names) {
+      return remoteList(dir).then(function (shared) { return union(names, shared); });
+    });
   }
 
   /* Read every .json file in a directory. The review game and the
@@ -330,7 +385,13 @@
 
   function remove(path) {
     delete state.cache[path];
-    if (state.mode === "fallback" || !state.ready) return Promise.resolve(true);
+    var alsoRemote = function (ok) {
+      if (!global.MRRemote || !global.MRRemote.docBacked) return ok;
+      if (!global.MRRemote.docBacked(path) || !global.MRRemote.configured()) return ok;
+      return global.MRRemote.docRemove(path).then(function () { return ok; },
+                                                  function () { return ok; });
+    };
+    if (state.mode === "fallback" || !state.ready) return Promise.resolve(true).then(alsoRemote);
     return dirFor(path, false)
       .then(function (d) { return d.removeEntry(leaf(path)); })
       .then(function () { return true; })
@@ -338,7 +399,8 @@
         if (err && err.name === "NotFoundError") return true;
         fail("Could not delete " + path, err);
         return false;
-      });
+      })
+      .then(alsoRemote);
   }
 
   /* ---------- fallback: explicit download / load --------------------- */

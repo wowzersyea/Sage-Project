@@ -513,6 +513,85 @@ const stub = `
     await setBody(okBody());
   }
 
+  /* ---- 11e. the one-tap link --------------------------------------
+
+     The setup step was the whole complaint: every browser had to be
+     told the endpoint by hand, so a phone showed no roster. A link that
+     carries both means a device is connected by opening it.
+
+     Driven in its own context, because "a device that has never been
+     told anything" is the case that matters.
+     ------------------------------------------------------------------- */
+
+  {
+    const ctx = await b.newContext();
+    const p5 = await ctx.newPage();
+    await p5.addInitScript(fake);
+    await p5.addInitScript(stub);
+    await setBody(okBody());
+
+    /* nothing configured: no chip at all, which is what the phone showed */
+    await p5.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
+    t('a fresh device starts with no shared roster',
+      await p5.evaluate(() => MRRemote.configured() === false && MRRemote.summary() === null));
+
+    /* build the link on a configured machine */
+    await page.evaluate(d => MRRemote.setSettings({ endpoint: d.e, key: d.k, remember: false }),
+      { e: ENDPOINT, k: KEY });
+    await page.goto(BASE + '/morning-report/settings/', { waitUntil: 'networkidle' });
+    const link = await page.evaluate(() => {
+      document.getElementById('copyfull').click();
+      return document.getElementById('rosterqr').querySelector('svg') ? 'has-qr' : 'no-qr';
+    });
+    t('the one-tap link gets a scannable code beside it', link === 'has-qr', link);
+
+    /* open it on the fresh device: nothing typed */
+    const oneTap = BASE + '/morning-report/settings/#e=' + encodeURIComponent(ENDPOINT) +
+      '&k=' + encodeURIComponent(KEY);
+    await p5.goto(oneTap, { waitUntil: 'networkidle' });
+    await p5.waitForFunction(() => window.MRRemote && MRRemote.configured(), null, { timeout: 5000 });
+
+    t('opening it connects the device', await p5.evaluate(() => MRRemote.configured()));
+    t('and it carries the right endpoint and key',
+      await p5.evaluate((d) => MRRemote.settings().endpoint === d.e && MRRemote.settings().key === d.k,
+        { e: ENDPOINT, k: KEY }));
+    t('and remembers, so it is genuinely once per device',
+      await p5.evaluate(() => MRRemote.settings().remember === true));
+    t('the key is taken out of the address bar afterwards',
+      await p5.evaluate(() => location.hash === ''), await p5.evaluate(() => location.hash));
+
+    /* and the roster is actually there on the next page it opens.
+       The stubbed endpoint keeps its canned answer in sessionStorage,
+       which is per-context, so this context needs its own copy — the
+       page under test is unaffected either way. */
+    await p5.evaluate(d => { window.__mr.body = d; }, okBody());
+    await p5.goto(BASE + '/morning-report/roster/', { waitUntil: 'networkidle' });
+    const seen = await p5.evaluate(async () => {
+      const r = await MRRoster.load();
+      return { n: r.residents.length, shared: MRRoster.residentsAreShared(r) };
+    });
+    t('a device set up by link sees the shared roster', seen.n === 3 && seen.shared === true, seen);
+
+    /* a link with only the endpoint still asks for the key */
+    const ctx6 = await b.newContext();
+    const p6 = await ctx6.newPage();
+    await p6.addInitScript(fake);
+    await p6.addInitScript(stub);
+    await p6.goto(BASE + '/morning-report/settings/#e=' + encodeURIComponent(ENDPOINT),
+      { waitUntil: 'networkidle' });
+    t('a link without a key fills the address and stops there',
+      await p6.evaluate(() => MRRemote.configured() === false &&
+        document.getElementById('endpoint').value.length > 0));
+
+    /* a malformed one changes nothing rather than half-connecting */
+    await p6.goto(BASE + '/morning-report/settings/#e=' + encodeURIComponent('http://insecure.test/exec') +
+      '&k=' + encodeURIComponent(KEY), { waitUntil: 'networkidle' });
+    t('an http endpoint in a link is refused', await p6.evaluate(() => MRRemote.configured() === false));
+
+    await ctx.close();
+    await ctx6.close();
+  }
+
   /* ---- 12. remote.js itself failing to load ------------------------
 
      It happened: a 404 was cached at the CDN for the four hours after

@@ -224,7 +224,10 @@ table.mr tbody tr:hover{background:#F7F9FB}
   background:#FBF0DE;border:1px solid var(--amber);border-radius:7px;
   padding:16px 18px;font-size:13.5px;color:#5C4415;line-height:1.6;
 }
-.privacy b{color:#8A6014;display:block;font-family:var(--serif);font-size:15.5px;margin-bottom:6px}
+/* The opening <b> is the panel's heading. Scoped to the first child so
+   emphasis inside the prose stays inline — an unscoped rule turned a
+   bolded word mid-sentence into its own line. */
+.privacy > b:first-child{color:#8A6014;display:block;font-family:var(--serif);font-size:15.5px;margin-bottom:6px}
 
 .callout{
   background:var(--navy);color:#D7E2EC;border-radius:7px;

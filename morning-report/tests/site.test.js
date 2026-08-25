@@ -105,6 +105,11 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   // someone ticks "remember on this device". Everything else would be
   // state that the other site and the folder cannot see, which is the
   // thing this assertion exists to prevent.
+  // Neither is data, and both are allowed everywhere this file counts
+  // keys: the front-door code, and the shared-roster endpoint settings
+  // when someone ticks "remember on this device". Anything else in
+  // localStorage is state the other site and the folder cannot see,
+  // which is what these assertions exist to prevent.
   const ALLOWED = ['sage-mr-gate', 'sage-mr-remote'];
   await page.evaluate(() => localStorage.clear());
   for (const p of ['/morning-report/draw/', '/morning-report/board/', '/morning-report/roster/']) {
