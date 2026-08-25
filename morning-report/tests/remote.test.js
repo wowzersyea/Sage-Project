@@ -244,15 +244,38 @@ const stub = `
   /* ---- 7. only the two name-bearing paths ever go to the endpoint --- */
 
   await setMode('ok');
+
+  /* This used to assert that sessions/ and casebank/ never reached the
+     endpoint, which was true until the shared document store existed.
+     They deliberately do now — that is what lets a device with no
+     folder open a board archive somebody else wrote.
+
+     The guarantee that did NOT change is the one worth keeping here:
+     the identified lanes stay on the machine that made them. They are
+     swept at seven days, and a copy at the endpoint would outlive the
+     sweep. */
+  r = await page.evaluate(async () => {
+    MRRemote.reload();
+    window.__mr.calls.length = 0;
+    const a = await MRStore.read('working/2026-09-03.json');
+    const b = await MRStore.read('manifests/2026-09-03.json');
+    const c = await MRStore.read('working-board.json');
+    return { calls: window.__mr.calls.length, a: a, b: b, c: c };
+  });
+  t('identified work never reaches the endpoint', r.calls === 0, r.calls);
+  t('and an absent one is null rather than undefined',
+    r.a === null && r.b === null && r.c === null, [r.a, r.b, r.c]);
+
+  /* A permanent artifact does go, and an absent one is still null —
+     which is the case the null coercion in docGet exists for. */
   r = await page.evaluate(async () => {
     MRRemote.reload();
     window.__mr.calls.length = 0;
     const a = await MRStore.read('sessions/2026-09-03.json');
-    const b = await MRStore.read('casebank/nope.json');
-    return { calls: window.__mr.calls.length, a: a, b: b };
+    return { calls: window.__mr.calls.length, a: a };
   });
-  t('session data never reaches the endpoint', r.calls === 0, r.calls);
-  t('a missing session file is still null', r.a === null && r.b === null);
+  t('a permanent artifact is looked for at the endpoint', r.calls > 0, r.calls);
+  t('and an endpoint with nothing to say still reads as null', r.a === null, r.a);
 
   /* ---- 8. the key is not persisted unless asked -------------------- */
 
