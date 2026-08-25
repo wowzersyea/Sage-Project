@@ -42,7 +42,7 @@
      Tests override via global.MR_PUBLIC_ENDPOINT before this loads. */
   var PUBLIC_ENDPOINT = (global.MR_PUBLIC_ENDPOINT !== undefined)
     ? global.MR_PUBLIC_ENDPOINT
-    : "";
+    : "https://script.google.com/macros/s/AKfycbyNyxxrMQyryOtc0wvxiafjmSW-kCpZjHGWbljHvpgI11xL6f3qfRn_OxxCkVqgJn0m/exec";
 
   var STORE_KEY = "sage-mr-remote";
 

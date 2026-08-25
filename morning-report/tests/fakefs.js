@@ -8,6 +8,11 @@
    and drives the gate properly. */
 (function(){
   try { localStorage.setItem("sage-mr-gate", "2026"); } catch (e) { /* private mode */ }
+  /* The site ships with a real public endpoint baked in. Tests must
+     never touch the real network, so the preamble switches it off;
+     the suite that tests the public path turns it back on against
+     its own stub. */
+  window.MR_PUBLIC_ENDPOINT = "";
 })();
 
 (function(){
