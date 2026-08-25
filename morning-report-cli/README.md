@@ -55,6 +55,35 @@ morningreport purge                              # force the sweep early
 morningreport calibrate                          # per-item agreement
 ```
 
+### Filling the manifest in from the draw
+
+The wheel already knows who the two discussants were: the browser writes a
+confirmed draw to the shared sheet, and that is the same mapping a manifest
+needs. Point the CLI at the same endpoint and `manifest` fills them in.
+
+```bash
+export MORNINGREPORT_ENDPOINT='https://script.google.com/macros/s/…/exec'
+export MORNINGREPORT_KEY='the MR_KEY from Script Properties'
+
+morningreport manifest 2026-09-03-galveston
+# Filled in from the confirmed draw on 2026-09-03: … as PGY1, … as SENIOR.
+```
+
+This is the half most worth automating, and not for the typing. `score` matches
+transcript speakers against manifest names, so a name remembered a day later and
+spelled differently from the Zoom display name does not error — it silently
+drops that role's evidence and the item comes back unsupported. Reading it from
+the draw removes the recollection step.
+
+It fills in the two people the wheel draws. The presenter, scribe, faculty and
+facilitator are not drawn, so their placeholders stay for you to replace — and
+the drawn names still want checking against the transcript, since Zoom names and
+roster names are not always the same string.
+
+Read-only, and never fatal: no endpoint, an unreachable one or a date with
+nothing confirmed each leave a normal template with a line saying so.
+`--no-from-draw` skips it entirely.
+
 Useful flags on `score`:
 
 | Flag | What it does |
