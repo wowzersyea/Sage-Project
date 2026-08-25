@@ -1,6 +1,15 @@
 /* An in-memory stand-in for the File System Access API + IndexedDB,
    backed by sessionStorage so it survives a reload the way a real
-   FileSystemDirectoryHandle does. Test scaffolding only. */
+   FileSystemDirectoryHandle does. Test scaffolding only.
+
+   This is the shared preamble every suite installs, so it also carries
+   the front-door code — otherwise each suite would open onto the gate
+   instead of the page it means to test. gate.test.js clears it first
+   and drives the gate properly. */
+(function(){
+  try { localStorage.setItem("sage-mr-gate", "2026"); } catch (e) { /* private mode */ }
+})();
+
 (function(){
   var KEY = "__fakefs__", IDBKEY = "__fakeidb__";
 

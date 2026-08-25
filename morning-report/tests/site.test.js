@@ -99,13 +99,20 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   t('and stops the auto-redirect so it can be copied', rescue.refreshRemoved === true);
 
   // ---- the module never writes localStorage ----------------------------------
+  // Two keys are allowed there on purpose and neither is data: the
+  // front-door code, and the shared-roster endpoint settings when
+  // someone ticks "remember on this device". Everything else would be
+  // state that the other site and the folder cannot see, which is the
+  // thing this assertion exists to prevent.
+  const ALLOWED = ['sage-mr-gate', 'sage-mr-remote'];
   await page.evaluate(() => localStorage.clear());
   for (const p of ['/morning-report/draw/', '/morning-report/board/', '/morning-report/roster/']) {
     await page.goto(BASE + p, { waitUntil: 'networkidle' });
     await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
     await page.waitForTimeout(300);
   }
-  const ls = await page.evaluate(() => Object.keys(localStorage).filter(k => !k.startsWith('__fakefs')));
+  const ls = await page.evaluate((allowed) => Object.keys(localStorage)
+    .filter(k => !k.startsWith('__fakefs') && allowed.indexOf(k) === -1), ALLOWED);
   t('nothing in the module writes localStorage', ls.length === 0, ls);
 
   let failed = 0;
