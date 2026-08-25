@@ -407,6 +407,112 @@ const stub = `
     await ctx.close();
   }
 
+  /* ---- 11c. confirming the morning --------------------------------
+
+     The half that lets a chief with no data folder leave a record: both
+     wheels land, one press writes the pair to the sheet.
+     ------------------------------------------------------------------- */
+
+  {
+    await page.evaluate(d => MRRemote.setSettings({ endpoint: d.e, key: d.k, remember: false }),
+      { e: ENDPOINT, k: KEY });
+    await setMode('ok');
+    await setBody({ status: 'ok', date: DATE, wrote: 2, replaced: 0 });
+
+    const r2 = await page.evaluate(async (date) => {
+      window.__mr.calls.length = 0;
+      const res = await MRRemote.confirmDraw({
+        date: date, site: 'Galveston', presenting: 'GAL',
+        entries: [
+          { role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' },
+          { role: 'senior_discussant', resident_id: 'r-2', name: 'Teodoro Nunez' },
+        ],
+      });
+      const sent = JSON.parse(window.__mr.calls[0].body);
+      return { res: res, method: window.__mr.calls[0].method, sent: sent };
+    }, DATE);
+
+    t('confirming posts', r2.method === 'POST');
+    t('it is marked as a draw, not a seed', r2.sent.action === 'draw', r2.sent.action);
+    t('it carries the key', r2.sent.key === KEY);
+    t('it carries both people', r2.sent.entries.length === 2, r2.sent.entries);
+    t('it carries the date and the presenting site',
+      r2.sent.date === DATE && r2.sent.presenting === 'GAL', [r2.sent.date, r2.sent.presenting]);
+    t('and reports what was written', r2.res.ok === true && r2.res.wrote === 2, r2.res);
+
+    /* Nothing to record is refused here rather than at the far end. */
+    const empty = await page.evaluate((date) => MRRemote.confirmDraw({ date: date, entries: [] }), DATE);
+    t('an empty draw is refused before it is sent', empty.ok === false, empty);
+    const blank = await page.evaluate((date) =>
+      MRRemote.confirmDraw({ date: date, entries: [{ role: 'r', resident_id: '', name: '' }] }), DATE);
+    t('a draw of blank entries is refused too', blank.ok === false, blank);
+
+    await setMode('denied');
+    const denied = await page.evaluate((date) => MRRemote.confirmDraw({
+      date: date, entries: [{ role: 'r', resident_id: 'r-1', name: 'n' }] }), DATE);
+    t('a refused key surfaces as an error, not a crash',
+      denied.ok === false && /key/i.test(denied.error), denied);
+
+    await setMode('network');
+    const down = await page.evaluate((date) => MRRemote.confirmDraw({
+      date: date, entries: [{ role: 'r', resident_id: 'r-1', name: 'n' }] }), DATE);
+    t('an unreachable endpoint does the same', down.ok === false && !!down.error, down);
+    await setMode('ok');
+  }
+
+  /* ---- 11d. confirmed draws feed the equity table ------------------
+
+     The point of folding them into the log: a draw confirmed on a
+     borrowed laptop has to show up in everyone's equity view, or the
+     shared record and the local one disagree about who is overdue.
+     ------------------------------------------------------------------- */
+
+  {
+    /* the settings page has no roster.js; the merge lives there */
+    await page.goto(BASE + '/morning-report/roster/', { waitUntil: 'networkidle' });
+
+    const merged = await page.evaluate(() => {
+      const local = [{ date: '2026-09-01', site: '', resident_id: 'r-2',
+                       role: 'senior_discussant', feedback_sent: true }];
+      const draws = [
+        /* the same entry the folder already has, with no feedback flag */
+        { date: '2026-09-01', site: '', role: 'senior_discussant', resident: 'r-2', name: 'T' },
+        /* one only the sheet knows about */
+        { date: '2026-09-03', site: 'Galveston', role: 'pgy1_discussant', resident: 'r-1', name: 'M' },
+        /* an acting intern: named in the sheet, no id, never a resident's turn */
+        { date: '2026-09-03', site: 'Galveston', role: 'pgy1_discussant', resident: '', name: 'Student' },
+      ];
+      const out = MRRoster.mergeLog(local, draws);
+      return {
+        n: out.length,
+        keptFeedback: out.filter(e => e.date === '2026-09-01')[0].feedback_sent,
+        dupes: out.filter(e => e.date === '2026-09-01').length,
+        added: out.filter(e => e.date === '2026-09-03').map(e => e.resident_id),
+      };
+    });
+    t('a draw only the sheet knows about is added', merged.added.join() === 'r-1', merged.added);
+    t('one the folder already has is not duplicated', merged.dupes === 1, merged.dupes);
+    t('and the folder copy wins, keeping feedback_sent', merged.keptFeedback === true);
+    t('an acting intern is never folded into a resident log', merged.n === 2, merged.n);
+
+    /* end to end: the endpoint carries draws, and the roster load folds
+       them in without a folder entry for them */
+    await setBody(okBody({ roster: Object.assign({}, SHARED_ROSTER, { draws: [
+      { date: '2026-09-10', site: 'Clear Lake', role: 'senior_discussant', resident: 'r-3', name: 'B' },
+    ] }) }));
+    const loaded = await page.evaluate(async () => {
+      MRRemote.reload();
+      const r = await MRRoster.load();
+      const e = r.log.filter(x => x.date === '2026-09-10')[0];
+      return { has: !!e, from: e && e.source, id: e && e.resident_id };
+    });
+    t('a confirmed draw reaches the roster log on load', loaded.has === true, loaded);
+    t('marked as coming from the sheet', loaded.from === 'shared');
+    t('with the right resident', loaded.id === 'r-3');
+
+    await setBody(okBody());
+  }
+
   /* ---- 12. remote.js itself failing to load ------------------------
 
      It happened: a 404 was cached at the CDN for the four hours after

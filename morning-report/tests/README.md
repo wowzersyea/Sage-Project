@@ -27,14 +27,17 @@ Each suite exits non-zero on a failure or on any console error.
 | `site.test.js` | Every page loads clean, every internal link resolves, and nothing writes `localStorage` |
 | `remote.test.js` | The optional shared endpoint: that the folder always wins, that the endpoint owns the people while the folder owns the log, that a refused key or a dead endpoint degrades instead of breaking, that only the two name-bearing paths are ever fetched, and that the key is not persisted unless asked |
 | `gate.test.js` | The front door: every page locked without the code, the page underneath genuinely hidden, a wrong code refused, the code remembered across pages and reloads — and that it stays a sign rather than a lock, by asserting it knows nothing about the endpoint key and a locked page has fetched no roster |
+| `confirm.test.js` | The chicken-dinner button: not offered after one wheel, what it posts, that a re-spin re-arms it and re-spinning onto the same person does not, that a new date is a new morning, and that a refused key or dead endpoint is shown and retryable |
 | `appsscript.test.js` | `server/Code.gs` run in node with the four Google globals stubbed: the key gate, name resolution in every form a chief might type, date cells, and the seed round-trip. No browser and no network — run it with plain `node`. |
 
 ## The fake file system
 
 `fakefs.js` stands in for the File System Access API and IndexedDB, backed by
 `localStorage` so a second tab sees the same folder — which is how the two-machine test
-in `roster.test.js` works. It is test scaffolding; the product never touches
-`localStorage`, and `site.test.js` asserts that.
+in `roster.test.js` works. It is test scaffolding. The product keeps no DATA in `localStorage` and
+`site.test.js` asserts that, allowing exactly two named keys: the front-door code and
+the shared-roster endpoint settings when someone asks to be remembered. Anything else
+appearing there fails the sweep.
 
 `roles.test.js` edits `content/roles.json` in place to run the acceptance test from the
 spec, and restores it in a `finally`. If it is killed mid-run, check that file with

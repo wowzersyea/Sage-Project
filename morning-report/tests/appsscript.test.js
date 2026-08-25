@@ -300,6 +300,77 @@ function fresh(key = 'k') {
     back.rotations.days);
 }
 
+/* ---------- recording today's discussants -------------------------------- */
+
+{
+  const { sandbox, byName } = makeContext([
+    makeSheet('Roster', ROSTER_ROWS), makeSheet('Rota', ROTA_ROWS), makeSheet('Sites', SITES_ROWS),
+  ], 'k');
+
+  const draw = (date, entries, site) => parse(sandbox.doPost({ postData: { contents: JSON.stringify({
+    key: 'k', action: 'draw', date: date, site: site || 'Galveston', presenting: 'GAL', entries: entries,
+  }) } }));
+
+  let res = draw('2026-09-03', [
+    { role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' },
+    { role: 'senior_discussant', resident_id: 'r-2', name: 'Teodoro Nunez' },
+  ]);
+  t('a draw is recorded', res.status === 'ok' && res.wrote === 2, res);
+  t('and the Draws tab gets a header row',
+    byName.Draws.__rows()[0].join('|') === 'date|site|presenting|role|resident_id|name|confirmed_at');
+  t('one row per person', byName.Draws.__rows().length === 3, byName.Draws.__rows().length);
+
+  /* The whole reason it is a button and not automatic: a re-spin has to
+     correct the morning, not add a third and fourth discussant. */
+  res = draw('2026-09-03', [
+    { role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' },
+    { role: 'senior_discussant', resident_id: 'r-3', name: 'Bronwen Kestrel' },
+  ]);
+  t('confirming the same date replaces it', res.wrote === 2 && res.replaced === 2, res);
+  t('and does not stack up rows', byName.Draws.__rows().length === 3, byName.Draws.__rows().length);
+  t('the replacement is what is kept',
+    byName.Draws.__rows()[2][4] === 'r-3', byName.Draws.__rows()[2]);
+
+  /* A second date must not disturb the first. */
+  res = draw('2026-09-04', [{ role: 'pgy1_discussant', resident_id: 'r-2', name: 'Teodoro Nunez' }]);
+  t('a different date is added, not swapped in', byName.Draws.__rows().length === 4, byName.Draws.__rows().length);
+  t('and it replaced nothing', res.replaced === 0, res);
+
+  /* It comes back on the next read, which is what lets a folderless
+     browser show the equity table. */
+  const back = parse(sandbox.doGet({ parameter: { key: 'k' } }));
+  t('draws come back on the payload', back.roster.draws.length === 3, back.roster.draws.length);
+  t('with the fields the browser folds into its log',
+    back.roster.draws.every(d => d.date && d.role && d.resident), back.roster.draws[0]);
+  t('the corrected senior is the one returned',
+    back.roster.draws.filter(d => d.date === '2026-09-03' && d.role === 'senior_discussant')[0].resident === 'r-3');
+
+  /* An acting intern is a discussant that morning and not a resident.
+     Recorded by name so the sheet is a true record of the room, with no
+     id so nothing folds them into a resident's participation. */
+  res = draw('2026-09-05', [
+    { role: 'pgy1_discussant', resident_id: '', name: 'A Visiting Student' },
+    { role: 'senior_discussant', resident_id: 'r-2', name: 'Teodoro Nunez' },
+  ]);
+  t('an acting intern is written', res.wrote === 2, res);
+  const back2 = parse(sandbox.doGet({ parameter: { key: 'k' } }));
+  const student = back2.roster.draws.filter(d => d.name === 'A Visiting Student')[0];
+  t('and comes back with no resident id', student && student.resident === '', student);
+
+  t('a draw with no date is refused',
+    draw('', [{ role: 'x', resident_id: 'r-1', name: 'n' }]).status === 'error');
+  t('a draw with nobody in it is refused', draw('2026-09-06', []).status === 'error');
+  t('a draw of blank entries is refused',
+    draw('2026-09-06', [{ role: 'x', resident_id: '', name: '' }]).status === 'error');
+}
+
+{
+  const { sandbox } = fresh('k');
+  t('recording a draw with a wrong key is denied',
+    parse(sandbox.doPost({ postData: { contents: JSON.stringify({ key: 'no', action: 'draw',
+      date: '2026-09-03', entries: [{ role: 'r', resident_id: 'r-1', name: 'n' }] }) } })).status === 'denied');
+}
+
 {
   const { sandbox } = fresh('k');
   t('seeding with a wrong key is denied',

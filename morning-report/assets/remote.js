@@ -255,6 +255,61 @@
       });
   }
 
+  /* ---------- recording today's discussants ---------------------------
+
+     The only write that comes from the room rather than from a data
+     folder, and the point of it: a chief on a borrowed laptop can leave
+     a record without connecting anything.
+
+     Confirming a date replaces that date's rows at the far end, so
+     pressing it twice is safe and a re-spin corrects rather than
+     duplicates.
+     ------------------------------------------------------------------- */
+
+  function confirmDraw(session) {
+    if (!configured()) {
+      return Promise.resolve({ ok: false, error: "No shared roster is set up on this browser." });
+    }
+    var entries = (session && session.entries ? session.entries : []).filter(function (e) {
+      return e && (e.name || e.resident_id);
+    });
+    if (!entries.length) {
+      return Promise.resolve({ ok: false, error: "There is nobody to record." });
+    }
+
+    return global.fetch(state.endpoint, {
+      method: "POST",
+      credentials: "omit",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        key: state.key,
+        action: "draw",
+        date: session.date,
+        site: session.site || "",
+        presenting: session.presenting || "",
+        entries: entries
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
+        return res.json();
+      })
+      .then(function (r) {
+        if (!r || r.status !== "ok") {
+          return {
+            ok: false,
+            error: (r && (r.message || (r.status === "denied" ? "That key was not accepted." : ""))) ||
+              "The endpoint refused it."
+          };
+        }
+        reload();                       /* the next read should see it */
+        return { ok: true, wrote: r.wrote || 0, replaced: r.replaced || 0, date: r.date || session.date };
+      })
+      .catch(function (err) {
+        return { ok: false, error: (err && err.message) || "Could not reach the endpoint." };
+      });
+  }
+
   /* ---------- status for the bar -------------------------------------- */
 
   function status() {
@@ -309,6 +364,7 @@
     reload: reload,
     get: get,
     publish: publish,
+    confirmDraw: confirmDraw,
     status: status,
     isEmpty: isEmpty,
     summary: summary,
