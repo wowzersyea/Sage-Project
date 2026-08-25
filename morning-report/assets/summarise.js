@@ -32,10 +32,101 @@
 (function (global) {
   "use strict";
 
-  var ENDPOINT = "https://api.anthropic.com/v1/messages";
   var VERSION = "2023-06-01";
   var KEY_STORE = "mr.model.key";
   var MODEL_STORE = "mr.model.name";
+  var PROVIDER_STORE = "mr.model.provider";
+
+  /* ---------- who is being asked -------------------------------------
+
+     Two shapes of the same request. Everything above this layer — the
+     rollup, the per-unit prompts, the confidence floor — is identical
+     either way; only the envelope differs. Adding a third provider
+     means adding a row here and nothing else.
+
+     Both are called straight from the browser. Anthropic wants an
+     explicit opt-in header to allow that; xAI answers the preflight
+     with a wildcard and needs nothing. Neither arrangement puts the
+     key anywhere but this browser. */
+
+  var PROVIDERS = {
+    anthropic: {
+      label: "Anthropic",
+      endpoint: "https://api.anthropic.com/v1/messages",
+      prefix: "sk-ant-",
+      headers: function (key) {
+        return {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": VERSION,
+          "anthropic-dangerous-direct-browser-access": "true"
+        };
+      },
+      body: function (p) {
+        return {
+          model: p.model,
+          max_tokens: p.max_tokens,
+          system: p.system,
+          messages: [{ role: "user", content: p.user }]
+        };
+      },
+      read: function (body) {
+        return body && body.content && body.content[0] && body.content[0].text;
+      }
+    },
+    xai: {
+      label: "xAI",
+      endpoint: "https://api.x.ai/v1/chat/completions",
+      prefix: "xai-",
+      headers: function (key) {
+        return {
+          "content-type": "application/json",
+          "authorization": "Bearer " + key
+        };
+      },
+      body: function (p) {
+        return {
+          model: p.model,
+          max_tokens: p.max_tokens,
+          messages: [
+            { role: "system", content: p.system },
+            { role: "user", content: p.user }
+          ]
+        };
+      },
+      read: function (body) {
+        return body && body.choices && body.choices[0] &&
+          body.choices[0].message && body.choices[0].message.content;
+      }
+    }
+  };
+
+  function providerNames() { return Object.keys(PROVIDERS); }
+
+  /* A key says who it belongs to, so pasting one is enough. */
+  function providerOfKey(k) {
+    k = String(k || "").trim();
+    var found = "";
+    providerNames().forEach(function (name) {
+      if (!found && k.indexOf(PROVIDERS[name].prefix) === 0) found = name;
+    });
+    return found;
+  }
+
+  function provider() {
+    var stored = read(global.localStorage, PROVIDER_STORE) ||
+      read(global.sessionStorage, PROVIDER_STORE);
+    if (stored && PROVIDERS[stored]) return stored;
+    return providerOfKey(key()) || "anthropic";
+  }
+
+  function setProvider(name) {
+    drop(PROVIDER_STORE);
+    if (!name || !PROVIDERS[name]) return;
+    try { global.sessionStorage.setItem(PROVIDER_STORE, name); } catch (e) { /* private mode */ }
+  }
+
+  function spec() { return PROVIDERS[provider()]; }
 
   /* ---------- the key ------------------------------------------------
 
@@ -78,15 +169,29 @@
 
   function remembered() { return !!read(global.localStorage, KEY_STORE); }
 
+  function defaultModel(content) {
+    var m = (content && content.model) || {};
+    var per = (m.providers || {})[provider()];
+    return (per && per.model) || m.default_model || "claude-sonnet-5";
+  }
+
+  /* A model chosen by hand is remembered per provider: switching from
+     one to the other must not carry a model name the other has never
+     heard of. */
   function model(content) {
-    var fallback = (content && content.model && content.model.default_model) || "claude-sonnet-5";
-    return read(global.localStorage, MODEL_STORE) || read(global.sessionStorage, MODEL_STORE) || fallback;
+    var chosen = read(global.localStorage, MODEL_STORE) || read(global.sessionStorage, MODEL_STORE);
+    if (!chosen) return defaultModel(content);
+    var parts = chosen.split("|");
+    if (parts.length === 2) {
+      return parts[0] === provider() ? parts[1] : defaultModel(content);
+    }
+    return chosen;                       /* written before providers existed */
   }
 
   function setModel(m) {
     drop(MODEL_STORE);
     if (!m) return;
-    try { global.sessionStorage.setItem(MODEL_STORE, m); } catch (e) { /* private mode */ }
+    try { global.sessionStorage.setItem(MODEL_STORE, provider() + "|" + m); } catch (e) { /* private mode */ }
   }
 
   /* ---------- the arithmetic --------------------------------------- */
@@ -193,6 +298,8 @@
       : m.no_comments;
 
     return {
+      provider: provider(),
+      endpoint: spec().endpoint,
       model: model(content),
       max_tokens: m.max_tokens || 700,
       system: m.system.join("\n"),
@@ -219,7 +326,7 @@
   }
 
   function reason(status, body) {
-    if (status === 401 || status === 403) return "the key was rejected";
+    if (status === 401 || status === 403) return "the key was rejected by " + spec().label;
     if (status === 429) return "the rate limit was hit — wait a moment and summarise again";
     if (status === 529 || status === 503) return "the API is overloaded";
     var msg = body && body.error && body.error.message;
@@ -238,24 +345,15 @@
     }
 
     var p = payload(unit, content);
-    return global.fetch(ENDPOINT, {
+    var api = spec();
+    return global.fetch(p.endpoint, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": k,
-        "anthropic-version": VERSION,
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: p.model,
-        max_tokens: p.max_tokens,
-        system: p.system,
-        messages: [{ role: "user", content: p.user }]
-      })
+      headers: api.headers(k),
+      body: JSON.stringify(api.body(p))
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (body) {
         if (!res.ok) throw new Error(reason(res.status, body));
-        var text = body && body.content && body.content[0] && body.content[0].text;
+        var text = api.read(body);
         var draft = parse(text);
         var low = content.model.low_confidence || 0.7;
         return {
@@ -266,6 +364,7 @@
           confidence: typeof draft.confidence === "number" ? draft.confidence : null,
           low: typeof draft.confidence === "number" ? draft.confidence < low : true,
           model: p.model,
+          provider: p.provider,
           drafted: new Date().toISOString()
         };
       });
@@ -289,7 +388,16 @@
     remembered: remembered,
     model: model,
     setModel: setModel,
-    mean: mean,
-    ENDPOINT: ENDPOINT
+    defaultModel: defaultModel,
+    provider: provider,
+    setProvider: setProvider,
+    providerOfKey: providerOfKey,
+    providers: function () {
+      return providerNames().map(function (name) {
+        return { id: name, label: PROVIDERS[name].label, endpoint: PROVIDERS[name].endpoint };
+      });
+    },
+    endpoint: function () { return spec().endpoint; },
+    mean: mean
   };
 })(window);

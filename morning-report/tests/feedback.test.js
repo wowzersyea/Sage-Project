@@ -120,8 +120,11 @@ const FAKE_API = `
   window.__calls = [];
   var real = window.fetch;
   window.fetch = function(url, opts){
-    if (String(url).indexOf('api.anthropic.com') === -1) return real.apply(this, arguments);
-    window.__calls.push({ url: String(url), headers: opts.headers, body: JSON.parse(opts.body) });
+    var u = String(url);
+    var anthropic = u.indexOf('api.anthropic.com') !== -1;
+    var xai = u.indexOf('api.x.ai') !== -1;
+    if (!anthropic && !xai) return real.apply(this, arguments);
+    window.__calls.push({ url: u, headers: opts.headers, body: JSON.parse(opts.body) });
     var n = window.__calls.length;
     var draft = {
       summary: 'Reply ' + n + ', in the coaching voice.',
@@ -129,9 +132,21 @@ const FAKE_API = `
       agreement: n === 1 ? 'agreed' : 'thin',
       confidence: n === 1 ? 0.86 : 0.41
     };
+    var text = JSON.stringify(draft);
+    /* A code fence, built without escapes: this whole script lives in
+       a template literal, where a backslash-n would become a real
+       newline and break the string it was meant to be inside. */
+    var fence = function(tag){
+      return String.fromCharCode(96, 96, 96) + tag + String.fromCharCode(10);
+    };
+    /* Each provider is answered in its own shape, so the reader is
+       exercised and not just the writer. */
+    var payload = anthropic
+      ? { content: [{ type: 'text', text: text }] }
+      : { choices: [{ message: { role: 'assistant', content: fence('json') + text + fence('') } }] };
     return Promise.resolve({
       ok: true, status: 200,
-      json: function(){ return Promise.resolve({ content: [{ type:'text', text: JSON.stringify(draft) }] }); }
+      json: function(){ return Promise.resolve(payload); }
     });
   };
 })();
@@ -377,6 +392,80 @@ const FAKE_API = `
   t('each call is scoped to one unit and carries no other unit with it',
      sent.every(c => c.split('\n')[0].indexOf('Unit: ') === 0) &&
      sent.filter(c => /Unit: Case Presenter/.test(c)).length === 1, sent.length);
+
+  // ---- the other provider, same everything else -------------------------
+  const swapped = await page.evaluate(async () => {
+    window.__calls = [];
+    document.getElementById('key').value = 'xai-test-key';
+    document.getElementById('key').dispatchEvent(new Event('input', { bubbles: true }));
+    return {
+      provider: document.getElementById('provider').value,
+      model: document.getElementById('model').value,
+      where: document.getElementById('wherenote').textContent
+    };
+  });
+  t('pasting a key switches the provider without anyone finding a menu',
+     swapped.provider === 'xai', swapped);
+  t('and the model box follows it to that provider\'s default',
+     swapped.model === 'grok-4.6', swapped.model);
+  t('the page says where summaries are going', /api\.x\.ai/.test(swapped.where), swapped.where);
+
+  /* Every unit is holding a draft from the run above, and the payload
+     preview only exists where one is not. Clear the first. */
+  await page.evaluate(() => {
+    const btns = document.querySelectorAll('.unit .draft .link-btn');
+    for (const b of btns) { if (/again/i.test(b.textContent)) { b.click(); return; } }
+  });
+  await page.waitForTimeout(200);
+
+  const xaiPeek = await page.evaluate(() => {
+    const btns = document.querySelectorAll('.unit .link-btn');
+    let peekBtn = null;
+    btns.forEach(b => { if (!peekBtn && /would be sent/i.test(b.textContent)) peekBtn = b; });
+    if (!peekBtn) return '';
+    peekBtn.click();
+    const pre = document.querySelector('.unit .peek:not([hidden])');
+    return pre ? pre.textContent : '';
+  });
+  t('the printable payload names the endpoint it would actually use',
+     /api\.x\.ai/.test(xaiPeek) && !/anthropic/.test(xaiPeek.split('\n')[0]), xaiPeek.slice(0, 60));
+
+  await page.evaluate(() => {
+    const btns = document.querySelectorAll('.unit .bar button.ghost');
+    btns[0].click();
+  });
+  await page.waitForTimeout(500);
+
+  const xaiCall = await page.evaluate(() => ({
+    calls: window.__calls.length,
+    url: window.__calls.length ? window.__calls[0].url : '',
+    auth: window.__calls.length ? window.__calls[0].headers['authorization'] : '',
+    hasAnthropicHeader: window.__calls.length ? ('x-api-key' in window.__calls[0].headers) : null,
+    roles: window.__calls.length ? window.__calls[0].body.messages.map(m => m.role) : [],
+    systemInBody: window.__calls.length ? ('system' in window.__calls[0].body) : null,
+    draft: (document.querySelector('.draft p') || {}).textContent || '',
+    meta: (document.querySelector('.draft .meta') || {}).textContent || ''
+  }));
+  t('the call goes to xAI, with a bearer token and no Anthropic header',
+     xaiCall.calls === 1 && /api\.x\.ai/.test(xaiCall.url) &&
+     xaiCall.auth === 'Bearer xai-test-key' && xaiCall.hasAnthropicHeader === false, xaiCall);
+  t('the prompt moves into a system message rather than a top-level field',
+     xaiCall.roles.join(',') === 'system,user' && xaiCall.systemInBody === false, xaiCall.roles);
+  t('a reply wrapped in a code fence is still read',
+     /coaching voice/.test(xaiCall.draft), xaiCall.draft);
+  t('and the draft says who answered', /xai/.test(xaiCall.meta), xaiCall.meta);
+
+  /* Back to where the rest of the suite expects to be. */
+  await page.evaluate(() => {
+    document.getElementById('key').value = 'sk-ant-test-key';
+    document.getElementById('key').dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  const backAgain = await page.evaluate(() => ({
+    provider: document.getElementById('provider').value,
+    model: document.getElementById('model').value
+  }));
+  t('and swapping back restores that provider\'s own model',
+     backAgain.provider === 'anthropic' && backAgain.model === 'claude-sonnet-5', backAgain);
 
   // ---- what is kept, and what is not ------------------------------------
   await page.click('#save');

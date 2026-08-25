@@ -7,7 +7,7 @@
 <meta name="description" content="What came back from one morning report session: the numbers, the comments, and a drafted summary of each — three sections and six roles, one call each.">
 <link rel="stylesheet" href="../../assets/mr.css">
 <style>
-  .pickbar{display:grid;grid-template-columns:2fr 1fr auto;gap:12px;align-items:end}
+  .pickbar{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end}
   .pickbar .bar{align-items:center}
 
   .count{
@@ -132,6 +132,10 @@
           <select id="session"><option value="">— nothing found —</option></select>
         </div>
         <div>
+          <label class="f" for="provider">Answered by</label>
+          <select id="provider"></select>
+        </div>
+        <div>
           <label class="f" for="model">Model</label>
           <input type="text" id="model" placeholder="claude-sonnet-5">
         </div>
@@ -173,6 +177,7 @@
         Keep it in this browser, so it is here next week
       </label>
       <p class="hint" id="keynote"></p>
+      <p class="hint" id="wherenote"></p>
     </div>
 
     <div id="body"></div>
@@ -362,7 +367,7 @@ function draftBlock(unit){
     peekBtn.addEventListener("click", function(){
       if (peek.hidden){
         var p = MRSummarise.payload(unit, content);
-        peek.textContent = "POST " + MRSummarise.ENDPOINT + "\nmodel: " + p.model +
+        peek.textContent = "POST " + p.endpoint + "\nmodel: " + p.model +
           "\n\n--- system ---\n" + p.system + "\n\n--- user ---\n" + p.user;
         peek.hidden = false;
         peekBtn.textContent = "Hide the payload";
@@ -401,7 +406,7 @@ function draftBlock(unit){
   if (d.agreement) bits.push(d.agreement === "split" ? "the responses disagree" :
     d.agreement === "thin" ? "thin signal" : "the responses agree");
   if (d.confidence !== null) bits.push("confidence " + d.confidence.toFixed(2));
-  bits.push(d.model);
+  bits.push(d.model + (d.provider ? " · " + d.provider : ""));
   meta.textContent = bits.join(" · ");
   box.appendChild(meta);
 
@@ -668,8 +673,25 @@ $("print").addEventListener("click", function(){ window.print(); });
 
 /* ---------- the key ------------------------------------------------------ */
 
+function fillProviders(){
+  var sel = $("provider");
+  sel.innerHTML = "";
+  MRSummarise.providers().forEach(function(p){
+    sel.appendChild(new Option(p.label, p.id));
+  });
+  sel.value = MRSummarise.provider();
+}
+
+function paintWhere(){
+  var name = MRSummarise.provider();
+  var label = (MRSummarise.providers().filter(function(p){ return p.id === name; })[0] || {}).label || name;
+  $("wherenote").textContent = "Summaries go to " + label + ", at " + MRSummarise.endpoint() +
+    ", and nowhere else.";
+}
+
 function paintKey(){
   var has = !!MRSummarise.key();
+  paintWhere();
   $("keynote").textContent = has
     ? (MRSummarise.remembered()
         ? "A key is set and kept in this browser. Anyone who uses this machine can summarise with it."
@@ -677,8 +699,23 @@ function paintKey(){
     : "No key set. The numbers and the comments below need none — only the drafted summaries do.";
 }
 
+/* A key knows which door it opens, so pasting one switches the
+   provider rather than making somebody find the menu. */
 $("key").addEventListener("input", function(){
+  var was = MRSummarise.provider();
   MRSummarise.setKey($("key").value, $("remember").checked);
+  var guess = MRSummarise.providerOfKey($("key").value);
+  if (guess && guess !== was){
+    MRSummarise.setProvider(guess);
+    $("provider").value = guess;
+    $("model").value = MRSummarise.model(content);
+  }
+  paintKey();
+});
+
+$("provider").addEventListener("change", function(){
+  MRSummarise.setProvider($("provider").value);
+  $("model").value = MRSummarise.model(content);
   paintKey();
 });
 $("remember").addEventListener("change", function(){
@@ -864,6 +901,7 @@ Promise.all([
   (both[1].roles || []).forEach(function(c){ roleCards[c.slug] = c; });
   $("key").value = MRSummarise.key();
   $("remember").checked = MRSummarise.remembered();
+  fillProviders();
   $("model").value = MRSummarise.model(content);
   paintKey();
   return MRStore.whenReady;

@@ -139,7 +139,7 @@
     "card_link": "their card →"
   },
   "model": {
-    "_note": "Editable prose, not string literals in JavaScript — the same rule the CLI follows for its per-item prompts. One call per unit: three sections and six roles, never one call for all of it.",
+    "_note": "Editable prose, not string literals in JavaScript — the same rule the CLI follows for its per-item prompts. One call per unit: three sections and six roles, never one call for all of it. The instructions are the same whoever is answering; only the envelope differs, which is summarise.js's business and not this file's.",
     "default_model": "claude-sonnet-5",
     "max_tokens": 700,
     "low_confidence": 0.7,
@@ -161,7 +161,17 @@
       "{\"summary\": \"two or three sentences\", \"one_thing\": \"the single change to try next time\", \"agreement\": \"agreed\"|\"split\"|\"thin\", \"confidence\": 0.0-1.0}"
     ],
     "user_header": "Unit: {unit}\nWhat this unit is: {about}\nResponses: {n} of {total} people who submitted feedback\nRatings (1 did not work, 5 as good as it gets): {ratings}\nTicked by: {ticks}\n\nComments as written:",
-    "no_comments": "(no written comments — summarise from the ratings and the ticks alone, and say that is all you had)"
+    "no_comments": "(no written comments — summarise from the ratings and the ticks alone, and say that is all you had)",
+    "providers": {
+      "anthropic": {
+        "model": "claude-sonnet-5",
+        "note": "Matches the CLI's second rater, so the two halves of the module do not drift."
+      },
+      "xai": {
+        "model": "grok-4.6",
+        "note": "grok-4.6 is the most recent, checked against the created dates the API itself reports (4.6 is 2026-08-06; the grok-4.20 family is 2026-03-09 — it is version 4 minor 20, five months older, and looks newer than it is). Reasoning tokens are billed and dominate on this family: a hundred-word reply carried two thousand tokens of thinking in testing, so a non-reasoning model is worth trying if the bill matters more than the prose."
+      }
+    }
   },
   "storage": {
     "_note": "Two lanes, on purpose. A submission carries role-level content, and the roster records which resident held which role on a date — so a permanent role-level file would join a name to a judgement by way of two files. It therefore goes to working/, which is swept. What is kept is the session, which belongs to nobody: the numbers, the ticks and the drafted summaries, never the comments as written — in a group this small a quotation identifies its author.",
