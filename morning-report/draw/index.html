@@ -663,7 +663,27 @@ Wheel.prototype.renderLedger = function(){
   var self = this;
   this.chipsEl.innerHTML = "";
   if (!roster || !roster.residents.length){
-    this.noteEl.innerHTML = "No roster yet. <a href='../roster/'>Add residents</a> to get started.";
+    /* On a device with no folder and no endpoint — a phone, most often
+       — "add residents" is advice it cannot take. Point at the thing
+       that would actually give it a roster. */
+    var rs = window.MRRemote ? MRRemote.status() : null;
+    if (rs && !rs.configured && !MRStore.status().ready){
+      this.noteEl.innerHTML = "This device has no roster. It has no data folder, and no shared " +
+        "roster is set up in this browser — <a href='../settings/'>point it at the shared sheet</a> " +
+        "and the wheel fills in.";
+    } else if (rs && rs.configured && rs.tried && !rs.ok){
+      this.noteEl.innerHTML = "The shared roster could not be read — " +
+        MRStore.esc(rs.error || "the endpoint did not answer") +
+        ". <a href='../settings/'>Check the settings</a>.";
+    } else if (rs && rs.configured && rs.ok && !rs.counts.residents){
+      /* Reachable, and empty. Normal between deploying the script and
+         publishing, and indistinguishable from broken unless it says so. */
+      this.noteEl.innerHTML = "The shared roster is connected but empty — nobody has been " +
+        "published to it yet. <a href='../publish/'>Publish from a data folder</a> " +
+        "on the machine that has one.";
+    } else {
+      this.noteEl.innerHTML = "No roster yet. <a href='../roster/'>Add residents</a> to get started.";
+    }
     return;
   }
   if (!this.people.length){
