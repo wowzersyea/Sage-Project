@@ -45,6 +45,9 @@ const OPEN = [
      what seeds the code for every other suite. */
   const cold = await b.newContext();
   const p1 = await cold.newPage();
+  /* No fakefs preamble here, deliberately — but the baked-in public
+     endpoint must still not be fetched for real from a test. */
+  await p1.addInitScript('window.MR_PUBLIC_ENDPOINT = "";');
   p1.on('pageerror', e => errs.push('pageerror: ' + e.message));
   p1.on('console', m => {
     const u = (m.location() && m.location().url) || '';
@@ -98,6 +101,7 @@ const OPEN = [
      code. Checked on a fresh page so the gate is up again. */
   const ctx2 = await b.newContext();
   const p2 = await ctx2.newPage();
+  await p2.addInitScript('window.MR_PUBLIC_ENDPOINT = "";');
   await p2.goto(BASE + '/morning-report/', { waitUntil: 'domcontentloaded' });
   await p2.fill('.mr-gate input', CODE);
   await p2.press('.mr-gate input', 'Enter');
@@ -149,6 +153,7 @@ const OPEN = [
      page had nothing to show in the first place. */
   const ctx4 = await b.newContext();
   const p4 = await ctx4.newPage();
+  await p4.addInitScript('window.MR_PUBLIC_ENDPOINT = "";');
   const fetched = [];
   await p4.route('**/*', route => {
     const u = route.request().url();

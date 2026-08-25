@@ -630,7 +630,10 @@
   api.whenReady = restore().then(function () {
     if (global.MRRemote) {
       global.MRRemote.onChange(renderBars);
-      if (global.MRRemote.configured()) global.MRRemote.fetchAll().then(renderBars);
+      /* Sourced covers both a configured device and the site's public
+         roster — either way there is something to fetch on load. */
+      var mrst = global.MRRemote.status();
+      if (mrst.configured || mrst.sourced) global.MRRemote.fetchAll().then(renderBars);
     }
     return api.status();
   });

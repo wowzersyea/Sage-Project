@@ -118,11 +118,63 @@ var MAX_CLIP = 8 * 1024 * 1024;
 
 function doGet(e) {
   try {
-    if (!authorised(e && e.parameter && e.parameter.key)) return json({ status: 'denied' });
-    return json(buildPayload());
+    var key = e && e.parameter && e.parameter.key;
+    if (authorised(key)) return json(buildPayload());
+
+    /* No key at all, and the owner has switched the public roster on:
+       serve names and levels, nothing else. A WRONG key is still
+       denied — a chief with a typo in their settings should be told
+       so, not silently downgraded to the view-only roster and left
+       wondering why the confirm button is dead. */
+    if (!key && publicRosterEnabled()) return json(buildPublicPayload());
+
+    return json({ status: 'denied' });
   } catch (err) {
     return json({ status: 'error', message: String(err && err.message || err) });
   }
+}
+
+/* ---------- the public roster ----------------------------------------
+
+   A deliberate decision, not a default. With MR_PUBLIC_ROSTER set to
+   any non-empty value in Script Properties, a keyless GET serves the
+   residents' names and levels — which is what lets every device in the
+   residency open the wheel with nothing set up, and also means anyone
+   on the internet who finds the URL can read those names. The owner
+   chose that trade knowingly; delete the property and it is off again
+   in seconds, no redeploy.
+
+   What it serves is the minimum the wheel needs and nothing that was
+   ever promised privacy beyond names:
+
+     - names, levels, ids, short names, active flags
+     - NO rota (who is where on which day stays behind the key)
+     - NO draws, NO leave windows, NO warnings (warnings can quote
+       names from rota cells, so they stay keyed too)
+   ------------------------------------------------------------------ */
+
+function publicRosterEnabled() {
+  var v = PropertiesService.getScriptProperties().getProperty('MR_PUBLIC_ROSTER');
+  return !!(v && String(v).trim());
+}
+
+function buildPublicPayload() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var residents = readRoster(ss, []).map(function (p) {
+    return {
+      id: p.id, name: p.name, sort_name: p.sort_name,
+      level: p.level, short: p.short, active: p.active,
+      unavailable: []
+    };
+  });
+  return {
+    status: 'ok',
+    public: true,
+    generated: new Date().toISOString(),
+    warnings: [],
+    roster: { source: 'sheet', academic_year: academicYear(), residents: residents },
+    rotations: null
+  };
 }
 
 function doPost(e) {

@@ -771,6 +771,53 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
     byName.Roster.__rows().length === ROSTER_ROWS.length, byName.Roster.__rows().length);
 }
 
+
+/* ---------- the public roster ---------------------------------------------
+
+   Option A, chosen by the owner with the trade stated: a keyless GET
+   serves names and levels so every device's wheel works with nothing
+   set up. What these tests guard is the boundary of that choice — the
+   switch defaults off, a wrong key is still a wrong key, and nothing
+   beyond names and levels ever rides along.
+   -------------------------------------------------------------------------- */
+
+{
+  const { sandbox } = fresh('k');
+  t('with the switch unset, a keyless GET is denied as before',
+    parse(sandbox.doGet({ parameter: {} })).status === 'denied');
+}
+
+{
+  const { sandbox } = makeContext([
+    makeSheet('Roster', ROSTER_ROWS), makeSheet('Rota', ROTA_ROWS), makeSheet('Sites', SITES_ROWS),
+  ], 'k');
+  sandbox.PropertiesService.getScriptProperties().setProperty('MR_PUBLIC_ROSTER', 'yes');
+
+  /* seed a draw and a leave-bearing situation so there is something to leak */
+  sandbox.doPost({ postData: { contents: JSON.stringify({ key: 'k', action: 'draw',
+    date: '2026-09-03', site: 'G', presenting: 'GAL',
+    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] }) } });
+
+  const pub = parse(sandbox.doGet({ parameter: {} }));
+  t('with the switch on, a keyless GET serves the public subset',
+    pub.status === 'ok' && pub.public === true, pub.status);
+  t('names and levels are there',
+    pub.roster.residents.length === 3 &&
+    pub.roster.residents.every(r => r.name && r.level), pub.roster.residents.length);
+  t('the rota is not', pub.rotations === null, pub.rotations);
+  t('the draws are not', pub.roster.draws === undefined);
+  t('leave windows are not', pub.roster.residents.every(r => r.unavailable.length === 0));
+  t('warnings are not, because they can quote rota cells', pub.warnings.length === 0, pub.warnings);
+
+  t('a WRONG key is still denied, not downgraded to the public view',
+    parse(sandbox.doGet({ parameter: { key: 'typo' } })).status === 'denied');
+
+  const full = parse(sandbox.doGet({ parameter: { key: 'k' } }));
+  t('the real key still gets everything',
+    full.public === undefined && full.rotations !== null &&
+    Array.isArray(full.roster.draws), [full.public, !!full.rotations]);
+}
+
 /* ---------- report -------------------------------------------------------- */
 
 let bad = 0;
