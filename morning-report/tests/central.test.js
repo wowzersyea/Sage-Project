@@ -373,6 +373,13 @@ const CARD = { session: '2026-09-03', items: [{ code: 'A1', met: true }] };
     t('the empty wheel says why it is empty', /no shared roster is set up/i.test(note), note);
     t('and does not tell a phone to add residents', !/Add residents/.test(note), note);
 
+    /* The presenting toggle is rota-driven and this device has no rota.
+       hidden must actually hide — display:flex was beating the
+       attribute, leaving an empty "Presenting today" label that reads
+       as a broken control. */
+    t('no rota means no presenting label, not an empty one',
+      !(await p.isVisible('#presenting-wrap')));
+
     await ctx.close();
   }
 
