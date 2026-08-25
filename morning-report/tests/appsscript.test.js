@@ -46,10 +46,10 @@ function makeSheet(name, rows) {
 /* Minutes each zone is offset from UTC, for the formatDate stub. */
 const ZONES = { 'America/Chicago': -5 * 60, 'Asia/Tokyo': 9 * 60 };
 
-function makeContext(sheets, key, tz, feedbackKey) {
+function makeContext(sheets, key, tz, feedbackKey, noUi) {
   tz = tz || 'America/Chicago';
   const byName = {};
-  const seen = { zones: [] };
+  const seen = { zones: [], alerts: [], logs: [] };
   /* A fake Drive: files by id, and a note of what got binned. */
   const drive = { files: {}, folders: {}, next: 1, trashed: [], converted: [] };
   sheets.forEach(s => { byName[s.name] = s; });
@@ -105,7 +105,14 @@ function makeContext(sheets, key, tz, feedbackKey) {
     getFiles: () => iter(live(f => f.parent === id)),
   });
   const sandbox = {
-    SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert: () => {} }) },
+    SpreadsheetApp: {
+      getActiveSpreadsheet: () => ss,
+      getUi: () => {
+        if (noUi) throw new Error('Cannot call SpreadsheetApp.getUi() from this context.');
+        return { alert: (m) => { seen.alerts.push(m); } };
+      },
+    },
+    Logger: { log: (m) => { seen.logs.push(m); } },
     PropertiesService: {
       getScriptProperties: () => ({
         getProperty: (k) => (k in props ? props[k] : null),
@@ -722,6 +729,46 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
   t('the feedback key cannot render a PDF',
     parse(s3.doPost({ postData: { contents: JSON.stringify(
       { key: 'fb', action: 'pdf', name: 'x', html: HTML }) } })).status === 'denied');
+}
+
+
+/* ---------- setting the sheets up ------------------------------------------
+
+   Reported from a real run: setUpSheets() created every tab and then
+   threw on SpreadsheetApp.getUi(), which is not available in every
+   context a script gets run from. The tabs were there and the run
+   looked like a failure, which is the worst way round to get it wrong.
+   -------------------------------------------------------------------------- */
+
+{
+  const { sandbox, byName, seen } = makeContext([], 'k', undefined, undefined, true);   // no UI
+  let threw = null;
+  try { sandbox.setUpSheets(); } catch (e) { threw = e.message; }
+
+  t('setUpSheets survives a context with no UI', threw === null, threw);
+  t('and still makes every tab',
+    ['Roster', 'Rota', 'Sites', 'Draws', 'Feedback'].every(n => !!byName[n]),
+    Object.keys(byName));
+  t('and says what to do next in the log', seen.logs.some(l => /MR_KEY/.test(l)), seen.logs.length);
+  t('and nothing was alerted, because there was nowhere to alert to', seen.alerts.length === 0);
+}
+
+{
+  const { sandbox, byName, seen } = makeContext([], 'k');                                // with a UI
+  sandbox.setUpSheets();
+  t('with a UI it still shows the message', seen.alerts.length === 1, seen.alerts.length);
+  t('and makes the same tabs',
+    ['Roster', 'Rota', 'Sites', 'Draws', 'Feedback'].every(n => !!byName[n]));
+  t('and the message names all five tabs',
+    /Roster, Rota, Sites, Draws, Feedback/.test(seen.alerts[0]), seen.alerts[0]);
+}
+
+{
+  /* Running it twice must not wipe a sheet somebody has already filled in. */
+  const { sandbox, byName } = makeContext([makeSheet('Roster', ROSTER_ROWS)], 'k', undefined, undefined, true);
+  sandbox.setUpSheets();
+  t('re-running leaves an existing tab alone',
+    byName.Roster.__rows().length === ROSTER_ROWS.length, byName.Roster.__rows().length);
 }
 
 /* ---------- report -------------------------------------------------------- */
