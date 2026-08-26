@@ -27,7 +27,6 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
     document.getElementById('caseid').value = 'PEDS-MR-04';
     document.getElementById('date').value = '2026-09-03';
     document.getElementById('site').value = 'Galveston';
-    document.getElementById('objective').value = 'Distinguish septic arthritis from transient synovitis';
     document.getElementById('pr').value = '3-year-old, two days of fever, refusing to bear weight, hip flexed and externally rotated';
     document.querySelector('[data-v="t"]').value = '38.6';
     document.querySelector('[data-v="hr"]').value = '148';

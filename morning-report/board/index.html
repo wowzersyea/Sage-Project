@@ -222,7 +222,6 @@
     <div><label>Case</label><input id="caseid" placeholder="PEDS-MR-##" size="11"></div>
     <div><label>Date</label><input id="date" placeholder="__/__" size="9"></div>
     <div><label>Site</label><input id="site" size="10"></div>
-    <div><label>Objective</label><input id="objective" placeholder="One objective, read aloud at 0:00"></div>
   </div>
 
   <div class="pr">
@@ -398,7 +397,7 @@
   .fbqr #feedbackQrCode svg{display:block;width:168px;height:168px}
   .fbqr .hint{flex:1 1 220px;margin:0}
 </style>
-<script src="../assets/remote.js?v=5"></script>
+<script src="../assets/remote.js?v=6"></script>
 <script src="../assets/relay.js"></script>
 <script src="../assets/qr.js"></script>
 <script src="../assets/store.js"></script>
@@ -637,7 +636,6 @@ function boardText(){
   var L = [];
   L.push("MORNING REPORT BOARD");
   L.push("Case " + (g("caseid") || "—") + "   " + g("date") + "   " + g("site"));
-  L.push("Objective: " + (g("objective") || "—"));
   L.push("");
   L.push("PROBLEM REPRESENTATION");
   L.push("  " + (g("pr") || "—"));
@@ -742,7 +740,7 @@ function saveBoardPdf(){
   var btn = $("printBtn");
   var was = btn.textContent;
 
-  if (!window.MRRemote || !MRRemote.configured()){
+  if (!window.MRRemote || typeof MRRemote.canWrite !== "function" || !MRRemote.canWrite()){
     /* Hardcoded strings only, so innerHTML is safe — it buys the link. */
     $("errmsg").innerHTML = (window.MRRemote && MRRemote.status().public
       ? "This computer is view-only, so there is nowhere to file the PDF. "
@@ -801,7 +799,7 @@ function state(){
   return {
     version: 1,
     saved: new Date().toISOString(),
-    meta: { caseid: g("caseid"), date: g("date"), site: g("site"), objective: g("objective") },
+    meta: { caseid: g("caseid"), date: g("date"), site: g("site") },
     pr: g("pr"),
     vitals: readVitals(),
     lists: readLists(),
@@ -820,7 +818,7 @@ function restore(s){
   if (!s) return;
   var set = function(id, v){ if ($(id)) $(id).value = v || ""; };
   set("caseid", s.meta && s.meta.caseid); set("date", s.meta && s.meta.date);
-  set("site", s.meta && s.meta.site);     set("objective", s.meta && s.meta.objective);
+  set("site", s.meta && s.meta.site);
   set("pr", s.pr);
   set("fwTxt", s.framework);
   set("testName", s.test && s.test.name); set("testPos", s.test && s.test.pos); set("testNeg", s.test && s.test.neg);
@@ -956,7 +954,7 @@ function archiveFrom(s, d){
     date: s.meta.date || MRStore.today(),
     site: s.meta.site,
     case_id: s.meta.caseid,
-    objective: s.meta.objective,
+    objective: (s.meta && s.meta.objective) || "",
     problem_representation: s.pr,
     key_data: {
       vitals: s.vitals,

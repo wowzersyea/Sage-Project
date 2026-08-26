@@ -270,7 +270,7 @@ const CARD = { session: '2026-09-03', items: [{ code: 'A1', met: true }] };
     await p.evaluate(() => {
       document.getElementById('date').value = '2026-09-03';
       document.getElementById('site').value = 'Galveston';
-      document.getElementById('objective').value = 'Fever and a limp in a toddler';
+      document.getElementById('pr').value = 'Fever and a limp in a toddler';
     });
 
     /* window.print would block the run, and its absence is the point */

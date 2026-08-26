@@ -159,6 +159,22 @@
      single answer rather than each hitting the endpoint.
      ------------------------------------------------------------------ */
 
+  /* Where a write goes, and with what key. A configured device uses
+     its settings. An unconfigured one falls back to the site's built-in
+     endpoint with no key at all — the owner has said, out loud, that
+     easy saving from any device is worth strangers being able to do
+     the same. The endpoint holds the other half of that decision
+     (MR_PUBLIC_SAVE) and refuses keyless saves while it is off;
+     deleting and re-seeding stay keyed no matter what. */
+  function writeTarget() {
+    loadSettings();
+    if (configured()) return { url: state.endpoint, key: state.key };
+    if (PUBLIC_ENDPOINT) return { url: PUBLIC_ENDPOINT, key: "" };
+    return null;
+  }
+
+  function canWrite() { return !!writeTarget(); }
+
   function reload() {
     state.pending = null;
     state.result = null;
@@ -288,7 +304,8 @@
      ------------------------------------------------------------------- */
 
   function confirmDraw(session) {
-    if (!configured()) {
+    var t = writeTarget();
+    if (!t) {
       return Promise.resolve({ ok: false, error: "No shared roster is set up on this browser." });
     }
     var entries = (session && session.entries ? session.entries : []).filter(function (e) {
@@ -298,12 +315,12 @@
       return Promise.resolve({ ok: false, error: "There is nobody to record." });
     }
 
-    return global.fetch(state.endpoint, {
+    return global.fetch(t.url, {
       method: "POST",
       credentials: "omit",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        key: state.key,
+        key: t.key,
         action: "draw",
         date: session.date,
         site: session.site || "",
@@ -319,7 +336,9 @@
         if (!r || r.status !== "ok") {
           return {
             ok: false,
-            error: (r && (r.message || (r.status === "denied" ? "That key was not accepted." : ""))) ||
+            error: (r && (r.message || (r.status === "denied" ?
+              (t.key ? "That key was not accepted."
+                     : "Saving without a key is switched off at this endpoint.") : ""))) ||
               "The endpoint refused it."
           };
         }
@@ -364,11 +383,12 @@
   }
 
   function docAction(action, extra) {
-    if (!configured()) return Promise.resolve(null);
-    var body = { key: state.key, action: action };
+    var t = writeTarget();
+    if (!t) return Promise.resolve(null);
+    var body = { key: t.key, action: action };
     Object.keys(extra || {}).forEach(function (k) { body[k] = extra[k]; });
 
-    return global.fetch(state.endpoint, {
+    return global.fetch(t.url, {
       method: "POST",
       credentials: "omit",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -380,7 +400,9 @@
       })
       .then(function (r) {
         if (!r || r.status !== "ok") {
-          throw new Error((r && (r.message || (r.status === "denied" ? "That key was not accepted." : ""))) ||
+          throw new Error((r && (r.message || (r.status === "denied" ?
+            (t.key ? "That key was not accepted."
+                   : "Saving without a key is switched off at this endpoint.") : ""))) ||
             "The endpoint refused it.");
         }
         return r;
@@ -391,7 +413,7 @@
      same as one that is not there, because the caller's next move is
      identical either way. Writes are not — see docPut. */
   function docGet(path) {
-    if (!docBacked(path) || !configured()) return Promise.resolve(null);
+    if (!docBacked(path) || !canWrite()) return Promise.resolve(null);
     return docAction("docget", { path: path })
       /* read() promises null for anything absent. An endpoint that
          answers ok without a data field would otherwise hand back
@@ -403,17 +425,19 @@
   /* A failed write must reach the caller. Losing a scorecard quietly is
      the one outcome worth being noisy about. */
   function docPut(path, data) {
-    if (!docBacked(path) || !configured()) return Promise.resolve(false);
+    if (!docBacked(path) || !canWrite()) return Promise.resolve(false);
     return docAction("docput", { path: path, data: data }).then(function () { return true; });
   }
 
   function docList(dir) {
-    if (!docDirBacked(dir) || !configured()) return Promise.resolve([]);
+    if (!docDirBacked(dir) || !canWrite()) return Promise.resolve([]);
     return docAction("doclist", { dir: String(dir).replace(/\/*$/, "") })
       .then(function (r) { return (r && r.names) || []; })
       .catch(function () { return []; });
   }
 
+  /* Deleting stays keyed on both ends: easy saving was the owner's
+     trade, easy deleting was not. */
   function docRemove(path) {
     if (!docBacked(path) || !configured()) return Promise.resolve(false);
     return docAction("docdel", { path: path })
@@ -426,7 +450,7 @@
      is filed without anybody choosing a folder, so silently not filing
      it is the one outcome that would be worse than the old dialog. */
   function renderPdf(name, html) {
-    if (!configured()) {
+    if (!canWrite()) {
       return Promise.reject(new Error("No shared store is set up on this browser."));
     }
     return docAction("pdf", { name: name, html: html })
@@ -468,7 +492,7 @@
     if (!s.tried) return { kind: "wait", text: "Checking the shared roster…" };
     if (s.ok) {
       if (isEmpty()) return { kind: "warn", text: "Shared roster: sheet is empty" };
-      if (s.public) return { kind: "ok", text: "Shared roster (view only)" };
+      if (s.public) return { kind: "ok", text: "Shared roster" };
       var n = s.warnings.length;
       return {
         kind: n ? "warn" : "ok",
@@ -491,6 +515,7 @@
     get: get,
     publish: publish,
     confirmDraw: confirmDraw,
+    canWrite: canWrite,
     docBacked: docBacked,
     docDirBacked: docDirBacked,
     docGet: docGet,
