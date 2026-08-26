@@ -815,6 +815,13 @@ Promise.all([
   return MRStore.whenReady;
 })
 .then(function(){
+  /* The site's own collection point (content/relay.json) arrives by
+     fetch, and the branch below decides its wording off canSubmit() —
+     deciding before the fetch resolves would tell a properly
+     configured site that answers will only download. */
+  return MRRelay.whenReady;
+})
+.then(function(){
   MRStore.mountBar("mr-bar");
   $("date").value = MRStore.today();
 
@@ -839,9 +846,14 @@ Promise.all([
   }
 
   if (!MRStore.status().ready){
-    note(MRRelay.canSubmit()
-      ? "No data folder on this device, so this goes to the collection point and lands in the folder when the facilitator collects it."
-      : "No data folder and no collection point on this device, so sending will download the file for somebody to drop in by hand.");
+    if (MRRelay.canSubmit()){
+      note("No data folder on this device, so this goes to the collection point and lands in the folder when the facilitator collects it.");
+    } else {
+      note("No data folder and no collection point on this device, so sending will download the file for somebody to drop in by hand.");
+      MRStore.notify("warn",
+        "This device has nowhere to send feedback — pressing send will only download a file to it. " +
+        "Tell whoever shared the link before filling anything in.", true);
+    }
     afterMeta();
     return;
   }

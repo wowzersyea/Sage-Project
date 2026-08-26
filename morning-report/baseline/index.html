@@ -175,6 +175,14 @@
 
     <div id="form">
 
+      <!-- Painted at boot, once the device's three ways out are known.
+           Red before anybody has typed anything, because finding out at
+           the send button costs a filled-in form; finding out here
+           costs nothing. -->
+      <div class="mr-alert err" id="nosave" hidden style="border-radius:7px;margin-bottom:16px">
+        <span class="msg" id="nosavemsg"></span>
+      </div>
+
       <div class="prog">
         <div class="in">
           <span id="progtext">&nbsp;</span>
@@ -905,6 +913,24 @@ function responsePath(r){
   return content.storage.responses + r.wave + "--" + r.id + ".json";
 }
 
+/* Said before anybody types, not discovered at the send button. A
+   device with no folder, no key in its link and no site collection
+   point can only download the answers to itself — which, on a
+   respondent's phone, is a file nobody will ever collect. That is a
+   configuration problem for the facilitator, and it is the person
+   holding the phone who has to be told to report it. */
+function paintNoSave(){
+  var can = MRStore.status().ready || MRRelay.canSubmit();
+  $("nosave").hidden = can;
+  if (!can){
+    $("nosavemsg").textContent =
+      "This device has nowhere to send answers. Pressing send will only download a file to " +
+      "this device — it will NOT reach whoever is collecting responses. Tell the person who " +
+      "shared this link before filling anything in; they need to reshare it with the key in it, " +
+      "or set the site's collection point.";
+  }
+}
+
 /* Three ways out, tried in this order: the folder on this machine, the
    collection point for a device that has none, and a download when
    there is neither. A phone scanning a code has the second one only,
@@ -914,30 +940,41 @@ function sendIt(r){
 
   if (MRStore.status().ready){
     return MRStore.write(path, r).then(function(ok){
-      return ok ? content.send.folder.replace("{path}", path) : null;
+      return ok ? { said: content.send.folder.replace("{path}", path), saved: true } : null;
     });
   }
 
   if (MRRelay.canSubmit()){
     return MRRelay.submit(r, []).then(function(res){
-      if (res.ok) return content.send.relay;
+      if (res.ok) return { said: content.send.relay, saved: true };
       MRStore.notify("warn", res.error, true);
       MRStore.download(path, r);
-      return content.send.relay_failed;
+      return { said: content.send.relay_failed, saved: false };
     });
   }
 
   MRStore.download(path, r);
-  return Promise.resolve(content.send.download);
+  return Promise.resolve({ said: content.send.download, saved: false });
 }
 
-function finish(r, where){
+/* The thank-you and the download are different endings and must not
+   share a headline. "Sent. Thank you." over a file that only reached
+   this device's Downloads is how a morning of responses disappears
+   without anybody noticing until the count comes back empty. */
+function finish(r, out){
   markSent(r.wave);
   clearDraft();
   $("form").hidden = true;
   $("done").hidden = false;
-  $("thanks").textContent = content.thanks;
-  $("donenote").textContent = where + " " + content.thanks_note;
+  if (out.saved){
+    $("thanks").textContent = content.thanks;
+    $("donenote").textContent = out.said + " " + content.thanks_note;
+  } else {
+    $("thanks").textContent = "Not sent — saved to this device only.";
+    $("donenote").textContent = out.said +
+      " The file is in this device's downloads. It only counts once somebody " +
+      "gets it to the facilitator — send it on, or hand this device over.";
+  }
   window.scrollTo(0, 0);
 }
 
@@ -961,9 +998,9 @@ $("send").addEventListener("click", function(){
   btn.disabled = true;
   $("sendnote").textContent = "Sending…";
 
-  sendIt(r).then(function(where){
-    if (where === null){ btn.disabled = false; $("sendnote").textContent = ""; return; }
-    finish(r, where);
+  sendIt(r).then(function(out){
+    if (out === null){ btn.disabled = false; $("sendnote").textContent = ""; return; }
+    finish(r, out);
   }).catch(function(err){
     btn.disabled = false;
     $("sendnote").textContent = "";
@@ -1030,6 +1067,15 @@ fetch(MRStore.base() + "content/baseline.json", { cache: "no-cache" })
       $("sendnote").textContent = "This browser has already sent a response for " + waveId() +
         ". One per person is the point of it.";
     }
+    /* Only now are all three ways out known: the folder (MRStore),
+       the link and device settings (synchronous), and the site's own
+       collection point (a fetch). Waiting for the last one is the
+       point — warning somebody red before content/relay.json has
+       loaded would cry wolf on every properly configured site. */
+    return MRRelay.whenReady;
+  })
+  .then(function(){
+    paintNoSave();
   })
   .catch(function(err){
     MRStore.notify("err", "Could not load the questions — " +
