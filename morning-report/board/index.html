@@ -168,6 +168,7 @@
     padding:9px 14px;font-size:13px;font-weight:600;display:flex;gap:12px;align-items:center;
   }
   .err[hidden]{display:none}
+  .err a{color:#fff}
   .err button{background:transparent;border:1px solid #fff;color:#fff;font-size:11px;
     padding:3px 9px;border-radius:3px;cursor:pointer;margin-left:auto}
 
@@ -703,8 +704,13 @@ function saveBoardPdf(){
   var was = btn.textContent;
 
   if (!window.MRRemote || !MRRemote.configured()){
-    showErr("No shared store is set up on this browser, so there is nowhere to file the PDF. " +
-            "Set one up on the settings page, or use Print for a local copy.");
+    /* Hardcoded strings only, so innerHTML is safe — it buys the link. */
+    $("errmsg").innerHTML = (window.MRRemote && MRRemote.status().public
+      ? "This computer is view-only, so there is nowhere to file the PDF. "
+      : "No shared store is set up on this browser, so there is nowhere to file the PDF. ") +
+      'Add the facilitator key on <a href="../settings/">the settings page</a> — one time on this ' +
+      "computer — and Save will file it centrally from then on. Print still makes a local copy.";
+    $("err").hidden = false;
     return;
   }
 
