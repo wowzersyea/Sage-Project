@@ -1,0 +1,10 @@
+{
+  "_what_this_is": "The site's own collection point, read by assets/relay.js as the fallback of last resort. With this filled in, the bare address — sageproject.xyz/baseline or /feedback, typed from a slide, no query string — can still send answers to the post box. Without it, a device that arrived with no key in its link can only download the answers to itself, which is how a morning's responses end up scattered across the phones that wrote them.",
+
+  "_which_key": "The SUBMIT key only (the endpoint's MR_FEEDBACK_KEY). It can put a submission into the post box and can do nothing else — it cannot read the roster, cannot read other submissions, cannot drain. This repository is public, so whatever is written here is public; that is acceptable for a key whose entire power is 'may add a row', and is exactly why the roster key must NEVER appear in this file. If the submit key is ever compromised in a way that matters, set a new MR_FEEDBACK_KEY in the endpoint's Script Properties and update this file.",
+
+  "_priority": "Lowest. A link carrying ?relay=...&k=..., or settings stored on the device, always wins over this file — so handing somebody a link to a different endpoint still behaves.",
+
+  "endpoint": "",
+  "submit_key": ""
+}

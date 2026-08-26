@@ -207,22 +207,29 @@ function link(){
 function paint(){
   var url = link();
   var keyed = url !== target();
+  var siteWide = MRRelay.siteConfigured();
 
   $("short").textContent = target().replace(/^https?:\/\//, "");
   $("linkbox").textContent = keyed ? url.replace(/([?&]k=)[^&]*/, "$1…") : url;
 
   var state = $("keystate");
-  state.className = "keystate " + (keyed ? "on" : "off");
+  state.className = "keystate " + (keyed || siteWide ? "on" : "off");
   $("keytitle").textContent = keyed
     ? "The link carries the submit key"
-    : "No submit key on this machine";
+    : siteWide
+      ? "The site carries its own collection point"
+      : "No submit key on this machine";
   $("keybody").textContent = keyed
     ? "A phone that scans this can send its answers straight to the collection point, and they " +
       "land in the data folder when you collect them. The key is shown blanked above; it is in " +
       "the code itself."
-    : "The code still opens the form, but a phone that fills it in will only be able to download " +
-      "the file to itself, which is no use to anybody. Set the endpoint and the feedback key in " +
-      "settings first, then come back — the code will be rebuilt with them in it.";
+    : siteWide
+      ? "content/relay.json is filled in, so even the bare address — typed off a slide, no code, " +
+        "no key — sends to the collection point. Every link on this page works on any device."
+      : "The code still opens the form, but a phone that fills it in will only be able to download " +
+        "the file to itself, which is no use to anybody. Set the endpoint and the feedback key in " +
+        "settings first, then come back — the code will be rebuilt with them in it. Or fill in " +
+        "content/relay.json once, and every address works with no key in it at all.";
 
   try {
     $("qr").innerHTML = MRQr.svg(url, { scale: 6, quiet: 4 });
@@ -306,6 +313,7 @@ fetch(MRStore.base() + "content/baseline.json", { cache: "no-cache" })
     $("under").textContent = content.lede.split(".")[0] + ".";
     return MRStore.whenReady;
   })
+  .then(function(){ return MRRelay.whenReady; })
   .then(function(){
     MRStore.mountBar("mr-bar");
     $("wave").value = defaultWave();
@@ -317,7 +325,7 @@ fetch(MRStore.base() + "content/baseline.json", { cache: "no-cache" })
        and nothing else. */
     MRStore.mountBar("mr-bar");
     $("wave").value = defaultWave();
-    paint();
+    MRRelay.whenReady.then(paint);
     MRStore.notify("warn", "Could not load the wording — " +
       (err && err.message ? err.message : err) + " The code itself is unaffected.", true);
   });

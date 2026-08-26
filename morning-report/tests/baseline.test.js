@@ -483,6 +483,104 @@ const FAKE_BOX = `
   t('the code encodes at a version that will scan off a slide',
      roundTrip.size >= 21 && roundTrip.square, roundTrip);
 
+  // ---- a device with nowhere to send is told so, before it types --------
+  /* The bare address, no folder, no key in the link, and a site config
+     that is blank — the exact configuration that scattered a morning's
+     responses across the phones that wrote them. The form has to say
+     so at the top, before anything is filled in, and the finish screen
+     must not say "Sent" over a file that only reached this device. */
+  const bareCtx = await browser.newContext();
+  const bare = await bareCtx.newPage();
+  await bare.goto(BASE + '/morning-report/baseline/', { waitUntil: 'networkidle' });
+  await bare.waitForSelector('#cohorts .who');
+  await bare.waitForTimeout(200);
+
+  const warned = await bare.evaluate(() => ({
+    shown: !document.getElementById('nosave').hidden,
+    text: document.getElementById('nosavemsg').textContent
+  }));
+  t('a device with nowhere to send answers is warned before it types',
+     warned.shown && /nowhere to send/i.test(warned.text), warned);
+
+  await bare.evaluate(() => {
+    const set = (name, value) => {
+      const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
+    };
+    set('cohort', 'pgy2');
+    set('q-technical-audio', 4);
+  });
+  await bare.click('#send');
+  await bare.waitForSelector('#done:not([hidden])');
+  const downloadedEnding = await bare.evaluate(() => ({
+    headline: document.getElementById('thanks').textContent,
+    note: document.getElementById('donenote').textContent
+  }));
+  t('a download-only send does not claim to have been sent',
+     /not sent/i.test(downloadedEnding.headline), downloadedEnding.headline);
+  t('and tells the person to hand the file on',
+     /downloads|facilitator/i.test(downloadedEnding.note), downloadedEnding.note);
+  await bareCtx.close();
+
+  // ---- the site's own collection point ----------------------------------
+  /* content/relay.json filled in: the same bare address now submits.
+     The config is injected by intercepting the fetch, because the real
+     file in the repository ships blank on purpose. */
+  const siteCtx = await browser.newContext();
+  const sitePage = await siteCtx.newPage();
+  sitePage.on('pageerror', e => errs.push('pageerror(site): ' + e.message));
+  await sitePage.addInitScript(FAKE_BOX);
+  await sitePage.route('**/content/relay.json', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ endpoint: 'https://endpoint.test/exec', submit_key: 'submit-key' })
+  }));
+  await sitePage.goto(BASE + '/morning-report/baseline/', { waitUntil: 'networkidle' });
+  await sitePage.waitForSelector('#cohorts .who');
+  await sitePage.waitForTimeout(200);
+
+  const siteState = await sitePage.evaluate(() => ({
+    warned: !document.getElementById('nosave').hidden,
+    canSubmit: MRRelay.canSubmit(),
+    siteConfigured: MRRelay.siteConfigured()
+  }));
+  t('with the site config filled in, the bare address can submit',
+     siteState.canSubmit && siteState.siteConfigured, siteState);
+  t('and the cannot-save warning stays down', siteState.warned === false);
+
+  await sitePage.evaluate(() => {
+    const set = (name, value) => {
+      const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
+    };
+    set('cohort', 'faculty');
+    set('q-technical-audio', 2);
+    set('global', 4);
+  });
+  await sitePage.click('#send');
+  await sitePage.waitForSelector('#done:not([hidden])');
+  const sitePosted = await sitePage.evaluate(() => ({
+    rows: window.__box.rows.length,
+    headline: document.getElementById('thanks').textContent,
+    note: document.getElementById('donenote').textContent
+  }));
+  t('a bare-address submission lands in the post box, not in downloads',
+     sitePosted.rows === 1 && /collection point/.test(sitePosted.note), sitePosted);
+  t('and that ending is the thank-you, because it really was sent',
+     !/not sent/i.test(sitePosted.headline), sitePosted.headline);
+
+  /* A link still wins over the site file — handing somebody a link to
+     a different endpoint has to keep meaning what it says. */
+  const linkWins = await sitePage.evaluate(() => {
+    sessionStorage.setItem('mr.relay', JSON.stringify({ endpoint: 'https://other.test/exec', submitKey: 'other-key' }));
+    return true;
+  });
+  await sitePage.goto(BASE + '/morning-report/baseline/', { waitUntil: 'networkidle' });
+  await sitePage.waitForTimeout(200);
+  const order = await sitePage.evaluate(() => MRRelay.endpoint());
+  t('a link or stored setting still beats the site file',
+     linkWins && order === 'https://other.test/exec', order);
+  await siteCtx.close();
+
   // ---- the front door, and the one page deliberately outside it ---------
   const strangerCtx = await browser.newContext();     /* no fakefs, so no code */
   const stranger = await strangerCtx.newPage();

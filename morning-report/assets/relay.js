@@ -37,6 +37,42 @@
 
   var state = { loaded: false, endpoint: "", submitKey: "" };
 
+  /* ---------- the site's own collection point -------------------------
+
+     Everything above configures one device at a time: a link, a QR, a
+     settings page. Each of those was a way for a device to end up with
+     no configuration at all — somebody types the short address off a
+     slide, gets a working form, presses send, and their answers
+     download to their own phone where nobody will ever file them.
+
+     content/relay.json closes that hole. It is committed to the site,
+     so the bare address works on a device that has never been
+     configured. It carries the SUBMIT key only — the weak key, which
+     can put a submission in and can read nothing back — and the file's
+     own note says why the roster key must never go in it.
+
+     Lowest priority on purpose: a link or a setting on the device
+     still wins, so handing somebody a link to a different endpoint
+     still behaves. Fetched once per page; before the fetch resolves,
+     canSubmit() reports what the device alone knows, which is why the
+     pages that care await MRRelay.whenReady first. */
+
+  var site = { endpoint: "", submitKey: "" };
+
+  var whenReady = (function () {
+    var base = (global.MRStore && global.MRStore.base) ? global.MRStore.base() : "../";
+    return global.fetch(base + "content/relay.json", { cache: "no-cache" })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (cfg) {
+        if (cfg && typeof cfg.endpoint === "string" && typeof cfg.submit_key === "string") {
+          site.endpoint = cfg.endpoint.trim();
+          site.submitKey = cfg.submit_key.trim();
+        }
+        return true;
+      })
+      .catch(function () { return true; });   /* no file, no fallback — same as before */
+  })();
+
   function readStore(store) {
     try {
       var raw = store.getItem(STORE_KEY);
@@ -84,12 +120,12 @@
 
   function endpoint() {
     load();
-    return state.endpoint || shared().endpoint;
+    return state.endpoint || shared().endpoint || site.endpoint;
   }
 
   function submitKey() {
     load();
-    return state.submitKey || shared().key;
+    return state.submitKey || shared().key || site.submitKey;
   }
 
   function canSubmit() { return !!(endpoint() && submitKey()); }
@@ -229,6 +265,8 @@
   function canShare() { return !!(shared().endpoint && shareKey()); }
 
   global.MRRelay = {
+    whenReady: whenReady,
+    siteConfigured: function () { return !!(site.endpoint && site.submitKey); },
     canSubmit: canSubmit,
     canDrain: canDrain,
     endpoint: endpoint,
