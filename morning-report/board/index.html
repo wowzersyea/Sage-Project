@@ -14,22 +14,22 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;overflow:hidden}
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.4}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.4}
   input,select,textarea{font-family:var(--sans);color:var(--ink)}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-offset:-2px}
 
   .app{display:flex;flex-direction:column;height:100vh}
 
   .top{background:var(--navy);color:#fff;display:flex;align-items:center;gap:12px;padding:6px 12px;flex:none}
-  .top .brand{font-family:var(--serif);font-weight:700;font-size:14px;white-space:nowrap}
-  .top .brand a{color:#9FB4C8;text-decoration:none;font-weight:400;font-size:12px;font-family:var(--sans)}
+  .top .brand{font-family:var(--serif);font-weight:700;font-size:15px;white-space:nowrap}
+  .top .brand a{color:#9FB4C8;text-decoration:none;font-weight:400;font-size:13px;font-family:var(--sans)}
   .top .brand a:hover{color:#fff}
   .top .sp{margin-left:auto;display:flex;align-items:center;gap:8px}
-  .phase{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  .phase{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
     background:var(--navy-2);padding:4px 8px;border-radius:3px;white-space:nowrap}
   .phase.hand{background:var(--amber);color:var(--navy)}
-  .time{font-family:var(--serif);font-size:17px;font-weight:700;min-width:52px;text-align:center}
-  .top button{font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.25);
+  .time{font-family:var(--serif);font-size:19px;font-weight:700;min-width:56px;text-align:center}
+  .top button{font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.25);
     background:transparent;color:#fff;padding:5px 9px;border-radius:3px;cursor:pointer}
   .top button:hover{background:rgba(255,255,255,.12)}
   .top button.solid{background:var(--amber);color:var(--navy);border-color:var(--amber)}
@@ -37,7 +37,7 @@
   .top button.finish:hover{background:#356a4e}
 
   /* the data folder state, kept small — this is a screen-share tool */
-  .save{display:flex;align-items:center;gap:6px;font-size:11px;color:#9FB4C8;white-space:nowrap}
+  .save{display:flex;align-items:center;gap:6px;font-size:12px;color:#9FB4C8;white-space:nowrap}
   .save .dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex:none}
   .save .dot.on{background:var(--green)}
   .save .dot.warn{background:var(--amber)}
@@ -46,23 +46,23 @@
   .meta{display:flex;background:var(--navy);color:#fff;flex:none;border-top:1px solid rgba(255,255,255,.12)}
   .meta div{padding:4px 12px;display:flex;align-items:center;gap:7px;border-right:1px solid rgba(255,255,255,.12)}
   .meta div:last-child{border-right:none;flex:1}
-  .meta label{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9FB4C8;white-space:nowrap}
+  .meta label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9FB4C8;white-space:nowrap}
   .meta input{background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.28);
-    color:#fff;font-size:14px;padding:2px 3px}
+    color:#fff;font-size:15px;padding:2px 3px}
   .meta div:last-child input{width:100%}
 
   .pr{background:#FBF0DE;border-bottom:1px solid var(--amber);padding:6px 12px;flex:none;
     display:flex;gap:10px;align-items:flex-start}
-  .pr .lbl{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  .pr .lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
     color:#8A6014;white-space:nowrap;padding-top:5px;width:112px;flex:none;line-height:1.25}
   .pr textarea{flex:1;border:none;background:transparent;resize:none;height:52px;
-    font-family:var(--serif);font-size:18px;color:#4A3520;padding:2px 0}
+    font-family:var(--serif);font-size:20px;color:#4A3520;padding:2px 0}
   .pr textarea::placeholder{color:#C0A77C;font-style:italic}
 
   .cols{flex:1;display:grid;grid-template-columns:23% 49% 28%;min-height:0;border-top:1px solid var(--line)}
   .col{display:flex;flex-direction:column;min-height:0;background:#fff;border-right:1px solid var(--line)}
   .col:last-child{border-right:none}
-  .ch{padding:5px 10px;font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  .ch{padding:5px 10px;font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
     color:#fff;flex:none;display:flex;justify-content:space-between;gap:6px}
   .col.data .ch{background:var(--black)}
   .col.ddx  .ch{background:var(--teal)}
@@ -72,15 +72,15 @@
   .ch a:hover{opacity:1}
   .body{flex:1;overflow-y:auto;min-height:0;padding:7px 10px 10px}
 
-  .sub{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  .sub{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);margin:9px 0 4px;border-bottom:1px solid #E6EBEF;padding-bottom:2px}
   .sub:first-child{margin-top:0}
 
   .vitals{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:5px}
   .growth{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
   .v{display:flex;flex-direction:column}
-  .v span{font-size:10px;color:var(--muted);font-weight:600}
-  .v input{border:1px solid var(--line);border-radius:3px;padding:2px 3px;font-size:13.5px;width:100%}
+  .v span{font-size:11px;color:var(--muted);font-weight:600}
+  .v input{border:1px solid var(--line);border-radius:3px;padding:2px 3px;font-size:14.5px;width:100%}
 
   .line{display:flex;align-items:flex-start;gap:5px;padding:1px 0}
   .line .t{flex:1;word-break:break-word}
@@ -89,25 +89,25 @@
   .line .x{border:none;background:none;color:#C3CED8;cursor:pointer;font-size:13px;padding:0 2px;line-height:1}
   .line .x:hover{color:var(--red)}
   .addin{width:100%;border:1px solid var(--line);border-radius:3px;padding:4px 6px;
-    font-size:14px;background:#FCFDFE;margin-top:3px}
+    font-size:15px;background:#FCFDFE;margin-top:3px}
 
   .fld{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-  .fld label{font-size:13.5px;white-space:nowrap;min-width:110px}
-  .fld input{flex:1;border:none;border-bottom:1px solid var(--line);padding:2px;font-size:14px;background:transparent}
+  .fld label{font-size:14.5px;white-space:nowrap;min-width:118px}
+  .fld input{flex:1;border:none;border-bottom:1px solid var(--line);padding:2px;font-size:15px;background:transparent}
   .fld.pos label{color:var(--green);font-weight:600}
   .fld.neg label{color:var(--red);font-weight:600}
 
   .fw{display:flex;align-items:center;gap:7px;padding:5px 10px;background:#EDF4F6;
     border-bottom:1px solid var(--line);flex:none}
-  .fw label{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  .fw label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
     color:var(--teal);white-space:nowrap}
-  .fw select{border:1px solid var(--line);border-radius:3px;padding:3px 5px;font-size:13.5px;background:#fff}
-  .fw input{flex:1;border:none;border-bottom:1px solid var(--line);font-size:14px;padding:2px;background:transparent}
+  .fw select{border:1px solid var(--line);border-radius:3px;padding:3px 5px;font-size:14.5px;background:#fff}
+  .fw input{flex:1;border:none;border-bottom:1px solid var(--line);font-size:15px;padding:2px;background:transparent}
 
   .split{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
   .side{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
   .side:last-child{border-right:none}
-  .sh{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  .sh{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
     padding:4px 9px;background:#F2F6F8;color:var(--navy);border-bottom:1px solid var(--line);
     flex:none;display:flex;justify-content:space-between}
   .sh em{font-style:normal;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
@@ -118,10 +118,10 @@
   .dx{border-left:3px solid var(--amber);padding:3px 0 3px 7px;margin-bottom:5px;background:#FCFDFE}
   .dx.ok{border-left-color:var(--teal)}
   .dx.struck{border-left-color:var(--red)}
-  .dx .name{font-weight:600;color:var(--teal);cursor:pointer;font-size:15px;display:flex;gap:5px;align-items:flex-start}
+  .dx .name{font-weight:600;color:var(--teal);cursor:pointer;font-size:16.5px;display:flex;gap:5px;align-items:flex-start}
   .dx .name span{flex:1}
   .dx.struck .name span{color:var(--red);text-decoration:line-through;text-decoration-thickness:1.5px}
-  .dx .why,.dx .kill{width:100%;border:none;font-size:13px;padding:1px 0;margin-top:2px;
+  .dx .why,.dx .kill{width:100%;border:none;font-size:14px;padding:1px 0;margin-top:2px;
     background:transparent;font-style:italic}
   .dx .why{border-bottom:1px dotted #C9D3DC;color:var(--muted)}
   .dx .why::placeholder{color:#BFA97A}
@@ -129,15 +129,22 @@
   .dx .kill{border-bottom:1px dotted #E3C2C7;color:var(--red)}
   .dx .x{border:none;background:none;color:#C3CED8;cursor:pointer;font-size:13px;line-height:1;padding:0 1px}
   .dx .x:hover{color:var(--red)}
-  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .hint{font-size:13px;color:var(--muted);margin-top:4px}
 
   .bot{display:grid;grid-template-columns:1fr 1fr;flex:none;border-top:1px solid var(--line)}
   .bx{padding:8px 12px;background:#F7F9FB;border-right:1px solid var(--line)}
   .bx:last-child{border-right:none;background:#FDF7EC}
-  .bx .lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .bx .lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
   .bx:last-child .lbl{color:#8A6014}
-  .bx textarea{width:100%;height:96px;border:none;background:transparent;resize:none;font-size:16px;line-height:1.45;color:var(--navy);padding:0}
+  .bx textarea{width:100%;height:124px;border:none;background:transparent;resize:none;font-size:17px;line-height:1.5;color:var(--navy);padding:0}
   .bx:last-child textarea{color:#4A3520}
+  .th{display:flex;align-items:center;gap:8px;padding:2px 0}
+  .th span{font-size:11px;font-weight:700;color:#8A6014;background:#F0E2C6;border-radius:50%;
+    width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex:none}
+  .th input{flex:1;border:none;border-bottom:1px solid #E4D5B8;background:transparent;
+    font-size:17px;padding:3px 2px;color:#4A3520}
+  .cnt{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:6px}
+  .cnt.good{color:var(--green)}
 
   /* ---- overlays: recovery, finish, and a loud failure ---- */
   .veil{
@@ -332,8 +339,11 @@
       <textarea id="plan"></textarea>
     </div>
     <div class="bx">
-      <div class="lbl">Take-home points</div>
-      <textarea id="teach"></textarea>
+      <div class="lbl">Take-home points <span class="cnt" id="teachCnt"></span></div>
+      <div class="th"><span>1</span><input id="teach1" class="teachline"></div>
+      <div class="th"><span>2</span><input id="teach2" class="teachline"></div>
+      <div class="th"><span>3</span><input id="teach3" class="teachline"></div>
+      <div class="th"><span>4</span><input id="teach4" class="teachline"></div>
     </div>
   </div>
 
@@ -410,6 +420,32 @@ var WORKING = "working-board.json";
 var AUTOSAVE_MS = 20000;
 
 var $ = function(id){ return document.getElementById(id); };
+/* The take-home points are two to four discrete lines, not a paragraph.
+   Everything downstream (the working file, the archive, the PDF) still
+   sees one newline-joined string, so old saves restore and old readers
+   read. A restore with more than four lines folds the tail onto the
+   fourth rather than losing it. */
+var teachEls = [$("teach1"), $("teach2"), $("teach3"), $("teach4")];
+function teachGet(){
+  return teachEls.map(function(i){ return i.value.trim(); })
+    .filter(function(v){ return v; }).join("\n");
+}
+function teachSet(v){
+  var lines = String(v || "").split("\n")
+    .map(function(x){ return x.trim(); }).filter(function(x){ return x; });
+  if (lines.length > 4) lines = lines.slice(0, 3).concat(lines.slice(3).join("; "));
+  teachEls.forEach(function(i, n){ i.value = lines[n] || ""; });
+  teachCount();
+}
+function teachCount(){
+  var v = teachGet();
+  var n = v ? v.split("\n").length : 0;
+  $("teachCnt").textContent = n + " of 2\u20134";
+  $("teachCnt").className = "cnt" + (n >= 2 && n <= 4 ? " good" : "");
+}
+teachEls.forEach(function(i){ i.addEventListener("input", teachCount); });
+teachCount();
+
 var dirty = false;
 var finished = false;
 
@@ -627,7 +663,10 @@ function boardText(){
   L.push("  Bias watch");  L.push.apply(L, listText("bias"));
   L.push("");
   L.push("WORKING DX / PLAN"); L.push("  " + (g("plan") || "—"));
-  L.push("TAKE-HOME POINTS");  L.push("  " + (g("teach") || "—"));
+  L.push("TAKE-HOME POINTS");
+  var th = teachGet() ? teachGet().split("\n") : [];
+  if (!th.length) L.push("  \u2014");
+  th.forEach(function(x, i2){ L.push("  " + (i2 + 1) + ". " + x); });
   return L.join("\n");
 }
 $("copyBtn").addEventListener("click", function(e){
@@ -770,7 +809,7 @@ function state(){
     dx: { intern: readDx("intern"), senior: readDx("senior") },
     test: { name: g("testName"), pos: g("testPos"), neg: g("testNeg") },
     plan: g("plan"),
-    teach: g("teach"),
+    teach: teachGet(),
     clock: { secs: secs, max: maxSecs, running: !!timer },
     marks: marks,
     one_liner: oneLiner
@@ -785,7 +824,7 @@ function restore(s){
   set("pr", s.pr);
   set("fwTxt", s.framework);
   set("testName", s.test && s.test.name); set("testPos", s.test && s.test.pos); set("testNeg", s.test && s.test.neg);
-  set("plan", s.plan); set("teach", s.teach);
+  set("plan", s.plan); teachSet(s.teach);
 
   Object.keys(s.vitals || {}).forEach(function(k){
     var i = document.querySelector('[data-v="' + k + '"]');

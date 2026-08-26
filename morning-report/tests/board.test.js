@@ -77,7 +77,8 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   await page.fill('#testPos', 'effusion → ortho tonight');
   await page.fill('#testNeg', 'no effusion → MRI, not back to synovitis');
   await page.fill('#plan', 'Septic arthritis ~70%. Dry tap with a normal joint would change my mind.');
-  await page.fill('#teach', 'Three of four Kocher criteria is past talking yourself out of it.');
+  await page.fill('#teach1', 'Three of four Kocher criteria is past talking yourself out of it.');
+  await page.fill('#teach2', 'Ultrasound cannot separate sterile from septic — aspiration decides.');
 
   const derived = await page.evaluate(() => derive());
   t('PR recorded', derived.pr_present === true);
@@ -121,7 +122,8 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
     hx: [...document.querySelectorAll('[data-list="hx"] .line .t')].map(x => x.textContent),
     clock: document.getElementById('time').textContent,
     test: document.getElementById('testName').value,
-    teach: document.getElementById('teach').value
+    teach: teachGet(),
+    teachCount: document.getElementById('teachCnt').textContent
   }));
   t('board restored intact at 0:18', restored.clock === '18:00', restored.clock);
   t('restored the problem representation', /refusing to bear weight/.test(restored.pr));
@@ -132,6 +134,9 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
      restored.senior[0].struck === true && /erythema/.test(restored.senior[0].kill), restored.senior);
   t('restored the key data lists', restored.hx.length === 2, restored.hx);
   t('restored the discriminator and take-homes', /ultrasound/.test(restored.test) && /Kocher/.test(restored.teach));
+  t('the take-homes come back as separate numbered lines',
+     restored.teach.split('\n').length === 2 && /2 of 2/.test(restored.teachCount),
+     restored.teachCount);
 
   const rederived = await page2.evaluate(() => derive());
   t('derived facts survive the restore',
