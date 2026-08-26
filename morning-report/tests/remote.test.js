@@ -619,9 +619,11 @@ const stub = `
 
      A device with nothing set up at all opens the wheel and sees the
      names, because the site carries the public endpoint and the
-     endpoint owner switched the public subset on. What matters here:
-     it reads and never writes, a configured device is untouched, and
-     switching it off at the endpoint degrades with a sentence.
+     endpoint owner switched the public subset on. Saving keyless is
+     the owner's second stated trade: a bare device's saves go to the
+     endpoint (which holds its own MR_PUBLIC_SAVE switch), while the
+     identified lanes still never leave the device and a configured
+     device is untouched.
      ------------------------------------------------------------------- */
 
   {
@@ -654,7 +656,8 @@ const stub = `
     t('a bare device gets the roster from the site itself', r7.names === 3, r7.names);
     t('without being configured', r7.configured === false);
     t('and knows it is the public subset', r7.pub === true);
-    t('the bar says view only', /view only/.test((r7.chip || {}).text || ''), r7.chip);
+    t('the bar names the shared roster without crying view-only',
+      /Shared roster/.test((r7.chip || {}).text || '') && !/view only/.test((r7.chip || {}).text || ''), r7.chip);
 
     /* the wheel itself */
     await p7.evaluate(d => { window.__mr.body = d; }, PUB_BODY);
@@ -692,8 +695,8 @@ const stub = `
       await p7.evaluate(() =>
         Array.from(document.querySelectorAll('#presenting button')).map(x => x.textContent)));
 
-    /* both wheels landed on a public device: the confirm bar explains
-       view-only instead of blaming a folder nobody was asked to pick */
+    /* both wheels landed on a bare device: the chicken dinner button
+       is live, because saving keyless is the point now */
     const hint = await p7.evaluate(() => {
       wheels.pgy1.winner = wheels.pgy1.people[0];
       wheels.senior.winner = wheels.senior.people[0];
@@ -704,21 +707,46 @@ const stub = `
         note: document.getElementById('confirm-note').textContent,
       };
     });
-    t('a finished draw still shows the confirm bar', hint.visible === true);
-    t('but the button is off', hint.disabled === true);
-    t('and the sentence says view-only, and where the key goes',
-      /view-only/.test(hint.note) && /settings/.test(hint.note), hint.note);
+    t('a finished draw shows the confirm bar', hint.visible === true);
+    t('and the button is live on a device with nothing set up', hint.disabled === false, hint);
+    t('with the normal recording sentence', /Records these two/.test(hint.note), hint.note);
 
-    /* it must never write: no doc actions, no draw confirmations */
+    /* saves go through, keyless; the identified lanes never do */
     const wrote = await p7.evaluate(async () => {
       window.__mr.calls.length = 0;
-      await MRStore.write('sessions/x.json', { a: 1 });
+      const put = await MRStore.write('sessions/x.json', { a: 1 });
       const res = await MRRemote.confirmDraw({ date: '2026-09-03',
         entries: [{ role: 'r', resident_id: 'r-1', name: 'n' }] });
-      return { calls: window.__mr.calls.map(c => c.method), confirm: res.ok };
+      const bodies = window.__mr.calls.filter(c => c.method === 'POST')
+        .map(c => JSON.parse(c.body));
+      return { put, confirm: res.ok,
+               actions: bodies.map(b => b.action), keys: bodies.map(b => b.key) };
     });
-    t('a public device never writes to the endpoint', wrote.calls.length === 0, wrote.calls);
-    t('confirming a draw is refused with a sentence', wrote.confirm === false);
+    t('a bare device saves a session document to the endpoint',
+      wrote.put === true && wrote.actions.indexOf('docput') !== -1, wrote);
+    t('and records the draw', wrote.confirm === true && wrote.actions.indexOf('draw') !== -1, wrote);
+    t('both with no key at all', wrote.keys.every(k => k === ''), wrote.keys);
+
+    const fenced = await p7.evaluate(async () => {
+      window.__mr.calls.length = 0;
+      await MRStore.write('working-board.json', { w: 1 });
+      await MRStore.write('working/2026-09-03.json', { w: 1 });
+      await MRStore.write('manifests/m.json', { w: 1 });
+      return window.__mr.calls.length;
+    });
+    t('the identified lanes still never leave a bare device', fenced === 0, fenced);
+
+    /* the endpoint's save switch is off: the sentence blames the
+       switch, not a key nobody entered */
+    const savedOff = await p7.evaluate(async () => {
+      window.__mr.mode = 'denied';
+      const r = await MRRemote.confirmDraw({ date: '2026-09-03',
+        entries: [{ role: 'r', name: 'n' }] });
+      window.__mr.mode = 'ok';
+      return r.error;
+    });
+    t('a keyless save the endpoint refuses reads as switched off',
+      /switched off/.test(savedOff), savedOff);
 
     /* the endpoint owner switches it off: a sentence, not a blank */
     const off = await p7.evaluate(async () => {

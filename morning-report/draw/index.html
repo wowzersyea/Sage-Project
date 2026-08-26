@@ -312,7 +312,7 @@
   </div>
 </section>
 
-<script src="../assets/remote.js?v=5"></script>
+<script src="../assets/remote.js?v=6"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/roster.js"></script>
 <script src="../assets/content.js"></script>
@@ -801,18 +801,17 @@ function renderConfirm(){
      a browser holding the older copy would throw on the press rather
      than explain itself. Cheap to check, and it covers any future
      version skew for free. */
-  if (!window.MRRemote || typeof MRRemote.confirmDraw !== "function"){
+  if (!window.MRRemote || typeof MRRemote.confirmDraw !== "function" ||
+      typeof MRRemote.canWrite !== "function"){
     els.confirmBtn.disabled = true;
     els.confirmNote.className = "hint bad";
     els.confirmNote.textContent = "This page is running an older copy of its scripts. Reload with a hard refresh.";
     return;
   }
-  if (!MRRemote.configured()){
+  if (!MRRemote.canWrite()){
     els.confirmBtn.disabled = true;
     els.confirmNote.className = "hint bad";
-    els.confirmNote.textContent = MRRemote.status().public
-      ? "This device is view-only — recording the draw needs the facilitator key, on the settings page."
-      : "No shared sheet is set up on this browser, so there is nowhere to write it.";
+    els.confirmNote.textContent = "No shared sheet is set up on this browser, so there is nowhere to write it.";
     return;
   }
   els.confirmBtn.disabled = false;

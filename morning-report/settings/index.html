@@ -195,7 +195,7 @@
 
 </main>
 
-<script src="../assets/remote.js?v=5"></script>
+<script src="../assets/remote.js?v=6"></script>
 <script src="../assets/store.js"></script>
 <script src="../assets/relay.js"></script>
 <script src="../assets/qr.js"></script>
@@ -227,8 +227,8 @@
 
     if (!s.configured) {
       txt.textContent = (s.sourced && s.tried && s.ok)
-        ? "Viewing the site's built-in roster, read-only. Add the facilitator key below to see the " +
-          "full rota, record draws, and publish."
+        ? "Using the site's built-in shared roster. Draws and board saves go to the shared " +
+          "store. Add the facilitator key below for the full rota and publishing."
         : "No shared roster configured. This browser uses the data folder only.";
       return;
     }

@@ -858,6 +858,57 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
     Object.keys(full.rotations.days).length === 4, Object.keys(full.rotations.days).length);
 }
 
+/* ---------- public saving -------------------------------------------------
+
+   The owner's second trade, stated as plainly as the first: with
+   MR_PUBLIC_SAVE set, any device that opens the site can save — a
+   draw, a board archive, a PDF — with no key at all. These tests hold
+   the boundary: off by default, a wrong key still refused outright,
+   and the verbs that destroy or replace stay keyed with the switch on.
+   -------------------------------------------------------------------------- */
+
+{
+  const { sandbox } = fresh('k');
+  const bare = (body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(body) } }));
+
+  const r = bare({ action: 'draw', date: '2026-09-03', site: 'G',
+    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] });
+  t('with the switch unset, a keyless save is refused', r.status === 'denied');
+  t('and the refusal blames the switch, not a key nobody entered',
+    /switched off/.test(r.message || ''), r);
+}
+
+{
+  const { sandbox } = fresh('k');
+  sandbox.PropertiesService.getScriptProperties().setProperty('MR_PUBLIC_SAVE', 'yes');
+  const bare = (body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(body) } }));
+
+  let r = bare({ action: 'draw', date: '2026-09-03', site: 'G',
+    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] });
+  t('switch on: a keyless draw records', r.status === 'ok', r);
+
+  r = bare({ action: 'docput', path: 'board-archive/2026-09-04.json', data: { a: 1 } });
+  t('switch on: a keyless board archive files', r.status === 'ok', r);
+  r = bare({ action: 'docget', path: 'board-archive/2026-09-04.json' });
+  t('and reads back keyless', r.status === 'ok' && r.data && r.data.a === 1, r);
+  r = bare({ action: 'doclist', dir: 'board-archive' });
+  t('and lists keyless', r.status === 'ok' && r.names.indexOf('2026-09-04.json') !== -1, r);
+  r = bare({ action: 'pdf', name: 'board-2026-09-04.pdf', html: '<p>board</p>' });
+  t('switch on: a keyless PDF renders', r.status === 'ok', r);
+
+  r = bare({ action: 'docdel', path: 'board-archive/2026-09-04.json' });
+  t('deleting keyless is refused, switch or no switch', r.status === 'denied', r);
+  r = bare({ roster: { residents: [] } });
+  t('the bare seed stays keyed', r.status === 'denied', r);
+  r = bare({ action: 'collect' });
+  t('the feedback post box stays keyed', r.status === 'denied', r);
+
+  r = bare({ key: 'wrong', action: 'draw', date: '2026-09-03', site: 'G',
+    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] });
+  t('a WRONG key is still a wrong key, never treated as keyless', r.status === 'denied', r);
+  t('and gets no switched-off excuse', !r.message, r);
+}
+
 /* ---------- report -------------------------------------------------------- */
 
 let bad = 0;

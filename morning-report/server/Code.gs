@@ -156,6 +156,21 @@ function doGet(e) {
        names from rota cells, so they stay keyed too)
    ------------------------------------------------------------------ */
 
+/* The owner's second out-loud trade: with MR_PUBLIC_SAVE set, a device
+   with no key at all may record a draw, file documents, and render
+   PDFs — so any computer that opens the site can hit Save and it
+   lands centrally. Saving is additive. The verbs that destroy or
+   replace (docdel, the bare-POST seed, publish) stay keyed, so the
+   worst a stranger can do is add files, never remove or rewrite.
+   A WRONG key is still denied outright, never downgraded. Delete the
+   property and keyless saving is off in seconds, no redeploy. */
+function publicSaveEnabled() {
+  var v = PropertiesService.getScriptProperties().getProperty('MR_PUBLIC_SAVE');
+  return !!(v && String(v).trim());
+}
+
+var PUBLIC_SAVE_ACTIONS = ['draw', 'docput', 'docget', 'doclist', 'pdf'];
+
 function publicRosterEnabled() {
   var v = PropertiesService.getScriptProperties().getProperty('MR_PUBLIC_ROSTER');
   return !!(v && String(v).trim());
@@ -227,7 +242,15 @@ function doPost(e) {
       return json(takeFeedback(body));
     }
 
-    if (!authorised(body.key)) return json({ status: 'denied' });
+    var publicSave = !body.key && publicSaveEnabled() &&
+      PUBLIC_SAVE_ACTIONS.indexOf(String(body.action || '')) !== -1;
+    if (!publicSave && !authorised(body.key)) {
+      if (!body.key) {
+        return json({ status: 'denied',
+          message: 'Saving without a key is switched off at this endpoint.' });
+      }
+      return json({ status: 'denied' });
+    }
 
     if (body.action === 'draw') return json(recordDraw(body));
 

@@ -283,7 +283,8 @@
       /* No folder. For a document the shared store keeps, that is not a
          problem to warn about — it is the whole point of having one. */
       if (global.MRRemote && global.MRRemote.docBacked &&
-          global.MRRemote.docBacked(path) && global.MRRemote.configured()) {
+          global.MRRemote.docBacked(path) &&
+          (global.MRRemote.canWrite ? global.MRRemote.canWrite() : global.MRRemote.configured())) {
         return global.MRRemote.docPut(path, obj)
           .then(function () { return true; })
           .catch(function (err) {
