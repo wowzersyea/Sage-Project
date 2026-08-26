@@ -67,12 +67,14 @@
     return rotations.days[date] || null;
   }
 
-  /* The people the presenting site is fielding — off the wheels. */
-  function presentingTeam(date, site) {
+  /* Everyone on one of this site's rotations that day — ward and other
+     services alike. This is the room the report is happening in. */
+  function siteTeam(date, site) {
     var day = rotationDay(date);
     if (!day || !site || !rotations.sites || !rotations.sites[site]) return [];
+    var cfg = rotations.sites[site];
     var out = [];
-    (rotations.sites[site].ward || []).forEach(function (task) {
+    (cfg.ward || []).concat(cfg.other || []).forEach(function (task) {
       (day[task] || []).forEach(function (id) {
         if (out.indexOf(id) === -1) out.push(id);
       });
@@ -80,16 +82,18 @@
     return out;
   }
 
-  /* Everyone on service that day who is not on the presenting ward team.
+  /* Everyone the wheels may draw from that day. With a site chosen the
+     pool is that site's people and nobody else — the discussant has to
+     be in the room. With no site chosen, everyone on service anywhere.
      null when the rotation says nothing about this date. */
   function onDuty(date, site) {
     var day = rotationDay(date);
     if (!day) return null;
-    var ward = presentingTeam(date, site);
+    if (site) return siteTeam(date, site);
     var out = [];
     Object.keys(day).forEach(function (task) {
       (day[task] || []).forEach(function (id) {
-        if (ward.indexOf(id) === -1 && out.indexOf(id) === -1) out.push(id);
+        if (out.indexOf(id) === -1) out.push(id);
       });
     });
     return out;
@@ -702,7 +706,7 @@
     rotationMeta: rotationMeta,
     rotationDay: rotationDay,
     siteList: siteList,
-    presentingTeam: presentingTeam,
+    siteTeam: siteTeam,
     onDuty: onDuty,
     tasksOn: tasksOn,
     roleLabel: function (id) {

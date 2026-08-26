@@ -316,6 +316,11 @@ const CARD = { session: '2026-09-03', items: [{ code: 'A1', met: true }] };
     await p.waitForFunction(() => !document.getElementById('err').hidden, null, { timeout: 5000 });
     t('with no shared store, Save board explains itself',
       /nowhere to file/.test(await p.textContent('#errmsg')), await p.textContent('#errmsg'));
+    t('and names the facilitator key as the missing piece',
+      /facilitator key/.test(await p.textContent('#errmsg')), await p.textContent('#errmsg'));
+    t('and links straight to the settings page',
+      await p.evaluate(() => { const a = document.querySelector('#errmsg a');
+        return !!a && /settings/.test(a.getAttribute('href')); }));
     t('and points at Print as the way to get a copy',
       /Print/.test(await p.textContent('#errmsg')));
     await ctx.close();

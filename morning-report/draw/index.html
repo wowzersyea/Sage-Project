@@ -193,8 +193,8 @@
   <div class="f"><label for="s-date">Date</label><input type="date" id="s-date"></div>
   <div class="f"><label for="s-site">Site</label><input type="text" id="s-site" list="sitelist" placeholder="Galveston"><datalist id="sitelist"></datalist></div>
   <div class="f" id="presenting-wrap" hidden>
-    <label>Presenting today</label>
-    <div class="seg" id="presenting" role="group" aria-label="Which site is presenting"></div>
+    <label>Report at</label>
+    <div class="seg" id="presenting" role="group" aria-label="Which site the report is at"></div>
   </div>
   <div class="f acting" id="acting-wrap">
     <label for="acting-name">Acting intern</label>
@@ -334,7 +334,7 @@ var CX = 200, CY = 200, R = 196;
 
 var roster = null;
 var wheels = {};
-var presenting = null;      /* which site is presenting today, if known */
+var presenting = null;      /* which site the report is at, if chosen */
 var acting = { on: false, name: "" };
 
 /* The acting intern is a 4th-year student on rotation — usually present in
@@ -956,7 +956,7 @@ function renderPresenting(){
     var b = document.createElement("button");
     b.type = "button";
     b.textContent = site.label;
-    b.title = site.label + " is presenting, so its ward team is off both wheels";
+    b.title = "Report at " + site.label + " — only its residents go on the wheels";
     b.setAttribute("aria-pressed", presenting === site.id ? "true" : "false");
     b.addEventListener("click", function(){
       presenting = (presenting === site.id) ? null : site.id;
@@ -989,12 +989,13 @@ function renderDutyBar(){
 
   var bits = [];
   if (presenting){
-    var team = MRRoster.presentingTeam(date, presenting).map(nameOf);
+    var team = MRRoster.siteTeam(date, presenting).map(nameOf);
     var label = (meta.sites[presenting] || {}).label || presenting;
-    bits.push("<b>" + MRStore.esc(label) + " presenting</b>" +
-      (team.length ? " — <span class='off'>" + MRStore.esc(team.join(", ")) + " are off the wheels</span>" : ""));
+    bits.push("<b>" + MRStore.esc(label) + " report</b>" +
+      (team.length ? " — wheels drawn from " + MRStore.esc(team.join(", "))
+                   : " — <span class='warn'>nobody is on its rotations that day</span>"));
   } else {
-    bits.push("<span class='warn'>Pick who is presenting</span> — until then nobody is excluded");
+    bits.push("<span class='warn'>Pick a site</span> — until then everyone on service is on the wheels");
   }
 
   var i = wheels.pgy1 ? wheels.pgy1.people.length : 0;

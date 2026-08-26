@@ -4,8 +4,9 @@ const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
 
 /* Invented people, arranged the way a real two-site programme is: each
-   site fields a ward team that presents, plus people on other services
-   who stay available as discussants. */
+   site fields a ward team plus people on other services. Picking a site
+   means the report is happening there, so the wheels hold that site's
+   people and nobody else — the discussant has to be in the room. */
 const R = (id, name, level) => ({ id, name, sort_name: name.split(' ').reverse().join(', '),
                                   level, active: true, unavailable: [] });
 const ROSTER = {
@@ -72,32 +73,37 @@ const ROTATIONS = {
   t('someone off service entirely is not on the wheel', !s.intern.includes('Saoirse Ophelia'), s.intern);
   t('with no site picked, everyone on service is a candidate',
      s.intern.length === 3 && s.senior.length === 4, s);
-  t('and the bar asks which site is presenting', /Pick who is presenting/i.test(s.bar), s.bar);
+  t('and the bar asks for a site', /Pick a site/i.test(s.bar), s.bar);
 
-  // ---- Galveston presenting -------------------------------------------
+  // ---- report at Galveston ---------------------------------------------
+  // Only Galveston's people: its ward team INCLUDED (they are in the
+  // room), everyone at Clear Lake off both wheels.
   await page.click('#presenting button:text-is("Galveston")');
   await page.waitForTimeout(250);
   s = await state();
-  t('GAL presenting: its ward intern comes off', !s.intern.includes('Marisol Aguirre'), s.intern);
-  t('GAL presenting: its ward senior comes off', !s.senior.includes('Teodoro Nunez'), s.senior);
-  t('GAL presenting: GAL flex STAYS on the senior wheel', s.senior.includes('Anouk Vandal'), s.senior);
-  t('GAL presenting: PICU STAYS on the senior wheel', s.senior.includes('Kwabena Asante'), s.senior);
-  t('GAL presenting: the CLC side is available',
-     s.intern.includes('Rashid Chaudhry') && s.senior.includes('Bronwen Kestrel'), s);
-  t('GAL presenting: AAI is available', s.intern.includes('Ingrid Dahl'), s.intern);
-  t('GAL presenting: 2 interns and 3 seniors', s.intern.length === 2 && s.senior.length === 3, s);
-  t('the bar names who is off', /Marisol Aguirre/.test(s.bar) && /Teodoro Nunez/.test(s.bar), s.bar);
+  t('GAL report: the GAL ward intern is ON the wheel', s.intern.includes('Marisol Aguirre'), s.intern);
+  t('GAL report: the GAL ward senior is ON the wheel', s.senior.includes('Teodoro Nunez'), s.senior);
+  t('GAL report: GAL flex is on the senior wheel', s.senior.includes('Anouk Vandal'), s.senior);
+  t('GAL report: PICU is on the senior wheel', s.senior.includes('Kwabena Asante'), s.senior);
+  t('GAL report: the CLC ward team is off both wheels',
+     !s.intern.includes('Rashid Chaudhry') && !s.senior.includes('Bronwen Kestrel'), s);
+  t('GAL report: AAI (a CLC service) is off', !s.intern.includes('Ingrid Dahl'), s.intern);
+  t('GAL report: 1 intern and 3 seniors', s.intern.length === 1 && s.senior.length === 3, s);
+  t('the bar names who the wheels draw from',
+     /Marisol Aguirre/.test(s.bar) && /Kwabena Asante/.test(s.bar), s.bar);
+  t('and warns that one intern is nothing to draw', /nothing to draw/i.test(s.bar), s.bar);
 
-  // ---- Clear Lake presenting -------------------------------------------
+  // ---- report at Clear Lake --------------------------------------------
   await page.click('#presenting button:text-is("Clear Lake")');
   await page.waitForTimeout(250);
   s = await state();
-  t('CLC presenting: its ward team comes off',
-     !s.intern.includes('Rashid Chaudhry') && !s.senior.includes('Bronwen Kestrel'), s);
-  t('CLC presenting: the GAL ward team is available',
-     s.intern.includes('Marisol Aguirre') && s.senior.includes('Teodoro Nunez'), s);
-  t('CLC presenting: AAI is still available', s.intern.includes('Ingrid Dahl'), s.intern);
-  t('CLC presenting: 2 interns and 3 seniors', s.intern.length === 2 && s.senior.length === 3, s);
+  t('CLC report: its ward team is ON the wheels',
+     s.intern.includes('Rashid Chaudhry') && s.senior.includes('Bronwen Kestrel'), s);
+  t('CLC report: the whole GAL side is off',
+     !s.intern.includes('Marisol Aguirre') && !s.senior.includes('Teodoro Nunez') &&
+     !s.senior.includes('Anouk Vandal') && !s.senior.includes('Kwabena Asante'), s);
+  t('CLC report: AAI is a CLC service, so on', s.intern.includes('Ingrid Dahl'), s.intern);
+  t('CLC report: 2 interns and 1 senior', s.intern.length === 2 && s.senior.length === 1, s);
 
   // ---- the acting intern flex button -----------------------------------
   const before = (await state()).intern.length;
