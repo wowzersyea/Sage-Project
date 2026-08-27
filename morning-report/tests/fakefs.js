@@ -61,13 +61,41 @@
           kind:"file", name:n,
           getFile:function(){
             var d=nodeAt(loadTree(), path, false);
-            return Promise.resolve({ text:function(){ return Promise.resolve(d ? d.f[n] : ""); } });
+            var raw=d ? d.f[n] : "";
+            if (typeof raw==="string" && raw.indexOf('{"__fakeblob"')===0){
+              try {
+                var rec=JSON.parse(raw);
+                var bin=atob(rec.__fakeblob);
+                var bytes=new Uint8Array(bin.length);
+                for (var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+                return Promise.resolve(new Blob([bytes], { type: rec.type||"" }));
+              } catch (e) { /* fall through to the string view */ }
+            }
+            return Promise.resolve({ text:function(){ return Promise.resolve(raw); } });
           },
           createWritable:function(){
-            var buf="";
+            /* Text goes into the string tree as before. A binary is
+               base64-encoded into the same tree, so a written
+               recording survives a reload exactly like a written
+               JSON — a suite that collects and then reloads before
+               transcribing sees what a real folder would show it. */
+            var parts=[];
             return Promise.resolve({
-              write:function(x){ buf+=x; return Promise.resolve(); },
-              close:function(){ var t2=loadTree(); nodeAt(t2,path,true).f[n]=buf; saveTree(t2); return Promise.resolve(); }
+              write:function(x){ parts.push(x); return Promise.resolve(); },
+              close:function(){
+                if (!parts.some(function(p){ return typeof p!=="string"; })){
+                  var t2=loadTree(); nodeAt(t2,path,true).f[n]=parts.join(""); saveTree(t2);
+                  return Promise.resolve();
+                }
+                var blob=new Blob(parts);
+                return blob.arrayBuffer().then(function(buf){
+                  var bytes=new Uint8Array(buf), bin="";
+                  for (var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+                  var t3=loadTree();
+                  nodeAt(t3,path,true).f[n]=JSON.stringify({ __fakeblob: btoa(bin), type: (parts[0]&&parts[0].type)||"" });
+                  saveTree(t3);
+                });
+              }
             });
           }
         });

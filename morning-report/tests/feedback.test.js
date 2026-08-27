@@ -736,6 +736,32 @@ const FAKE_API = `
   t('the drain asks in the right order',
      drained.calls.join(',') === 'collect,recording,collected', drained.calls);
 
+  // ---- opening the page IS the click ------------------------------------
+  /* A row waiting in the box before the page opens: no button press,
+     just arrival, and the folder has it. */
+  await page.addInitScript(() => {
+    const arm = () => {
+      if (!window.__box) { setTimeout(arm, 5); return; }
+      window.__box.rows.push({
+        session: '2026-10-22-galveston', submission: 'fb-autodrain',
+        recordings: [],
+        record: { id: 'fb-autodrain', session: '2026-10-22-galveston', date: '2026-10-22', site: 'Galveston',
+          overall: { rating: 2, checks: {}, comment: 'Arrived while nobody was looking.' }, roles: {} }
+      });
+    };
+    arm();
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.evaluate(async () => { await MRStore.whenReady; await MRStore.connect(); });
+  await page.waitForTimeout(900);
+  const auto = await page.evaluate(async () => ({
+    subs: await MRStore.list('working/feedback'),
+    left: window.__box.rows.length,
+    note: document.getElementById('collectnote').textContent
+  }));
+  t('opening the summary page collects by itself',
+     auto.subs.some(n => /fb-autodrain\.json$/.test(n)) && auto.left === 0, auto);
+
   // ---- the short link, and that it carries the query across -------------
   const shortCtx = await browser.newContext();
   await shortCtx.addInitScript(FAKE_SPEECH);

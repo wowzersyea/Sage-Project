@@ -445,6 +445,13 @@ const FAKE_BOX = `
      drained.files.some(n => /^2026-08--bl-.*\.json$/.test(n)), drained.files);
 
   // ---- the code that gets handed out ------------------------------------
+  /* The repository's relay.json now carries the site's own submit key,
+     which is exactly what this block needs absent: blank it for this
+     page so the no-key state is reachable at all. */
+  await page.route('**/content/relay.json', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ endpoint: '', submit_key: '' })
+  }));
   await page.goto(BASE + '/morning-report/baseline/share/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(250);
   const noKey = await page.evaluate(() => ({
@@ -491,6 +498,14 @@ const FAKE_BOX = `
      must not say "Sent" over a file that only reached this device. */
   const bareCtx = await browser.newContext();
   const bare = await bareCtx.newPage();
+  /* The repository's relay.json is filled in now, so the nowhere-to-send
+     device has to be manufactured: blank the site config for this
+     context only. The scenario is still real — a fork of the site, or a
+     deployment whose endpoint was rotated away. */
+  await bare.route('**/content/relay.json', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ endpoint: '', submit_key: '' })
+  }));
   await bare.goto(BASE + '/morning-report/baseline/', { waitUntil: 'networkidle' });
   await bare.waitForSelector('#cohorts .who');
   await bare.waitForTimeout(200);
@@ -524,8 +539,8 @@ const FAKE_BOX = `
 
   // ---- the site's own collection point ----------------------------------
   /* content/relay.json filled in: the same bare address now submits.
-     The config is injected by intercepting the fetch, because the real
-     file in the repository ships blank on purpose. */
+     The config is injected by intercepting the fetch, so this test
+     does not depend on what the repository's own file holds. */
   const siteCtx = await browser.newContext();
   const sitePage = await siteCtx.newPage();
   sitePage.on('pageerror', e => errs.push('pageerror(site): ' + e.message));

@@ -5,6 +5,6 @@
 
   "_priority": "Lowest. A link carrying ?relay=...&k=..., or settings stored on the device, always wins over this file — so handing somebody a link to a different endpoint still behaves.",
 
-  "endpoint": "",
-  "submit_key": ""
+  "endpoint": "https://script.google.com/macros/s/AKfycbyNyxxrMQyryOtc0wvxiafjmSW-kCpZjHGWbljHvpgI11xL6f3qfRn_OxxCkVqgJn0m/exec",
+  "submit_key": "G5:|0L1epnwIvj-B16Q4mc8UGAgXW}"
 }

@@ -219,6 +219,7 @@
     if (!a) return false;
     if (typeof a.rating === "number") return true;
     if (a.comment && String(a.comment).trim()) return true;
+    if (a.transcript && String(a.transcript).trim()) return true;
     return !!(a.checks && Object.keys(a.checks).some(function (k) { return a.checks[k]; }));
   }
 
@@ -251,6 +252,8 @@
         dist: distribution(ratings),
         checks: checks,
         comments: answers.map(function (a) { return clean(a.comment); }).filter(Boolean)
+          .concat(answers.map(function (a) { return clean(a.transcript); }).filter(Boolean)
+            .map(function (t) { return t + " (said into the recording)"; }))
       };
     });
 
@@ -264,6 +267,8 @@
         mean: mean(ratings),
         dist: distribution(ratings),
         comments: answers.map(function (a) { return clean(a.comment); }).filter(Boolean)
+          .concat(answers.map(function (a) { return clean(a.transcript); }).filter(Boolean)
+            .map(function (t) { return t + " (said into the recording)"; }))
       };
     });
 

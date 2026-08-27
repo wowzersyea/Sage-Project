@@ -78,6 +78,17 @@
   .roles .unit{border-top:1px solid #EEF2F5;padding-top:16px;margin-top:16px}
   .roles .unit:first-child{border-top:none;padding-top:0;margin-top:0}
 
+  .recrow{
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+    padding:9px 0;border-bottom:1px solid #EEF2F5;font-size:13px;
+  }
+  .recrow:last-child{border-bottom:none}
+  .recrow b{font-weight:600}
+  .recrow audio{height:32px;max-width:230px}
+  .recrow .who{min-width:150px}
+  .recrow .txt{flex:1 1 260px;color:#3D4855}
+  .recrow .txt em{color:var(--muted)}
+
   .empty{text-align:center;color:var(--muted);padding:34px 0}
   .empty h2{color:var(--navy)}
 
@@ -151,12 +162,22 @@
     <div class="panel" id="collectpanel" hidden style="margin-bottom:16px">
       <h2>Collect what came in from elsewhere</h2>
       <p class="lede">Feedback filled in on a phone, or on any machine without the data folder, waits
-        at the endpoint until this machine fetches it. Collecting writes it into the folder and then
-        tells the endpoint to forget it — so the folder is the only place any of it lives.</p>
+        at the endpoint until this machine fetches it. Opening this page collects it automatically;
+        the button is for asking again mid-session. Collecting writes everything into the folder and
+        then tells the endpoint to forget it — so the folder is the only place any of it lives.</p>
       <div class="bar">
         <button class="teal" id="collect">Collect into the folder</button>
         <span class="hint" id="collectnote" style="margin:0"></span>
       </div>
+    </div>
+
+    <div class="panel" id="recpanel" hidden style="margin-bottom:16px">
+      <h2>Recordings for this session</h2>
+      <p class="lede">What the microphone caught, from any device. Transcribing runs a speech model
+        inside this browser — the site serves it, nothing is sent anywhere, no key is used — and the
+        words land in that submission's comment, marked as coming from the recording.</p>
+      <div id="recordings"></div>
+      <p class="hint" id="recnote"></p>
     </div>
 
     <div class="panel" style="margin-bottom:16px">
@@ -211,6 +232,7 @@
 <script src="../../assets/remote.js?v=7"></script>
 <script src="../../assets/store.js?v=7"></script>
 <script src="../../assets/relay.js?v=7"></script>
+<script src="../../assets/transcribe.js?v=7"></script>
 <script src="../../assets/phi.js?v=7"></script>
 <script src="../../assets/summarise.js?v=7"></script>
 <script>
@@ -734,6 +756,155 @@ $("model").addEventListener("change", function(){
 });
 $("runall").addEventListener("click", runAll);
 
+/* ---------- the recordings, and the words inside them --------------------
+
+   Any browser can record; only some can dictate. So the words are
+   recovered here instead: each collected recording can be played, and
+   transcribed by a speech model served from this site and run inside
+   this tab. The audio is never sent anywhere for this — which matters,
+   because a voice identifies its speaker and the recording may say
+   things the typed comment did not.
+
+   The transcript is written into the submission's own file in
+   working/feedback/, marked as coming from the recording, and from
+   there it behaves exactly like typed text: the rollup counts it, the
+   identifier screen checks it before any model call, and the drafted
+   summaries read it.
+   ------------------------------------------------------------------ */
+
+function unitLabel(unit){
+  if (unit.indexOf("role-") === 0){
+    var slug = unit.slice(5);
+    return (roleCards[slug] && roleCards[slug].name) || slug;
+  }
+  var sec = content.sections.filter(function(x){ return x.id === unit; })[0];
+  return sec ? sec.title : unit;
+}
+
+/* {session}--{fbid}--{unit}.{ext} back into its parts. The fbid itself
+   contains "--" never, but the unit may contain "-", so split from the
+   outside in. */
+function parseRecName(name){
+  var stem = name.replace(/\.[a-z0-9]+$/i, "");
+  var parts = stem.split("--");
+  if (parts.length < 3) return null;
+  return { session: parts[0], fbid: parts[1], unit: parts.slice(2).join("--") };
+}
+
+function submissionPathFor(fbid){
+  return content.storage.submissions + current + "--" + fbid + ".json";
+}
+
+function transcriptOf(sub, unit){
+  if (!sub) return "";
+  if (unit.indexOf("role-") === 0){
+    var r = (sub.roles || {})[unit.slice(5)];
+    return (r && r.transcript) || "";
+  }
+  return (sub[unit] && sub[unit].transcript) || "";
+}
+
+function setTranscript(sub, unit, text){
+  if (unit.indexOf("role-") === 0){
+    var slug = unit.slice(5);
+    if (!sub.roles) sub.roles = {};
+    if (!sub.roles[slug]) sub.roles[slug] = { rating: null, comment: "" };
+    sub.roles[slug].transcript = text;
+  } else {
+    if (!sub[unit]) sub[unit] = { rating: null, checks: {}, comment: "" };
+    sub[unit].transcript = text;
+  }
+}
+
+function loadRecordings(){
+  var host = $("recordings");
+  $("recpanel").hidden = true;
+  if (!MRStore.status().ready || !current) return Promise.resolve();
+  return MRStore.list(content.storage.audio.replace(/\/*$/, "")).then(function(names){
+    var mine = names.filter(function(n){ return n.indexOf(current + "--") === 0; });
+    host.innerHTML = "";
+    if (!mine.length) return;
+    $("recpanel").hidden = false;
+    $("recnote").textContent = MRStt.supported() ? "" :
+      "This browser cannot run the transcriber, so the recordings play but stay audio.";
+    mine.forEach(function(name){ host.appendChild(recRow(name)); });
+  });
+}
+
+function recRow(name){
+  var meta = parseRecName(name);
+  var row = document.createElement("div");
+  row.className = "recrow";
+
+  var who = document.createElement("span");
+  who.className = "who";
+  who.innerHTML = "<b>" + MRStore.esc(meta ? unitLabel(meta.unit) : name) + "</b>";
+  row.appendChild(who);
+
+  var player = document.createElement("audio");
+  player.controls = true;
+  player.preload = "none";
+  row.appendChild(player);
+  MRStore.readBlob(content.storage.audio + name).then(function(blob){
+    if (blob) player.src = URL.createObjectURL(blob);
+  });
+
+  var txt = document.createElement("span");
+  txt.className = "txt";
+  row.appendChild(txt);
+
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ghost";
+  btn.textContent = "Transcribe";
+  row.appendChild(btn);
+
+  function paintExisting(){
+    if (!meta) return;
+    MRStore.read(submissionPathFor(meta.fbid)).then(function(sub){
+      var t = transcriptOf(sub, meta.unit);
+      if (t){
+        txt.textContent = "“" + t + "”";
+        btn.textContent = "Transcribe again";
+      }
+    });
+  }
+  paintExisting();
+
+  if (!MRStt.supported() || !meta){ btn.disabled = true; return row; }
+
+  btn.addEventListener("click", function(){
+    btn.disabled = true;
+    txt.innerHTML = "<em>Starting…</em>";
+    MRStore.readBlob(content.storage.audio + name).then(function(blob){
+      if (!blob) throw new Error("the recording is not in the folder");
+      return MRStt.transcribe(blob, function(stage){ txt.innerHTML = "<em>" + MRStore.esc(stage) + "</em>"; });
+    }).then(function(out){
+      var text = out.text || "";
+      if (!text){
+        txt.innerHTML = "<em>Nothing intelligible in the recording.</em>";
+        btn.disabled = false;
+        return;
+      }
+      return MRStore.read(submissionPathFor(meta.fbid)).then(function(sub){
+        if (!sub) throw new Error("the matching submission is not in the folder");
+        setTranscript(sub, meta.unit, text);
+        return MRStore.write(submissionPathFor(meta.fbid), sub);
+      }).then(function(ok){
+        if (!ok) throw new Error("the transcript did not save");
+        txt.textContent = "“" + text + "”";
+        btn.textContent = "Transcribe again";
+        btn.disabled = false;
+        return load(current);        /* the rollup now includes it */
+      });
+    }).catch(function(err){
+      txt.innerHTML = "<em>" + MRStore.esc("Could not transcribe — " + (err && err.message ? err.message : err)) + "</em>";
+      btn.disabled = false;
+    });
+  });
+  return row;
+}
+
 /* ---------- collecting from the endpoint ---------------------------------
 
    The drain, and the only reason the endpoint exists. Everything
@@ -885,6 +1056,7 @@ function load(want){
     subs = rows.map(function(r){ return r.data; }).filter(Boolean);
     group();
     fillPicker(want || current);
+    loadRecordings();
     var sessions = Object.keys(bySession).length;
     $("stock").textContent = subs.length
       ? subs.length + (subs.length === 1 ? " submission" : " submissions") + " in " +
@@ -905,6 +1077,7 @@ function recompute(){
 $("session").addEventListener("change", function(){
   current = $("session").value;
   recompute();
+  loadRecordings();
 });
 
 Promise.all([
@@ -933,7 +1106,14 @@ Promise.all([
     return;
   }
   paintCollect();
-  return load(new URLSearchParams(location.search).get("session") || "");
+  /* Collect without being asked: if this machine holds the key and the
+     folder, opening this page IS the click. Anything waiting at the
+     endpoint is in the folder by the time the numbers render, and the
+     note under the button says what arrived. */
+  var autoDrain = MRRelay.canDrain() && MRStore.status().ready;
+  return load(new URLSearchParams(location.search).get("session") || "").then(function(){
+    if (autoDrain) return collect();
+  });
 })
 .catch(function(err){
   MRStore.notify("err", "Could not load the summary — " +

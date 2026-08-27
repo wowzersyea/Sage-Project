@@ -175,6 +175,8 @@
     }
 
     var clip = null;        /* { blob, mime, seconds } once something was said */
+    var recognitionDead = false;   /* recogniser gone, recorder carrying on */
+    var recognitionFailure = null; /* the sentence to say when it ends */
     var media = null;       /* the live MediaRecorder, while running */
     var stream = null;      /* its microphone stream, so it can be released */
     var chunks = [];
@@ -234,6 +236,10 @@
       }
     }
 
+    function recorderRunning() {
+      return !!(media && media.state !== "inactive");
+    }
+
     function stopRecorder() {
       if (media && media.state !== "inactive") {
         try { media.stop(); return; } catch (e) { /* fall through and release */ }
@@ -277,30 +283,52 @@
       }
     };
 
+    /* Recognition dying must never orphan the recorder. The failure
+       that actually happens — a hospital network refusing the speech
+       service mid-sentence — used to flip the button to "off" while
+       the microphone stayed hot and recording: a live mic the page
+       denied having. Now a dead recogniser DEMOTES the session to
+       record-only instead: the button stays on and honest, the
+       recording continues, and the words are recovered later by the
+       transcriber on the summary page. */
+    function demoteToRecordOnly(msg) {
+      if (!recorderRunning()) {
+        session.wanted = false;
+        if (live === session) live = null;
+        session.setState("off");
+        if (msg) notify("warn", msg);
+        return;
+      }
+      recognitionDead = true;
+      if (msg) notify("warn", msg + " Still recording — the words can be recovered from the recording.");
+    }
+
     if (rec) rec.onerror = function (e) {
       if (e.error === "no-speech") return;        /* onend will restart it */
-      var msg = why(e.error);
-      if (msg) {
-        session.wanted = false;
-        notify(e.error === "network" ? "warn" : "err", msg);
-      }
+      recognitionFailure = why(e.error);
     };
 
     if (rec) rec.onend = function () {
-      if (session.wanted && session.restarts < RESTART_LIMIT) {
+      if (recognitionDead) return;                /* already demoted */
+      if (session.wanted && !recognitionFailure && session.restarts < RESTART_LIMIT) {
         session.restarts++;
-        try { rec.start(); return; } catch (e) { /* fall through to off */ }
+        try { rec.start(); return; } catch (e) { /* fall through */ }
       }
-      if (session.wanted && session.restarts >= RESTART_LIMIT) {
-        notify("warn", "Dictation kept dropping out, so it has been switched off. What was transcribed is in the box.");
+      if (!session.wanted) {                      /* the user pressed stop */
+        if (live === session) live = null;
+        session.setState("off");
+        return;
       }
-      session.wanted = false;
-      if (live === session) live = null;
-      session.setState("off");
+      var msg = recognitionFailure ||
+        "Dictation kept dropping out, so it has stopped. What was transcribed is in the box.";
+      recognitionFailure = null;
+      demoteToRecordOnly(msg);
     };
 
     btn.addEventListener("click", function () {
       if (live === session && session.wanted) { stop(); return; }
+      recognitionDead = false;
+      recognitionFailure = null;
       session.setState("on");
       start(session);
       if (session.wanted) startRecorder();
@@ -327,6 +355,8 @@
     MAX_SECONDS: MAX_SECONDS,
     NOTE: "Dictation uses the browser's own speech service, so the audio leaves this machine. " +
           "Say nothing you would not put in the box by hand — no names, no MRNs, no dates of service.",
-    UNSUPPORTED: "This browser has no dictation, so the boxes are typed into. Chrome or Edge if you want the microphone."
+    RECORD_ONLY: "This browser records without live dictation: press Record, speak, and the words are " +
+          "recovered from the recording when the feedback is collected.",
+    UNSUPPORTED: "This browser can neither dictate nor record, so the boxes are typed into."
   };
 })(window);

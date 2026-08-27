@@ -340,6 +340,21 @@
     return out.sort();
   }
 
+  /* The blob back out again — the transcriber and the audio player
+     need the bytes, not JSON. Fallback mode holds no binaries, so
+     there it answers null and the caller says so. */
+  function readBlob(path) {
+    if (state.mode === "fallback" || !state.ready) return Promise.resolve(null);
+    return dirFor(path, false)
+      .then(function (d) { return d.getFileHandle(leaf(path)); })
+      .then(function (fh) { return fh.getFile(); })
+      .catch(function (err) {
+        if (err && err.name === "NotFoundError") return null;
+        fail("Could not read " + path, err);
+        return null;
+      });
+  }
+
   function list(dir) {
     if (state.mode === "fallback" || !state.ready) {
       var pre = dir.replace(/\/*$/, "/");
@@ -602,6 +617,7 @@
     read: read,
     write: write,
     writeBlob: writeBlob,
+    readBlob: readBlob,
     list: list,
     readAll: readAll,
     remove: remove,
