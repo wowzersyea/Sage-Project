@@ -804,9 +804,21 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
   t('names and levels are there',
     pub.roster.residents.length === 3 &&
     pub.roster.residents.every(r => r.name && r.level), pub.roster.residents.length);
-  t('the fixture rota, all in the past, is filtered to nothing',
-    pub.rotations !== null && Object.keys(pub.rotations.days).length === 0,
-    pub.rotations && Object.keys(pub.rotations.days));
+  /* The fixture's two dates drift relative to the rolling window as
+     real time passes, so the expectation is computed, not assumed —
+     this assertion once said "filtered to nothing" and started failing
+     the day 2026-09-03 rolled inside today+7. */
+  {
+    const off = ZONES['America/Chicago'];
+    const dd = n => new Date(Date.now() + n * 86400000 + off * 60 * 1000)
+      .toISOString().slice(0, 10);
+    const expected = ['2026-09-03', '2026-09-04']
+      .filter(d => d >= dd(0) && d <= dd(7));
+    t('the public rota is the fixture clipped to the window',
+      pub.rotations !== null &&
+      JSON.stringify(Object.keys(pub.rotations.days).sort()) === JSON.stringify(expected),
+      { served: pub.rotations && Object.keys(pub.rotations.days), expected: expected });
+  }
   t('the draws are not', pub.roster.draws === undefined);
   t('leave windows are not', pub.roster.residents.every(r => r.unavailable.length === 0));
   t('warnings are not, because they can quote rota cells', pub.warnings.length === 0, pub.warnings);

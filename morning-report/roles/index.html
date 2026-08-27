@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Role cards and handouts | Morning Report</title>
 <meta name="description" content="The seven pediatric morning report role cards, one URL each, plus the printed collateral.">
-<link rel="stylesheet" href="../assets/mr.css">
+<link rel="stylesheet" href="../assets/mr.css?v=7">
 <style>
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
   a.rc{
@@ -46,7 +46,7 @@
 </style>
 </head>
 <body>
-<script src="../assets/gate.js"></script>
+<script src="../assets/gate.js?v=7"></script>
 
 <div id="mr-bar"></div>
 
@@ -86,9 +86,9 @@
 </footer>
 
 <script src="../assets/remote.js?v=7"></script>
-<script src="../assets/store.js"></script>
-<script src="../assets/roster.js"></script>
-<script src="../assets/content.js"></script>
+<script src="../assets/store.js?v=7"></script>
+<script src="../assets/roster.js?v=7"></script>
+<script src="../assets/content.js?v=7"></script>
 <script>
 Promise.all([MRStore.whenReady, MRContent.load()]).then(function(){
   MRStore.mountBar("mr-bar");

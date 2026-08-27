@@ -632,6 +632,9 @@ const FAKE_API = `
   /* Its own context, so it has no folder, no connected handle and no
      shared storage — which is exactly what a phone is. */
   const phoneCtx = await browser.newContext();
+  /* Bare on purpose — but the baked-in public endpoint and the /mr-api
+     corridor must still not be fetched for real from a test. */
+  await phoneCtx.addInitScript('window.MR_PUBLIC_ENDPOINT = ""; window.MR_PROXY = "";');
   await phoneCtx.addInitScript(FAKE_SPEECH);
   await phoneCtx.addInitScript(FAKE_RECORDER);
   await phoneCtx.addInitScript(FAKE_BOX);
