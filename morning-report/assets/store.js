@@ -489,7 +489,9 @@
     st.className = "state";
 
     var dot = document.createElement("span");
-    dot.className = "mr-dot" + (state.ready ? " on" : (state.dir ? " warn" : ""));
+    var sharedOnly = !state.ready && !state.dir && state.mode !== "fallback" &&
+      global.MRRemote && global.MRRemote.canWrite && global.MRRemote.canWrite();
+    dot.className = "mr-dot" + (state.ready ? " on" : (state.dir || sharedOnly ? " warn" : ""));
     st.appendChild(dot);
 
     var label = document.createElement("span");
@@ -499,6 +501,11 @@
       label.innerHTML = "Data folder <span class='folder'>" + esc(state.name) + "</span>";
     } else if (state.dir) {
       label.innerHTML = "<span class='folder'>" + esc(state.name) + "</span> <span class='why'>needs permission again</span>";
+    } else if (sharedOnly) {
+      /* No folder, but the shared store takes this device's draws and
+         board saves — "nothing will be saved" would be a lie that
+         sends someone hunting for a folder a phone cannot have. */
+      label.innerHTML = "<span class='why'>No folder on this device — draws and board saves go to the shared store</span>";
     } else {
       label.innerHTML = "<span class='why'>No data folder connected — nothing will be saved</span>";
     }

@@ -736,6 +736,10 @@ const stub = `
     });
     t('the identified lanes still never leave a bare device', fenced === 0, fenced);
 
+    t('the bar stops claiming nothing will be saved',
+      await p7.evaluate(() => /shared store/.test(document.getElementById('mr-bar').textContent)),
+      await p7.evaluate(() => document.getElementById('mr-bar').textContent.trim().slice(0, 90)));
+
     /* the endpoint's save switch is off: the sentence blames the
        switch, not a key nobody entered */
     const savedOff = await p7.evaluate(async () => {
@@ -774,6 +778,88 @@ const stub = `
     t('a configured device still sends its key', /key=/.test(keyed.url), keyed.url);
     t('and still gets the rota', keyed.hasRota === true);
     t('and is not marked public', keyed.pub === false);
+
+    await ctx.close();
+  }
+
+  /* ---- 11g. the same-origin corridor -------------------------------
+
+     Hospital WiFi blocks script.google.com; nobody blocks the site's
+     own address. Every request tries /mr-api first and falls back to
+     the endpoint itself, so the corridor being absent (local dev, a
+     host without functions) costs nothing but the one failed try.
+     ------------------------------------------------------------------- */
+
+  {
+    const PUB = {
+      status: 'ok', public: true, generated: '2026-08-25T12:00:00Z', warnings: [],
+      roster: { source: 'sheet', academic_year: '2026-2027',
+        residents: SHARED_ROSTER.residents.map(r => Object.assign({}, r, { unavailable: [] })) },
+      rotations: null,
+    };
+    const proxyStub = `
+(function(){
+  var real = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    var u = String(url && url.url ? url.url : url);
+    if (u.indexOf('/mr-api') !== 0) return real(url, opts);
+    var s = JSON.parse(sessionStorage.getItem('__px__') || '{}');
+    var calls = JSON.parse(sessionStorage.getItem('__pxcalls__') || '[]');
+    calls.push({ url: u, method: (opts && opts.method) || 'GET', body: (opts && opts.body) || null });
+    sessionStorage.setItem('__pxcalls__', JSON.stringify(calls));
+    if (s.mode === '404') return Promise.resolve(new Response('not here', { status: 404 }));
+    return Promise.resolve(new Response(JSON.stringify(s.body || null), {
+      status: 200, headers: { 'Content-Type': 'application/json' } }));
+  };
+})();`;
+
+    const ctx = await b.newContext();
+    const p9 = await ctx.newPage();
+    p9.on('pageerror', e => errs.push('pageerror: ' + e.message));
+    await p9.addInitScript(fake);
+    await p9.addInitScript('window.MR_PUBLIC_ENDPOINT = ' + JSON.stringify(ENDPOINT) + '; window.MR_PROXY = "/mr-api";');
+    await p9.addInitScript(stub);       /* answers the direct endpoint */
+    await p9.addInitScript(proxyStub);  /* wraps last, so it answers first */
+    await p9.goto(BASE + '/morning-report/roster/', { waitUntil: 'networkidle' });
+    await p9.evaluate(d => {
+      sessionStorage.setItem('__px__', JSON.stringify({ mode: 'ok', body: d }));
+      window.__mr.body = d;
+    }, PUB);
+
+    const viaProxy = await p9.evaluate(async () => {
+      sessionStorage.setItem('__pxcalls__', '[]');
+      window.__mr.calls.length = 0;
+      MRRemote.reload();
+      const r = await MRRoster.load();
+      return { names: r.residents.length,
+               proxyCalls: JSON.parse(sessionStorage.getItem('__pxcalls__')).length,
+               directCalls: window.__mr.calls.length };
+    });
+    t('the roster arrives through the site\'s own address', viaProxy.names === 3, viaProxy);
+    t('and script.google.com is never contacted', viaProxy.directCalls === 0, viaProxy);
+    t('the corridor carried it', viaProxy.proxyCalls > 0, viaProxy);
+
+    const wrote = await p9.evaluate(async () => {
+      sessionStorage.setItem('__pxcalls__', '[]');
+      window.__mr.calls.length = 0;
+      const putOk = await MRStore.write('sessions/px.json', { a: 1 });
+      const calls = JSON.parse(sessionStorage.getItem('__pxcalls__'));
+      const post = calls.filter(c => c.method === 'POST')[0];
+      return { putOk: putOk, action: post && JSON.parse(post.body).action,
+               direct: window.__mr.calls.length };
+    });
+    t('saves go through the corridor too', wrote.putOk === true && wrote.action === 'docput', wrote);
+    t('still without touching the endpoint directly', wrote.direct === 0, wrote.direct);
+
+    /* the corridor is absent: fall back to the endpoint, invisibly */
+    const fell = await p9.evaluate(async () => {
+      sessionStorage.setItem('__px__', JSON.stringify({ mode: '404' }));
+      window.__mr.calls.length = 0;
+      MRRemote.reload();
+      const r = await MRRoster.load();
+      return { names: r.residents.length, direct: window.__mr.calls.length };
+    });
+    t('an absent corridor falls back to the endpoint', fell.names === 3 && fell.direct > 0, fell);
 
     await ctx.close();
   }

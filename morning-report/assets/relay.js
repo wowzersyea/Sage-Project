@@ -137,23 +137,48 @@
     return !!(s.endpoint && s.key);
   }
 
+  /* The same-origin corridor remote.js already rides (a Cloudflare
+     function at /mr-api): hospital WiFi blocks script.google.com
+     wholesale, and a feedback submit dies there exactly the way the
+     roster fetch did. Corridor first, but ONLY when the endpoint in
+     play is the site's own — the corridor forwards to one fixed
+     deployment, and a link that configured a different endpoint must
+     keep going where it points. Unreachable falls through to direct;
+     a denied or error answer is an answer. */
+  var CORRIDOR = (global.MR_PROXY !== undefined) ? global.MR_PROXY : "/mr-api";
+
+  function postTargets(url) {
+    var own = (site.endpoint && url === site.endpoint) || url === shared().endpoint;
+    return (CORRIDOR && own) ? [CORRIDOR, url] : [url];
+  }
+
   function post(body, key) {
     var url = body.action === "feedback" ? endpoint() : shared().endpoint;
     if (!url || !key) return Promise.resolve({ ok: false, error: "No endpoint and key are set." });
 
     body.key = key;
+    var urls = postTargets(url);
     /* text/plain on purpose: Apps Script does not answer the CORS
        preflight a JSON content-type would provoke. */
-    return global.fetch(url, {
-      method: "POST",
-      credentials: "omit",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body)
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
-        return res.json();
+    var attempt = function (i) {
+      return global.fetch(urls[i], {
+        method: "POST",
+        credentials: "omit",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(body)
       })
+        .then(function (res) {
+          if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
+          return res.json().catch(function () {
+            throw new Error("The endpoint did not return JSON.");
+          });
+        })
+        .catch(function (err) {
+          if (i + 1 < urls.length) return attempt(i + 1);
+          throw err;
+        });
+    };
+    return attempt(0)
       .then(function (r) {
         if (!r || r.status !== "ok") {
           return {

@@ -804,20 +804,20 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
   t('names and levels are there',
     pub.roster.residents.length === 3 &&
     pub.roster.residents.every(r => r.name && r.level), pub.roster.residents.length);
-  /* The fixture's dates drift against the wall clock, so the assertion
-     is the invariant rather than a count: whatever survives the filter
-     sits inside [today, today + window], computed exactly as the
-     endpoint computes it. The original "filtered to nothing" broke the
-     day the fixture's September dates rolled into the seven-day window. */
+  /* The fixture's two dates drift relative to the rolling window as
+     real time passes, so the expectation is computed, not assumed —
+     this assertion once said "filtered to nothing" and started failing
+     the day 2026-09-03 rolled inside today+7. */
   {
-    const offP = ZONES['America/Chicago'];
-    const dayP = (n) => new Date(Date.now() + n * 86400000 + offP * 60 * 1000)
+    const off = ZONES['America/Chicago'];
+    const dd = n => new Date(Date.now() + n * 86400000 + off * 60 * 1000)
       .toISOString().slice(0, 10);
-    const horizon = dayP((pub.rotations && pub.rotations.window_days) || 7);
-    t('the public rota holds nothing outside the rolling window',
-      pub.rotations !== null && Object.keys(pub.rotations.days)
-        .every(d => d >= dayP(0) && d <= horizon),
-      pub.rotations && Object.keys(pub.rotations.days));
+    const expected = ['2026-09-03', '2026-09-04']
+      .filter(d => d >= dd(0) && d <= dd(7));
+    t('the public rota is the fixture clipped to the window',
+      pub.rotations !== null &&
+      JSON.stringify(Object.keys(pub.rotations.days).sort()) === JSON.stringify(expected),
+      { served: pub.rotations && Object.keys(pub.rotations.days), expected: expected });
   }
   t('the draws are not', pub.roster.draws === undefined);
   t('leave windows are not', pub.roster.residents.every(r => r.unavailable.length === 0));
