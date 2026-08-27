@@ -806,7 +806,9 @@ Promise.all([
   $("title").textContent = content.title;
   $("lede").textContent = content.lede;
   $("footnote").textContent = content.footer;
-  $("voicenote").textContent = MRVoice.supported() ? MRVoice.NOTE : MRVoice.UNSUPPORTED;
+  $("voicenote").textContent = MRVoice.supported() ? MRVoice.NOTE
+    : MRVoice.records() ? MRVoice.RECORD_ONLY
+    : MRVoice.UNSUPPORTED;
   $("keeplabel").textContent = content.audio.keep_label;
   $("keephint").textContent = MRVoice.records() ? content.audio.keep_hint : content.audio.unsupported;
 
