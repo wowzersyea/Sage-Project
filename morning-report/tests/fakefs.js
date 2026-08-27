@@ -13,6 +13,7 @@
      the suite that tests the public path turns it back on against
      its own stub. */
   window.MR_PUBLIC_ENDPOINT = "";
+  window.MR_PROXY = "";
 })();
 
 (function(){
