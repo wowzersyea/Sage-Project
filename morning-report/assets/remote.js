@@ -40,6 +40,15 @@
      windows and every write stay behind the key.
 
      Tests override via global.MR_PUBLIC_ENDPOINT before this loads. */
+  /* The same-origin corridor (a Cloudflare Pages Function at /mr-api)
+     is tried first for every request, because institutional networks —
+     hospital WiFi among them — block script.google.com wholesale, and
+     nobody blocks the site's own address. If the corridor is absent or
+     unreachable, every call falls back to the endpoint directly, so
+     nothing depends on it existing. Tests set MR_PROXY = "" to keep
+     requests off the real network. */
+  var PROXY = (global.MR_PROXY !== undefined) ? global.MR_PROXY : "/mr-api";
+
   var PUBLIC_ENDPOINT = (global.MR_PUBLIC_ENDPOINT !== undefined)
     ? global.MR_PUBLIC_ENDPOINT
     : "https://script.google.com/macros/s/AKfycbyNyxxrMQyryOtc0wvxiafjmSW-kCpZjHGWbljHvpgI11xL6f3qfRn_OxxCkVqgJn0m/exec";
@@ -168,9 +177,37 @@
      deleting and re-seeding stay keyed no matter what. */
   function writeTarget() {
     loadSettings();
-    if (configured()) return { url: state.endpoint, key: state.key };
-    if (PUBLIC_ENDPOINT) return { url: PUBLIC_ENDPOINT, key: "" };
-    return null;
+    var key, direct;
+    if (configured()) { key = state.key; direct = state.endpoint; }
+    else if (PUBLIC_ENDPOINT) { key = ""; direct = PUBLIC_ENDPOINT; }
+    else return null;
+    var urls = PROXY ? [PROXY, direct] : [direct];
+    return { urls: urls, key: key };
+  }
+
+  /* POST to the first address that answers with JSON. A denied or
+     error answer IS an answer — only an unreachable or non-JSON
+     address falls through to the next. */
+  function postJson(urls, body) {
+    var attempt = function (i) {
+      return global.fetch(urls[i], {
+        method: "POST",
+        credentials: "omit",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(body)
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
+          return res.json().catch(function () {
+            throw new Error("The endpoint did not return JSON.");
+          });
+        })
+        .catch(function (err) {
+          if (i + 1 < urls.length) return attempt(i + 1);
+          throw err;
+        });
+    };
+    return attempt(0);
   }
 
   function canWrite() { return !!writeTarget(); }
@@ -184,22 +221,35 @@
   function fetchAll() {
     if (state.pending) return state.pending;
 
-    var url;
+    var direct;
     if (configured()) {
-      url = state.endpoint +
+      direct = state.endpoint +
         (state.endpoint.indexOf("?") === -1 ? "?" : "&") +
         "key=" + encodeURIComponent(state.key);
     } else if (PUBLIC_ENDPOINT) {
-      url = PUBLIC_ENDPOINT;              /* keyless: the public subset */
+      direct = PUBLIC_ENDPOINT;           /* keyless: the public subset */
     } else {
       return Promise.resolve(null);
     }
+    var urls = PROXY
+      ? [PROXY + (configured() ? "?key=" + encodeURIComponent(state.key) : ""), direct]
+      : [direct];
 
-    state.pending = global.fetch(url, { method: "GET", credentials: "omit" })
-      .then(function (res) {
-        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
-        return res.json();
-      })
+    var attempt = function (i) {
+      return global.fetch(urls[i], { method: "GET", credentials: "omit" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
+          return res.json().catch(function () {
+            throw new Error("The endpoint did not return JSON.");
+          });
+        })
+        .catch(function (err) {
+          if (i + 1 < urls.length) return attempt(i + 1);
+          throw err;
+        });
+    };
+
+    state.pending = attempt(0)
       .then(function (body) {
         if (!body || typeof body !== "object") throw new Error("The endpoint did not return JSON.");
         if (body.status === "denied") {
@@ -264,21 +314,12 @@
     if (!configured()) {
       return Promise.resolve({ ok: false, error: "No endpoint and key are set." });
     }
-    var body = JSON.stringify({
+    var urls = PROXY ? [PROXY, state.endpoint] : [state.endpoint];
+    return postJson(urls, {
       key: state.key,
       roster: payload && payload.roster ? payload.roster : null,
       rotations: payload && payload.rotations ? payload.rotations : null
-    });
-    return global.fetch(state.endpoint, {
-      method: "POST",
-      credentials: "omit",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: body
     })
-      .then(function (res) {
-        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
-        return res.json();
-      })
       .then(function (r) {
         if (!r || r.status !== "ok") {
           return { ok: false, error: (r && (r.message || (r.status === "denied" ? "That key was not accepted." : ""))) || "The endpoint refused the publish." };
@@ -315,23 +356,14 @@
       return Promise.resolve({ ok: false, error: "There is nobody to record." });
     }
 
-    return global.fetch(t.url, {
-      method: "POST",
-      credentials: "omit",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        key: t.key,
-        action: "draw",
-        date: session.date,
-        site: session.site || "",
-        presenting: session.presenting || "",
-        entries: entries
-      })
+    return postJson(t.urls, {
+      key: t.key,
+      action: "draw",
+      date: session.date,
+      site: session.site || "",
+      presenting: session.presenting || "",
+      entries: entries
     })
-      .then(function (res) {
-        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
-        return res.json();
-      })
       .then(function (r) {
         if (!r || r.status !== "ok") {
           return {
@@ -388,16 +420,7 @@
     var body = { key: t.key, action: action };
     Object.keys(extra || {}).forEach(function (k) { body[k] = extra[k]; });
 
-    return global.fetch(t.url, {
-      method: "POST",
-      credentials: "omit",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body)
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error("The endpoint answered " + res.status + ".");
-        return res.json();
-      })
+    return postJson(t.urls, body)
       .then(function (r) {
         if (!r || r.status !== "ok") {
           throw new Error((r && (r.message || (r.status === "denied" ?
