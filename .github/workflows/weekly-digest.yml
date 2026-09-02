@@ -65,5 +65,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -A
+          # Only the digest outputs. A stray directory created by the script must
+          # never be committed again (that is how the f:/ tree got in).
+          git add literature-monitor/
           git diff --quiet && git diff --staged --quiet || (git commit -m "📚 Bi-weekly literature digest - $(date +'%Y-%m-%d')" && git push)

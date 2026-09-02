@@ -32,3 +32,6 @@ desktop.ini
 build/
 dist/
 .pytest_cache/
+
+# A Windows drive path once became this directory in CI; never commit it
+f:/

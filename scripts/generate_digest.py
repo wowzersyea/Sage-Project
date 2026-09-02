@@ -39,7 +39,12 @@ file_date = today.strftime('%Y-%m-%d')
 folder_date_range = f"{digest_start.strftime('%Y-%m-%d')}_to_{today.strftime('%Y-%m-%d')}"
 
 # PDF download directory
-PDF_OUTPUT_DIR = Path("f:/Coding/sage_podcastlm/example_inputs")
+# PDFs are fetched on the podcast machine (sage_podcastlm fetch-pdfs) from the
+# published digest JSON, not by this script in CI. Set DIGEST_PDF_DIR to download
+# them locally. A hard-coded Windows drive path here used to create a literal
+# "f:" directory in the Actions checkout, which git add -A then committed.
+_pdf_dir = os.environ.get("DIGEST_PDF_DIR", "").strip()
+PDF_OUTPUT_DIR = Path(_pdf_dir) if _pdf_dir else None
 
 # Memory file path
 MEMORY_FILE = "literature-monitor/digests/reviewed_articles.json"
@@ -302,6 +307,9 @@ def extract_article_titles_for_pdfs(response_text):
 
 def download_all_pdfs(response_text):
     """Download all PDFs mentioned in the digest."""
+    if PDF_OUTPUT_DIR is None:
+        print("Skipping PDF download: DIGEST_PDF_DIR is not set (the podcast machine fetches them).")
+        return []
     pdf_folder = create_pdf_folder()
     print(f"\nDownloading PDFs to: {pdf_folder}")
 
