@@ -5,7 +5,7 @@
     <link>https://sageproject.xyz/</link>
     <description>Clinical evidence podcast generated from curated article reviews.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 26 Feb 2026 15:32:48 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 02 Sep 2026 13:49:58 GMT</lastBuildDate>
     <itunes:author>Sage Project</itunes:author>
     <itunes:summary>Clinical evidence podcast generated from curated article reviews.</itunes:summary>
     <itunes:explicit>false</itunes:explicit>
@@ -14,6 +14,18 @@
       <itunes:name>Sage Project</itunes:name>
       <itunes:email>mark.murphy86@gmail.com</itunes:email>
     </itunes:owner>
+    <item>
+      <title>Sage ID Briefing (2026-08-26): Misidentification of a Specimen as Neisseria meningit and Notes from the Field Potential Infant HIV Exposure f</title>
+      <description>This episode reviews 2 recent papers with practical clinical takeaways. Covered in this episode: - Misidentification of a Specimen as Neisseria meningit - Notes from the Field Potential Infant HIV Exposure f Educational only. Not medical advice.</description>
+      <link>https://sageproject.xyz/podcast/audio/2026-08-26/digest-full.mp3</link>
+      <guid isPermaLink="false">sageproject:2026-08-26:episode:full</guid>
+      <pubDate>Wed, 02 Sep 2026 13:49:58 GMT</pubDate>
+      <enclosure url="https://sageproject.xyz/podcast/audio/2026-08-26/digest-full.mp3" length="8210434" type="audio/mpeg" />
+      <itunes:author>Sage Project</itunes:author>
+      <itunes:summary>This episode reviews 2 recent papers with practical clinical takeaways. Covered in this episode: - Misidentification of a Specimen as Neisseria meningit - Notes from the Field Potential Infant HIV Exposure f Educational only. Not medical advice.</itunes:summary>
+      <itunes:duration>00:11:24</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>Sage ID Briefing (2026-03-02): Comparing Generative Artificial Intelli, The Role of beta-Lactam Antibiotics in Treating, and Healthcare resource...</title>
       <description>This episode reviews 7 recent papers with practical clinical takeaways. Covered in this episode: - Comparing Generative Artificial Intelli - The Role of beta-Lactam Antibiotics in Treating - Healthcare resource utilization outcom - CID Marzolini Is TDM of Long Acting Cabotgravir - Therapeutic Drug Monitoring of Long-Acting Ca - Epi of IFD in heart transplants - Clinical Epi and micro of orbital cellulit Educational only. Not medical advice.</description>
