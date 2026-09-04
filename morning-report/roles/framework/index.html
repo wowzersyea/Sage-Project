@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameworks | Morning Report</title>
+<meta name="description" content="The eight organising frameworks the senior discussant can offer at 0:11, each with when it is the right one and what it sounds like.">
+<link rel="stylesheet" href="../../assets/mr.css?v=7">
+<style>
+  .fws{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:16px}
+  .fw{
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px;
+    border-left:3px solid var(--teal);
+  }
+  .fw h3{margin:0 0 3px;font-size:16.5px}
+  .fw .when{margin:0 0 9px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .fw .eg{
+    margin:0;font-family:var(--serif);font-size:13.5px;line-height:1.6;color:#3D4855;
+    border-top:1px dashed var(--line);padding-top:9px;
+  }
+  .one{
+    background:#FBF0DE;border:1px solid var(--amber);border-radius:7px;padding:14px 17px;
+    font-size:13.5px;color:#5C4415;line-height:1.55;
+  }
+  .one b{color:#8A6014}
+  .backline{margin-top:26px;font-size:13px}
+  .backline a{color:var(--teal);text-decoration:none;font-weight:600}
+  .backline a:hover{text-decoration:underline}
+  @media print{
+    .mr-bar,.backline,footer.mr{display:none}
+    body{background:#fff}
+    .fw{break-inside:avoid;page-break-inside:avoid}
+    .fws{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<script src="../../assets/gate.js?v=7"></script>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · roles</p>
+    <h1>Frameworks</h1>
+    <p class="sub">The senior discussant names one of these out loud at 0:11, before listing anything.
+      Pick the framework the case is asking for — not the one you know best. Naming it first is what
+      turns the intern's list into an argument the group can push back on.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+    <div class="one">
+      <b>One framework, named before the list.</b> The board records whether it was named first,
+      because a framework offered after the list is a label, not a tool. Two frameworks in five
+      minutes is one too many.
+    </div>
+
+    <div class="fws" id="fws"></div>
+
+    <div class="panel" style="margin-top:24px">
+      <h2>If none of them fit</h2>
+      <p class="lede" style="margin-bottom:0">Say so, and say what you are using instead — the board's
+        Framework box takes free text. An honest ad-hoc framework beats forcing the case into
+        <em>infectious, inflammatory, neoplastic</em> because it was the nearest one to hand.</p>
+    </div>
+
+    <p class="backline">
+      <a href="../senior/">Senior discussant card</a> ·
+      <a href="../pgy1/">PGY-1 discussant card</a> ·
+      <a href="../../handouts/Cognitive_Bias_Card.pdf" download>Cognitive bias card (PDF)</a> ·
+      <a href="../">All role cards</a>
+    </p>
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project &mdash; Morning Report.</p></div>
+</footer>
+
+<script src="../../assets/remote.js?v=7"></script>
+<script src="../../assets/store.js?v=7"></script>
+<script src="../../assets/content.js?v=7"></script>
+<script>
+Promise.all([MRStore.whenReady, MRContent.load()]).then(function(){
+  MRStore.mountBar("mr-bar");
+  var host = document.getElementById("fws");
+  MRContent.frameworks().forEach(function(f){
+    var d = document.createElement("div");
+    d.className = "fw";
+    var h = document.createElement("h3"); h.textContent = f.name;
+    var w = document.createElement("p"); w.className = "when"; w.textContent = f.when;
+    var e = document.createElement("p"); e.className = "eg"; e.textContent = f.example;
+    d.appendChild(h); d.appendChild(w); d.appendChild(e);
+    host.appendChild(d);
+  });
+});
+</script>
+</body>
+</html>

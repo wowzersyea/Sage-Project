@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parked tools | Morning Report</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Morning report tools kept off the front page while the group works on the twenty-five minutes themselves. Nothing here has been deleted and no data has moved.">
+<link rel="stylesheet" href="../assets/mr.css?v=7">
+<style>
+  .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+  a.tool{
+    display:block;background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:17px 19px;text-decoration:none;color:inherit;
+  }
+  a.tool:hover{border-color:#9FB0BE;box-shadow:0 2px 10px rgba(22,40,60,.06)}
+  a.tool h3{margin:0 0 4px;font-size:17px}
+  a.tool p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  .stage-head{display:flex;align-items:baseline;gap:12px;margin:26px 0 11px}
+  .stage-head .when{
+    font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:#fff;background:var(--navy);padding:4px 10px;border-radius:3px;
+  }
+  .stage-head.measure .when{background:var(--red)}
+  .stage-head.after   .when{background:var(--teal)}
+  .stage-head.later   .when{background:var(--green)}
+  .stage-head .note{font-size:12.5px;color:var(--muted)}
+  .why{
+    background:#FBF0DE;border:1px solid var(--amber);border-radius:7px;padding:14px 17px;
+    font-size:13.5px;color:#5C4415;line-height:1.55;
+  }
+  .why b{color:#8A6014}
+  .backline{margin-top:28px;font-size:13px}
+  .backline a{color:var(--teal);text-decoration:none;font-weight:600}
+  .backline a:hover{text-decoration:underline}
+  a.tool code{font-family:var(--mono);background:#F2F6F8;border:1px solid var(--line);
+    padding:1px 5px;border-radius:3px;font-size:12px}
+</style>
+</head>
+<body>
+<script src="../assets/gate.js?v=7"></script>
+
+<div id="mr-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Morning report · parked</p>
+    <h1>Parked tools</h1>
+    <p class="sub">Everything here still works and still points at the same data folder. It is off the
+      front page so that the front page is only the twenty-five minutes and the two people who carry
+      them. Put a tool back the moment the group is ready for it.</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+
+    <div class="why">
+      <b>Nothing has been deleted.</b> The URLs are unchanged, the folder layout is unchanged, and
+      anything already collected — baseline responses, scorecards, captured cases, feedback — is
+      exactly where it was. This page is a front-page decision, not a data one.
+    </div>
+
+    <div class="stage-head measure">
+      <span class="when">Baseline</span>
+      <span class="note">Answered once, before any of this changed. We are past it.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="../baseline/">
+        <h3>Pre-intervention evaluation</h3>
+        <p>What the arrangement was like before, rated by the people in it. Still live at
+          <code>sageproject.xyz/baseline</code> for anyone who has not answered.</p>
+      </a>
+      <a class="tool" href="../baseline/share/">
+        <h3>Baseline QR code</h3>
+        <p>The code and short address to hand round. Printable, and downloadable as SVG or PNG.</p>
+      </a>
+      <a class="tool" href="../baseline/summary/">
+        <h3>Baseline read-out</h3>
+        <p>Domain scores by year group and both open questions, each row tagged outcome, process or
+          balancing. This is the before picture to measure against later — keep it.</p>
+      </a>
+    </div>
+
+    <div class="stage-head">
+      <span class="when">Before</span>
+      <span class="note">Scheduling, once the draw is settled.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="../roster/">
+        <h3>Roster and equity</h3>
+        <p>Who has served, who has not, and who is away. Sorted by weeks since a discussant role.
+          The draw already weights by this, so the page is for checking, not running.</p>
+      </a>
+    </div>
+
+    <div class="stage-head after">
+      <span class="when">After</span>
+      <span class="note">What the board hands over when it finishes.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="../scorecard/">
+        <h3>Scorecard</h3>
+        <p>The sixteen-item strike-out card. What the board already knows is ticked for you, marked,
+          and overridable.</p>
+      </a>
+      <a class="tool" href="../capture/">
+        <h3>Capture case</h3>
+        <p>The case bank entry, pre-filled from the board and checked for identifiers. Under sixty
+          seconds or it will not happen.</p>
+      </a>
+      <a class="tool" href="../feedback/">
+        <h3>Feedback</h3>
+        <p>Ninety seconds, anonymous: the technology, the flow, the six roles, and the one thing to
+          change. Answers to <code>sageproject.xyz/feedback</code>.</p>
+      </a>
+      <a class="tool" href="../feedback/summary/">
+        <h3>Feedback summary</h3>
+        <p>What came back, rolled up, with recordings turned into text on this machine.</p>
+      </a>
+    </div>
+
+    <div class="stage-head later">
+      <span class="when">Later</span>
+      <span class="note">Weeks and months out, once the case bank has something in it.</span>
+    </div>
+    <div class="tools">
+      <a class="tool" href="../review/">
+        <h3>Review game</h3>
+        <p>Four rounds off the case bank, filtered by date and tag. Round three is backwards and is
+          the one worth keeping.</p>
+      </a>
+      <a class="tool" href="../report/">
+        <h3>Group report</h3>
+        <p>Which rubric item the group misses most, over a rolling window. Never a single session,
+          never a person.</p>
+      </a>
+      <a class="tool" href="../learn/specificity/">
+        <h3>Learn</h3>
+        <p>How specific a differential item has to be before it earns a place on the board. Three
+          cases to sort.</p>
+      </a>
+      <a class="tool" href="../roles/#handouts">
+        <h3>All handouts</h3>
+        <p>The printed collateral: role cards, the scorecard, the bias card, the role evaluation
+          forms, the Zoom and OneNote material.</p>
+      </a>
+    </div>
+
+    <p class="backline"><a href="../">&larr; Back to morning report</a></p>
+
+  </div>
+</section>
+
+<footer class="mr">
+  <div class="wrap"><p>Sage Project &mdash; Morning Report.</p></div>
+</footer>
+
+<script src="../assets/remote.js?v=7"></script>
+<script src="../assets/store.js?v=7"></script>
+<script>MRStore.mountBar("mr-bar");</script>
+</body>
+</html>

@@ -46,6 +46,8 @@
 
   function blocks() { return (data && data.blocks) || []; }
 
+  function frameworks() { return (data && data.frameworks) || []; }
+
   function block(id) {
     var b = blocks().filter(function (x) { return x.id === id; })[0];
     return b || null;
@@ -170,6 +172,7 @@
     get: get,
     role: role,
     blocks: blocks,
+    frameworks: frameworks,
     block: block,
     blockForDate: blockForDate,
     blockAsk: blockAsk,

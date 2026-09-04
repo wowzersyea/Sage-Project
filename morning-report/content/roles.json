@@ -502,6 +502,49 @@
       }
     }
   ],
+  "_frameworks_source": "The eight organising frameworks the senior may offer at 0:11. The board's Framework dropdown shows the same eight labels; keep them in step if you edit this list.",
+  "frameworks": [
+    {
+      "name": "Anatomic — by level",
+      "when": "The complaint points at a tract or a tube and the question is where along it.",
+      "example": "Vomiting: mouth → oesophagus → stomach → pylorus → small bowel → colon. Bilious puts you below the ampulla and buys the surgeon a phone call."
+    },
+    {
+      "name": "Anatomic — by layer",
+      "when": "The complaint is local and imaging is what will sort it out.",
+      "example": "The limp: skin and soft tissue → joint → bone → referred. Each layer has its own test, so the framework writes the work-up."
+    },
+    {
+      "name": "Physiologic",
+      "when": "A number is abnormal and you need to know what is producing it.",
+      "example": "Anaemia: too little made, too much destroyed, or too much lost. Retic count separates the first from the other two before any smear."
+    },
+    {
+      "name": "Pre / intra / post",
+      "when": "An organ is failing and the cause may sit upstream or downstream of it.",
+      "example": "Acute kidney injury: pre-renal, intrinsic, post-renal. A bladder scan settles the third in ninety seconds."
+    },
+    {
+      "name": "Mechanistic category",
+      "when": "Nothing localises and you need coverage without listing everything.",
+      "example": "Infectious, inflammatory, neoplastic, metabolic, toxic, traumatic, congenital — but name a leader inside each category you keep, or this becomes the list that cannot be crossed off."
+    },
+    {
+      "name": "Age-anchored",
+      "when": "The same syndrome means different things at different ages.",
+      "example": "Fever without a source: under 28 days, 29–60 days, 61–90 days, over 90 days. The age band, not the temperature, decides the work-up."
+    },
+    {
+      "name": "Tempo",
+      "when": "Onset and course are the most discriminating features you have.",
+      "example": "Hyperacute (seconds to minutes) is vascular or mechanical; subacute over weeks is infectious or inflammatory; months is neoplastic, metabolic or degenerative."
+    },
+    {
+      "name": "Triage-based",
+      "when": "The child is sick and the list has to be ordered by what kills first.",
+      "example": "Can't-miss now → likely → possible. You are not building the complete list; you are building the one the next hour needs."
+    }
+  ],
   "handouts": [
     {
       "file": "Morning_Report_Role_Cards.pdf",
