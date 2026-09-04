@@ -32,19 +32,13 @@
   .stage-head.during .when{background:var(--amber);color:var(--navy)}
   .stage-head .note{font-size:12.5px;color:var(--muted)}
   .setup{margin-top:30px}
-  .setup ol{margin:0;padding-left:20px;font-size:13.5px;color:#3D4855}
-  .setup li{margin-bottom:7px}
   .setup code{font-family:var(--mono);background:#F2F6F8;border:1px solid var(--line);
     padding:1px 5px;border-radius:3px;font-size:12.5px}
-  pre.tree{
-    font-family:var(--mono);font-size:12.5px;line-height:1.55;color:#3D4855;
-    background:#F7F9FB;border:1px solid var(--line);border-radius:6px;
-    padding:14px 16px;margin:12px 0 0;overflow-x:auto;
-  }
   .parked{
-    margin-top:28px;font-size:13px;color:var(--muted);
-    border-top:1px solid var(--line);padding-top:14px;
+    margin-top:28px;border-top:1px solid var(--line);padding-top:14px;
   }
+  .parked p{margin:0 0 8px;font-size:13px;color:var(--muted);line-height:1.55}
+  .parked p:last-child{margin-bottom:0}
   .parked a{color:var(--teal);text-decoration:none;font-weight:600}
   .parked a:hover{text-decoration:underline}
 </style>
@@ -139,51 +133,12 @@
       </a>
     </div>
 
-    <p class="parked">The baseline evaluation, the roster, the scorecard, capture, feedback and the
-      review game are <a href="archive/">parked here</a> — all still working, all still pointed at the
-      same folder, just off this page until the twenty-five minutes are running the way they should.</p>
-
-    <div class="setup panel">
-      <h2>Setting up the data folder</h2>
-      <p class="lede">There is no server and no account. The tools read and write JSON files in a folder
-        you choose. Point that folder at a OneDrive-synced location and both sites share state with
-        nothing in between.</p>
-      <ol>
-        <li>Make a folder called <code>MorningReport</code> somewhere OneDrive syncs.</li>
-        <li>Press <b>Connect data folder</b> in the bar at the top and pick it. Grant read-write.</li>
-        <li>Do the same once on the other site's machine, pointing at the same synced folder.</li>
-      </ol>
-      <pre class="tree">MorningReport/
-  roster.json          names and the participation log — the one file with names in it
-  casebank/            de-identified cases, permanent
-  baseline/            the pre-intervention evaluation, permanent — the before picture
-  sessions/            de-identified scorecards, permanent
-    feedback/          what the group said about the session, permanent
-  board-archive/       de-identified board contents, permanent
-  working/             identified, ephemeral, CLI and feedback only, swept after 7 days
-    feedback/          the role half of the feedback — handed over, then gone
-      audio/           recordings, only the ones somebody chose to keep</pre>
-      <p class="hint">Folder access needs Chrome or Edge. In any other browser the tools fall back to
-        explicit Download JSON and Load JSON buttons, and the bar says so.</p>
-    </div>
-
-    <div class="setup panel">
-      <h2>Optional: a shared roster</h2>
-      <p class="lede">The folder is per-machine. If you would rather have one live answer to
-        <em>who is on service today</em> — editable by a chief from a phone, picked up by every
-        browser without anyone re-exporting anything — the roster and rota can come from a
-        Google Sheet behind a keyed endpoint instead.</p>
-      <ol>
-        <li><a href="settings/">Settings</a> — paste the endpoint URL and key, once per browser.</li>
-        <li><a href="publish/">Publish</a> — seed the sheet from the folder you already have.</li>
-        <li>After that, a chief edits the sheet. Swaps and sick calls need no export.</li>
-      </ol>
-      <p class="hint" style="margin-bottom:0"><a href="settings/">Settings</a> also draws the QR code for
-        the presenter template: scan it and a phone can send feedback without anyone typing a URL, and
-        the board puts the same code on screen at the end of a session.</p>
-      <p class="hint">Entirely optional, and it degrades rather than misleads: with no endpoint,
-        or one that cannot be reached, everything falls back to the folder exactly as before.
-        The folder always wins over the endpoint, and the participation log never leaves it.</p>
+    <div class="parked">
+      <p><a href="archive/">Parked tools</a> — the baseline evaluation, the roster, the scorecard,
+        capture, feedback and the review game. All still working, all still pointed at the same
+        folder, just off this page until the twenty-five minutes are running the way they should.</p>
+      <p><a href="admin/">Administration</a> — setting up the shared data folder, and the optional
+        shared roster. Done once per machine; nobody presenting or discussing a case needs it.</p>
     </div>
 
     <div class="privacy setup">
