@@ -262,86 +262,103 @@
         }
 
         /* ─── Capsule navigation ─────────────────────────────── */
-        .capsule-nav{
-            position:relative; width:1040px; max-width:96vw; height:430px;
-            margin:1.5rem auto 0; display:flex; align-items:flex-start; justify-content:center;
-            animation: fadeInUp 0.6s ease 0.3s forwards; opacity:0;
-        }
-        .capsule-hint{ position:absolute; top:138px; left:50%; transform:translateX(-50%);
-            font-size:0.82rem; color:var(--text-muted); letter-spacing:0.02em; white-space:nowrap;
-            transition:opacity .3s ease; }
-        .capsule-nav.open .capsule-hint{ opacity:0; }
-        .pill{ position:relative; width:340px; height:118px; cursor:pointer; z-index:5; margin-top:6px;
-            filter:drop-shadow(0 20px 38px rgba(0,0,0,0.5));
-            transition:transform .6s cubic-bezier(.34,1.45,.6,1); }
-        .capsule-nav.open .pill{ transform:translateY(-8px); }
-        .pill-half{ position:absolute; top:0; height:118px; width:174px;
-            transition:transform .85s cubic-bezier(.22,1,.36,1); transition-delay:.16s; }
-        .pill-left{ left:0; border-radius:59px 14px 14px 59px;
-            background:
-                linear-gradient(160deg, rgba(255,255,255,0.30), rgba(255,255,255,0) 42%),
-                linear-gradient(135deg, var(--sage-500), var(--sage-600));
-            box-shadow:inset 0 3px 9px rgba(255,255,255,0.28), inset 0 -11px 20px rgba(0,0,0,0.18); }
-        .pill-right{ right:0; border-radius:14px 59px 59px 14px;
-            background:
-                linear-gradient(160deg, rgba(255,255,255,0.24), rgba(255,255,255,0) 45%),
-                linear-gradient(135deg, rgba(200,229,199,0.32), rgba(127,168,130,0.18));
-            backdrop-filter:blur(2px);
-            box-shadow:inset 0 3px 9px rgba(255,255,255,0.20), inset 0 -11px 20px rgba(0,0,0,0.14);
-            overflow:hidden; }
-        .ghost-beads{ position:absolute; inset:0; display:flex; align-items:center; gap:12px;
-            padding-left:24px; opacity:0.5; transition:opacity .3s ease; }
-        .capsule-nav.open .ghost-beads{ opacity:0; }
-        .ghost-beads span{ width:21px; height:21px; border-radius:50%;
-            box-shadow:inset -3px -3px 4px rgba(0,0,0,0.2), inset 3px 3px 4px rgba(255,255,255,0.4); }
-        .pill-seam{ position:absolute; left:50%; top:14px; bottom:14px; width:2px; transform:translateX(-50%);
-            background:linear-gradient(180deg, transparent, rgba(255,255,255,0.4), transparent);
-            z-index:6; transition:opacity .3s ease; }
-        .capsule-nav.open .pill-seam{ opacity:0; }
-        .capsule-nav.open .pill-left{ transform:translateX(-52px) rotate(-9deg); }
-        .capsule-nav.open .pill-right{ transform:translateX(52px) rotate(9deg); }
-        .beads{ position:absolute; left:50%; top:114px; width:0; height:0; z-index:4; }
-        .bead{ position:absolute; left:0; top:0;
-            transform:translate(-50%,-50%) scale(.16); opacity:0; pointer-events:none;
-            transition:transform .7s cubic-bezier(.34,1.5,.6,1), opacity .45s ease;
-            text-decoration:none; text-align:center; width:128px; }
-        .capsule-nav.open .bead{ opacity:1; pointer-events:auto;
-            transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); }
-        .bead-sphere{ width:70px; height:70px; border-radius:50%; margin:0 auto 9px;
-            display:flex; align-items:center; justify-content:center;
-            background:radial-gradient(circle at 32% 28%, rgba(255,255,255,0.7), rgba(255,255,255,0) 46%), var(--bead);
-            box-shadow:0 10px 22px rgba(0,0,0,0.42), inset 0 -7px 14px rgba(0,0,0,0.22), inset 0 4px 7px rgba(255,255,255,0.45);
-            transition:transform .25s ease, box-shadow .25s ease; }
-        .bead-sphere svg{ width:29px; height:29px; color:#11140f; opacity:0.8; }
-        .bead:hover .bead-sphere{ transform:scale(1.15) translateY(-3px);
-            box-shadow:0 16px 30px rgba(0,0,0,0.5), inset 0 -7px 14px rgba(0,0,0,0.22), inset 0 4px 7px rgba(255,255,255,0.6); }
-        .bead-label{ display:inline-block; font-size:0.82rem; font-weight:600; color:var(--text-primary);
-            background:rgba(30,35,30,0.9); padding:0.26rem 0.7rem; border-radius:100px;
-            border:1px solid rgba(199,208,199,0.16); white-space:nowrap; line-height:1.3;
-            box-shadow:0 4px 12px rgba(0,0,0,0.34); }
-        @keyframes capsuleFloat{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
-        .capsule-nav:not(.open) .pill{ animation:capsuleFloat 4s ease-in-out infinite; }
+        /* The stage is only as tall as the pill when closed and grows on open, so the
+           page below slides down instead of sitting under 400px of empty hero. */
+        .cap{ display:block; position:relative; width:100%; margin:1.5rem auto 0; --closed-h:186px; --open-h:430px;
+            animation: fadeInUp 0.6s ease 0.3s forwards; opacity:0; }
+        .cap-stage{ position:relative; height:var(--closed-h); transition:height .6s cubic-bezier(.22,1,.36,1); }
+        .cap.open .cap-stage{ height:var(--open-h); }
+        /* Idle float on a wrapper; the open lift on the pill. Two transforms, two elements. */
+        .cap-float{ position:absolute; left:50%; top:6px; width:340px; height:118px; transform:translateX(-50%); z-index:5; }
+        .cap:not(.open) .cap-float{ animation:capFloat 4.5s ease-in-out infinite; }
+        @keyframes capFloat{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-8px) } }
+        /* Contact shadow on the floor, breathing opposite to the float. */
+        .cap-shadow{ position:absolute; left:50%; top:calc(100% + 16px); width:270px; height:28px; transform:translateX(-50%); border-radius:50%;
+            background:radial-gradient(ellipse at center, rgba(0,0,0,.6), rgba(0,0,0,0) 68%); opacity:.85; pointer-events:none;
+            transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .6s ease; }
+        .cap:not(.open) .cap-shadow{ animation:capShadow 4.5s ease-in-out infinite; }
+        @keyframes capShadow{ 0%,100%{ transform:translateX(-50%) scaleX(1); opacity:.85 } 50%{ transform:translateX(-50%) scaleX(.86); opacity:.55 } }
+        .cap.open .cap-shadow{ transform:translateX(-50%) scaleX(1.3); opacity:.45; }
+        .cap-pill{ all:unset; -webkit-appearance:none; display:block; position:relative; width:340px; height:118px; cursor:pointer;
+            perspective:900px; transition:transform .6s cubic-bezier(.34,1.45,.6,1); border-radius:59px; }
+        .cap.open .cap-pill{ transform:translateY(-10px); }
+        .cap-pill:focus-visible{ outline:2px solid var(--sage-700); outline-offset:8px; }
+        .half{ position:absolute; top:0; height:118px; width:174px; will-change:transform; backface-visibility:hidden; overflow:hidden;
+            transition:transform .7s cubic-bezier(.22,1,.36,1) .18s; }
+        .cap.open .half{ transition-delay:0s; }
+        .half.left{ left:0; border-radius:59px 14px 14px 59px; transform-origin:100% 50%;
+            background: linear-gradient(160deg, rgba(255,255,255,.32), rgba(255,255,255,0) 42%), linear-gradient(135deg, var(--sage-500), var(--sage-600));
+            box-shadow: inset 0 3px 9px rgba(255,255,255,.28), inset 0 -11px 20px rgba(0,0,0,.18), 0 18px 34px rgba(0,0,0,.45); }
+        .half.right{ right:0; border-radius:14px 59px 59px 14px; transform-origin:0% 50%;
+            background: linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,0) 45%), linear-gradient(135deg, rgba(200,229,199,.30), rgba(127,168,130,.16));
+            box-shadow: inset 0 3px 9px rgba(255,255,255,.18), inset 0 -11px 20px rgba(0,0,0,.14), 0 18px 34px rgba(0,0,0,.40); }
+        /* The halves tilt away in 3D like a cap being pulled off. */
+        .cap.open .half.left{ transform:translateX(-72px) rotateY(-34deg) rotateZ(-7deg); }
+        .cap.open .half.right{ transform:translateX(72px) rotateY(34deg) rotateZ(7deg); }
+        /* Specular sheen sweeps once on hover. */
+        .half::after{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+            background:linear-gradient(115deg, transparent 32%, rgba(255,255,255,.26) 48%, transparent 62%);
+            transform:translateX(-130%); transition:transform .9s ease; }
+        .cap-pill:hover .half::after, .cap.open .half::after{ transform:translateX(130%); }
+        .ghost{ position:absolute; inset:0; display:flex; align-items:center; gap:12px; padding-left:24px; opacity:.55; transition:opacity .3s ease; }
+        .cap.open .ghost{ opacity:0; }
+        .ghost span{ width:21px; height:21px; border-radius:50%; box-shadow:inset -3px -3px 4px rgba(0,0,0,.2), inset 3px 3px 4px rgba(255,255,255,.4); }
+        .seam{ position:absolute; left:50%; top:14px; bottom:14px; width:2px; transform:translateX(-50%); z-index:6; pointer-events:none;
+            background:linear-gradient(180deg, transparent, rgba(255,255,255,.45), transparent); transition:opacity .25s ease; }
+        .cap.open .seam{ opacity:0; }
+        .flash{ position:absolute; left:50%; top:50%; width:140px; height:140px; border-radius:50%; pointer-events:none; z-index:4; opacity:0;
+            transform:translate(-50%,-50%) scale(.2);
+            background:radial-gradient(circle, rgba(197,229,199,.85), rgba(197,229,199,0) 62%); }
+        .cap.open .flash{ animation:capFlash .6s ease-out forwards; }
+        @keyframes capFlash{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.2) } 22%{ opacity:.9 } 100%{ opacity:0; transform:translate(-50%,-50%) scale(2.4) } }
+        .cap-beads{ position:absolute; left:50%; top:124px; width:0; height:0; z-index:4; visibility:hidden; transition:visibility 0s linear .6s; }
+        .cap.open .cap-beads{ visibility:visible; transition-delay:0s; }
+        /* The bead only translates; the sphere scales; the label fades in after. Text never scales. */
+        .cap .bead{ position:absolute; left:0; top:0; width:128px; text-align:center; text-decoration:none; opacity:0;
+            transform:translate(-50%,-50%); transition:transform .38s cubic-bezier(.4,0,.6,1), opacity .22s ease; transition-delay:0ms; }
+        .cap.open .bead{ opacity:1; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty)));
+            transition:transform .75s cubic-bezier(.34,1.45,.6,1), opacity .35s ease; transition-delay:var(--d); }
+        .cap .bead-sphere{ width:70px; height:70px; border-radius:50%; margin:0 auto 9px; display:flex; align-items:center; justify-content:center;
+            transform:scale(.25); transition:transform .4s cubic-bezier(.3,1.4,.5,1), box-shadow .25s ease; transition-delay:0ms;
+            background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.7), rgba(255,255,255,0) 46%), var(--bead);
+            box-shadow:0 10px 22px rgba(0,0,0,.42), inset 0 -7px 14px rgba(0,0,0,.22), inset 0 4px 7px rgba(255,255,255,.45); }
+        .cap.open .bead-sphere{ transform:scale(1); transition-delay:var(--d); }
+        .cap .bead-sphere svg{ width:29px; height:29px; color:#11140f; opacity:.8; }
+        .cap.open .bead:hover .bead-sphere, .cap.open .bead:focus-visible .bead-sphere{ transform:scale(1.14) translateY(-3px); transition-delay:0ms;
+            box-shadow:0 16px 30px rgba(0,0,0,.5), inset 0 -7px 14px rgba(0,0,0,.22), inset 0 4px 7px rgba(255,255,255,.6); }
+        .cap .bead:focus-visible{ outline:none; }
+        .cap .bead:focus-visible .bead-sphere{ box-shadow:0 0 0 3px var(--warm-50), 0 0 0 6px var(--sage-700), 0 16px 30px rgba(0,0,0,.5); }
+        .cap .bead-label{ display:inline-block; font-size:.82rem; font-weight:600; color:var(--text-primary); background:rgba(30,35,30,.92);
+            padding:.26rem .7rem; border-radius:100px; border:1px solid rgba(199,208,199,.16); white-space:nowrap; line-height:1.3;
+            box-shadow:0 4px 12px rgba(0,0,0,.34); opacity:0; transform:translateY(6px); transition:opacity .22s ease, transform .22s ease; transition-delay:0ms; }
+        .cap.open .bead-label{ opacity:1; transform:none; transition-delay:calc(var(--d) + 240ms); }
+        .cap-hint{ position:absolute; left:50%; top:146px; transform:translateX(-50%); margin:0; font-size:.82rem; color:var(--text-muted);
+            letter-spacing:.02em; white-space:nowrap; transition:opacity .3s ease; }
+        .cap.open .cap-hint{ opacity:0; }
+        .cap-hint .hint-touch{ display:none; }
+        @media (hover:none){ .cap-hint .hint-desktop{ display:none } .cap-hint .hint-touch{ display:inline } }
+        .cap-browse{ display:inline-block; margin-top:.35rem; color:var(--text-secondary); font-size:.9rem; text-decoration:none;
+            border-bottom:1px solid transparent; transition:color .2s, border-color .2s; }
+        .cap-browse:hover, .cap-browse:focus-visible{ color:var(--sage-600); border-color:var(--sage-600); outline:none; }
+        .cap a::after{ content:none; }
         .hero-buttons-fallback{ display:none; }
-        .capsule-hint .hint-touch{ display:none; }
-        /* On phones/tablets the capsule shrinks and beads stack in a tighter grid (positions set in JS) */
         @media (max-width: 880px){
-            .capsule-hint .hint-desktop{ display:none; }
-            .capsule-hint .hint-touch{ display:inline; }
-            .capsule-nav{ width:100%; height:620px; margin-top:1rem; }
-            .pill{ width:248px; height:88px; }
-            .pill-half{ width:128px; height:88px; }
-            .pill-left{ border-radius:44px 12px 12px 44px; }
-            .pill-right{ border-radius:12px 44px 44px 12px; }
-            .ghost-beads{ gap:9px; padding-left:18px; }
-            .ghost-beads span{ width:17px; height:17px; }
-            .capsule-nav.open .pill-left{ transform:translateX(-44px) rotate(-9deg); }
-            .capsule-nav.open .pill-right{ transform:translateX(44px) rotate(9deg); }
-            .beads{ top:92px; }
-            .capsule-hint{ top:108px; }
-            .bead{ width:112px; }
-            .bead-sphere{ width:58px; height:58px; }
-            .bead-sphere svg{ width:24px; height:24px; }
-            .bead-label{ font-size:0.78rem; padding:0.22rem 0.6rem; }
+            .cap{ --closed-h:150px; margin-top:1rem; }
+            .cap-float, .cap-pill{ width:248px; height:88px; }
+            .half{ width:128px; height:88px; }
+            .half.left{ border-radius:44px 12px 12px 44px; }
+            .half.right{ border-radius:12px 44px 44px 12px; }
+            .cap.open .half.left{ transform:translateX(-54px) rotateY(-34deg) rotateZ(-7deg); }
+            .cap.open .half.right{ transform:translateX(54px) rotateY(34deg) rotateZ(7deg); }
+            .ghost{ gap:9px; padding-left:18px; } .ghost span{ width:17px; height:17px; }
+            .cap-shadow{ width:200px; height:22px; }
+            .cap-beads{ top:96px; } .cap-hint{ top:112px; }
+            .cap .bead{ width:112px; } .cap .bead-sphere{ width:58px; height:58px; } .cap .bead-sphere svg{ width:24px; height:24px; }
+            .cap .bead-label{ font-size:.78rem; padding:.22rem .6rem; }
+        }
+        @media (prefers-reduced-motion: reduce){
+            .cap-float, .cap-shadow, .cap.open .flash{ animation:none !important; }
+            .cap *, .cap *::after{ transition-duration:.01ms !important; transition-delay:0ms !important; }
         }
 
         .btn {
@@ -1321,26 +1338,30 @@
             <h1>Learn pediatric ID, <span class="highlight">one capsule at a time</span></h1>
             <p>Literature, stewardship, and quality improvement that double as teaching tools — plus assessments built for students and residents.</p>
 
-            <!-- Capsule navigation: hover to open, click to pin. Mobile falls back to the buttons below. -->
-            <div class="capsule-nav" id="capsuleNav">
-                <div class="pill" id="capsulePill" role="button" tabindex="0" aria-label="Open navigation capsule" aria-expanded="false">
-                    <div class="pill-half pill-left"></div>
-                    <div class="pill-half pill-right">
-                        <div class="ghost-beads">
-                            <span style="background:var(--accent-lavender)"></span>
-                            <span style="background:#7eb8a8"></span>
-                            <span style="background:var(--accent-gold)"></span>
-                            <span style="background:var(--accent-sky)"></span>
-                            <span style="background:var(--accent-coral)"></span>
-                        </div>
+            <!-- Capsule navigation: hover to open, click to keep open. Touch taps. The stage grows on open. -->
+            <div class="cap" id="capsuleNav" role="navigation" aria-label="Learning tools">
+                <div class="cap-stage" id="capsuleStage">
+                    <div class="cap-float">
+                        <button class="cap-pill" id="capsulePill" type="button" aria-expanded="false" aria-controls="capsuleBeads" aria-label="Open the learning tools menu">
+                            <span class="half left"></span>
+                            <span class="half right">
+                                <span class="ghost">
+                                    <span style="background:var(--accent-lavender)"></span>
+                                    <span style="background:#7eb8a8"></span>
+                                    <span style="background:var(--accent-gold)"></span>
+                                    <span style="background:var(--accent-sky)"></span>
+                                    <span style="background:var(--accent-coral)"></span>
+                                </span>
+                            </span>
+                            <span class="seam"></span>
+                            <span class="flash"></span>
+                        </button>
+                        <div class="cap-shadow"></div>
                     </div>
-                    <div class="pill-seam"></div>
+                    <div class="cap-beads" id="capsuleBeads"></div>
+                    <div class="cap-hint"><span class="hint-desktop">Hover to open · click to keep it open</span><span class="hint-touch">Tap the capsule to open</span></div>
                 </div>
-                <div class="beads" id="capsuleBeads"></div>
-                <div class="capsule-hint">
-                    <span class="hint-desktop">↓ hover to open · click to pin</span>
-                    <span class="hint-touch">tap the capsule to open</span>
-                </div>
+                <a class="cap-browse" href="#tools">or browse all tools ↓</a>
             </div>
 
             <!-- No-JS fallback: the capsule needs JS, so show buttons when it's unavailable -->
@@ -1694,10 +1715,10 @@
     <script>
         // ─── Capsule navigation ───────────────────────────────
         (function(){
-            const nav = document.getElementById('capsuleNav');
+            const cap = document.getElementById('capsuleNav');
             const pill = document.getElementById('capsulePill');
             const beadsEl = document.getElementById('capsuleBeads');
-            if(!nav || !pill || !beadsEl) return;
+            if(!cap || !pill || !beadsEl) return;
 
             const TABS = [
                 { label:'Literature Digest', href:'literature-monitor/', color:'var(--accent-lavender)',
@@ -1719,83 +1740,101 @@
                 { label:'Mentee LC', href:'#mentee-lc', color:'#d48fa5',
                   icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
             ];
-            const n = TABS.length, mid = (n-1)/2;
-            const beadEls = TABS.map(function(t,i){
+            const SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+            const n = TABS.length, mid = (n - 1) / 2;
+            const beads = TABS.map(function(t, i){
                 const a = document.createElement('a');
-                a.className = 'bead'; a.href = t.href;
-                a.style.transitionDelay = (i*55 + 120)+'ms';
-                a.innerHTML =
-                    '<div class="bead-sphere" style="--bead:'+t.color+'">'
-                    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+t.icon+'</svg>'
-                    + '</div><div class="bead-label">'+t.label+'</div>';
+                a.className = 'bead'; a.href = t.href; a.tabIndex = -1;
+                a.style.setProperty('--d', (i * 50 + 90) + 'ms');
+                a.innerHTML = '<span class="bead-sphere" style="--bead:' + t.color + '">' + SVG_OPEN + t.icon + '</svg></span>'
+                            + '<span class="bead-label">' + t.label + '</span>';
                 beadsEl.appendChild(a);
                 return a;
             });
 
-            // Position the beads responsively: a wide staggered fan on desktop,
-            // a compact 2-column grid on phones. Re-run on resize/orientation change.
-            function layoutBeads(){
-                const rows = Math.ceil(n / 2);
-                // Work out how wide the fan can be. Beads extend rightward from the
-                // origin, so the room on that side is short by one bead width. Without
-                // this the fixed 140px step walks the outermost beads off-screen once
-                // there are enough of them, and the body clips overflow-x.
-                const beadW = (beadEls[0] && beadEls[0].offsetWidth) || 128;
-                const beadH = (beadEls[0] && beadEls[0].offsetHeight) || 106;
+            // Position the beads: a staggered fan on desktop, a two-column grid on phones (or
+            // wherever the fan would collide with itself). Sets the open height of the stage.
+            function layout(){
+                const beadW = beads[0].offsetWidth || 128, beadH = beads[0].offsetHeight || 106;
                 const originX = beadsEl.getBoundingClientRect().left;
                 const room = Math.min(originX, window.innerWidth - originX - beadW) - 8;
-                const step = Math.min(140, room / Math.max(mid, 0.5));
-                // Phones — and any width where the fan would collide with itself — get
-                // the stacked grid instead.
+                const step = Math.min(140, room / Math.max(mid, .5));
                 const narrow = window.matchMedia('(max-width: 880px)').matches || step < 96;
-                // The grid stacks two per row; grow the capsule when the rows outrun
-                // the 620px height the stylesheet gives it, so the last row doesn't
-                // spill past the capsule and onto the section below.
-                const originY = beadsEl.getBoundingClientRect().top - nav.getBoundingClientRect().top;
-                if (narrow) nav.style.height = Math.max(620, originY + 60 + (rows - 1) * 118 + beadH + 8) + 'px';
-                else nav.style.removeProperty('height');
-                beadEls.forEach(function(a,i){
+                let maxY = 0;
+                beads.forEach(function(a, i){
                     let tx, ty;
-                    if (narrow){
-                        const col = (i % 2 === 0) ? -1 : 1;   // left / right column
-                        const row = Math.floor(i/2);
-                        tx = col * 84;
-                        ty = 60 + row * 118;
-                    } else {
-                        tx = (i - mid) * step;
-                        ty = 70 + (i % 2 === 1 ? 90 : 0);     // stagger odd beads downward
-                    }
-                    a.style.setProperty('--tx', tx.toFixed(1)+'px');
-                    a.style.setProperty('--ty', ty.toFixed(1)+'px');
+                    if (narrow){ tx = (i % 2 === 0 ? -1 : 1) * 84; ty = 60 + Math.floor(i / 2) * 118; }
+                    else { tx = (i - mid) * step; ty = 70 + (i % 2 === 1 ? 90 : 0); }
+                    a.style.setProperty('--tx', tx.toFixed(1) + 'px');
+                    a.style.setProperty('--ty', ty.toFixed(1) + 'px');
+                    maxY = Math.max(maxY, ty);
                 });
+                cap.style.setProperty('--open-h', (beadsEl.offsetTop + maxY + beadH / 2 + 28) + 'px');
             }
-            layoutBeads();
-            let resizeT;
-            window.addEventListener('resize', function(){ clearTimeout(resizeT); resizeT = setTimeout(layoutBeads, 150); });
+            layout();
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+            let resizeT; window.addEventListener('resize', function(){ clearTimeout(resizeT); resizeT = setTimeout(layout, 120); });
 
-            const isTouch = window.matchMedia('(hover: none)').matches;
-            let closeTimer;
-            function openNav(){ clearTimeout(closeTimer); nav.classList.add('open'); pill.setAttribute('aria-expanded','true'); }
-            function closeNav(){ nav.classList.remove('open','pinned'); pill.setAttribute('aria-expanded','false'); }
-            // Hover-to-open only where hover exists (desktop). Touch devices use tap.
-            if (!isTouch){
-                nav.addEventListener('mouseenter', openNav);
-                nav.addEventListener('mouseleave', function(){
-                    if (nav.classList.contains('pinned')) return;
-                    clearTimeout(closeTimer);
-                    closeTimer = setTimeout(closeNav, 260);
-                });
+            let openT, closeT, demoT, pinned = false, kb = false;
+            document.addEventListener('keydown', function(){ kb = true; }, true);
+            document.addEventListener('pointerdown', function(){ kb = false; }, true);
+
+            function setOpen(v, o){
+                o = o || {};
+                clearTimeout(openT); clearTimeout(closeT); clearTimeout(demoT);
+                if (cap.classList.contains('open') === v && !o.force) return;
+                cap.classList.toggle('open', v);
+                pill.setAttribute('aria-expanded', String(v));
+                beads.forEach(function(a){ a.tabIndex = v ? 0 : -1; });
+                if (!v){ pinned = false; cap.classList.remove('pinned'); }
+                if (v && o.focusFirst) setTimeout(function(){ beads[0].focus({ preventScroll:true }); }, 180);
+                if (!v && o.returnFocus) pill.focus({ preventScroll:true });
             }
-            // Tap/click the capsule to toggle open (works on touch and desktop).
-            pill.addEventListener('click', function(e){
-                e.stopPropagation();
-                const willOpen = !nav.classList.contains('open');
-                nav.classList.toggle('pinned', willOpen);
-                if (willOpen) openNav(); else closeNav();
+            // Hover with intent (desktop only): the pill opens it, the stage keeps it open.
+            const hoverable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            if (hoverable){
+                pill.addEventListener('pointerenter', function(){ clearTimeout(closeT); openT = setTimeout(function(){ setOpen(true); }, 110); });
+                pill.addEventListener('pointerleave', function(){ clearTimeout(openT); });
+                cap.addEventListener('pointerenter', function(){ clearTimeout(closeT); });
+                cap.addEventListener('pointerleave', function(){ if (pinned) return; clearTimeout(openT); closeT = setTimeout(function(){ setOpen(false); }, 320); });
+            }
+            // Tap/click toggles and keeps it open (works on touch and desktop; Enter/Space via the button).
+            pill.addEventListener('click', function(){
+                const willOpen = !cap.classList.contains('open');
+                pinned = willOpen; cap.classList.toggle('pinned', willOpen);
+                setOpen(willOpen, { focusFirst: willOpen && kb, force:true });
+                if (willOpen) pinned = true;
             });
-            pill.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pill.click(); }});
-            document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeNav(); });
-            document.addEventListener('click', function(e){ if(!nav.contains(e.target)) closeNav(); });
+            document.addEventListener('keydown', function(e){
+                if (e.key === 'Escape' && cap.classList.contains('open')) setOpen(false, { returnFocus: cap.contains(document.activeElement) });
+            });
+            beadsEl.addEventListener('keydown', function(e){
+                const i = beads.indexOf(document.activeElement); if (i < 0) return;
+                let j = null;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % n;
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + n) % n;
+                if (e.key === 'Home') j = 0;
+                if (e.key === 'End') j = n - 1;
+                if (j !== null){ e.preventDefault(); beads[j].focus(); }
+            });
+            cap.addEventListener('focusout', function(e){
+                if (!cap.contains(e.relatedTarget) && !pinned && cap.classList.contains('open')) setOpen(false);
+            });
+            document.addEventListener('click', function(e){ if (!cap.contains(e.target)) setOpen(false); });
+
+            // First visit this session: open once after the hero settles and close again, so
+            // visitors learn what the capsule does. Skipped under reduced motion.
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let seen = false;
+            try { seen = sessionStorage.getItem('capsule-intro') === '1'; } catch (e) {}
+            if (!seen && !reduceMotion){
+                try { sessionStorage.setItem('capsule-intro', '1'); } catch (e) {}
+                demoT = setTimeout(function(){
+                    if (cap.classList.contains('open')) return;
+                    setOpen(true);
+                    demoT = setTimeout(function(){ if (!pinned && !cap.matches(':hover')) setOpen(false); }, 2300);
+                }, 1400);
+            }
         })();
 
         // Mobile menu toggle
