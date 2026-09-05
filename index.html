@@ -1800,10 +1800,12 @@
             }
             // Tap/click toggles and keeps it open (works on touch and desktop; Enter/Space via the button).
             pill.addEventListener('click', function(){
-                const willOpen = !cap.classList.contains('open');
+                const isOpen = cap.classList.contains('open');
+                // Hover already opened it: the click pins rather than toggles, as the hint promises.
+                if (isOpen && !pinned){ pinned = true; cap.classList.add('pinned'); return; }
+                const willOpen = !isOpen;
                 pinned = willOpen; cap.classList.toggle('pinned', willOpen);
                 setOpen(willOpen, { focusFirst: willOpen && kb, force:true });
-                if (willOpen) pinned = true;
             });
             document.addEventListener('keydown', function(e){
                 if (e.key === 'Escape' && cap.classList.contains('open')) setOpen(false, { returnFocus: cap.contains(document.activeElement) });
