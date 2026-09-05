@@ -12,6 +12,7 @@
    Invented people and cases throughout. */
 
 const { chromium } = require('playwright');
+const { launchOptions } = require('./browser');
 const fs = require('fs');
 const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
@@ -76,7 +77,7 @@ const BOARD = { objective: 'Fever and a limp in a toddler', struck: ['transient 
 const CARD = { session: '2026-09-03', items: [{ code: 'A1', met: true }] };
 
 (async () => {
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const b = await chromium.launch(launchOptions());
   const out = [];
   const t = (n, c, x) => out.push({ n, p: !!c, x: x === undefined ? '' : JSON.stringify(x) });
   const errs = [];

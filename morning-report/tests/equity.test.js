@@ -1,11 +1,12 @@
 const { chromium } = require('playwright');
+const { launchOptions } = require('./browser');
 const fs = require('fs');
 const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
 const TODAY = '2026-12-01';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch(launchOptions());
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   const errs = [];

@@ -1,10 +1,11 @@
 const { chromium } = require('playwright');
+const { launchOptions } = require('./browser');
 const fs = require('fs');
 const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch(launchOptions());
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   const errs = [];
@@ -145,7 +146,9 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
   const fb = await page.evaluate((allowed) => {
     const local = Object.keys(localStorage)
       .filter(k => !k.startsWith('__fakefs') && allowed.indexOf(k) === -1);
-    const session = Object.keys(sessionStorage).filter(k => !k.startsWith('__fake'));
+    // capsule-intro is the landing page's once-per-session flag (same origin,
+    // visited earlier in this run); it is not the module's and not a draft.
+    const session = Object.keys(sessionStorage).filter(k => !k.startsWith('__fake') && k !== 'capsule-intro');
     let draft = null;
     try { draft = JSON.parse(sessionStorage.getItem('mr.feedback.draft')); } catch (e) { /* none */ }
     return { local, session, draft };

@@ -74,21 +74,21 @@
       <span class="note">Read your card before report. It is one page and it takes four minutes.</span>
     </div>
     <div class="tools">
-      <a class="tool lead" href="roles/pgy1/">
+      <a class="tool lead" href="roles/pgy1/" data-role="pgy1">
         <h3>PGY-1 discussant <span class="slot">0:07</span></h3>
-        <p>The first pass. Four deliverables in order: problem representation, three to four diagnoses
+        <p data-fill="lede">The first pass. Four deliverables in order: problem representation, three to four diagnoses
           with the reason each is on the list, the can't-miss named as such, and the one piece of data
           you most want. A defensible four beats an unfalsifiable twelve. Nobody interrupts you.</p>
       </a>
-      <a class="tool lead" href="roles/senior/">
+      <a class="tool lead" href="roles/senior/" data-role="senior">
         <h3>Senior discussant <span class="slot">0:11</span></h3>
-        <p>The second pass. You are not producing a better list — you are turning the intern's list
+        <p data-fill="lede">The second pass. You are not producing a better list — you are turning the intern's list
           into an argument. Five moves: organise into a framework, prune out loud with the reason,
           apply the illness script, name the discriminating test, state confidence, trigger and bias.</p>
       </a>
-      <a class="tool" href="roles/framework/">
+      <a class="tool" href="roles/framework/" data-role="framework">
         <h3>Frameworks</h3>
-        <p>The eight the senior can offer at 0:11 — anatomic by level or by layer, physiologic,
+        <p data-fill="frameworks">The eight the senior can offer at 0:11 — anatomic by level or by layer, physiologic,
           pre/intra/post, mechanism, age-anchored, tempo, triage — each with when it is the right one
           and what it sounds like out loud. Named before the list, or it is a label rather than a tool.</p>
       </a>
@@ -167,6 +167,37 @@
 
 <script src="assets/remote.js?v=7"></script>
 <script src="assets/store.js?v=7"></script>
-<script>MRStore.mountBar("mr-bar");</script>
+<script src="assets/roster.js?v=7"></script>
+<script src="assets/content.js?v=7"></script>
+<script>
+MRStore.mountBar("mr-bar");
+/* The two discussant tiles and the frameworks tile say what the cards say.
+   The text in the HTML is the fallback for when roles.json cannot load;
+   otherwise it is rendered from the same file as the cards themselves,
+   so editing a card edits the front page. */
+MRContent.load().then(function(){
+  var blockId = MRRoster.blockFor(MRStore.today()).id;
+  function sentence(s){ s = String(s || "").trim(); return s && !/[.!?]$/.test(s) ? s + "." : s; }
+  ["pgy1", "senior"].forEach(function(slug){
+    var r = MRContent.role(slug), tile = document.querySelector('[data-role="' + slug + '"]');
+    if (!r || !tile) return;
+    var slot = tile.querySelector(".slot"), tag = MRContent.taglineFor(slug, blockId);
+    if (slot && tag) slot.textContent = tag.split(" ")[0];
+    var sec = (r.sections || [])[0], steps = [];
+    if (sec) steps = (sec.items || []).map(function(it){
+      var t = typeof it === "string" ? it : it.move;
+      return String(t || "").split(/ — | – |: /)[0].replace(/\.$/, "");
+    });
+    var p = tile.querySelector('[data-fill="lede"]');
+    if (p) p.textContent = sentence(r.lede) + (steps.length
+      ? " " + sentence((sec.title || "In order") + ": " + steps.join("; ").toLowerCase()) : "");
+  });
+  var fws = MRContent.frameworks(), fp = document.querySelector('[data-fill="frameworks"]');
+  if (fws.length && fp) fp.textContent =
+    "The " + (["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][fws.length] || fws.length) + " the senior can offer at 0:11 — " +
+    fws.map(function(f){ return f.name.toLowerCase(); }).join(", ") +
+    " — each with when it is the right one and what it sounds like out loud. Named before the list, or it is a label rather than a tool.";
+});
+</script>
 </body>
 </html>

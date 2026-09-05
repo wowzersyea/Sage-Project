@@ -12,15 +12,15 @@
    picked up by the rollup like any typed comment. */
 
 const { chromium } = require('playwright');
+const { launchOptions } = require('./browser');
 const fs = require('fs');
 const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
 
 (async () => {
-  const browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  const browser = await chromium.launch(launchOptions({
     args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream']
-  });
+  }));
   const ctx = await browser.newContext({ permissions: ['microphone'] });
   const page = await ctx.newPage();
   const errs = [];

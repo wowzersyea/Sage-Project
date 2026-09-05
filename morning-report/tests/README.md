@@ -13,6 +13,11 @@ node tests/run.js               # or: node tests/store.test.js
 
 Each suite exits non-zero on a failure or on any console error.
 
+The browser comes from `tests/browser.js`: `PW_CHROME` if set, else CI's pinned Chromium,
+else a Chrome or Edge already on the machine, else Playwright's own download
+(`npx playwright install chromium`). A Windows or Mac laptop with Chrome installed needs
+nothing beyond `npm install playwright`.
+
 | Suite | What it holds down |
 |---|---|
 | `store.test.js` | Folder round-trips, nesting, listing, deletion, and that the handle survives a reload |

@@ -279,14 +279,7 @@
         <label>Framework</label>
         <select id="fwSel">
           <option value="">&mdash; senior names it before listing &mdash;</option>
-          <option>Anatomic &mdash; by level</option>
-          <option>Anatomic &mdash; by layer</option>
-          <option>Physiologic</option>
-          <option>Pre / intra / post</option>
-          <option>Mechanistic category</option>
-          <option>Age-anchored</option>
-          <option>Tempo</option>
-          <option>Triage-based</option>
+          <!-- the eight frameworks are filled in from content/roles.json -->
           <option value="__other">Other&hellip;</option>
         </select>
         <input id="fwTxt" placeholder="or type it">
@@ -1098,6 +1091,15 @@ MRStore.whenReady.then(function(){
   paintSave();
   return MRContent.load();
 }).then(function(){
+  /* The framework list lives in roles.json with the cards; the options
+     go in ahead of "Other" and before any saved board is restored, since
+     restore() matches a saved framework by option text. */
+  var other = fwSel.querySelector('option[value="__other"]');
+  MRContent.frameworks().forEach(function(f){
+    var o = document.createElement("option");
+    o.textContent = f.name;
+    fwSel.insertBefore(o, other);
+  });
   var block = MRContent.blockForDate($("date").value || MRStore.today());
   if (block){
     $("slot-pgy1").textContent = MRContent.fmt(MRContent.runOfShow(block.id).filter(function(r){ return r.segment === "First pass"; })[0].start);

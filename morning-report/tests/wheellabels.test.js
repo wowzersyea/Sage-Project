@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { launchOptions } = require('./browser');
 const fs = require('fs');
 const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
@@ -26,7 +27,7 @@ function rosterOf(n) {
 }
 
 (async () => {
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const b = await chromium.launch(launchOptions());
   const ctx = await b.newContext();
   const page = await ctx.newPage();
   const errs = [];

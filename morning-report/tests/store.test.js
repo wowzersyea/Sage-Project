@@ -1,10 +1,11 @@
 const { chromium } = require('playwright');
+const { launchOptions } = require('./browser');
 const fs = require('fs');
 const BASE = 'http://localhost:8899';
 const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch(launchOptions());
   const page = await browser.newPage();
   const errs = [];
   page.on('pageerror', e => errs.push('pageerror: ' + e.message));
