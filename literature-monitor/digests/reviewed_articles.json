@@ -203,9 +203,26 @@
     "*Clinical Infectious Diseases*, Vol. 83, Issue 2, August 15, 2026, pp. [confirmed CID Vol. 83, Issue 2] | https://doi.org/10.1093/cid/[confirmed within CID 83(2) TOC]",
     "*JAMA*, Published September 2, 2026 | https://doi.org/10.1001/jama.2026.17871",
     "Immediate clinical action items for pediatric ID and primary care:",
-    "Ongoing monitoring reminders from prior periods:"
+    "Ongoing monitoring reminders from prior periods:",
+    "No unambiguously practice-changing publications were identified this period.",
+    "\u26a0\ufe0f IDSA/PIDS 2026 CAP Guideline Update \u2014 CID Publication Status Note",
+    "The IDSA/PIDS 2026 Guideline Update on the Management of Community-Acquired Pneumonia (CAP) in Infants and Children Older than 3 Months of Age was originally posted February 24, 2026 on the IDSA website and appeared as a CID advance article on March 16, 2026 (DOI: https://doi.org/10.1093/cid/ciag186). This is an advance article and will update its citation information once assigned to a CID issue. A companion article specifically addressing the use of tPA and DNase (or tPA alone) for fibrinolysis in pediatric complicated CAP was simultaneously released (DOI: https://doi.org/10.1093/cid/ciag191).",
+    "This guideline was published prior to the digest window and is therefore not reviewed in full here.",
+    "**Access:** DOI https://doi.org/10.1093/cid/ciag186 (Part 1) and https://doi.org/10.1093/cid/ciag191 (Part 2 \u2014 fibrinolysis). Both are available at Oxford Academic. Access status should be confirmed at the institutional level; the IDSA website provides free access to member institutions. Full guideline-format review is deferred to programs that have not yet implemented (prior to this digest's window). **Clinical bottom line:** Pediatric ID and hospital medicine programs that manage complicated CAP should confirm local protocols are concordant with the 2026 update, particularly regarding pleural drainage indications, fibrinolytic agent selection, and duration of antibiotic therapy for empyema.",
+    "*The Pediatric Infectious Disease Journal*, Published Online September 14, 2026 | https://doi.org/10.1097/INF.0000000000005XXX *(confirm final DOI at journals.lww.com/pidj)*",
+    "*The Pediatric Infectious Disease Journal*, Vol. 45(10), October 2026, pp. 885\u2013887 (Published Online ahead of print, confirmed within window) | https://doi.org/10.1097/INF.0000000000005259",
+    "*The Pediatric Infectious Disease Journal*, Vol. 45(10), October 2026, pp. e406\u2013e411 (DOI confirmed; advance online June 17, 2026; formally appearing in October 2026 print within this review window as online-first) | https://doi.org/10.1097/INF.0000000000005271",
+    "*Antimicrobial Agents and Chemotherapy*, Published Online September 3, 2026 | https://doi.org/10.1128/aac.00272-26",
+    "*Antimicrobial Agents and Chemotherapy*, Published Online September 11, 2026 | https://doi.org/10.1128/aac.00278-26",
+    "*MMWR Morbidity and Mortality Weekly Report*, Vol. 75, No. 35, September 10, 2026 | https://doi.org/10.15585/mmwr.mm7535a2",
+    "Outbreak Context (Updated):",
+    "Uganda index case context (from Nature Medicine, June 2026):",
+    "Pediatric Implications:",
+    "[OPEN ACCESS \u2014 but as a Notes from the Field report, full quantitative clinical data are limited to the 21-case series; comprehensive clinical outcomes data from Uganda are expected in subsequent peer-reviewed publications.]",
+    "*Emerging Infectious Diseases*, Vol. 32, No. 9, September 2026, pp. 1508\u20131510 | https://doi.org/10.3201/eid3209.260871",
+    "No new FDA drug safety communications, pediatric drug shortages, or novel resistance alerts directly relevant to pediatric ID/ASP practice were identified with confirmed publication dates of September 06\u201320, 2026."
   ],
-  "last_run": "2026-09-06T09:48:31.102457",
+  "last_run": "2026-09-20T10:12:30.727357",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -1567,6 +1584,136 @@
       "key_finding": "The 2026 Bundibugyo ebolavirus outbreak in the DRC has reached 6,342 confirmed cases with 3,072 deaths (48% case fatality rate) as of September 3, 2026, making it the second-largest Ebola outbreak ever recorded, with no approved vaccine or proven antiviral therapy available and critical public health response targets unmet.",
       "study_type": "case-series",
       "digest_date": "2026-09-06"
+    },
+    {
+      "title": "Congenital Syphilis Diagnosis and Management at a Tertiary Care Center in Alabama: Concordance with CDC Recommendations",
+      "doi": "https://doi.org/10.1097/INF.0000000000005XXX",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "September 14, 2026",
+      "topics": [
+        "congenital-syphilis",
+        "maternal-treatment",
+        "diagnostic-stewardship",
+        "guideline-concordance",
+        "neonatal-screening"
+      ],
+      "key_finding": "Significant variability in congenital syphilis risk categorization and management was observed at a tertiary care center, with diagnostic uncertainty and incomplete maternal data contributing to prolonged hospitalization and surveillance gaps.",
+      "study_type": "cohort",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Long COVID-19 in Hospitalized and Ambulatory Children in Jamaica",
+      "doi": "https://doi.org/10.1097/INF.0000000000005259",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "Published online within September 06\u201320, 2026 window",
+      "topics": [
+        "long-covid-19",
+        "post-acute-sequelae",
+        "resource-limited-settings",
+        "Caribbean-epidemiology",
+        "pandemic-burden"
+      ],
+      "key_finding": "A 47.3% incidence of long COVID-19 in unvaccinated, resource-limited Jamaican children highlights significant symptom burden in under-resourced populations, with gastrointestinal and neurological symptoms as predominant predictors.",
+      "study_type": "cohort",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Burden of COVID-19 in Korean Children: A Retrospective Observational Study Using Real-World Data",
+      "doi": "https://doi.org/10.1097/INF.0000000000005271",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "Published online June 17, 2026; formally in Vol. 45(10), October 2026",
+      "topics": [
+        "covid-19-severity",
+        "omicron-burden",
+        "pediatric-risk-factors",
+        "vaccination-effectiveness",
+        "mis-c"
+      ],
+      "key_finding": "Among 239,334 pediatric COVID-19 cases in South Korea, children aged 1\u20134 years experienced the greatest severity during Omicron era; cardiovascular disease, neurologic disorders, and obesity were independent risk factors for severe outcomes.",
+      "study_type": "cohort",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Population Pharmacokinetics of Piperacillin/Tazobactam in Critically Ill Pediatric Patients",
+      "doi": "https://doi.org/10.1128/aac.00272-26",
+      "journal": "Antimicrobial Agents and Chemotherapy",
+      "date": "September 3, 2026",
+      "topics": [
+        "piperacillin-tazobactam",
+        "pharmacokinetics",
+        "target-attainment",
+        "critically-ill-children",
+        "infusion-strategy",
+        "precision-dosing"
+      ],
+      "key_finding": "Only 22.6% of critically ill pediatric patients achieved simultaneous piperacillin and tazobactam target exposures with standard dosing at MIC=16 mg/L; continuous infusion consistently achieved highest target drug exposures across all scenarios.",
+      "study_type": "other",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Development of a Dosing Algorithm Integrating Pharmacogenetic Markers and Inflammation for Individualization of Initial Voriconazole Maintenance Doses",
+      "doi": "https://doi.org/10.1128/aac.00278-26",
+      "journal": "Antimicrobial Agents and Chemotherapy",
+      "date": "September 11, 2026",
+      "topics": [
+        "voriconazole",
+        "pharmacogenetics",
+        "cyp2c19",
+        "invasive-aspergillosis",
+        "therapeutic-drug-monitoring",
+        "precision-dosing"
+      ],
+      "key_finding": "A multiparametric dosing algorithm integrating CYP2C19 genotype and inflammatory markers improves prediction of initial voriconazole maintenance doses needed to achieve early therapeutic trough concentrations.",
+      "study_type": "other",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Notes from the Field: Clinical Characteristics of Patients with Ebola Disease Caused by Bundibugyo Virus \u2014 Uganda, 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7535a2",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "September 10, 2026",
+      "topics": [
+        "bundibugyo-virus",
+        "ebola-disease",
+        "outbreak-response",
+        "hemorrhagic-fever",
+        "african-epidemiology"
+      ],
+      "key_finding": "Clinical characterization of the 2026 Uganda Bundibugyo virus disease outbreak, now the second-largest Ebola outbreak ever recorded with 5,458 confirmed DRC cases and 48% case-fatality rate, lacking established effective treatments.",
+      "study_type": "case-series",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Southern Tick\u2013Associated Rash Illness in a Pediatric Patient, New York, USA, 2025",
+      "doi": "https://doi.org/10.3201/eid3209.260871",
+      "journal": "Emerging Infectious Diseases",
+      "date": "September 2026",
+      "topics": [
+        "southern-tick-associated-rash-illness",
+        "borrelia-lonestari",
+        "lone-star-tick",
+        "erythema-migrans",
+        "geographic-expansion"
+      ],
+      "key_finding": "Documentation of southern tick-associated rash illness in New York with Borrelia lonestari detection in the implicated tick illustrates northward geographic expansion of Amblyomma americanum and STARI into areas where Lyme disease is endemic.",
+      "study_type": "case-series",
+      "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Pediatric Tuberculosis Care Outcomes in a Tertiary Care Center, France, 2014\u20132024",
+      "doi": "",
+      "journal": "Emerging Infectious Diseases",
+      "date": "September 2026",
+      "topics": [
+        "tuberculosis",
+        "pediatric-treatment",
+        "treatment-outcomes",
+        "adherence",
+        "high-income-setting"
+      ],
+      "key_finding": "Among 123 pediatric tuberculosis patients in a French tertiary care center, only 60.9% achieved successful treatment outcomes, with 39.1% experiencing unfavorable outcomes including treatment failure, loss to follow-up, and death due to dosing errors and adherence barriers.",
+      "study_type": "cohort",
+      "digest_date": "2026-09-20"
     }
   ]
 }
