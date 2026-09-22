@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>ASP Radar | Sage Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--sage-300:#4a5a4b;--sage-400:#6a806c;--sage-500:#7fa882;--sage-600:#8fbf92;--sage-700:#a8d4ab;--sage-900:#e8f5e9;
+--accent-coral:#e07a5f;--accent-gold:#d4a574;--accent-sky:#81b0c4;--accent-lavender:#b8a5d4;
+--text-primary:#e0e8e0;--text-secondary:#9bb09d;--text-muted:#6a806c;--surface:#181c18;--surface-raised:#1e231e;--bg:#111411;
+--radius-sm:8px;--radius-md:12px;--radius-lg:20px;--shadow-md:0 4px 12px rgba(0,0,0,.3)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text-primary);font-family:'Outfit',system-ui,sans-serif;line-height:1.55;min-height:100vh}
+a{color:var(--sage-600)}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 18px 80px}
+h1{font-family:'Source Serif 4',Georgia,serif;font-weight:600;font-size:1.9rem;color:var(--sage-900)}
+h2{font-family:'Source Serif 4',Georgia,serif;font-weight:600;font-size:1.25rem;color:var(--sage-800,#c5e5c7);margin:26px 0 12px}
+.sub{color:var(--text-secondary);font-size:.95rem}
+.gate{max-width:440px;margin:14vh auto;background:var(--surface-raised);border:1px solid var(--sage-300);border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-md);text-align:center}
+.gate p{color:var(--text-secondary);margin:10px 0 18px}
+input,textarea,select{width:100%;background:var(--surface);color:var(--text-primary);border:1px solid var(--sage-300);border-radius:var(--radius-sm);padding:10px 12px;font:inherit}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--sage-500);border-color:transparent}
+.btn{display:inline-block;background:var(--sage-500);color:#0f140f;border:0;border-radius:var(--radius-sm);padding:10px 18px;font:inherit;font-weight:600;cursor:pointer;margin-top:12px}
+.btn:hover{background:var(--sage-600)} .btn.ghost{background:transparent;color:var(--sage-600);border:1px solid var(--sage-300)}
+.err{color:var(--accent-coral);min-height:1.4em;margin-top:8px;font-size:.9rem}
+.hdr{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.counts{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:600;background:var(--surface-raised);border:1px solid var(--sage-300);color:var(--text-secondary)}
+.pill.idea{border-color:var(--accent-gold);color:var(--accent-gold)} .pill.track{border-color:var(--accent-sky);color:var(--accent-sky)} .pill.skip{color:var(--text-muted)}
+.pill.warn{border-color:var(--accent-coral);color:var(--accent-coral)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 10px}
+.tab{background:transparent;color:var(--text-secondary);border:1px solid var(--sage-300);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
+.tab.active{background:var(--sage-500);color:#0f140f;border-color:var(--sage-500);font-weight:600}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px} .toolbar input{max-width:360px}
+.card{background:var(--surface-raised);border:1px solid var(--sage-300);border-radius:var(--radius-md);padding:16px 18px;margin-bottom:12px}
+.card h3{font-family:'Source Serif 4',Georgia,serif;font-size:1.08rem;font-weight:600;margin-bottom:4px} .card h3 a{color:var(--sage-900);text-decoration:none} .card h3 a:hover{text-decoration:underline}
+.meta{color:var(--text-muted);font-size:.85rem;margin-bottom:8px}
+.scores{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.kv{font-size:.93rem;margin:3px 0} .kv b{color:var(--sage-700);font-weight:500}
+details{margin-top:8px} summary{cursor:pointer;color:var(--sage-600);font-size:.9rem}
+blockquote{border-left:3px solid var(--sage-400);padding:4px 12px;margin:6px 0;color:var(--text-secondary);font-family:'Source Serif 4',Georgia,serif;font-size:.95rem}
+.chat{background:var(--surface-raised);border:1px solid var(--sage-300);border-radius:var(--radius-lg);padding:20px;margin-top:30px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:700px){.row{grid-template-columns:1fr}}
+.answer{white-space:pre-wrap;background:var(--surface);border:1px solid var(--sage-300);border-radius:var(--radius-md);padding:14px;margin-top:12px;min-height:60px;font-size:.95rem}
+.note{color:var(--text-muted);font-size:.82rem;margin-top:8px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px} .top a{text-decoration:none;color:var(--text-secondary);font-size:.9rem}
+</style>
+</head>
+<body>
+
+<!-- ── PASSCODE GATE ── -->
+<div id="gate" class="gate">
+  <h1>ASP Radar</h1>
+  <p>Antimicrobial stewardship literature watch and ideas board. Enter the passcode.</p>
+  <input id="pass" type="password" placeholder="Passcode" autocomplete="current-password">
+  <button class="btn" onclick="unlock()">Unlock</button>
+  <div id="gate-err" class="err"></div>
+  <p class="note"><a href="../">Back to Sage Project</a></p>
+</div>
+
+<!-- ── BOARD ── -->
+<div id="dash" class="wrap" style="display:none">
+  <div class="top"><a href="../">← Sage Project</a><button class="btn ghost" style="margin:0" onclick="logout()">Lock</button></div>
+  <div class="hdr">
+    <div><h1>ASP Radar</h1><div class="sub" id="gen">Loading…</div></div>
+    <div class="counts" id="counts"></div>
+  </div>
+  <div class="sub" id="watches"></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="toolbar"><input id="q" placeholder="Search title, journal, one-liner…" oninput="render()"><span class="note" id="shown"></span></div>
+  <div id="list"></div>
+
+  <div class="chat" id="chat">
+    <h2 style="margin-top:0">Ask the radar</h2>
+    <p class="sub">Questions go to the Spark's local model over your tailnet with the board's screened papers as context. Works on devices connected to the tailnet; the key is stored only in this browser.</p>
+    <details style="margin:10px 0"><summary>Connection settings</summary>
+      <div class="row" style="margin-top:8px">
+        <div><label class="note">Endpoint</label><input id="ep" value="https://spark-5bc8.taild6e506.ts.net/qwen/v1"></div>
+        <div><label class="note">Model</label><select id="model"><option value="local-fast-nothink">local-fast-nothink (27B, fast)</option><option value="local-fast">local-fast (27B, thinking)</option></select></div>
+      </div>
+      <div style="margin-top:8px"><label class="note">Spark key (LiteLLM virtual key, e.g. the sageproject-assessment key)</label><input id="key" type="password" placeholder="sk-…" onchange="saveSettings()"></div>
+    </details>
+    <textarea id="question" rows="3" placeholder="e.g. Which of the idea candidates could we pilot with order and culture data only? Cite PMIDs."></textarea>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="ask()" id="askbtn">Ask</button><span class="note" id="ctxnote"></span></div>
+    <div class="answer" id="answer">Answers appear here.</div>
+  </div>
+</div>
+
+<script>
+const BOARD_URL = 'board.enc.json';
+let BOARD = null, TAB = 'idea';
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function deriveKey(pw, saltB64, iter){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt: b64(saltB64), iterations: iter, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+async function openBoard(pw){
+  const res = await fetch(BOARD_URL, {cache:'no-store'});
+  if(!res.ok) throw new Error('board file missing (' + res.status + ')');
+  const blob = await res.json();
+  const key = await deriveKey(pw, blob.salt, blob.iter);
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv: b64(blob.iv)}, key, b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+document.getElementById('pass').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
+async function unlock(){
+  const pw = document.getElementById('pass').value; if(!pw) return;
+  const err = document.getElementById('gate-err'); err.textContent = 'Checking…';
+  try{ BOARD = await openBoard(pw); }
+  catch(e){ err.textContent = /missing/.test(e.message) ? e.message : 'Incorrect passcode.'; return; }
+  sessionStorage.setItem('aspRadarKey', pw); err.textContent='';
+  document.getElementById('gate').style.display='none'; document.getElementById('dash').style.display='block';
+  loadSettings(); renderHeader(); render();
+}
+function logout(){ sessionStorage.removeItem('aspRadarKey'); location.reload(); }
+
+function renderHeader(){
+  const c = BOARD.counts || {};
+  document.getElementById('gen').textContent = 'Generated ' + (BOARD.generated||'').replace('T',' ').slice(0,16) + ' · ' + (c.papers||0) + ' papers in the library, ' + (c.screened||0) + ' screened';
+  document.getElementById('counts').innerHTML = `<span class="pill idea">${c.idea||0} idea candidates</span><span class="pill track">${c.track||0} to track</span><span class="pill skip">${c.skip||0} skipped</span>`;
+  const w = BOARD.watches || {};
+  document.getElementById('watches').textContent = 'Watches: journal = ' + (w.journal||'') + ' · AI/CDS = ' + (w.ai||'') + ' · growth = ' + (w.growth||'');
+  const tabs = [['idea','Idea candidates'],['track','Track'],['skip','Skipped'],['all','All']];
+  document.getElementById('tabs').innerHTML = tabs.map(([k,l]) => `<button class="tab ${k===TAB?'active':''}" onclick="TAB='${k}';renderHeader();render()">${l}</button>`).join('');
+}
+function scorePills(it){
+  const p = [`Rel ${it.relevance}/5`,`Novel ${it.novelty}/5`,`AI ${it.ai}/5`,`Growth ${it.growth}/5`].map(x=>`<span class="pill">${x}</span>`);
+  p.push(`<span class="pill ${it.implementable?'idea':''}">${it.implementable?'implementable':'not implementable'}</span>`);
+  if(!it.quotes_verified) p.push('<span class="pill warn">quotes unverified</span>');
+  return p.join('');
+}
+function card(it){
+  const tags = (it.tags||[]).map(t=>({journal:'journal watch',ai:'AI/CDS',growth:'ASP growth'})[t]||t).join(', ');
+  const quotes = (it.quotes||[]).map(q=>`<blockquote>${esc(q)}</blockquote>`).join('');
+  return `<div class="card">
+    <h3><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h3>
+    <div class="meta">${esc(it.journal)} · ${esc(it.pubdate)} · PMID ${esc(it.pmid)} · ${esc(tags)} · <span class="pill ${it.verdict}">${it.verdict}</span></div>
+    <div class="scores">${scorePills(it)}</div>
+    <div class="kv"><b>One-liner:</b> ${esc(it.one_liner)}</div>
+    <div class="kv"><b>Intervention:</b> ${esc(it.intervention)}</div>
+    <div class="kv"><b>AI component:</b> ${esc(it.ai_component)}</div>
+    <div class="kv"><b>Data needed:</b> ${esc(it.data_needed)}</div>
+    <div class="kv"><b>Outcomes:</b> ${esc(it.outcomes)}</div>
+    <div class="kv"><b>Growth angle:</b> ${esc(it.growth_angle)}</div>
+    <details><summary>Quotes from the abstract</summary>${quotes||'<div class="note">none</div>'}</details>
+    <div style="margin-top:8px"><button class="btn ghost" style="margin:0;padding:6px 12px;font-size:.85rem" onclick="askAbout('${esc(it.pmid)}')">Ask about this paper</button></div>
+  </div>`;
+}
+function render(){
+  if(!BOARD) return;
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  let items = BOARD.items || [];
+  if(TAB!=='all') items = items.filter(i=>i.verdict===TAB);
+  if(q) items = items.filter(i => [i.title,i.journal,i.one_liner,i.intervention,i.pmid].join(' ').toLowerCase().includes(q));
+  document.getElementById('list').innerHTML = items.map(card).join('') || '<div class="note">Nothing here.</div>';
+  document.getElementById('shown').textContent = items.length + ' shown';
+}
+
+/* ── chat ── */
+function loadSettings(){ const k = localStorage.getItem('aspSparkKey'); if(k) document.getElementById('key').value = k; const ep = localStorage.getItem('aspSparkEp'); if(ep) document.getElementById('ep').value = ep; }
+function saveSettings(){ localStorage.setItem('aspSparkKey', document.getElementById('key').value.trim()); localStorage.setItem('aspSparkEp', document.getElementById('ep').value.trim()); }
+function askAbout(pmid){ document.getElementById('question').value = `Summarise PMID ${pmid} for our stewardship committee: what it did, what it would take to implement here, and what data we would need. Cite the PMID.`; document.getElementById('chat').scrollIntoView({behavior:'smooth'}); }
+function context(){
+  const items = (BOARD.items||[]).filter(i=>i.verdict!=='skip').slice(0,80);
+  const lines = items.map(i => `PMID ${i.pmid} | ${i.journal} ${i.pubdate} | ${i.verdict} | rel ${i.relevance} nov ${i.novelty} ai ${i.ai} growth ${i.growth} | ${i.one_liner} | data: ${i.data_needed}`);
+  let ctx = lines.join('\n'); if(ctx.length > 14000) ctx = ctx.slice(0, 14000);
+  document.getElementById('ctxnote').textContent = items.length + ' screened papers in context';
+  return ctx;
+}
+async function ask(){
+  saveSettings();
+  const q = document.getElementById('question').value.trim(); if(!q) return;
+  const ep = document.getElementById('ep').value.trim().replace(/\/$/,''); const key = document.getElementById('key').value.trim();
+  const out = document.getElementById('answer'); const btn = document.getElementById('askbtn');
+  if(!key){ out.textContent = 'Paste a Spark key in Connection settings first.'; return; }
+  btn.disabled = true; out.textContent = 'Thinking…';
+  const sys = 'You are the ASP innovation radar assistant for a hospital antimicrobial stewardship team. Answer ONLY from the board context below (screened PubMed papers: scores, one-liners, data needed). Cite PMIDs for every claim. If the context does not contain the answer, say so plainly. Be concise.\n\nBOARD CONTEXT:\n' + context();
+  try{
+    const res = await fetch(ep + '/chat/completions', {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body: JSON.stringify({model: document.getElementById('model').value, temperature: 0.3, max_tokens: 900, messages:[{role:'system',content:sys},{role:'user',content:q}]})});
+    if(!res.ok){ out.textContent = 'Spark replied ' + res.status + (res.status===401?' (bad key)':'') + '. ' + (await res.text()).slice(0,300); }
+    else { const d = await res.json(); out.textContent = d.choices?.[0]?.message?.content || JSON.stringify(d).slice(0,500); }
+  }catch(e){ out.textContent = 'Could not reach the Spark. This only works on a device connected to the tailnet (Tailscale on). ' + e.message; }
+  btn.disabled = false;
+}
+(async()=>{ const pw = sessionStorage.getItem('aspRadarKey'); if(pw){ document.getElementById('pass').value = pw; unlock(); } })();
+</script>
+</body>
+</html>
