@@ -92,7 +92,7 @@ blockquote{border-left:3px solid var(--sage-400);padding:4px 12px;margin:6px 0;c
 
 <script>
 const BOARD_URL = 'board.enc.json';
-let BOARD = null, TAB = 'idea';
+let BOARD = null, TAB = 'ideas';
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -123,10 +123,11 @@ function logout(){ sessionStorage.removeItem('aspRadarKey'); location.reload(); 
 function renderHeader(){
   const c = BOARD.counts || {};
   document.getElementById('gen').textContent = 'Generated ' + (BOARD.generated||'').replace('T',' ').slice(0,16) + ' · ' + (c.papers||0) + ' papers in the library, ' + (c.screened||0) + ' screened';
-  document.getElementById('counts').innerHTML = `<span class="pill idea">${c.idea||0} idea candidates</span><span class="pill track">${c.track||0} to track</span><span class="pill skip">${c.skip||0} skipped</span>`;
+  const ideas = BOARD.ideas || []; const nb = ideas.filter(i=>i.status==='building').length, nbuilt = ideas.filter(i=>i.status==='built').length;
+  document.getElementById('counts').innerHTML = `<span class="pill idea">${ideas.length} briefs, ${nb} building, ${nbuilt} built</span><span class="pill idea">${c.idea||0} idea candidates</span><span class="pill track">${c.track||0} to track</span><span class="pill skip">${c.skip||0} skipped</span>`;
   const w = BOARD.watches || {};
   document.getElementById('watches').textContent = 'Watches: journal = ' + (w.journal||'') + ' · AI/CDS = ' + (w.ai||'') + ' · growth = ' + (w.growth||'');
-  const tabs = [['idea','Idea candidates'],['track','Track'],['skip','Skipped'],['all','All']];
+  const tabs = [['ideas','Ideas in the pipeline'],['idea','Idea candidates'],['track','Track'],['skip','Skipped'],['all','All']];
   document.getElementById('tabs').innerHTML = tabs.map(([k,l]) => `<button class="tab ${k===TAB?'active':''}" onclick="TAB='${k}';renderHeader();render()">${l}</button>`).join('');
 }
 function scorePills(it){
@@ -152,9 +153,35 @@ function card(it){
     <div style="margin-top:8px"><button class="btn ghost" style="margin:0;padding:6px 12px;font-size:.85rem" onclick="askAbout('${esc(it.pmid)}')">Ask about this paper</button></div>
   </div>`;
 }
+function ideaCard(i){
+  let b = {}; try{ b = JSON.parse(i.brief||'{}'); }catch(e){}
+  const dc = b.data_contract || {}; const src = (dc.sources||[]).map(s=>`<li><code>${esc(s.table)}</code> (${esc((s.columns||[]).join(', '))}): ${esc(s.purpose)}</li>`).join('');
+  const cards = (b.cards||[]).map((c,k)=>`<li>${k+1}. ${esc(c.title)}</li>`).join('');
+  const st = {idea:'pill',building:'pill idea',built:'pill track',stalled:'pill warn'}[i.status] || 'pill';
+  return `<div class="card">
+    <h3>#${i.id} ${esc(i.title)} <span class="${st}">${esc(i.status)}</span></h3>
+    <div class="meta">PMID ${esc(i.pmid)} · effort ${esc(b.effort_nights||'?')} night(s) · cards: ${esc(i.night_cards||'not filed yet')}</div>
+    <div class="kv"><b>Problem:</b> ${esc(b.problem)}</div>
+    <div class="kv"><b>What the paper did:</b> ${esc(b.intervention_from_paper)}</div>
+    <div class="kv"><b>UTMB adaptation:</b> ${esc(b.utmb_adaptation)}</div>
+    <div class="kv"><b>Metric:</b> ${esc(b.metric)}</div>
+    <details><summary>Epic data contract (table names are hypotheses to confirm with the Clarity team)</summary>
+      <div class="kv">Grain: ${esc(dc.grain)} · refresh: ${esc(dc.refresh)} · PHI: ${esc(dc.phi_note)}</div><ul style="margin:6px 0 0 18px">${src}</ul></details>
+    <details><summary>Build plan</summary><ul style="margin:6px 0 0 18px">${cards}</ul></details>
+    <div class="kv" style="margin-top:8px"><b>Risks:</b> ${esc(b.risks)}</div>
+    <div class="kv"><b>Growth argument:</b> ${esc(b.growth_argument)}</div>
+    <div style="margin-top:8px"><button class="btn ghost" style="margin:0;padding:6px 12px;font-size:.85rem" onclick="askAbout('${esc(i.pmid)}')">Ask about this idea</button></div>
+  </div>`;
+}
 function render(){
   if(!BOARD) return;
   const q = document.getElementById('q').value.trim().toLowerCase();
+  if(TAB==='ideas'){
+    let ideas = BOARD.ideas || [];
+    if(q) ideas = ideas.filter(i => [i.title,i.pmid,i.status,i.brief].join(' ').toLowerCase().includes(q));
+    document.getElementById('list').innerHTML = ideas.map(ideaCard).join('') || '<div class="note">No briefs yet. The radar writes briefs for idea candidates each evening; builds start automatically for the top two.</div>';
+    document.getElementById('shown').textContent = ideas.length + ' idea(s)'; return;
+  }
   let items = BOARD.items || [];
   if(TAB!=='all') items = items.filter(i=>i.verdict===TAB);
   if(q) items = items.filter(i => [i.title,i.journal,i.one_liner,i.intervention,i.pmid].join(' ').toLowerCase().includes(q));
