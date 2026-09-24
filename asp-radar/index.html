@@ -32,6 +32,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--sage-500);border
 .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:600;background:var(--surface-raised);border:1px solid var(--sage-300);color:var(--text-secondary)}
 .pill.idea{border-color:var(--accent-gold);color:var(--accent-gold)} .pill.track{border-color:var(--accent-sky);color:var(--accent-sky)} .pill.skip{color:var(--text-muted)}
 .pill.warn{border-color:var(--accent-coral);color:var(--accent-coral)}
+table{border-collapse:collapse;margin:8px 0;font-size:.9rem}td,th{border:1px solid var(--sage-300);padding:4px 8px;text-align:left}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 10px}
 .tab{background:transparent;color:var(--text-secondary);border:1px solid var(--sage-300);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
 .tab.active{background:var(--sage-500);color:#0f140f;border-color:var(--sage-500);font-weight:600}
@@ -126,8 +127,9 @@ function renderHeader(){
   const ideas = BOARD.ideas || []; const nb = ideas.filter(i=>i.status==='building').length, nbuilt = ideas.filter(i=>i.status==='built').length;
   document.getElementById('counts').innerHTML = `<span class="pill idea">${ideas.length} briefs, ${nb} building, ${nbuilt} built</span><span class="pill idea">${c.idea||0} idea candidates</span><span class="pill track">${c.track||0} to track</span><span class="pill skip">${c.skip||0} skipped</span>`;
   const w = BOARD.watches || {};
-  document.getElementById('watches').textContent = 'Watches: journal = ' + (w.journal||'') + ' · AI/CDS = ' + (w.ai||'') + ' · growth = ' + (w.growth||'');
+  document.getElementById('watches').textContent = 'Watches: journal = ' + (w.journal||'') + ' · AI/CDS = ' + (w.ai||'') + ' · growth = ' + (w.growth||'') + (w.ipc ? ' · IPC = ' + w.ipc : '') + (w.micro ? ' · micro = ' + w.micro : '');
   const tabs = [['ideas','Ideas in the pipeline'],['idea','Idea candidates'],['track','Track'],['skip','Skipped'],['all','All']];
+  if(BOARD.marathon) tabs.unshift(['marathon', BOARD.marathon.active ? 'Marathon (running)' : 'Marathon report']);
   document.getElementById('tabs').innerHTML = tabs.map(([k,l]) => `<button class="tab ${k===TAB?'active':''}" onclick="TAB='${k}';renderHeader();render()">${l}</button>`).join('');
 }
 function scorePills(it){
@@ -149,15 +151,57 @@ function card(it){
     <div class="kv"><b>Data needed:</b> ${esc(it.data_needed)}</div>
     <div class="kv"><b>Outcomes:</b> ${esc(it.outcomes)}</div>
     <div class="kv"><b>Growth angle:</b> ${esc(it.growth_angle)}</div>
+    ${it.study_design ? `<div class="kv"><b>Evidence:</b> ${esc(it.study_design)}, ${esc(it.evidence)}${it.sample_n ? ', n=' + esc(it.sample_n) : ''}${it.domain ? ' · ' + esc(it.domain) : ''}</div>` : ''}
+    ${gateBlock(it)}
     <details><summary>Quotes from the abstract</summary>${quotes||'<div class="note">none</div>'}</details>
     <div style="margin-top:8px"><button class="btn ghost" style="margin:0;padding:6px 12px;font-size:.85rem" onclick="askAbout('${esc(it.pmid)}')">Ask about this paper</button></div>
   </div>`;
+}
+function gateBlock(it){
+  if(!it.gate) return '';
+  const g = it.gate_notes || {}; const cls = {build:'pill idea', maybe:'pill track', skip:'pill skip'}[it.gate] || 'pill';
+  return `<details><summary>Claude gate: <span class="${cls}">${esc(it.gate)}</span> (evidence ${esc(g.evidence_quality||'?')})</summary>
+    <div class="kv"><b>Why:</b> ${esc(g.why)}</div><div class="kv"><b>Target:</b> ${esc(g.target)}</div><div class="kv"><b>Data feasibility:</b> ${esc(g.data_feasibility)}</div></details>`;
+}
+function confirmBlock(i){
+  if(!i.confirm) return '';
+  const c = i.confirm_notes || {}; const cls = {approved:'pill idea', revise:'pill track', rejected:'pill warn'}[i.confirm] || 'pill';
+  const fixes = (c.fixes||[]).map(f=>`<li>${esc(f)}</li>`).join('');
+  return `<details><summary>Claude confirmation: <span class="${cls}">${esc(i.confirm)}</span></summary><div class="kv">${esc(c.why)}</div>${fixes ? '<ul style="margin:6px 0 0 18px">'+fixes+'</ul>' : ''}</details>`;
+}
+function mdLite(md){
+  const lines = String(md||'').split('\n'); let out = [], list = false, table = [];
+  const flushT = () => { if(table.length){ const rows = table.filter(r => !/^\|?\s*-{2,}/.test(r)); out.push('<table>' + rows.map((r,k)=>'<tr>'+r.split('|').filter((c,j,a)=>j>0&&j<a.length-1).map(c=>(k?'<td>':'<th>')+esc(c.trim())+(k?'</td>':'</th>')).join('')+'</tr>').join('') + '</table>'); table = []; } };
+  const flushL = () => { if(list){ out.push('</ul>'); list = false; } };
+  for(const raw of lines){ const l = raw.trimEnd();
+    if(/^\|/.test(l)){ flushL(); table.push(l); continue; } flushT();
+    if(/^### /.test(l)){ flushL(); out.push('<h4>'+esc(l.slice(4))+'</h4>'); }
+    else if(/^## /.test(l)){ flushL(); out.push('<h3>'+esc(l.slice(3))+'</h3>'); }
+    else if(/^# /.test(l)){ flushL(); out.push('<h2>'+esc(l.slice(2))+'</h2>'); }
+    else if(/^- /.test(l)){ if(!list){ out.push('<ul>'); list = true; } out.push('<li>'+esc(l.slice(2)).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')+'</li>'); }
+    else if(l==='---'){ flushL(); out.push('<hr>'); }
+    else if(l===''){ flushL(); }
+    else { flushL(); out.push('<p>'+esc(l).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')+'</p>'); } }
+  flushL(); flushT(); return out.join('');
+}
+function marathonView(){
+  const m = BOARD.marathon; if(!m) return '<div class="note">No marathon yet.</div>';
+  const f = ts => ts ? new Date(ts*1000).toLocaleString() : '?';
+  const stat = [['Hours run', m.hours_elapsed + ' (' + m.ticks + ' cycles)'],['Papers pulled', m.papers_fetched],['Screened by the 27B', m.screened],['Idea candidates', m.idea_candidates],
+    ['Claude gate build / maybe / skip', m.gated_build + ' / ' + m.gated_maybe + ' / ' + m.gated_skip],['Briefs written', m.briefs],['Briefs confirmed by Claude', m.confirmed],
+    ['Building now', m.building],['Built', m.built],['Stalled', m.stalled],['Rejected', m.rejected]];
+  const ideas = (BOARD.ideas||[]).filter(i => (i.updated_at||0) >= m.started_at || (i.created_at||0) >= m.started_at);
+  return `<div class="card"><h3>${m.active ? 'Marathon running' : 'Marathon finished'} <span class="pill ${m.active?'idea':'track'}">${esc(f(m.started_at))} → ${esc(f(m.ends_at))}</span></h3>
+    <div class="sub">Loop every 30 min: PubMed pull (stewardship, infection prevention, microbiology diagnostics, AI) → 27B screening for solid positive studies → Claude gate → 27B brief → Claude confirmation → 27B builds on kanban cards → verifier + Claude review → Claude debugs stuck branches.</div>
+    <div class="scores" style="margin-top:10px">${stat.map(([k,v])=>`<span class="pill">${esc(k)}: ${esc(v)}</span>`).join('')}</div></div>
+    ${m.report_md ? '<div class="card">' + mdLite(m.report_md) + '</div>' : '<div class="note">The written report appears here when the 72 hours end.</div>'}
+    ${ideas.length ? '<h3>Ideas touched by the marathon</h3>' + ideas.map(ideaCard).join('') : ''}`;
 }
 function ideaCard(i){
   let b = {}; try{ b = JSON.parse(i.brief||'{}'); }catch(e){}
   const dc = b.data_contract || {}; const src = (dc.sources||[]).map(s=>`<li><code>${esc(s.table)}</code> (${esc((s.columns||[]).join(', '))}): ${esc(s.purpose)}</li>`).join('');
   const cards = (b.cards||[]).map((c,k)=>`<li>${k+1}. ${esc(c.title)}</li>`).join('');
-  const st = {idea:'pill',building:'pill idea',built:'pill track',stalled:'pill warn'}[i.status] || 'pill';
+  const st = {idea:'pill',building:'pill idea',built:'pill track',stalled:'pill warn',rejected:'pill skip'}[i.status] || 'pill';
   return `<div class="card">
     <h3>#${i.id} ${esc(i.title)} <span class="${st}">${esc(i.status)}</span></h3>
     <div class="meta">PMID ${esc(i.pmid)} · effort ${esc(b.effort_nights||'?')} night(s) · cards: ${esc(i.night_cards||'not filed yet')}</div>
@@ -165,6 +209,7 @@ function ideaCard(i){
     <div class="kv"><b>What the paper did:</b> ${esc(b.intervention_from_paper)}</div>
     <div class="kv"><b>UTMB adaptation:</b> ${esc(b.utmb_adaptation)}</div>
     <div class="kv"><b>Metric:</b> ${esc(b.metric)}</div>
+    ${confirmBlock(i)}
     <details><summary>Epic data contract (table names are hypotheses to confirm with the Clarity team)</summary>
       <div class="kv">Grain: ${esc(dc.grain)} · refresh: ${esc(dc.refresh)} · PHI: ${esc(dc.phi_note)}</div><ul style="margin:6px 0 0 18px">${src}</ul></details>
     <details><summary>Build plan</summary><ul style="margin:6px 0 0 18px">${cards}</ul></details>
@@ -176,6 +221,7 @@ function ideaCard(i){
 function render(){
   if(!BOARD) return;
   const q = document.getElementById('q').value.trim().toLowerCase();
+  if(TAB==='marathon'){ document.getElementById('list').innerHTML = marathonView(); document.getElementById('shown').textContent = ''; return; }
   if(TAB==='ideas'){
     let ideas = BOARD.ideas || [];
     if(q) ideas = ideas.filter(i => [i.title,i.pmid,i.status,i.brief].join(' ').toLowerCase().includes(q));
