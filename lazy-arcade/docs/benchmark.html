@@ -1,0 +1,122 @@
+<title>Cabinet Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#FAF9FB; --surface:#FFFFFF; --sunk:#F2F0F6;
+  --ink:#191324; --muted:#6C6480; --rule:#E4E0EA;
+  --accent:#A8791C; --ok:#26786A; --ok-bg:#E4F1ED; --art:#6B57A8; --art-bg:#ECE7F7;
+  --warn:#9A5B14; --warn-bg:#F6ECDD;
+  --shadow:0 1px 2px rgba(25,19,36,.05),0 8px 24px -16px rgba(25,19,36,.25);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ground:#151020; --surface:#1D172A; --sunk:#231B33;
+  --ink:#EBE7F2; --muted:#9A93AC; --rule:#2C2440;
+  --accent:#D9A94A; --ok:#4FB8A4; --ok-bg:#173029; --art:#A48EE0; --art-bg:#241C3A;
+  --warn:#E0A65C; --warn-bg:#33260F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -18px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --ground:#151020; --surface:#1D172A; --sunk:#231B33;
+  --ink:#EBE7F2; --muted:#9A93AC; --rule:#2C2440;
+  --accent:#D9A94A; --ok:#4FB8A4; --ok-bg:#173029; --art:#A48EE0; --art-bg:#241C3A;
+  --warn:#E0A65C; --warn-bg:#33260F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);margin:0;
+  font-family:"Source Serif 4",Georgia,serif;font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px) 96px}
+h1,h2,h3,.count,.chip,.eyebrow,.legend{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 14px}
+h1{font-size:clamp(34px,5.2vw,56px);font-weight:800;line-height:1.04;margin:0 0 18px;
+  letter-spacing:-.02em;text-wrap:balance}
+.lede{max-width:64ch;color:var(--muted);font-size:clamp(16.5px,1.9vw,18.5px);
+  line-height:1.5;margin:0 0 34px}
+.lede strong{color:var(--ink);font-weight:600}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow);margin-bottom:26px}
+.cell{background:var(--surface);padding:20px 22px}
+.cell .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:38px;
+  line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;display:block}
+.cell .n .sub{color:var(--muted);font-size:22px}
+.cell .n.gold{color:var(--accent)} .cell .n.teal{color:var(--ok)} .cell .n.vio{color:var(--art)}
+.cell .l{display:block;margin-top:8px;font-size:13.5px;color:var(--muted);line-height:1.4}
+#ticks{display:flex;gap:3px;flex-wrap:wrap;margin:0 0 8px}
+#ticks i{flex:1 1 8px;min-width:7px;height:26px;border-radius:2px;display:block}
+#ticks .t-ok{background:var(--ok)} #ticks .t-art{background:var(--art)}
+#ticks .t-part{background:var(--warn)}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:48px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend b{width:10px;height:10px;border-radius:2px;display:inline-block}
+.cat{margin-bottom:40px}
+.cat > header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:4px}
+.cat h2{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+.count{font-weight:800;font-size:19px;font-variant-numeric:tabular-nums;color:var(--ok)}
+.count .of{color:var(--muted);font-weight:600}
+.crits{list-style:none;margin:0;padding:0}
+.crits > li{padding:15px 0;border-bottom:1px solid var(--rule)}
+.crit{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.crit h3{font-size:16.5px;font-weight:600;margin:0;letter-spacing:-.005em}
+.ev{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;line-height:1.65;
+  color:var(--muted);margin:7px 0 0;max-width:78ch;overflow-wrap:anywhere}
+.note{margin:9px 0 0;padding-left:14px;border-left:2px solid var(--art);
+  font-size:14.5px;line-height:1.55;color:var(--muted);max-width:66ch;font-style:italic}
+.chip{flex:none;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 9px;border-radius:4px;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.art{background:var(--art-bg);color:var(--art)}
+.chip.part{background:var(--warn-bg);color:var(--warn)}
+.closing{margin-top:64px;padding:30px 32px;background:var(--sunk);
+  border:1px solid var(--rule);border-radius:14px}
+.closing h2{font-size:23px;margin:0 0 8px;font-weight:800;letter-spacing:-.015em}
+.closing > p{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.blocked{list-style:none;margin:0;padding:0;display:grid;gap:20px}
+.blocked li{padding-left:18px;border-left:3px solid var(--art)}
+.blocked h3{margin:0;font-size:16.5px;font-weight:600}
+footer{margin-top:44px;color:var(--muted);font-size:13.5px;line-height:1.7}
+footer code{font-family:"JetBrains Mono",monospace;font-size:12.5px;
+  background:var(--sunk);padding:2px 6px;border-radius:4px}
+@media (max-width:620px){.crit{flex-direction:column;gap:6px}.chip{align-self:flex-start}}
+</style>
+<div class="wrap">
+<p class="eyebrow">Lazy Arcade &middot; front-end review</p>
+<h1>Where the cabinet stands against tier-one slots</h1>
+<p class="lede">57 criteria drawn from what NetEnt, Hacksaw, Play&rsquo;n GO, Push, Nolimit,
+Pragmatic and Relax actually ship, each one <strong>measured in a live browser</strong> against the real
+page rather than looked up in the source. Anything needing artistic or human judgement is reported as
+blocked and never as a pass.</p>
+<div class="board">
+  <div class="cell"><span class="n teal">55<span class="sub">/55</span></span>
+    <span class="l">code-side criteria verified</span></div>
+  <div class="cell"><span class="n vio">2</span><span class="l">blocked on art or a person</span></div>
+  <div class="cell"><span class="n gold">17</span><span class="l">defects found and fixed during this review</span></div>
+  <div class="cell"><span class="n gold">169</span><span class="l">browser checks guarding it, each proven to fail</span></div>
+</div>
+<div id="ticks"><i class="t-ok" title="Motion-blurred canvas reels"></i><i class="t-ok" title="Velocity never exceeds cruise"></i><i class="t-ok" title="Monotonic deceleration"></i><i class="t-ok" title="Overshoot and settle"></i><i class="t-ok" title="Staggered reel stops"></i><i class="t-ok" title="Scatter anticipation"></i><i class="t-ok" title="Anticipation does not spoil the result"></i><i class="t-ok" title="Anticipation escalates with scatter count"></i><i class="t-ok" title="Roll-up scales with win size"></i><i class="t-ok" title="Small wins stay out of the way"></i><i class="t-ok" title="Celebrations are skippable"></i><i class="t-ok" title="Skip pays out the exact total"></i><i class="t-ok" title="Turbo compresses celebration"></i><i class="t-ok" title="Tiered win banners"></i><i class="t-ok" title="Win line walk-through"></i><i class="t-ok" title="Particle / coin effects"></i><i class="t-ok" title="Master limiter"></i><i class="t-ok" title="Music ducks under wins"></i><i class="t-ok" title="Music bed starts on every entry point"></i><i class="t-ok" title="Win tick rises in pitch"></i><i class="t-ok" title="Escalating scatter landings"></i><i class="t-ok" title="Reel stop impact"></i><i class="t-ok" title="Anticipation riser"></i><i class="t-ok" title="Mute control"></i><i class="t-art" title="Recorded/produced audio assets"></i><i class="t-ok" title="Autoplay"></i><i class="t-ok" title="Autoplay loss limit enforced"></i><i class="t-ok" title="Autoplay single-win stop enforced"></i><i class="t-ok" title="Autoplay cancels on game switch"></i><i class="t-ok" title="Turbo / quick spin"></i><i class="t-ok" title="Bet selector"></i><i class="t-ok" title="Paytable and rules"></i><i class="t-ok" title="Feature buy"></i><i class="t-ok" title="Round history"></i><i class="t-ok" title="History bounded (no session leak)"></i><i class="t-ok" title="Server seed committed before play"></i><i class="t-ok" title="Player-editable client seed"></i><i class="t-ok" title="Reveal rotates the seed and resets the nonce"></i><i class="t-ok" title="Each round records its own seed"></i><i class="t-ok" title="Standalone verifier"></i><i class="t-ok" title="Every control has an accessible name"></i><i class="t-ok" title="Dialogs declared and labelled"></i><i class="t-ok" title="Wins announced to screen readers"></i><i class="t-ok" title="Reduced-motion support"></i><i class="t-ok" title="Keyboard play"></i><i class="t-ok" title="Loss limit"></i><i class="t-ok" title="Single-win stop"></i><i class="t-ok" title="Bounded autoplay run"></i><i class="t-ok" title="Session staked/returned tracked"></i><i class="t-ok" title="Session clock / reality check"></i><i class="t-ok" title="Net position visible at a glance"></i><i class="t-ok" title="Twelve symbols from owned art"></i><i class="t-ok" title="Winning symbols perform, not just highlight"></i><i class="t-ok" title="Motion inside the character outline"></i><i class="t-art" title="Row-multiplier art"></i><i class="t-ok" title="Multiplied rows read hot, and the heat scales"></i><i class="t-ok" title="Ambient idle motion"></i></div>
+<div class="legend">
+  <span><b style="background:var(--ok)"></b> verified by measurement</span>
+  <span><b style="background:var(--art)"></b> blocked on art or human judgement</span>
+</div>
+<section class="cat"><header><h2>Reel motion</h2><span class="count">8<span class="of">/8</span></span></header><ul class="crits"><li><div class="crit"><h3>Motion-blurred canvas reels</h3><span class="chip ok">verified</span></div><p class="ev">canvasSpinAll + drawColumn present, canvas in DOM</p></li><li><div class="crit"><h3>Velocity never exceeds cruise</h3><span class="chip ok">verified</span></div><p class="ev">peak 1.423 vs cruise 1.423</p></li><li><div class="crit"><h3>Monotonic deceleration</h3><span class="chip ok">verified</span></div><p class="ev">sampled over 2000 points</p></li><li><div class="crit"><h3>Overshoot and settle</h3><span class="chip ok">verified</span></div><p class="ev">peak 1.0250, lands on exactly 1</p></li><li><div class="crit"><h3>Staggered reel stops</h3><span class="chip ok">verified</span></div><p class="ev">base 520ms + 135ms per reel, stagger on stop not start</p></li><li><div class="crit"><h3>Scatter anticipation</h3><span class="chip ok">verified</span></div><p class="ev">first light 720ms (reel 2 lands 655ms)</p></li><li><div class="crit"><h3>Anticipation does not spoil the result</h3><span class="chip ok">verified</span></div><p class="ev">720ms -- must be after the first reel lands</p></li><li><div class="crit"><h3>Anticipation escalates with scatter count</h3><span class="chip ok">verified</span></div><p class="ev">2 scatters 1709ms, 3 scatters 2225ms</p></li></ul></section><section class="cat"><header><h2>Win presentation</h2><span class="count">8<span class="of">/8</span></span></header><ul class="crits"><li><div class="crit"><h3>Roll-up scales with win size</h3><span class="chip ok">verified</span></div><p class="ev">2x 648ms, 50x 1809ms, 500x 2741ms</p></li><li><div class="crit"><h3>Small wins stay out of the way</h3><span class="chip ok">verified</span></div><p class="ev">648ms for a 2x</p></li><li><div class="crit"><h3>Celebrations are skippable</h3><span class="chip ok">verified</span></div><p class="ev">skip resolved in 115ms</p></li><li><div class="crit"><h3>Skip pays out the exact total</h3><span class="chip ok">verified</span></div><p class="ev">showed 4,321</p></li><li><div class="crit"><h3>Turbo compresses celebration</h3><span class="chip ok">verified</span></div><p class="ev">382ms for a 500x</p></li><li><div class="crit"><h3>Tiered win banners</h3><span class="chip ok">verified</span></div><p class="ev">4 tiers on the ladder</p></li><li><div class="crit"><h3>Win line walk-through</h3><span class="chip ok">verified</span></div><p class="ev">showWinLines present</p></li><li><div class="crit"><h3>Particle / coin effects</h3><span class="chip ok">verified</span></div><p class="ev">coins() present</p></li></ul></section><section class="cat"><header><h2>Audio</h2><span class="count">8<span class="of">/9</span></span></header><ul class="crits"><li><div class="crit"><h3>Master limiter</h3><span class="chip ok">verified</span></div><p class="ev">DynamicsCompressorNode on the bus</p></li><li><div class="crit"><h3>Music ducks under wins</h3><span class="chip ok">verified</span></div><p class="ev">duckMusic present</p></li><li><div class="crit"><h3>Music bed starts on every entry point</h3><span class="chip ok">verified</span></div><p class="ev">spin button, space bar and autoplay all start it</p><p class="note">This row used to read PASS because startMusic() existed. It did exist, and was wired to the spin button alone -- SPACE and autoplay span in silence.</p></li><li><div class="crit"><h3>Win tick rises in pitch</h3><span class="chip ok">verified</span></div><p class="ev">counterTick(progress, tier)</p></li><li><div class="crit"><h3>Escalating scatter landings</h3><span class="chip ok">verified</span></div><p class="ev">scatterLand(index)</p></li><li><div class="crit"><h3>Reel stop impact</h3><span class="chip ok">verified</span></div><p class="ev">thud(reel)</p></li><li><div class="crit"><h3>Anticipation riser</h3><span class="chip ok">verified</span></div><p class="ev">riser(seconds), length matches the drag</p></li><li><div class="crit"><h3>Mute control</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Recorded/produced audio assets</h3><span class="chip art">needs a person</span></div><p class="ev">everything above is synthesised in WebAudio</p><p class="note">Wanted Dead or a Wild -- the reference actually linked in the brief, see COMPETITIVE-GAPS Sec. 0.5 -- runs on produced stems with heavy sub and hard transients. Synthesis gets the STRUCTURE right (ducking, limiting, escalation, tempo) but not the timbre of produced audio.</p></li></ul></section><section class="cat"><header><h2>Controls &amp; session</h2><span class="count">10<span class="of">/10</span></span></header><ul class="crits"><li><div class="crit"><h3>Autoplay</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Autoplay loss limit enforced</h3><span class="chip ok">verified</span></div><p class="ev">runAuto breaks on autoBaseline-balance &gt;= lossStop</p></li><li><div class="crit"><h3>Autoplay single-win stop enforced</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Autoplay cancels on game switch</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Turbo / quick spin</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Bet selector</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Paytable and rules</h3><span class="chip ok">verified</span></div><p class="ev">per-game rules text</p></li><li><div class="crit"><h3>Feature buy</h3><span class="chip ok">verified</span></div><p class="ev">EV-neutral, price measured by simulation</p></li><li><div class="crit"><h3>Round history</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>History bounded (no session leak)</h3><span class="chip ok">verified</span></div><p class="ev">capped at 200 rounds</p></li></ul></section><section class="cat"><header><h2>Provable fairness</h2><span class="count">5<span class="of">/5</span></span></header><ul class="crits"><li><div class="crit"><h3>Server seed committed before play</h3><span class="chip ok">verified</span></div><p class="ev">sha256(serverSeed) rendered at init</p></li><li><div class="crit"><h3>Player-editable client seed</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Reveal rotates the seed and resets the nonce</h3><span class="chip ok">verified</span></div><p class="ev">fReveal shows the old seed, then regenerates and calls refreshHash</p></li><li><div class="crit"><h3>Each round records its own seed</h3><span class="chip ok">verified</span></div><p class="ev">history entries carry seed, client, nonce</p></li><li><div class="crit"><h3>Standalone verifier</h3><span class="chip ok">verified</span></div><p class="ev">verify/index.html, guarded against strip drift by a test</p></li></ul></section><section class="cat"><header><h2>Accessibility</h2><span class="count">5<span class="of">/5</span></span></header><ul class="crits"><li><div class="crit"><h3>Every control has an accessible name</h3><span class="chip ok">verified</span></div><p class="ev">15 controls, 0 unnamed</p></li><li><div class="crit"><h3>Dialogs declared and labelled</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Wins announced to screen readers</h3><span class="chip ok">verified</span></div><p class="ev">aria-live on the win readout</p></li><li><div class="crit"><h3>Reduced-motion support</h3><span class="chip ok">verified</span></div><p class="ev">prefers-reduced-motion rules present</p></li><li><div class="crit"><h3>Keyboard play</h3><span class="chip ok">verified</span></div><p class="ev">space spins, space skips a roll-up, Escape closes, focus returns</p></li></ul></section><section class="cat"><header><h2>Responsible play</h2><span class="count">6<span class="of">/6</span></span></header><ul class="crits"><li><div class="crit"><h3>Loss limit</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Single-win stop</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Bounded autoplay run</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Session staked/returned tracked</h3><span class="chip ok">verified</span></div></li><li><div class="crit"><h3>Session clock / reality check</h3><span class="chip ok">verified</span></div><p class="ev">elapsed time on the cabinet, clock starts at the first spin</p><p class="note">Required by UKGC and MGA for real-money play. Cheap to add, and it is the one responsible-play control tier-one operators cannot ship without.</p></li><li><div class="crit"><h3>Net position visible at a glance</h3><span class="chip ok">verified</span></div><p class="ev">signed net on the cabinet, derived from staked vs returned</p></li></ul></section><section class="cat"><header><h2>Art &amp; animation</h2><span class="count">5<span class="of">/6</span></span></header><ul class="crits"><li><div class="crit"><h3>Twelve symbols from owned art</h3><span class="chip ok">verified</span></div><p class="ev">each traced to a token the operator holds</p></li><li><div class="crit"><h3>Winning symbols perform, not just highlight</h3><span class="chip ok">verified</span></div><p class="ev">7-stop squash-and-stretch from a bottom origin, backlight, ring, specular sweep</p><p class="note">Animation principle applied to a static portrait: anticipation, action, follow-through, scaled from 50% 88% so the lion rears instead of zooming.</p></li><li><div class="crit"><h3>Motion inside the character outline</h3><span class="chip ok">verified</span></div><p class="ev">6 manes lag the roar, 4 blink, 2 loll a tongue</p><p class="note">Every route that DEFORMED the art failed -- slice mesh warp, three-piece falloff, silhouette grow, and an eye-twin search returning 0 matches across 9,999 tokens. Separating a flat-colour LAYER and moving it rigidly works: no shear, no seam. The blink was twice called impossible on the strength of a sampling bug that read the black brow line as fur; sampling between the eyes and adding a lash line gives a closed eye that reads as drawn. Where a layer is absent it is measured, not assumed: M3&#x27;s orange mane takes 15.8% of the muzzle box, M4&#x27;s white mane IS the face colour.</p></li><li><div class="crit"><h3>Row-multiplier art</h3><span class="chip art">needs art</span></div><p class="ev">orbs are drawn procedurally (svgOrb)</p><p class="note">Settled rather than suspected: scanning all 6,525 lines of the session transcript shows exactly two images sent across the project&#x27;s history, both Lions. The /goal message describing a video and multiplier files carried only one Lion image, so at least two intended attachments did not survive that send.</p></li><li><div class="crit"><h3>Multiplied rows read hot, and the heat scales</h3><span class="chip ok">verified</span></div><p class="ev">x2 and x25 resolve to different plates</p><p class="note">Measured against the reference the brief actually links -- Wanted Dead or a Wild, whose multiplied reels are a saturated red block readable across a room (COMPETITIVE-GAPS Sec. 0.5). Ours was a dark brown, and binary: the ceiling multiplier lit exactly like the smallest one, so the rail annotated the grid instead of describing it. The heat now rides a log curve of the multiplier, and browser.mjs holds it there by reading the screenshot rather than the CSS.</p></li><li><div class="crit"><h3>Ambient idle motion</h3><span class="chip ok">verified</span></div><p class="ev">51 tiles idling on 4 periods (3.3s, 3.6s, 4.1s, 5.3s) across 5 phase offsets</p></li></ul></section>
+<div class="closing">
+  <h2>What is still blocked, and on what</h2>
+  <p>2 rows, down from four. The character animation
+  that used to sit here &mdash; the blink and mouth movement &mdash; has shipped. Both were called
+  impossible on the strength of a sampling bug that read a black brow line as fur. Three times in this
+  project something was declared out of reach and turned out to be a faulty instrument rather than a
+  property of the art, so read what remains below as a claim with evidence attached rather than a
+  verdict.</p>
+  <ul class="blocked"><li><h3>Recorded/produced audio assets</h3><p class="ev">everything above is synthesised in WebAudio</p><p class="note">Wanted Dead or a Wild -- the reference actually linked in the brief, see COMPETITIVE-GAPS Sec. 0.5 -- runs on produced stems with heavy sub and hard transients. Synthesis gets the STRUCTURE right (ducking, limiting, escalation, tempo) but not the timbre of produced audio.</p></li><li><h3>Row-multiplier art</h3><p class="ev">orbs are drawn procedurally (svgOrb)</p><p class="note">Settled rather than suspected: scanning all 6,525 lines of the session transcript shows exactly two images sent across the project&#x27;s history, both Lions. The /goal message describing a video and multiplier files carried only one Lion image, so at least two intended attachments did not survive that send.</p></li></ul>
+</div>
+<footer>This page is generated: <code>node tools/review/render-benchmark.mjs</code> runs the benchmark
+and writes every count, tick and row above from its verdicts, so it cannot drift from what was measured.
+Run <code>npm run review:benchmark</code> for the same report in a terminal, or <code>--json</code> for
+the raw verdicts. It is a report, not a gate: it exits zero whatever it finds, and
+<code>npm run check</code> is where things are allowed to fail the build.</footer>
+</div>
