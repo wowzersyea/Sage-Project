@@ -220,9 +220,29 @@
     "Pediatric Implications:",
     "[OPEN ACCESS \u2014 but as a Notes from the Field report, full quantitative clinical data are limited to the 21-case series; comprehensive clinical outcomes data from Uganda are expected in subsequent peer-reviewed publications.]",
     "*Emerging Infectious Diseases*, Vol. 32, No. 9, September 2026, pp. 1508\u20131510 | https://doi.org/10.3201/eid3209.260871",
-    "No new FDA drug safety communications, pediatric drug shortages, or novel resistance alerts directly relevant to pediatric ID/ASP practice were identified with confirmed publication dates of September 06\u201320, 2026."
+    "No new FDA drug safety communications, pediatric drug shortages, or novel resistance alerts directly relevant to pediatric ID/ASP practice were identified with confirmed publication dates of September 06\u201320, 2026.",
+    "No unambiguously practice-changing publications were identified this period.",
+    "> **Ongoing reminder:** The IDSA/PIDS 2026 CAP Guideline Update (DOI: https://doi.org/10.1093/cid/ciag186) and companion fibrinolysis paper (DOI: https://doi.org/10.1093/cid/ciag191), while outside this window, remain the most recent actionable pediatric ID guideline. ASPs should confirm local empyema and CAP protocols are concordant. The SHEA/IDSA/PIDS/SIDP updated guidance on knowledge and skills required for ASP leaders (DOI: https://doi.org/10.1017/ash.2026.10344, published May 2026) remains a relevant structural resource for stewardship teams building or revising competency frameworks.",
+    "Effect of Institutional Guidelines on Equitable Management of Pediatric Osteomyelitis",
+    "*Journal of the Pediatric Infectious Diseases Society (JPIDS)*, Published Online: **September 24, 2026** | https://doi.org/10.1093/jpids/piag103",
+    "HIV-1 Drug Resistance in Mother\u2013Infant Pairs in Southern Mozambique (EARTH Cohort)",
+    "Safety of Rotavirus Vaccination in a Growing Care Unit (Intermediate-care Neonatal Unit) in Japan",
+    "*The Pediatric Infectious Disease Journal*, Vol. 45(10), October 2026, pp. 911\u2013915 | https://doi.org/10.1097/INF.0000000000005251",
+    "Health and Economic Impact of Seasonal Maternal Vaccination With Bivalent Respiratory Syncytial Virus Prefusion F Vaccine in Belgium",
+    "*The Pediatric Infectious Disease Journal*, Vol. 45(10), October 2026, pp. 905\u2013910 | https://doi.org/10.1097/INF.0000000000005226",
+    "Safety and Immunogenicity of Varicella Vaccination in Children and Adolescents Living With HIV",
+    "Influenza-Related Deaths in Young Children: Case Series from Southwest Germany (2022/23 and 2023/24 Seasons)",
+    "Identification and Quantification of Pathogens in Pleural Fluid from Children with Complicated Pneumonia Using the BioFire\u00ae FilmArray\u00ae Pneumonia Panel",
+    "Levofloxacin-Induced Ataxia in a Child After Complicated Pneumonia",
+    "[MMWR Report 1] Notes from the Field: Fatal Pneumonic Plague \u2014 Coconino County, Arizona, July 2025",
+    "[MMWR Report 2] Unannounced Drills Using Patient Actors to Evaluate Health Care Facility Readiness for Infectious Disease Outbreaks \u2014 New Jersey, New York, and U.S. Virgin Islands, January\u2013June 2026",
+    "*MMWR Morbidity and Mortality Weekly Report*, Vol. 75, No. 38, **October 1, 2026**, pp. 581\u2013587 | https://doi.org/10.15585/mmwr.mm7538a1",
+    "[MMWR Early Release] Notes from the Field: Molecular Detections of *Cladophialophora bantiana* at a Clinical Reference Laboratory \u2014 United States, 2009\u20132026",
+    "MMWR Report: Fatal Pneumonic Plague \u2014 Drug Selection Reminder",
+    "MMWR Early Release: *Cladophialophora bantiana* \u2014 Laboratory Safety Note",
+    "No new FDA drug safety communications, pediatric drug shortages, or novel resistance alerts"
   ],
-  "last_run": "2026-09-20T10:12:30.727357",
+  "last_run": "2026-10-04T11:26:11.728728",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -1714,6 +1734,191 @@
       "key_finding": "Among 123 pediatric tuberculosis patients in a French tertiary care center, only 60.9% achieved successful treatment outcomes, with 39.1% experiencing unfavorable outcomes including treatment failure, loss to follow-up, and death due to dosing errors and adherence barriers.",
       "study_type": "cohort",
       "digest_date": "2026-09-20"
+    },
+    {
+      "title": "Effect of Institutional Guidelines on Equitable Management of Pediatric Osteomyelitis",
+      "doi": "https://doi.org/10.1093/jpids/piag103",
+      "journal": "Journal of the Pediatric Infectious Diseases Society (JPIDS)",
+      "date": "September 24, 2026",
+      "topics": [
+        "acute-hematogenous-osteomyelitis",
+        "antimicrobial-stewardship",
+        "iv-to-oral-transition",
+        "health-equity",
+        "guideline-implementation",
+        "sociodemographic-disparities"
+      ],
+      "key_finding": "Implementation of institutional guidelines for pediatric acute hematogenous osteomyelitis increased appropriate empiric antibiotic use; equity impact on sociodemographic disparities requires full results review.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "HIV-1 Drug Resistance in Mother\u2013Infant Pairs in Southern Mozambique (EARTH Cohort)",
+      "doi": "https://journals.lww.com/pidj",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "September 28, 2026",
+      "topics": [
+        "pediatric-hiv",
+        "mother-to-child-transmission",
+        "drug-resistance-mutations",
+        "antiretroviral-therapy",
+        "dolutegravir",
+        "mozambique"
+      ],
+      "key_finding": "Prospective characterization of drug resistance mutation patterns in mother-infant HIV pairs in Mozambique during the dolutegravir-based PMTCT era.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Safety of Rotavirus Vaccination in a Growing Care Unit (Intermediate-care Neonatal Unit) in Japan",
+      "doi": "https://doi.org/10.1097/INF.0000000000005251",
+      "journal": "The Pediatric Infectious Diseases Journal",
+      "date": "October 2026",
+      "topics": [
+        "rotavirus-vaccine",
+        "neonatal-step-down-care",
+        "vaccine-safety",
+        "vaccine-strain-shedding",
+        "missed-vaccination-window"
+      ],
+      "key_finding": "Rotavirus vaccine (RV1) vaccination was safe in a neonatal growing care unit with no serious adverse events or evidence of horizontal transmission, supporting in-hospital vaccination to prevent missed opportunities.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Health and Economic Impact of Seasonal Maternal Vaccination With Bivalent Respiratory Syncytial Virus Prefusion F Vaccine in Belgium",
+      "doi": "https://doi.org/10.1097/INF.0000000000005226",
+      "journal": "The Pediatric Infectious Diseases Journal",
+      "date": "October 2026",
+      "topics": [
+        "rsv-prevention",
+        "maternal-vaccination",
+        "rsv-prefusion-f-vaccine",
+        "cost-effectiveness-analysis",
+        "health-economics",
+        "rsv-hospitalization"
+      ],
+      "key_finding": "Maternal RSV prefusion F vaccine demonstrated favorable cost-effectiveness from the Belgian public healthcare payer perspective with reductions in infant RSV lower respiratory tract infection hospitalizations.",
+      "study_type": "other",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Safety and Immunogenicity of Varicella Vaccination in Children and Adolescents Living With HIV",
+      "doi": "https://journals.lww.com/pidj",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 2026",
+      "topics": [
+        "varicella-vaccine",
+        "pediatric-hiv",
+        "immunogenicity",
+        "vaccine-safety",
+        "immunoreconstitution",
+        "cd4-count"
+      ],
+      "key_finding": "Varicella vaccination is safe and immunogenic in adequately immunoreconstituted HIV-positive children with minimal vaccine-related rash; serious adverse events occur only with inadvertent vaccination during severe immunosuppression.",
+      "study_type": "systematic-review",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Influenza-Related Deaths in Young Children: Case Series from Southwest Germany (2022/23 and 2023/24 Seasons)",
+      "doi": "https://journals.lww.com/pidj",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 2026",
+      "topics": [
+        "influenza-mortality",
+        "influenza-encephalitis",
+        "pediatric-influenza",
+        "fatal-influenza",
+        "vaccine-prevention"
+      ],
+      "key_finding": "Four fatal influenza cases in young children (ages 2\u20136 years) in Southwest Germany, including one with influenza A(H1N1)pdm09 CNS neurotropism, underscore the potential for fatal outcomes in previously healthy children.",
+      "study_type": "case-series",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Identification and Quantification of Pathogens in Pleural Fluid from Children with Complicated Pneumonia Using the BioFire\u00ae FilmArray\u00ae Pneumonia Panel",
+      "doi": "",
+      "journal": "Journal of the Pediatric Infectious Diseases Society (JPIDS)",
+      "date": "September\u2013October 2026",
+      "topics": [
+        "community-acquired-pneumonia",
+        "empyema",
+        "molecular-diagnostics",
+        "multiplex-pcr",
+        "pleural-fluid",
+        "pathogen-identification"
+      ],
+      "key_finding": "BioFire FilmArray Pneumonia Panel applied to pleural fluid from children with complicated pneumonia enables pathogen identification and quantification with potential for pathogen-directed therapy prior to culture results.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Levofloxacin-Induced Ataxia in a Child After Complicated Pneumonia",
+      "doi": "https://journals.lww.com/pidj",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "September 29, 2026",
+      "topics": [
+        "levofloxacin",
+        "fluoroquinolone-adverse-events",
+        "cns-toxicity",
+        "ataxia",
+        "pediatric-safety",
+        "community-acquired-pneumonia"
+      ],
+      "key_finding": "Acute ataxia with urticarial rash and urinary incontinence developed on day 3 of levofloxacin therapy in a 6-year-old with complicated pneumonia and completely resolved after drug discontinuation and corticosteroid therapy.",
+      "study_type": "case-series",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Notes from the Field: Fatal Pneumonic Plague \u2014 Coconino County, Arizona, July 2025",
+      "doi": "https://www.cdc.gov/mmwr/volumes/75/wr/mm7538a2.htm",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "October 1, 2026",
+      "topics": [
+        "pneumonic-plague",
+        "yersinia-pestis",
+        "laboratory-diagnosis",
+        "maldi-tof-misidentification",
+        "contact-tracing",
+        "southwestern-us"
+      ],
+      "key_finding": "Fatal pneumonic plague case in Arizona highlights risk of pathogen misidentification by automated systems; rapid recognition, antibiotic therapy, and contact tracing are critical for outbreak prevention.",
+      "study_type": "case-series",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Unannounced Drills Using Patient Actors to Evaluate Health Care Facility Readiness for Infectious Disease Outbreaks \u2014 New Jersey, New York, and U.S. Virgin Islands, January\u2013June 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7538a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "October 1, 2026",
+      "topics": [
+        "infection-prevention-control",
+        "outbreak-preparedness",
+        "high-consequence-infectious-disease",
+        "healthcare-readiness",
+        "quality-improvement",
+        "mystery-patient-drills"
+      ],
+      "key_finding": "Unannounced drills using trained patient actors effectively evaluated healthcare facility readiness for infectious disease outbreaks including time to identification, isolation, and infection prevention measure adherence.",
+      "study_type": "other",
+      "digest_date": "2026-10-04"
+    },
+    {
+      "title": "Notes from the Field: Molecular Detections of Cladophialophora bantiana at a Clinical Reference Laboratory \u2014 United States, 2009\u20132026",
+      "doi": "https://www.cdc.gov/mmwr/volumes/75/wr/mm7540e1.htm",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "October 2, 2026",
+      "topics": [
+        "cladophialophora-bantiana",
+        "brain-abscess",
+        "dematiaceous-fungi",
+        "neurotropic-fungal-infection",
+        "cns-infection",
+        "molecular-surveillance"
+      ],
+      "key_finding": "Molecular detections of Cladophialophora bantiana increased approximately fourfold from 2023 to 2025 at a U.S. reference laboratory with 88% of cases from CNS tissue and 60\u201370% case-fatality rate; no national surveillance exists.",
+      "study_type": "case-series",
+      "digest_date": "2026-10-04"
     }
   ]
 }
