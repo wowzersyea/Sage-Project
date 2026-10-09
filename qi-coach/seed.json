@@ -1,0 +1,874 @@
+{
+  "workspace": {
+    "project": {
+      "id": "synthetic-flow",
+      "name": "A smoother start · synthetic clinic",
+      "synthetic": 1,
+      "revision": 12,
+      "created": "2026-10-09T17:04:53.863072+00:00"
+    },
+    "artifacts": [
+      {
+        "id": "demo-suggestions",
+        "project": "synthetic-flow",
+        "kind": "suggestions",
+        "title": "AI Suggestions",
+        "body": {
+          "items": []
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863367+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-questions",
+        "project": "synthetic-flow",
+        "kind": "questions",
+        "title": "Unresolved Questions",
+        "body": {
+          "items": [
+            {
+              "id": "q1",
+              "text": "What level of overtime would make the change unacceptable?",
+              "classification": "unresolved_question",
+              "status": "open",
+              "sources": []
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863352+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-actions",
+        "project": "synthetic-flow",
+        "kind": "actions",
+        "title": "Actions",
+        "body": {
+          "items": [
+            {
+              "id": "a1",
+              "text": "Agree an operational definition for the balancing measure",
+              "owner": "Unassigned",
+              "due": "",
+              "status": "open",
+              "classification": "ai_suggestion",
+              "sources": []
+            },
+            {
+              "id": "a2",
+              "text": "Confirm the first test's owner and prediction",
+              "owner": "Unassigned",
+              "due": "",
+              "status": "open",
+              "classification": "ai_suggestion",
+              "sources": []
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863335+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-decisions",
+        "project": "synthetic-flow",
+        "kind": "decisions",
+        "title": "Decisions",
+        "body": {
+          "items": []
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863321+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-notes",
+        "project": "synthetic-flow",
+        "kind": "notes",
+        "title": "Meeting Notes",
+        "body": {
+          "entries": [],
+          "summary": "Synthetic demonstration. Replay the included meeting to see live documentation."
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863307+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-pdsa",
+        "project": "synthetic-flow",
+        "kind": "pdsa",
+        "title": "PDSA Cycles",
+        "body": {
+          "cycles": [
+            {
+              "id": "pdsa-1",
+              "title": "Test a five-minute readiness huddle",
+              "status": "proposed",
+              "plan": "One morning, one clinic team; confirm owner and process measure.",
+              "prediction": "Earlier visibility of unready rooms may reduce avoidable delay.",
+              "do": "Not yet tested",
+              "study": "No test observations yet",
+              "act": "Decide after reviewing the test",
+              "sources": []
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863292+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-measurement",
+        "project": "synthetic-flow",
+        "kind": "measurement",
+        "title": "Measurement Plan",
+        "body": {
+          "measures": [
+            {
+              "id": "wait-time",
+              "type": "outcome",
+              "name": "Check-in to room time",
+              "operational_definition": "Elapsed minutes between check-in and entry to examination room",
+              "population": "Scheduled synthetic clinic encounters",
+              "unit_of_analysis": "Encounter",
+              "numerator": "Not applicable: continuous duration",
+              "denominator": "Not applicable",
+              "inclusion": "Scheduled daytime visits",
+              "exclusion": "Walk-ins; explicit missing timestamp report",
+              "frequency": "Daily mean; fixed first 10 days baseline median",
+              "source": "Synthetic CSV; actual schema not supplied",
+              "required_fields": [
+                "encounter_id",
+                "date",
+                "wait_minutes"
+              ],
+              "owner": "Unassigned",
+              "burden": "Automatic after mapping",
+              "missing_data": "Reject snapshot and show missing values",
+              "validation": "Unique encounter ID; ISO date; duration 0–240 minutes",
+              "unintended_consequences": "Monitor staff overtime and rushed check-in"
+            },
+            {
+              "id": "overtime",
+              "type": "balancing",
+              "name": "Staff overtime minutes",
+              "operational_definition": "Needs team definition and data source",
+              "owner": "Unassigned"
+            },
+            {
+              "id": "readiness",
+              "type": "process",
+              "name": "Morning room readiness check completed",
+              "operational_definition": "Needs numerator, denominator and collection plan",
+              "owner": "Unassigned"
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863269+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-drivers",
+        "project": "synthetic-flow",
+        "kind": "drivers",
+        "title": "Driver Diagram",
+        "body": {
+          "aim": "Timely rooming",
+          "nodes": [
+            {
+              "id": "d1",
+              "type": "primary",
+              "label": "Ready rooms"
+            },
+            {
+              "id": "d2",
+              "type": "secondary",
+              "label": "Shared readiness signal"
+            },
+            {
+              "id": "d3",
+              "type": "change",
+              "label": "Test a morning readiness huddle"
+            }
+          ],
+          "edges": [
+            {
+              "from": "d1",
+              "to": "d2"
+            },
+            {
+              "from": "d2",
+              "to": "d3"
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863246+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-fishbone",
+        "project": "synthetic-flow",
+        "kind": "fishbone",
+        "title": "Fishbone",
+        "body": {
+          "effect": "Delayed rooming (synthetic)",
+          "causes": [
+            {
+              "id": "f1",
+              "category": "Workflow",
+              "text": "Registration and room readiness are not visible together",
+              "classification": "hypothesis",
+              "sources": []
+            },
+            {
+              "id": "f2",
+              "category": "People",
+              "text": "Peak arrivals may exceed available rooming staff",
+              "classification": "hypothesis",
+              "sources": []
+            },
+            {
+              "id": "f3",
+              "category": "Environment",
+              "text": "Rooms may need supplies before use",
+              "classification": "hypothesis",
+              "sources": []
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863226+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-process",
+        "project": "synthetic-flow",
+        "kind": "process",
+        "title": "Process Maps",
+        "body": {
+          "nodes": [
+            {
+              "id": "checkin",
+              "label": "Patient checks in"
+            },
+            {
+              "id": "verify",
+              "label": "Registration verifies details"
+            },
+            {
+              "id": "wait",
+              "label": "Patient waits for a room"
+            },
+            {
+              "id": "room",
+              "label": "Staff room the patient"
+            }
+          ],
+          "edges": [
+            {
+              "from": "checkin",
+              "to": "verify"
+            },
+            {
+              "from": "verify",
+              "to": "wait"
+            },
+            {
+              "from": "wait",
+              "to": "room"
+            }
+          ]
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863201+00:00",
+        "author": "system"
+      },
+      {
+        "id": "demo-charter",
+        "project": "synthetic-flow",
+        "kind": "charter",
+        "title": "Charter and Aim",
+        "body": {
+          "problem": "Synthetic scenario: clinic visits often start late, creating avoidable waiting and staff rework.",
+          "aim": "Reduce median check-in-to-room time from the synthetic baseline to 15 minutes or less by 31 December 2026, without increasing staff overtime.",
+          "scope": "Simulated adult outpatient clinic; no real patients or operational evidence.",
+          "status": "Exploring a small test of change",
+          "population": "Synthetic scheduled outpatient encounters",
+          "team": "Pilot team — names and roles to be confirmed"
+        },
+        "revision": 1,
+        "updated": "2026-10-09T17:04:53.863136+00:00",
+        "author": "system"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "demo-waits",
+        "project": "synthetic-flow",
+        "name": "Rooming time · synthetic",
+        "spec": {
+          "policy": "snapshot",
+          "mapping": {
+            "key": "encounter_id",
+            "date": "date",
+            "value": "wait_minutes",
+            "category": "delay_reason",
+            "mrn": "mrn"
+          },
+          "aggregation": "mean",
+          "unit": "minutes",
+          "minimum": 0,
+          "maximum": 240,
+          "baseline_points": 10,
+          "unit_of_analysis": "Encounter",
+          "record_key": "encounter_id",
+          "measure_id": "wait-time",
+          "definition_version": 1,
+          "missing": "reject",
+          "annotations": [
+            {
+              "date": "2026-09-15",
+              "label": "Illustrative test marker; synthetic only"
+            }
+          ]
+        },
+        "revision": 1,
+        "current_import": "imp_1bc9ca7a60994861af7f",
+        "calculation": {
+          "id": "calc_e3750ea0aaae4c5b8f9b",
+          "import_id": "imp_1bc9ca7a60994861af7f",
+          "measure_revision": 1,
+          "charts": {
+            "run": {
+              "points": [
+                {
+                  "date": "2026-09-01",
+                  "value": 24.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-02",
+                  "value": 22.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-03",
+                  "value": 25.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-04",
+                  "value": 21.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-05",
+                  "value": 23.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-06",
+                  "value": 27.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-07",
+                  "value": 24.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-08",
+                  "value": 22.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-09",
+                  "value": 26.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-10",
+                  "value": 23.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-11",
+                  "value": 21.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-12",
+                  "value": 20.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-13",
+                  "value": 22.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-14",
+                  "value": 18.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-15",
+                  "value": 19.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-16",
+                  "value": 17.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-17",
+                  "value": 20.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-18",
+                  "value": 16.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-19",
+                  "value": 18.0,
+                  "n": 3
+                },
+                {
+                  "date": "2026-09-20",
+                  "value": 17.0,
+                  "n": 3
+                }
+              ],
+              "median": 23.5,
+              "baseline_count": 10,
+              "baseline_end": null,
+              "signals": [
+                "Shift: six consecutive useful points on one side of the baseline median."
+              ]
+            },
+            "pareto": [
+              {
+                "category": "Room readiness",
+                "count": 24,
+                "cumulative_percent": 40.0
+              },
+              {
+                "category": "Other",
+                "count": 12,
+                "cumulative_percent": 60.0
+              },
+              {
+                "category": "Registration",
+                "count": 12,
+                "cumulative_percent": 80.0
+              },
+              {
+                "category": "Staff availability",
+                "count": 12,
+                "cumulative_percent": 100.0
+              }
+            ],
+            "record_count": 60,
+            "unit": "minutes",
+            "aggregation": "mean",
+            "annotations": [
+              {
+                "date": "2026-09-15",
+                "label": "Illustrative test marker; synthetic only"
+              }
+            ],
+            "methodology": {
+              "source": "https://www.ihi.org/library/tools/run-chart-tool",
+              "rules": "IHI descriptive shift (6) and trend (5); points on median omitted for shift; ties ignored for trend. Runs-count and astronomical-point rules require expert review and are not automated.",
+              "caution": "Run chart, not a control chart. Signals do not establish improvement or causation."
+            }
+          },
+          "created": "2026-10-09T17:04:53.876230+00:00"
+        }
+      }
+    ],
+    "imports": [
+      {
+        "id": "imp_1bc9ca7a60994861af7f",
+        "dataset": "demo-waits",
+        "filename": "synthetic-2026-09-20.csv",
+        "effective": "2026-09-20",
+        "sequence": 0,
+        "status": "validated",
+        "report": {
+          "valid": true,
+          "record_count": 60,
+          "issues": [],
+          "issue_count": 0,
+          "schema": [
+            "encounter_id",
+            "mrn",
+            "date",
+            "wait_minutes",
+            "delay_reason"
+          ],
+          "policy": "full snapshot; no concatenation",
+          "spec_revision": 1
+        },
+        "created": "2026-10-09T17:04:53.875975+00:00"
+      }
+    ],
+    "meetings": [
+      {
+        "id": "demo-meeting",
+        "project": "synthetic-flow",
+        "name": "Synthetic working session",
+        "state": "paused",
+        "epoch": 0,
+        "config": "{\"agent_name\":\"QI Coach\",\"coaching\":\"low\",\"cooldown_seconds\":300,\"pause_seconds\":4}",
+        "created": "2026-10-09T17:04:53.863409+00:00",
+        "last_segment": 0.0
+      }
+    ],
+    "jobs": [],
+    "transfers": [],
+    "companion": null,
+    "references": [],
+    "retention": {
+      "raw_audio_hours": 0,
+      "transcript_days": 90,
+      "durable_notes": "Retained as project records"
+    },
+    "model": {
+      "reasoning": "Inferact/Qwen3.8-27B-NVFP4",
+      "fast": "Qwen/Qwen3.5-9B"
+    },
+    "asr": {
+      "configured": false,
+      "voices": "Source-only attribution; distinct voices require correction",
+      "connections": []
+    },
+    "event_cursor": 12,
+    "transfer_counts": {}
+  },
+  "meetings": {
+    "demo-meeting": {
+      "meeting": {
+        "id": "demo-meeting",
+        "project": "synthetic-flow",
+        "name": "Synthetic working session",
+        "state": "paused",
+        "epoch": 0,
+        "config": "{\"agent_name\":\"QI Coach\",\"coaching\":\"low\",\"cooldown_seconds\":300,\"pause_seconds\":4}",
+        "created": "2026-10-09T17:04:53.863409+00:00",
+        "last_segment": 0.0
+      },
+      "speakers": [],
+      "segments": [],
+      "issues": []
+    }
+  },
+  "versions": {
+    "demo-suggestions": [
+      {
+        "artifact": "demo-suggestions",
+        "revision": 1,
+        "body": {
+          "items": []
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863371+00:00"
+      }
+    ],
+    "demo-questions": [
+      {
+        "artifact": "demo-questions",
+        "revision": 1,
+        "body": {
+          "items": [
+            {
+              "id": "q1",
+              "text": "What level of overtime would make the change unacceptable?",
+              "classification": "unresolved_question",
+              "status": "open",
+              "sources": []
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863358+00:00"
+      }
+    ],
+    "demo-actions": [
+      {
+        "artifact": "demo-actions",
+        "revision": 1,
+        "body": {
+          "items": [
+            {
+              "id": "a1",
+              "text": "Agree an operational definition for the balancing measure",
+              "owner": "Unassigned",
+              "due": "",
+              "status": "open",
+              "classification": "ai_suggestion",
+              "sources": []
+            },
+            {
+              "id": "a2",
+              "text": "Confirm the first test's owner and prediction",
+              "owner": "Unassigned",
+              "due": "",
+              "status": "open",
+              "classification": "ai_suggestion",
+              "sources": []
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863342+00:00"
+      }
+    ],
+    "demo-decisions": [
+      {
+        "artifact": "demo-decisions",
+        "revision": 1,
+        "body": {
+          "items": []
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863324+00:00"
+      }
+    ],
+    "demo-notes": [
+      {
+        "artifact": "demo-notes",
+        "revision": 1,
+        "body": {
+          "entries": [],
+          "summary": "Synthetic demonstration. Replay the included meeting to see live documentation."
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863311+00:00"
+      }
+    ],
+    "demo-pdsa": [
+      {
+        "artifact": "demo-pdsa",
+        "revision": 1,
+        "body": {
+          "cycles": [
+            {
+              "id": "pdsa-1",
+              "title": "Test a five-minute readiness huddle",
+              "status": "proposed",
+              "plan": "One morning, one clinic team; confirm owner and process measure.",
+              "prediction": "Earlier visibility of unready rooms may reduce avoidable delay.",
+              "do": "Not yet tested",
+              "study": "No test observations yet",
+              "act": "Decide after reviewing the test",
+              "sources": []
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863298+00:00"
+      }
+    ],
+    "demo-measurement": [
+      {
+        "artifact": "demo-measurement",
+        "revision": 1,
+        "body": {
+          "measures": [
+            {
+              "id": "wait-time",
+              "type": "outcome",
+              "name": "Check-in to room time",
+              "operational_definition": "Elapsed minutes between check-in and entry to examination room",
+              "population": "Scheduled synthetic clinic encounters",
+              "unit_of_analysis": "Encounter",
+              "numerator": "Not applicable: continuous duration",
+              "denominator": "Not applicable",
+              "inclusion": "Scheduled daytime visits",
+              "exclusion": "Walk-ins; explicit missing timestamp report",
+              "frequency": "Daily mean; fixed first 10 days baseline median",
+              "source": "Synthetic CSV; actual schema not supplied",
+              "required_fields": [
+                "encounter_id",
+                "date",
+                "wait_minutes"
+              ],
+              "owner": "Unassigned",
+              "burden": "Automatic after mapping",
+              "missing_data": "Reject snapshot and show missing values",
+              "validation": "Unique encounter ID; ISO date; duration 0–240 minutes",
+              "unintended_consequences": "Monitor staff overtime and rushed check-in"
+            },
+            {
+              "id": "overtime",
+              "type": "balancing",
+              "name": "Staff overtime minutes",
+              "operational_definition": "Needs team definition and data source",
+              "owner": "Unassigned"
+            },
+            {
+              "id": "readiness",
+              "type": "process",
+              "name": "Morning room readiness check completed",
+              "operational_definition": "Needs numerator, denominator and collection plan",
+              "owner": "Unassigned"
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863280+00:00"
+      }
+    ],
+    "demo-drivers": [
+      {
+        "artifact": "demo-drivers",
+        "revision": 1,
+        "body": {
+          "aim": "Timely rooming",
+          "nodes": [
+            {
+              "id": "d1",
+              "type": "primary",
+              "label": "Ready rooms"
+            },
+            {
+              "id": "d2",
+              "type": "secondary",
+              "label": "Shared readiness signal"
+            },
+            {
+              "id": "d3",
+              "type": "change",
+              "label": "Test a morning readiness huddle"
+            }
+          ],
+          "edges": [
+            {
+              "from": "d1",
+              "to": "d2"
+            },
+            {
+              "from": "d2",
+              "to": "d3"
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863251+00:00"
+      }
+    ],
+    "demo-fishbone": [
+      {
+        "artifact": "demo-fishbone",
+        "revision": 1,
+        "body": {
+          "effect": "Delayed rooming (synthetic)",
+          "causes": [
+            {
+              "id": "f1",
+              "category": "Workflow",
+              "text": "Registration and room readiness are not visible together",
+              "classification": "hypothesis",
+              "sources": []
+            },
+            {
+              "id": "f2",
+              "category": "People",
+              "text": "Peak arrivals may exceed available rooming staff",
+              "classification": "hypothesis",
+              "sources": []
+            },
+            {
+              "id": "f3",
+              "category": "Environment",
+              "text": "Rooms may need supplies before use",
+              "classification": "hypothesis",
+              "sources": []
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863233+00:00"
+      }
+    ],
+    "demo-process": [
+      {
+        "artifact": "demo-process",
+        "revision": 1,
+        "body": {
+          "nodes": [
+            {
+              "id": "checkin",
+              "label": "Patient checks in"
+            },
+            {
+              "id": "verify",
+              "label": "Registration verifies details"
+            },
+            {
+              "id": "wait",
+              "label": "Patient waits for a room"
+            },
+            {
+              "id": "room",
+              "label": "Staff room the patient"
+            }
+          ],
+          "edges": [
+            {
+              "from": "checkin",
+              "to": "verify"
+            },
+            {
+              "from": "verify",
+              "to": "wait"
+            },
+            {
+              "from": "wait",
+              "to": "room"
+            }
+          ]
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863210+00:00"
+      }
+    ],
+    "demo-charter": [
+      {
+        "artifact": "demo-charter",
+        "revision": 1,
+        "body": {
+          "problem": "Synthetic scenario: clinic visits often start late, creating avoidable waiting and staff rework.",
+          "aim": "Reduce median check-in-to-room time from the synthetic baseline to 15 minutes or less by 31 December 2026, without increasing staff overtime.",
+          "scope": "Simulated adult outpatient clinic; no real patients or operational evidence.",
+          "status": "Exploring a small test of change",
+          "population": "Synthetic scheduled outpatient encounters",
+          "team": "Pilot team — names and roles to be confirmed"
+        },
+        "author": "system",
+        "reason": "created",
+        "created": "2026-10-09T17:04:53.863158+00:00"
+      }
+    ]
+  },
+  "metrics": []
+}

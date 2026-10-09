@@ -1309,6 +1309,7 @@
             </button>
             <nav id="main-nav">
                 <a href="#tools">Learning Tools</a>
+                <a href="qi-coach/">QI Coach</a>
                 <a href="https://test.sageproject.xyz">Resident Assessment</a>
                 <a href="https://test.sageproject.xyz/assess/med-student">Med Student</a>
                 <a href="https://test.sageproject.xyz/assess/antimicrobial-selection">Antimicrobial Selection</a>
@@ -1436,6 +1437,25 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
+                    </div>
+                </a>
+
+                <a href="qi-coach/" class="tool-card education" style="text-decoration: none;">
+                    <div class="tool-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/>
+                            <path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3M8 22h8"/>
+                        </svg>
+                    </div>
+                    <h3>QI Coach</h3>
+                    <p>Explore a shared quality improvement workspace: editable aims and diagrams, measures, PDSA worksheets, and meeting notes. Try the synthetic preview and share your feedback.</p>
+                    <div class="tool-features">
+                        <span class="tool-feature">Interactive Preview</span>
+                        <span class="tool-feature">Synthetic Data</span>
+                        <span class="tool-feature">No Sign-In</span>
+                    </div>
+                    <div class="tool-action">Review QI Coach
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </a>
 
@@ -1721,6 +1741,8 @@
             if(!cap || !pill || !beadsEl) return;
 
             const TABS = [
+                { label:'QI Coach', href:'qi-coach/', color:'var(--sage-600)',
+                  icon:'<path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3M8 22h8"/>' },
                 { label:'Literature Digest', href:'literature-monitor/', color:'var(--accent-lavender)',
                   icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
                 { label:'Empiric Therapy', href:'asp-advisor/', color:'#7eb8a8',

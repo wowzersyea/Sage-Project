@@ -16,6 +16,7 @@ literature-monitor/           # Bi-weekly literature digest viewer
   index.html                  # Digest UI
   digests/                    # JSON digest data files
 qi-dashboard/                 # QI metrics & run charts
+qi-coach/                     # Public synthetic QI Coach review; browser-local edits
 asp-advisor/                  # Empiric therapy calculator
 podcast/                      # RSS feed for Sage Podcast
 mission-control/              # Operations overlay (localhost only)
@@ -28,6 +29,16 @@ mission-control/              # Operations overlay (localhost only)
 3. GitHub Pages deploys automatically (usually within 1-2 minutes)
 
 No build tools, no CI pipeline needed — just push.
+
+## QI Coach preview
+
+The QI Coach navigation tab, capsule link and learning-tools card open `/qi-coach/`.
+This is a password-free synthetic review using the real app's interface, with local
+document edits, meeting replay, and feedback notes. Live AI, uploads, audio and
+OneDrive integration are disabled. It contains no Spark credentials or live data.
+The private `wowzersyea/qi-coach` repository owns the source and its
+`scripts/build_review.py` generator. Regenerate the complete `qi-coach/` directory
+there when the interface changes; do not edit generated assets independently.
 
 ## Related Repos
 

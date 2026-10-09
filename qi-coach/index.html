@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Explore QI Coach's synthetic quality improvement workspace and share design feedback.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>QI Coach · Interactive review</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./review.css">
+  <script type="module" src="./review.js"></script>
+</head>
+<body>
+  <div class="review-banner">
+    <div><a href="/">← Sage Project</a><strong>QI Coach · Interactive review</strong><span>Synthetic data. Edits stay in this browser. Live AI, audio and file sync require the private Spark app.</span></div>
+    <div class="review-actions"><button id="review-feedback">Give feedback</button><button id="review-reset">Reset demo</button></div>
+  </div>
+  <div id="app"><div class="loading">Opening the synthetic workspace…</div></div>
+  <div id="toast" role="status"></div>
+  <dialog id="modal"></dialog>
+  <dialog id="review-dialog" aria-labelledby="review-title">
+    <h2 id="review-title">What would make this more useful?</h2>
+    <p class="subtle">Note what works, what feels confusing, and what you would change. Your notes save in this browser. Download them to share in chat, or open a GitHub issue to submit them.</p>
+    <label for="review-notes">Your feedback</label>
+    <textarea id="review-notes" rows="9" placeholder="Page or feature:\nWhat I noticed:\nWhat I would change:"></textarea>
+    <p class="proof">Use synthetic examples only. GitHub submission requires your account and your final Submit click.</p>
+    <div class="actions"><button id="review-close">Close</button><button id="review-download">Download notes</button><a class="button primary" id="review-issue" target="_blank" rel="noopener noreferrer">Open GitHub issue</a></div>
+  </dialog>
+</body>
+</html>
