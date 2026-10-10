@@ -1,0 +1,14 @@
+# Rust build output
+crates/mathsim/target/
+# Node (no trailing slash: a symlinked node_modules must be ignored too)
+node_modules
+# Ingest logs (data/ IS committed -- it is the licensing gate's input)
+tools/trait-ingest/*.log
+# Source NFT images (large, refetchable via tools/atlas-build/fetch-deck.py).
+# The derived tiles are inlined into play/index.html and ARE committed.
+tools/atlas-build/cache/
+# build logs
+tools/atlas-build/*.log
+# Full-collection metadata: a 10k-token build input, refetchable in ~3 min via
+# tools/trait-ingest/fetch-collection.py. The derived rarity.json IS committed.
+tools/trait-ingest/data/collection_traits.json
