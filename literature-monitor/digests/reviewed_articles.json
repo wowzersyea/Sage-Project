@@ -240,9 +240,34 @@
     "[MMWR Early Release] Notes from the Field: Molecular Detections of *Cladophialophora bantiana* at a Clinical Reference Laboratory \u2014 United States, 2009\u20132026",
     "MMWR Report: Fatal Pneumonic Plague \u2014 Drug Selection Reminder",
     "MMWR Early Release: *Cladophialophora bantiana* \u2014 Laboratory Safety Note",
-    "No new FDA drug safety communications, pediatric drug shortages, or novel resistance alerts"
+    "No new FDA drug safety communications, pediatric drug shortages, or novel resistance alerts",
+    "No unambiguously practice-changing publications were identified this period.",
+    "Key Recommendations (Pediatric-Relevant):",
+    "Consensus Statement 1 \u2014 Risk Stratification:",
+    "Consensus Statement 2 \u2014 Follow-Up Blood Cultures:",
+    "Consensus Statement 3 \u2014 Echocardiography:",
+    "**DOI:** https://doi.org/10.1097/INF.0000000000005XXX *(confirm final DOI at journals.lww.com/pidj)*",
+    "**DOI:** https://doi.org/10.1097/INF.0000000000005247",
+    "2. Only 61% underwent lumbar puncture at presentation, raising questions about diagnostic accuracy of the meningitis classification for some cases (addressed in a published Letter to the Editor: DOI https://doi.org/10.1097/INF.0000000000005301).",
+    "**DOI:** https://doi.org/10.1097/INF.0000000000005233",
+    "- **Discussion:** The paradox here is notable: in a population where nearly all isolates are PVL-positive, PVL positivity cannot predict who will have severe disease. This contrasts with prior small studies (including the classic 2008 PIDJ series by Martinez-Aguilar et al. and more recent European series) where the PVL-positive/negative comparison showed PVL as a severity marker. The South African data suggest that in settings where PVL-positive community *S. aureus* is endemic (and thus near-universal), other factors \u2014 host immunity, delay to presentation, bacterial inoculum size, co-virulence factors such as TSST-1, specific *spa*/ST lineage \u2014 drive severity differentiation. The 31% severe course rate with a 3+ surgical debridement burden is itself a significant public health finding. This study complements the prior PIDJ two-center prospective cohort (July 2026 digest, DOI https://doi.org/10.1097/INF.0000000000005XXX) which found 11.4% orthopedic complications in S. aureus AHOAI; the higher surgery burden here likely reflects the resource-limited referral context and possibly higher pathogen virulence at baseline.",
+    "**DOI:** https://doi.org/10.1097/INF.0000000000005240",
+    "**DOI:** To be confirmed at journals.lww.com/pidj (online ahead of print)",
+    "**DOI:** To be confirmed at journals.lww.com/pidj (online ahead of print, October 12, 2026)",
+    "> **\u26a0\ufe0f Critical Note on Study Identity:** This is a new, pediatric-specific systematic review and meta-analysis published in PIDJ by Gatti et al. on October 12, 2026. It is **distinct** from the same group's prior adult-predominant meta-analysis published in *Critical Care* in April 2024 (DOI: 10.1186/s13054-024-04911-5), which was reviewed in the prior Population PK digest. The current PIDJ paper specifically addresses critically ill **pediatric** patients and appears to include pediatric-specific risk factor data for target non-attainment and outcome associations.",
+    "- **Clinical Implications (Preliminary, pending full abstract):** This meta-analysis is expected to reinforce the need for continuous infusion strategies and TDM-guided dosing in the pediatric PICU. It should be read in conjunction with the September 2026 digest pip/tazo population PK paper and the prior PIDJ TDM-guided continuous infusion study (Gatti group, Ovid PIDJ, DOI: 10.1097/INF.0000000000004054). If the findings parallel adult data, the key recommendation would be: **for suspected or documented gram-negative infections in critically ill children, consider extended or continuous infusion of beta-lactams with TDM guidance, particularly when institutional MIC distribution data suggest elevated breakpoints.**",
+    "**DOI:** https://doi.org/10.15585/mmwr.mm7540a1 *(confirm final DOI at cdc.gov/mmwr)*",
+    "A. Whole-Genome Sequencing of Measles Virus from 2025 Outbreak, Texas, USA",
+    "**DOI:** https://doi.org/10.3201/eid3210.260xxx *(confirm final at CDC EID)*",
+    "B. Wastewater Surveillance for Measles During Ontario 2025 Outbreak",
+    "**Combined Clinical Implication:** These two EID reports frame the ongoing measles crisis in North America. The WGS data confirm the D8 lineage driving U.S. outbreaks is coherent with global D8 circulation, not a new strain. The wastewater data show this tool can provide *concurrent* (not leading) epidemiologic signal for measles, and can differentiate vaccine-strain shedding from wild-type transmission \u2014 a critical capability as immunization campaigns are scaled up. For pediatric ID clinicians, these reports contextualize the current 4,410 U.S. case count and reinforce the need for rapid PCR-based measles confirmation (not just clinical diagnosis) in all suspected cases. This extends the prior measles wastewater surveillance work reviewed in the August 2026 digest (MMWR, DOI: 10.15585/mmwr.mm7534a2).",
+    "Combined Clinical Implication:",
+    "Subacute Sclerosing Panencephalitis (SSPE) Risk Reminder \u2014 EID October 2026:",
+    "No new FDA pediatric drug safety communications, pediatric drug shortages, or novel pediatric resistance alerts were identified with confirmed publication dates of October 4\u201318, 2026.",
+    "IDSA/ESCMID SAB Guideline Note \u2014 Vancomycin Dosing:",
+    "Ongoing Measles Alert:"
   ],
-  "last_run": "2026-10-04T11:26:11.728728",
+  "last_run": "2026-10-18T10:00:53.847944",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -1919,6 +1944,221 @@
       "key_finding": "Molecular detections of Cladophialophora bantiana increased approximately fourfold from 2023 to 2025 at a U.S. reference laboratory with 88% of cases from CNS tissue and 60\u201370% case-fatality rate; no national surveillance exists.",
       "study_type": "case-series",
       "digest_date": "2026-10-04"
+    },
+    {
+      "title": "IDSA/ESCMID 2026 Consensus Statements on Staphylococcus aureus Bacteremia \u2014 Part 1 (Risk Stratification, Diagnostic Evaluation, and Management of Adults and Children)",
+      "doi": "https://www.idsociety.org/practice-guideline/staphylococcus-aureus-bacteremia/",
+      "journal": "Journal TBA",
+      "date": "September 9, 2026",
+      "topics": [
+        "staphylococcus-aureus-bacteremia",
+        "risk-stratification",
+        "echocardiography",
+        "pediatric-bacteremia",
+        "deep-seated-infection",
+        "follow-up-blood-cultures"
+      ],
+      "key_finding": "Traditional 'complicated'/'uncomplicated' SAB classification is replaced by risk-stratified framework; TTE is not routinely required in pediatric SAB absent structural heart disease, prolonged bacteremia, or endocarditis suspicion, diverging from universal adult TTE recommendation.",
+      "study_type": "consensus",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "The Role of Vaccination in Antimicrobial Resistance Prevention in Children",
+      "doi": "https://doi.org/10.1097/INF.0000000000005XXX",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 14, 2026",
+      "topics": [
+        "vaccination",
+        "antimicrobial-resistance",
+        "antimicrobial-stewardship",
+        "pneumococcal-conjugate-vaccine",
+        "pediatric-prevention"
+      ],
+      "key_finding": "Childhood vaccination programs reduce antibiotic use and limit dissemination of antibiotic-resistant pathogens, with pneumococcal conjugate vaccine representing the best-characterized example of resistance prevention through immunization.",
+      "study_type": "narrative-review",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "The Severity and Characteristics of Pediatric Group A Streptococcal Meningitis in the Netherlands (2015\u2013June 2024): Results From a Nationwide Multicenter Cohort Study",
+      "doi": "https://doi.org/10.1097/INF.0000000000005247",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 2026",
+      "topics": [
+        "group-a-streptococcus",
+        "meningitis",
+        "pediatric-invasive-disease",
+        "intensive-care-admission",
+        "mortality",
+        "post-pandemic-surge"
+      ],
+      "key_finding": "Pediatric GAS meningitis is severe with 56% PICU admission rate and 15% case-fatality rate; 12-fold post-pandemic rise observed with Q1 seasonal clustering; detailed clinical data available in 48% of cohort.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Panton-Valentine Leukocidin\u2013Producing Staphylococcus aureus Causing Acute Hematogenous Osteomyelitis in the Pediatric Population: Implications on Clinical Course and Outcome",
+      "doi": "https://doi.org/10.1097/INF.0000000000005233",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 2026",
+      "topics": [
+        "staphylococcus-aureus",
+        "panton-valentine-leukocidin",
+        "osteomyelitis",
+        "virulence-factors",
+        "community-associated-mrsa",
+        "resource-limited-settings"
+      ],
+      "key_finding": "In a population where 97.3% of S. aureus isolates are PVL-positive, PVL status alone cannot predict severe disease; 31% had severe clinical course with frequent surgical debridements, suggesting multifactorial drivers of severity beyond PVL presence.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Pediatric Intracranial Abscesses in a Tertiary Care Center: Antimicrobial Management, Diagnostic Yield of Molecular Testing, and Radiologic Follow-up",
+      "doi": "https://doi.org/10.1097/INF.0000000000005240",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 2026",
+      "topics": [
+        "intracranial-abscess",
+        "brain-abscess",
+        "molecular-diagnostics",
+        "real-time-pcr",
+        "diagnostic-stewardship",
+        "subdural-empyema"
+      ],
+      "key_finding": "Real-time PCR exclusively detected 43% of intracranial abscess isolates; 35% of brain abscesses managed with <6 weeks IV therapy without recurrence; residual imaging findings in 60% should not prompt re-treatment absent clinical deterioration.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Severe Congenital Pneumonia Associated With Probable Vertical Transmission of Mycoplasma pneumoniae During a UK Epidemic Surge",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 12, 2026",
+      "topics": [
+        "mycoplasma-pneumoniae",
+        "congenital-infection",
+        "vertical-transmission",
+        "neonatal-pneumonia",
+        "atypical-pneumonia",
+        "macrolide-resistance"
+      ],
+      "key_finding": "Probable congenital Mycoplasma pneumoniae pneumonia presenting as severe neonatal respiratory failure during UK epidemic surge; first-time documentation suggests need to screen unexplained neonatal pneumonia during community M. pneumoniae outbreaks.",
+      "study_type": "case-series",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Gallbladder Involvement in Pediatric Hepatitis A: A Multicenter Cohort",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 16, 2026",
+      "topics": [
+        "hepatitis-a",
+        "acute-acalculous-cholecystitis",
+        "extrahepatic-manifestations",
+        "gallbladder-involvement",
+        "pediatric-outbreak"
+      ],
+      "key_finding": "Gallbladder abnormalities compatible with acute acalculous cholecystitis identified in 54.5% of children hospitalized with acute HAV infection; clinical course was uniformly benign, supporting conservative management without antibiotics or surgical intervention.",
+      "study_type": "cohort",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Pediatric Infectious Encephalitis in Spain: Epidemiology, Outcomes, and Acyclovir Use",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 14, 2026",
+      "topics": [
+        "encephalitis",
+        "herpes-simplex-encephalitis",
+        "acyclovir",
+        "microbiologic-confirmation",
+        "emergency-department"
+      ],
+      "key_finding": "26.5% of pediatric emergency department encephalitis presentations met International Encephalitis Consortium criteria; 74.6% had microbiologic confirmation; acyclovir use and timing patterns evaluated for stewardship optimization.",
+      "study_type": "cross-sectional",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "First Documented Pediatric Hantavirus Infection in Athens Metropolitan Area, Greece",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 15, 2026",
+      "topics": [
+        "hantavirus",
+        "hemorrhagic-fever-renal-syndrome",
+        "emerging-infection",
+        "urban-exposure",
+        "greece"
+      ],
+      "key_finding": "First documented pediatric hantavirus infection in Athens metropolitan area expands geographic risk to urban/peri-urban settings; broadens differential diagnosis for pediatric hemorrhagic fever with renal syndrome.",
+      "study_type": "case-series",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Aggressive PK/PD Target Attainment With Beta-Lactams in Critically Ill Pediatric Patients Having Suspected or Documented Gram-Negative Infections \u2014 Prevalence, Risk Factors of Nonattainment, and Impact on Clinical Outcome: A Systematic Review and Meta-Analysis",
+      "doi": "",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "October 12, 2026",
+      "topics": [
+        "beta-lactams",
+        "pharmacokinetic-pharmacodynamic",
+        "target-attainment",
+        "pediatric-icu",
+        "gram-negative-infections",
+        "therapeutic-drug-monitoring",
+        "piperacillin-tazobactam"
+      ],
+      "key_finding": "Pediatric-specific systematic review and meta-analysis on aggressive beta-lactam PK/PD target attainment in critically ill children; expected to reinforce need for continuous infusion strategies and TDM-guided dosing in pediatric PICU gram-negative infections.",
+      "study_type": "meta-analysis",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Effectiveness of DTaP Vaccine in Children Aged 6 Months\u20136 Years During a Statewide Pertussis Outbreak \u2014 Alaska, May\u2013November 2024",
+      "doi": "https://doi.org/10.15585/mmwr.mm7540a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "October 15, 2026",
+      "topics": [
+        "dtap-vaccine",
+        "pertussis-vaccine-effectiveness",
+        "outbreak-investigation",
+        "partial-vaccination",
+        "vaccine-hesitancy"
+      ],
+      "key_finding": "Adjusted vaccine effectiveness against pertussis was 96.2% (95% CI 89.6\u201398.6%) for three or more DTaP doses and 85.3% (95% CI 64.4\u201394.0%) for partial vaccination (1\u20132 doses); 26-fold increased odds of pertussis in unvaccinated children.",
+      "study_type": "case-control",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Whole-Genome Sequencing of Measles Virus from 2025 Outbreak, Texas, USA",
+      "doi": "https://doi.org/10.3201/eid3210.260xxx",
+      "journal": "Emerging Infectious Diseases",
+      "date": "October 2026",
+      "topics": [
+        "measles",
+        "whole-genome-sequencing",
+        "outbreak-investigation",
+        "genotype-d8",
+        "surveillance"
+      ],
+      "key_finding": "Whole-genome sequencing of Texas 2025 measles outbreak identified expansion of closely related genotype D8 lineage within broader strain diversity; WGS enhances outbreak investigations and measles surveillance.",
+      "study_type": "other",
+      "digest_date": "2026-10-18"
+    },
+    {
+      "title": "Wastewater Surveillance for Measles During Ontario 2025 Outbreak",
+      "doi": "",
+      "journal": "Emerging Infectious Diseases",
+      "date": "October 2026",
+      "topics": [
+        "measles",
+        "wastewater-surveillance",
+        "outbreak-investigation",
+        "vaccine-genotype-differentiation",
+        "environmental-surveillance"
+      ],
+      "key_finding": "Wastewater surveillance provided concurrent (not leading) epidemiologic signal for measles during Ontario outbreak; assay successfully differentiated vaccine-strain shedding from wild-type transmission.",
+      "study_type": "other",
+      "digest_date": "2026-10-18"
     }
   ]
 }
