@@ -119,3 +119,22 @@ test('expired faculty authentication clears previously displayed records and det
         assert.equal(await page.evaluate(() => ALL.length), 0);
     } finally {await page.close();}
 });
+
+test('malformed legacy records do not break faculty review of valid records', async () => {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    try {
+        await page.route('**/assessment-api/admin', route => route.fulfill({json:{status:'ok',submissions:[
+            null, 'invalid', {name:'Legacy result',domains:{invalid:true}},
+            {name:'Valid result',domains:[null,{domain:'Example',asked:1,correct:1,answers:[null,{question:'Readable question'}]}]}
+        ]}}));
+        await page.goto('http://localhost:8899/admin/');
+        await page.locator('#list .card').first().click();
+        await page.getByText('No per-question detail stored for this submission.').waitFor();
+        await page.evaluate(() => closeDetail());
+        await page.locator('#list .card').nth(1).click();
+        await page.getByText('Readable question',{exact:true}).waitFor();
+        assert.deepEqual(errors,[]);
+    } finally {await page.close();}
+});

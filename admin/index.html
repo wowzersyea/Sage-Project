@@ -171,7 +171,7 @@ async function loadData(){
       sessionStorage.removeItem('sageAdminKey');
       return;
     }
-    ALL = data.submissions || [];
+    ALL = data.submissions.filter(s => s && typeof s === 'object' && !Array.isArray(s));
     document.getElementById('gate').style.display='none';
     document.getElementById('dash').style.display='block';
     renderFilters();
@@ -243,18 +243,18 @@ function openDetail(idx){
   }
 
   // Resident with raw answers only (no answer key stored — legacy/client save)
-  if(!s.domains && s.answers){
+  if(!Array.isArray(s.domains) && Array.isArray(s.answers)){
     body += `<div class="domain-block"><div class="domain-title">Answers (${s.answers.length})</div>`;
-    s.answers.forEach(a=>{
+    s.answers.filter(a => a && typeof a === 'object').forEach(a=>{
       body += `<div class="q"><div class="q-text"><strong>${esc(a.questionId)}</strong></div>
         <div class="freetext"><div class="lbl">Their answer</div>${esc(a.answer)}</div></div>`;
     });
     body += `</div><p style="color:var(--text-muted);font-size:.82rem">Answer key not stored for this assessment (scored server-side).</p>`;
   }
   // Domain-scored assessments
-  else if(s.domains){
+  else if(Array.isArray(s.domains)){
     s.domains.forEach(d=>{
-      if(!d.answers || !d.answers.length) return;
+      if(!d || !Array.isArray(d.answers) || !d.answers.length) return;
       const dpct = d.asked ? Math.round((d.correct/d.asked)*100) : null;
       body += `<div class="domain-block"><div class="domain-title">${esc(d.domain)}${dpct!==null?` — ${dpct}%`:''}</div>`;
       d.answers.forEach(a=> body += renderQuestion(a));
@@ -278,6 +278,7 @@ function closeDetail(){ document.getElementById('overlay').classList.remove('ope
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetail(); });
 
 function renderQuestion(a){
+  if(!a || typeof a !== 'object' || Array.isArray(a)) return '';
   const correct = a.correct===true || a.score===1;
   const icon = correct ? '<span class="q-icon ok">✓</span>' : '<span class="q-icon no">✗</span>';
   let html = `<div class="q"><div class="q-top">${icon}
