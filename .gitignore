@@ -14,7 +14,10 @@ __pycache__/
 *.pyc
 .venv/
 node_modules/
-package-lock.json
+.wrangler/
+.clasp.json
+.clasprc.json
+test-results/
 
 # OS
 .DS_Store

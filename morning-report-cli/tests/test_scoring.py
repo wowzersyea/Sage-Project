@@ -166,7 +166,7 @@ def test_the_run_of_show_matches_roles_json():
 def test_the_phi_rules_match_the_browser_half():
     """phi.py and phi.js must catch and spare the same things."""
     from morningreport import phi
-    js = (Path(__file__).resolve().parents[2] / "morning-report" / "assets" / "phi.js").read_text()
+    js = (Path(__file__).resolve().parents[2] / "morning-report" / "assets" / "phi.js").read_text(encoding="utf-8")
     for kind in ("MRN", "long number", "phone number", "SSN", "date of service",
                  "age over 89", "address", "named person", "named relative"):
         assert f'"{kind}"' in js or f"'{kind}'" in js, kind
