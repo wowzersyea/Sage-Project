@@ -639,7 +639,13 @@ function showCalculatedMetricsInfo(metrics) {
     const listSpan = document.getElementById('calculatedMetricsList');
 
     if (infoDiv && listSpan) {
-        listSpan.innerHTML = metrics.map(m => `<strong>${m.name}</strong> (${m.from})`).join(', ');
+        listSpan.replaceChildren();
+        metrics.forEach((m, index) => {
+            if (index) listSpan.append(', ');
+            const name = document.createElement('strong');
+            name.textContent = m.name;
+            listSpan.append(name, ` (${m.from})`);
+        });
         infoDiv.style.display = 'block';
     }
 }
@@ -1411,16 +1417,19 @@ function createProjectCard(project) {
     card.innerHTML = `
         <div class="chart-card-header">
             <div>
-                <div class="chart-card-title">${project.name}</div>
-                <div class="chart-card-value">${currentValue}</div>
+                <div class="chart-card-title"></div>
+                <div class="chart-card-value"></div>
             </div>
             <span class="trend-indicator ${trendClass}">${trendIcon} ${trend}</span>
         </div>
         <div class="chart-wrapper">
-            <canvas id="mini-chart-${project.id}"></canvas>
+            <canvas></canvas>
         </div>
     `;
 
+    card.querySelector('.chart-card-title').textContent = project.name;
+    card.querySelector('.chart-card-value').textContent = currentValue;
+    card.querySelector('canvas').id = `mini-chart-${project.id}`;
     return card;
 }
 
@@ -1656,17 +1665,25 @@ function updateInterventionList() {
         return;
     }
 
-    container.innerHTML = interventions.map(i => `
-        <div class="intervention-item">
-            <div>
-                <strong>${i.label}</strong>
-                <div style="font-size: 0.85rem; opacity: 0.7;">
-                    ${i.date}${i.description ? ' - ' + i.description : ''}
-                </div>
-            </div>
-            <button type="button" class="remove-btn small" onclick="removeIntervention('${i.id}')">Remove</button>
-        </div>
-    `).join('');
+    container.replaceChildren();
+    interventions.forEach(i => {
+        const item = document.createElement('div');
+        item.className = 'intervention-item';
+        const content = document.createElement('div');
+        const label = document.createElement('strong');
+        label.textContent = i.label;
+        const detail = document.createElement('div');
+        detail.style.cssText = 'font-size: 0.85rem; opacity: 0.7;';
+        detail.textContent = `${i.date}${i.description ? ' - ' + i.description : ''}`;
+        content.append(label, detail);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'remove-btn small';
+        remove.textContent = 'Remove';
+        remove.addEventListener('click', () => removeIntervention(i.id));
+        item.append(content, remove);
+        container.append(item);
+    });
 }
 
 // ============================================
