@@ -1,0 +1,31 @@
+title = "Sage Project secret scanning"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "sage-private-server-key"
+description = "Private assessment or facilitator credential in source"
+regex = '''(?i)\b(?:ASSESSMENT_ADMIN_KEY|ASSESSMENT_WRITE_KEY|ADMIN_KEY|MR_KEY)\b["']?\s*[:=]\s*["']([^"'\r\n]+)["']'''
+secretGroup = 1
+[[rules.allowlists]]
+description = "Synthetic credentials in automated tests"
+paths = ['''(?:^|[/\\])tests[/\\]''']
+
+[[allowlists]]
+description = "Third-party speech engine: tokenizer code resembles a token"
+paths = ['''^morning-report[/\\]assets[/\\]stt[/\\]transformers\.min\.js$''']
+
+[[allowlists]]
+description = "Local game save slot, not an authentication credential"
+condition = "AND"
+paths = ['''^tower-defense[/\\]index\.html$''']
+regexTarget = "line"
+regexes = ['''^const SAVE_KEY = 'immunopolis_save_v1';\s*$''']
+
+[[allowlists]]
+description = "Timezone argument in the server test fixture, not a key"
+condition = "AND"
+paths = ['''^morning-report[/\\]tests[/\\]appsscript\.test\.js$''']
+regexTarget = "line"
+regexes = ['''^\s*\], key, 'America/Chicago', feedbackKey\);\s*$''']

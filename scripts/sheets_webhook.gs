@@ -2,10 +2,8 @@
 // Deploy as Google Apps Script Web App:
 //   Extensions → Apps Script → paste this → Deploy → New deployment
 //   Type: Web App | Execute as: Me | Who has access: Anyone
-//   Copy the Web App URL → paste into SHEETS_ENDPOINT in:
-//     - med-student-assessment/index.html
-//     - antimicrobial-selection/index.html
-//     - components/AssessmentForm.tsx  (resident, Next.js app on home server)
+//   Configure the URL and independent read/write secrets on the server proxy.
+//   See docs/security-rollout.md before publishing the frontend.
 //
 // Each assessment routes to its own tab in the Sheet.
 
@@ -25,6 +23,7 @@ function tabNameFor(assessmentType) {
     switch (assessmentType) {
         case 'Med Student':   return 'Med Student';
         case 'Resident':      return 'Resident';
+        case 'Resident Post-Test': return 'Resident Post-Test';
         case 'Antimicrobial': return 'Antimicrobial';
         case 'Antimicrobial Selection': return 'Antimicrobial Selection';
         default:              return 'Responses';
@@ -32,19 +31,106 @@ function tabNameFor(assessmentType) {
 }
 
 // ─── Admin read endpoint ─────────────────────────────────────────────────────
-// The admin dashboard fetches all submissions via GET ?key=<ADMIN_KEY>.
-// Change this passcode and keep it private — anyone with it can read all results.
-const ADMIN_KEY = 'pid';
+// Only the authenticated server proxy holds the read and write credentials.
+function serverSecret(name) {
+    const value = PropertiesService.getScriptProperties().getProperty(name);
+    return value && value.length >= 32 ? value : null;
+}
+
+function validateSubmission(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid submission.');
+    const allowed = ['submissionId', 'assessmentType', 'timestamp', 'name', 'year', 'school', 'email',
+        'overallScore', 'correct', 'total', 'totalQuestions', 'domains', 'answers', 'goals', 'fullPayload'];
+    if (Object.keys(data).some(k => !allowed.includes(k))) throw new Error('Unexpected submission field.');
+    if (!['Med Student', 'Resident', 'Resident Post-Test', 'Antimicrobial', 'Antimicrobial Selection'].includes(data.assessmentType)) throw new Error('Unknown assessment.');
+    if (typeof data.submissionId !== 'string' || !/^[A-Za-z0-9_-]{16,100}$/.test(data.submissionId)) throw new Error('A submission ID is required.');
+    if (typeof data.name !== 'string' || !data.name.trim() || data.name.length > 200) throw new Error('A valid name is required.');
+    if (typeof data.email !== 'string' || data.email.length > 254 || !/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(data.email)) throw new Error('A valid email is required.');
+    if (typeof data.timestamp !== 'string' || !Number.isFinite(Date.parse(data.timestamp))) throw new Error('Invalid timestamp.');
+    if (/[\r\n\x00-\x1f\x7f]/.test(data.name)) throw new Error('Invalid name.');
+    ['year', 'school'].forEach(k => {
+        if (data[k] !== undefined && (typeof data[k] !== 'string' || data[k].length > 300)) throw new Error('Invalid student details.');
+    });
+    function bounded(value, depth) {
+        if (depth > 12) throw new Error('Submission is too deeply nested.');
+        if (typeof value === 'string' && value.length > 10000) throw new Error('An answer is too long.');
+        if (Array.isArray(value) && value.length > 300) throw new Error('Too many answers.');
+        if (value && typeof value === 'object') {
+            if (Object.keys(value).some(k => ['__proto__', 'prototype', 'constructor'].includes(k))) throw new Error('Invalid object field.');
+            Object.values(value).forEach(v => bounded(v, depth + 1));
+        }
+    }
+    bounded(data, 0);
+    ['overallScore', 'correct', 'total', 'totalQuestions'].forEach(k => {
+        if (data[k] != null && (!Number.isFinite(data[k]) || data[k] < 0)) throw new Error('Invalid score.');
+    });
+    if (data.overallScore > 100) throw new Error('Invalid percentage.');
+    const total = data.total ?? data.totalQuestions;
+    if (total !== undefined && (!Number.isInteger(total) || total > 300 || data.correct > total)) throw new Error('Invalid question count.');
+    if (data.domains !== undefined && (!Array.isArray(data.domains) || data.domains.length > 10 ||
+        data.domains.some(d => !d || typeof d.domain !== 'string' || !Number.isFinite(d.asked) || d.asked < 0 ||
+            !Number.isInteger(d.asked) || d.asked > 300 || !Number.isFinite(d.correct) || d.correct < 0 || d.correct > d.asked ||
+            !Number.isInteger(d.maxTier) || d.maxTier < 0 || d.maxTier > 3 || !Array.isArray(d.answers)))) throw new Error('Invalid domains.');
+    function answer(a) {
+        if (!a || typeof a !== 'object' || Array.isArray(a)) throw new Error('Invalid answer.');
+        ['questionId', 'question', 'answer', 'selected', 'correctAnswer', 'rationale'].forEach(k => {
+            if (a[k] !== undefined && typeof a[k] !== 'string') throw new Error('Invalid answer text.');
+        });
+        if (a.correct !== undefined && typeof a.correct !== 'boolean') throw new Error('Invalid answer result.');
+        if (a.score !== undefined && (!Number.isFinite(a.score) || a.score < 0 || a.score > 1)) throw new Error('Invalid answer score.');
+        if (a.tier !== undefined && (!Number.isInteger(a.tier) || a.tier < 0 || a.tier > 3)) throw new Error('Invalid tier.');
+        if (a.options !== undefined && (!Array.isArray(a.options) || a.options.length > 20 || a.options.some(v => typeof v !== 'string'))) throw new Error('Invalid options.');
+        ['selectedIndex', 'correctIndex'].forEach(k => {
+            if (a[k] !== undefined && (!Number.isInteger(a[k]) || a[k] < -1 || !a.options || a[k] >= a.options.length)) throw new Error('Invalid option index.');
+        });
+        if (a.detail !== undefined) {
+            if (!a.detail || typeof a.detail !== 'object' || Array.isArray(a.detail)) throw new Error('Invalid answer detail.');
+            if (a.detail.text !== undefined && typeof a.detail.text !== 'string') throw new Error('Invalid answer text.');
+            ['nHit', 'nConcepts', 'good', 'bad'].forEach(k => {
+                if (a.detail[k] !== undefined && (!Number.isInteger(a.detail[k]) || a.detail[k] < 0 || a.detail[k] > 300)) throw new Error('Invalid concept count.');
+            });
+        }
+    }
+    (data.domains || []).forEach(d => d.answers.forEach(answer));
+    if (data.answers !== undefined) {
+        if (!Array.isArray(data.answers)) throw new Error('Invalid answers.');
+        data.answers.forEach(answer);
+    }
+    if (data.goals !== undefined && (!data.goals || typeof data.goals !== 'object' || Array.isArray(data.goals) ||
+        Object.values(data.goals).some(v => typeof v !== 'string'))) throw new Error('Invalid goals.');
+    // Full JSON occupies one Sheets cell, whose limit is 50,000 characters.
+    if (JSON.stringify(data).length > 45000) throw new Error('Submission is too large to store.');
+    return data;
+}
+
+function sheetText(value) {
+    if (value == null) return '';
+    return typeof value === 'string' && /^\s*[=+@-]/.test(value) ? "'" + value : value;
+}
+
+function submissionContent(data) {
+    const copy = Object.assign({}, data);
+    delete copy.timestamp;
+    function ordered(value) {
+        if (Array.isArray(value)) return value.map(ordered);
+        if (!value || typeof value !== 'object') return value;
+        const result = {};
+        Object.keys(value).sort().forEach(k => { result[k] = ordered(value[k]); });
+        return result;
+    }
+    return JSON.stringify(ordered(copy));
+}
 
 function doGet(e) {
-    if (!e || !e.parameter || e.parameter.key !== ADMIN_KEY) {
+    const key = serverSecret('ASSESSMENT_ADMIN_KEY');
+    if (!key || !e || !e.parameter || e.parameter.key !== key) {
         return ContentService
             .createTextOutput(JSON.stringify({ status: 'unauthorized' }))
             .setMimeType(ContentService.MimeType.JSON);
     }
 
     const ss = getSpreadsheet();
-    const tabs = ['Med Student', 'Resident', 'Antimicrobial', 'Antimicrobial Selection', 'Responses'];
+    const tabs = ['Med Student', 'Resident', 'Resident Post-Test', 'Antimicrobial', 'Antimicrobial Selection', 'Responses'];
     const submissions = [];
 
     tabs.forEach(name => {
@@ -77,11 +163,37 @@ function doGet(e) {
 }
 
 function doPost(e) {
+    let lock;
+    let locked = false;
+    let validated = false;
     try {
+        if (!e || !e.postData || e.postData.contents.length > 200000) throw new Error('Invalid submission size.');
         const data = JSON.parse(e.postData.contents);
+        const key = serverSecret('ASSESSMENT_WRITE_KEY');
+        if (!key || data.writeKey !== key) throw new Error('Submission service authorization failed.');
+        delete data.writeKey;
+        validateSubmission(data);
+        validated = true;
+        lock = LockService.getScriptLock();
+        lock.waitLock(10000);
+        locked = true;
         const ss = getSpreadsheet();
         const SHEET_NAME = tabNameFor(data.assessmentType);
         let sheet = ss.getSheetByName(SHEET_NAME);
+        if (sheet) {
+            const rows = sheet.getDataRange().getValues();
+            const jsonColumn = rows.length ? rows[0].indexOf('Full JSON') : -1;
+            const previous = rows.slice(1).map(row => {
+                try { return JSON.parse(row[jsonColumn]); } catch (_) { return null; }
+            }).find(saved => saved && saved.submissionId === data.submissionId);
+            // Server-side callers may reconstruct timestamps and field order on a retry.
+            if (previous && submissionContent(previous) !== submissionContent(data)) {
+                return ContentService.createTextOutput(JSON.stringify({status: 'error', message: 'This submission ID is already in use.'}))
+                    .setMimeType(ContentService.MimeType.JSON);
+            }
+            if (previous) return ContentService.createTextOutput(JSON.stringify({status: 'ok', submissionId: data.submissionId}))
+                .setMimeType(ContentService.MimeType.JSON);
+        }
 
         // Create sheet with headers on first run
         if (!sheet) {
@@ -120,9 +232,9 @@ function doPost(e) {
             data.year || data.email,  // resident sends email not year
             data.school || (data.goals ? 'Resident' : '—'),
             data.email,
-            data.overallScore || '—',
-            data.correct || (data.answers ? data.answers.length : '—'),
-            data.total || data.totalQuestions || '—'
+            data.overallScore ?? '—',
+            data.correct ?? '—',
+            data.total ?? data.totalQuestions ?? '—'
         ];
 
         // Domain columns (up to 10 domains). Resident submissions have no
@@ -142,22 +254,26 @@ function doPost(e) {
         // Full JSON for AI grader
         row.push(JSON.stringify(data));
 
-        sheet.appendRow(row);
+        sheet.appendRow(row.map(sheetText));
 
         // Write one row per question to the per-question detail tab
-        writeAnswerDetail(ss, data);
+        // The full JSON above is the durable record; derived views can be rebuilt.
+        try { writeAnswerDetail(ss, data); } catch (error) { console.warn('Answer detail unavailable:', error); }
 
         // Send faculty notification email
-        sendFacultyNotification(data);
+        try { sendFacultyNotification(data); } catch (error) { console.warn('Notification unavailable:', error); }
 
         return ContentService
-            .createTextOutput(JSON.stringify({ status: 'ok' }))
+            .createTextOutput(JSON.stringify({ status: 'ok', submissionId: data.submissionId }))
             .setMimeType(ContentService.MimeType.JSON);
 
     } catch (err) {
+        console.warn(JSON.stringify({event: 'assessment_submission', outcome: validated ? 'storage_failed' : 'rejected'}));
         return ContentService
-            .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+            .createTextOutput(JSON.stringify({ status: 'error', message: validated ? 'The service could not save this submission. Please retry.' : 'Invalid or unauthorized submission.' }))
             .setMimeType(ContentService.MimeType.JSON);
+    } finally {
+        if (locked) lock.releaseLock();
     }
 }
 
@@ -209,7 +325,7 @@ function writeAnswerDetail(ss, data) {
 
     // Bulk-write all question rows at once
     if (rows.length > 0) {
-        detail.getRange(detail.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+        detail.getRange(detail.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows.map(row => row.map(sheetText)));
     }
 }
 
@@ -254,7 +370,7 @@ Full results and raw data saved in the Sage Project Google Sheet.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
         try {
-            MailApp.sendEmail({ to: FACULTY_EMAIL, cc: data.email, subject: rSubject, body: rBody });
+            MailApp.sendEmail({ to: FACULTY_EMAIL, subject: rSubject, body: rBody });
         } catch (e) {
             console.warn('Email notification failed:', e);
         }
@@ -325,7 +441,6 @@ Reply to this email or contact ${data.email} to follow up with the student.
     try {
         MailApp.sendEmail({
             to: FACULTY_EMAIL,
-            cc: data.email,  // student gets a copy too
             subject: subject,
             body: body
         });
@@ -335,9 +450,14 @@ Reply to this email or contact ${data.email} to follow up with the student.
     }
 }
 
-// Test function — run manually in Apps Script editor to verify sheet setup
+// Read-only preflight: no learner records, test rows or email notifications.
 function testSetup() {
+    const readKey = serverSecret('ASSESSMENT_ADMIN_KEY');
+    const writeKey = serverSecret('ASSESSMENT_WRITE_KEY');
+    if (!readKey || !writeKey || readKey === writeKey) throw new Error('Configure independent read and write secrets of at least 32 characters.');
     const testData = {
+        submissionId: 'configuration-check-00001',
+        assessmentType: 'Med Student',
         timestamp: new Date().toISOString(),
         name: 'Test Student',
         year: 'MS3',
@@ -351,7 +471,6 @@ function testSetup() {
             { domain: 'Common Bacterial Infections', correct: 2, asked: 2, maxTier: 3, answers: [] }
         ]
     };
-    const fakeEvent = { postData: { contents: JSON.stringify(testData) } };
-    const result = doPost(fakeEvent);
-    Logger.log(result.getContent());
+    validateSubmission(testData);
+    Logger.log('Assessment credentials and submission schema are configured. No records were read or written.');
 }

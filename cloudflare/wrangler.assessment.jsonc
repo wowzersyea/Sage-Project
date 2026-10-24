@@ -1,0 +1,9 @@
+{
+  "name": "sage-assessment-api",
+  "main": "assessment-api.mjs",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [{"pattern": "sageproject.xyz/assessment-api/*", "zone_name": "sageproject.xyz"}],
+  // Allow a teaching cohort behind a shared institutional IP to submit together.
+  "ratelimits": [{"name": "SUBMISSION_LIMITER", "namespace_id": "1001", "simple": {"limit": 120, "period": 60}}]
+}
