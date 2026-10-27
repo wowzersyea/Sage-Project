@@ -2,6 +2,17 @@
 
 These changes were prepared from main at `3e44e9e` on October 23, 2026. Source changes do not rotate deployed credentials or update Apps Script deployments. Do not publish the assessment migration until its backend and faculty access are ready.
 
+## Live status: October 27, 2026
+
+- The owner approved PR #39. It merged as `e6918ee39645d542b6e32ada304409221c481dd8`; GitHub Pages run `40567698235` succeeded. Both deployed files match that commit by SHA-256, and both Chromium security regressions pass against the downloaded live code.
+- Cloudflare now redirects apex HTTP requests to HTTPS with status 308 while preserving paths and queries. Apex HTTPS responses have `nosniff`, `strict-origin-when-cross-origin`, and HSTS `max-age=300` without subdomains or preload. `/admin` and `/admin/*` additionally have `private, no-store`, `no-referrer`, and `SAMEORIGIN`. Checks after each rule change passed; the booking embed, assessment link, existing login gates and QI chart still load.
+- **Morning Report is explicitly on hold:** the owner said facilitator devices are not configured yet and asked to prepare but wait. Both anonymous-access properties remain `yes`; neither the script nor its deployment was changed. Do not switch them until facilitator readiness is confirmed.
+- No faculty email list has been supplied. The existing Cloudflare Access application protects Workbench only; its policy was not modified. Assessment secrets have not been rotated and the private API migration remains draft.
+- The actual assessment app is `wowzersyea/Sage-app` (`F:/peds-id-assessment` locally), running Next.js with SQLite and Resend. Its current source and README show that the Google Sheets writer was removed. It is not an active collector writer in that source; inventory retained/cached legacy pages before retiring collector access. A separate framework security upgrade is being tested in an isolated checkout; no assessment process has been restarted.
+- Origin TLS remains a separate issue: GitHub Pages reports no custom-domain certificate and certificate validation directly against all four configured Pages origin IPs fails hostname verification. Cloudflare currently uses Full. Do not enable Full (strict) until origin certificate provisioning and hostname verification pass, or requests could fail. The edge HTTPS certificate is valid.
+
+Account inventory was read-only: Morning Report has one active Version 8 deployment (August 26, 2026); the collector has one active Version 5 deployment (August 21, 2026), with no Script Properties configured. Editor source matched the legacy main-branch files; editor contents alone do not prove an active deployment's source. Historical deployments still need review during credential retirement.
+
 ## Release 1: browser rendering
 
 [PR #39](https://github.com/wowzersyea/Sage-Project/pull/39) fixes unsafe rendering in the faculty dashboard and QI interface while preserving their existing backend/login interfaces. It also clears displayed learner data on lock and failed refresh. Its Chromium tests exercise malicious stored text and normal filter/detail/removal controls. It can be reviewed and released independently of the authentication migration.
@@ -14,7 +25,7 @@ This release has dependencies across Google Apps Script, Cloudflare, static page
 
 ### Assessment preparation
 
-1. Identify the Apps Script project and every still-active deployment of the collector. Inventory clients writing to it, including `test.sageproject.xyz`. That separate application's actual source/deployment is outside this repository; `scripts/resident-saveToSheets.ts` is only its integration template.
+1. Identify the Apps Script project and every still-active deployment of the collector. Inventory clients writing to it, including cached legacy pages. The October 27 inventory found that `test.sageproject.xyz` now uses the separate `wowzersyea/Sage-app` SQLite backend and its source no longer writes to Google Sheets. `scripts/resident-saveToSheets.ts` is only an optional integration template, not proof of a deployed caller.
 2. Create a staging Sheet and Apps Script deployment containing `scripts/sheets_webhook.gs`. Set its `SPREADSHEET_ID` to the staging Sheet before deployment. Configure independent random secrets of at least 32 characters in Script Properties: `ASSESSMENT_ADMIN_KEY` and `ASSESSMENT_WRITE_KEY`. Never commit them. The owner must enter replacement credentials in the account UI or a secure CLI workflow.
 3. Prepare `cloudflare/assessment-api.mjs` with `cloudflare/wrangler.assessment.jsonc`. Set `ASSESSMENT_ENDPOINT` to the correct deployment URL and store the matching read/write keys as Worker secrets. Keep staging on a separate hostname and route; do not use the production route from the sample config for staging.
 4. Create a Cloudflare Access application covering the faculty page and `/assessment-api/admin`. Restrict it to the intended faculty identities. Set `ACCESS_TEAM_DOMAIN` to the team's HTTPS issuer and `ACCESS_AUD` to that application's audience. The Worker verifies the JWT signature, issuer, audience, expiry, subject and email using [Cloudflare's validation requirements](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/). An email header alone is insufficient.
@@ -34,6 +45,8 @@ This release has dependencies across Google Apps Script, Cloudflare, static page
 ### Morning Report
 
 The owner's chosen policy is private roster access as well as private documents and edits. `MR_KEY` now gates all roster, rota, draw, document, PDF, collection and recording operations. The old `MR_PUBLIC_ROSTER` and `MR_PUBLIC_SAVE` properties are ignored by the new code; delete them in the account as immediate containment when facilitators have been prepared.
+
+The owner explicitly deferred this access switch on October 27 because facilitator devices are not ready. Keep the code prepared and the current production flags unchanged until that prerequisite is met.
 
 1. Verify a trusted facilitator's existing `MR_KEY` and endpoint are configured in Morning Report Settings. The settings page prefills the built-in endpoint so entering the key is sufficient. Do not distribute it in public links or the repository. Publicly shared feedback links must use the separate feedback key.
 2. Test the new Apps Script against a staging spreadsheet and Drive folders: keyless/wrong-key requests deny access; the facilitator key reads the roster, saves and retrieves documents, renders a PDF, records/replaces a draw, collects audio, and acknowledges collection. Replacing one site's draw must preserve the other site's rows.
