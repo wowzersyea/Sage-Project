@@ -1,0 +1,11 @@
+{
+  "name": "sage-project",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs tests/*.test.mjs",
+    "test:morning-report": "node morning-report/tests/run.js",
+    "test:security": "node --test tests/security-browser.test.cjs"
+  },
+  "dependencies": { "jose": "6.2.12" },
+  "devDependencies": { "playwright": "1.63.0" }
+}

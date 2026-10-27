@@ -149,6 +149,13 @@ function unlock(){
 }
 function logout(){
   sessionStorage.removeItem('sageAdminKey');
+  ALL = [];
+  FILTER = 'all';
+  document.getElementById('list').replaceChildren();
+  document.getElementById('filters').replaceChildren();
+  document.getElementById('modal').replaceChildren();
+  document.getElementById('pass').value = '';
+  closeDetail();
   document.getElementById('dash').style.display='none';
   document.getElementById('gate').style.display='block';
 }
@@ -161,6 +168,7 @@ async function loadData(){
     const res = await fetch(ENDPOINT + '?key=' + encodeURIComponent(key));
     const data = await res.json();
     if(data.status !== 'ok'){
+      logout();
       document.getElementById('gate-err').textContent = 'Incorrect passcode.';
       sessionStorage.removeItem('sageAdminKey');
       return;
@@ -171,6 +179,7 @@ async function loadData(){
     renderFilters();
     renderList();
   }catch(err){
+    logout();
     document.getElementById('gate-err').textContent = 'Could not reach the server. Check the endpoint URL.';
   }
 }
@@ -178,9 +187,15 @@ async function loadData(){
 function renderFilters(){
   const types = ['all', ...new Set(ALL.map(s => s.assessmentType || s._tab || 'Other'))];
   const el = document.getElementById('filters');
-  el.innerHTML = types.map(t =>
-    `<button class="pill ${t===FILTER?'active':''}" onclick="setFilter('${t.replace(/'/g,"\\'")}')">${t==='all'?'All assessments':t}</button>`
-  ).join('');
+  el.replaceChildren();
+  types.forEach(t => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'pill' + (t===FILTER ? ' active' : '');
+    button.textContent = t==='all' ? 'All assessments' : t;
+    button.addEventListener('click', () => setFilter(t));
+    el.appendChild(button);
+  });
 }
 function setFilter(t){ FILTER=t; renderFilters(); renderList(); }
 
@@ -269,7 +284,7 @@ function renderQuestion(a){
   const icon = correct ? '<span class="q-icon ok">✓</span>' : '<span class="q-icon no">✗</span>';
   let html = `<div class="q"><div class="q-top">${icon}
     <div style="flex:1"><div class="q-text">${esc(a.question||'')}</div></div>
-    ${a.tier?`<div class="q-tier">Tier ${a.tier}</div>`:''}</div>`;
+    ${a.tier?`<div class="q-tier">Tier ${esc(a.tier)}</div>`:''}</div>`;
 
   // Full multiple-choice review (med student / antimicrobial post-test)
   if(Array.isArray(a.options) && a.options.length){
@@ -294,7 +309,7 @@ function renderQuestion(a){
   // Antimicrobial-selection free-text / concept scoring
   else if(a.detail){
     if(a.detail.text!==undefined) html += `<div class="freetext"><div class="lbl">Their response</div>${esc(a.detail.text||'(blank)')}</div>`;
-    if(a.detail.nConcepts!==undefined) html += `<div class="freetext"><div class="lbl">Concepts hit</div>${a.detail.nHit}/${a.detail.nConcepts}</div>`;
+    if(a.detail.nConcepts!==undefined) html += `<div class="freetext"><div class="lbl">Concepts hit</div>${esc(a.detail.nHit)}/${esc(a.detail.nConcepts)}</div>`;
     if(typeof a.score==='number') html += `<div class="freetext"><div class="lbl">Auto-score</div>${Math.round(a.score*100)}%</div>`;
   }
 
