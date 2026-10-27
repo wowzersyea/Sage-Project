@@ -226,10 +226,7 @@
     warns.innerHTML = "";
 
     if (!s.configured) {
-      txt.textContent = (s.sourced && s.tried && s.ok)
-        ? "Using the site's built-in shared roster. Draws and board saves go to the shared " +
-          "store. Add the facilitator key below for the full rota and publishing."
-        : "No shared roster configured. This browser uses the data folder only.";
+      txt.textContent = "Add the facilitator key below to load the shared roster and access shared documents. The connected data folder still works locally.";
       return;
     }
     if (!s.tried) { txt.textContent = "Checking the endpoint…"; return; }
@@ -272,7 +269,7 @@
 
   function fill() {
     var s = MRRemote.settings();
-    $("endpoint").value = s.endpoint;
+    $("endpoint").value = s.endpoint || MRRemote.defaultEndpoint || "";
     $("key").value = s.key;
     $("fbkey").value = MRRelay.shareKey();
     paintQr();

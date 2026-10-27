@@ -58,11 +58,12 @@ is needed.
 Google Sheet "Sage Project - Assessment Results" + Apps Script Web App.
 - Endpoint: `https://script.google.com/macros/s/AKfycbzVGqv0Ot-L9BtUzcWhq8XTpmOEZSGqVFwD0kPLSRfKBFVvTlRLMdzmtWXZuaPf6adz/exec`
 - Spreadsheet ID: `1vtv38Ld3utmwq957a5volAgiz8W6ySkTo7YE7dPNNKw`
-- `doPost` routes each submission to a per-assessment tab; writes a summary row +
-  a per-question "<Tab> — Answers" detail tab; emails faculty (maemurph@utmb.edu)
-  + CC's student.
-- `doGet?key=sage-faculty-2026` returns all submissions as JSON (admin read).
-- This works today. It's the thing we're migrating OFF of.
+- `doPost` routes each submission to a per-assessment tab and writes summary and
+  answer-detail rows. The hardened collector notifies faculty only; the supplied
+  student address has not been verified.
+- Admin reads must go through the authenticated proxy. Historical credentials in
+  this document and the collector source must be revoked at the deployed service.
+- See `docs/security-rollout.md` for the coordinated backend migration.
 
 ---
 

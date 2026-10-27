@@ -70,6 +70,7 @@ function makeContext(sheets, key, tz, feedbackKey, noUi) {
   const fileHandle = (id) => ({
     getId: () => id,
     getName: () => drive.files[id].name,
+    getParents: () => iter(drive.files[id].parent ? [folderHandle(drive.files[id].parent)] : []),
     getUrl: () => 'https://drive.test/' + id,
     getBlob: () => ({
       getContentType: () => drive.files[id].mime,
@@ -105,6 +106,7 @@ function makeContext(sheets, key, tz, feedbackKey, noUi) {
     getFiles: () => iter(live(f => f.parent === id)),
   });
   const sandbox = {
+    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     SpreadsheetApp: {
       getActiveSpreadsheet: () => ss,
       getUi: () => {
@@ -772,153 +774,39 @@ function withPostBox(key = 'k', feedbackKey = 'fk') {
 }
 
 
-/* ---------- the public roster ---------------------------------------------
-
-   Option A, chosen by the owner with the trade stated: a keyless GET
-   serves names and levels so every device's wheel works with nothing
-   set up. What these tests guard is the boundary of that choice — the
-   switch defaults off, a wrong key is still a wrong key, and nothing
-   beyond names and levels ever rides along.
-   -------------------------------------------------------------------------- */
-
+/* Legacy public flags cannot reopen protected operations. */
 {
   const { sandbox } = fresh('k');
-  t('with the switch unset, a keyless GET is denied as before',
-    parse(sandbox.doGet({ parameter: {} })).status === 'denied');
-}
-
-{
-  const { sandbox } = makeContext([
-    makeSheet('Roster', ROSTER_ROWS), makeSheet('Rota', ROTA_ROWS), makeSheet('Sites', SITES_ROWS),
-  ], 'k');
-  sandbox.PropertiesService.getScriptProperties().setProperty('MR_PUBLIC_ROSTER', 'yes');
-
-  /* seed a draw and a leave-bearing situation so there is something to leak */
-  sandbox.doPost({ postData: { contents: JSON.stringify({ key: 'k', action: 'draw',
-    date: '2026-09-03', site: 'G', presenting: 'GAL',
-    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] }) } });
-
-  const pub = parse(sandbox.doGet({ parameter: {} }));
-  t('with the switch on, a keyless GET serves the public subset',
-    pub.status === 'ok' && pub.public === true, pub.status);
-  t('names and levels are there',
-    pub.roster.residents.length === 3 &&
-    pub.roster.residents.every(r => r.name && r.level), pub.roster.residents.length);
-  /* The fixture's two dates drift relative to the rolling window as
-     real time passes, so the expectation is computed, not assumed —
-     this assertion once said "filtered to nothing" and started failing
-     the day 2026-09-03 rolled inside today+7. */
-  {
-    const off = ZONES['America/Chicago'];
-    const dd = n => new Date(Date.now() + n * 86400000 + off * 60 * 1000)
-      .toISOString().slice(0, 10);
-    const expected = ['2026-09-03', '2026-09-04']
-      .filter(d => d >= dd(0) && d <= dd(7));
-    t('the public rota is the fixture clipped to the window',
-      pub.rotations !== null &&
-      JSON.stringify(Object.keys(pub.rotations.days).sort()) === JSON.stringify(expected),
-      { served: pub.rotations && Object.keys(pub.rotations.days), expected: expected });
+  const props = sandbox.PropertiesService.getScriptProperties();
+  props.setProperty('MR_PUBLIC_ROSTER', 'yes');
+  props.setProperty('MR_PUBLIC_SAVE', 'yes');
+  t('legacy public roster flag does not expose names', parse(sandbox.doGet({parameter: {}})).status === 'denied');
+  t('wrong roster key is denied', parse(sandbox.doGet({parameter: {key: 'wrong'}})).status === 'denied');
+  t('facilitator can still read the roster', parse(sandbox.doGet({parameter: {key: 'k'}})).status === 'ok');
+  for (const action of ['draw','docput','docget','doclist','docdel','pdf','collect','recording','collected']) {
+    t('anonymous '+action+' is denied despite legacy flags', post(sandbox, {action}).status === 'denied');
+    t('wrong key for '+action+' is denied', post(sandbox, {key:'wrong', action}).status === 'denied');
   }
-  t('the draws are not', pub.roster.draws === undefined);
-  t('leave windows are not', pub.roster.residents.every(r => r.unavailable.length === 0));
-  t('warnings are not, because they can quote rota cells', pub.warnings.length === 0, pub.warnings);
-
-  t('a WRONG key is still denied, not downgraded to the public view',
-    parse(sandbox.doGet({ parameter: { key: 'typo' } })).status === 'denied');
-
-  const full = parse(sandbox.doGet({ parameter: { key: 'k' } }));
-  t('the real key still gets everything',
-    full.public === undefined && full.rotations !== null &&
-    Array.isArray(full.roster.draws), [full.public, !!full.rotations]);
+  t('anonymous seed is denied', post(sandbox, {roster:{residents:[]}}).status === 'denied');
+  t('null request is denied without a crash', post(sandbox, null).status === 'denied');
 }
-
-
-/* The rota window. Dates computed exactly as the endpoint computes
-   them — today in the spreadsheet's zone via the same formatDate stub —
-   so this does not rot with the calendar the way a fixed fixture would. */
 {
-  const off = ZONES['America/Chicago'];
-  const day = (n) => new Date(Date.now() + n * 86400000 + off * 60 * 1000)
-    .toISOString().slice(0, 10);
-
-  const rota = [
-    ['date', 'GAL Ward Int'],
-    [day(-1), 'Marisol Aguirre'],       // yesterday: out
-    [day(0), 'Marisol Aguirre'],        // today: in
-    [day(7), 'Teodoro Nunez'],          // the window's last day: in
-    [day(8), 'Teodoro Nunez'],          // beyond: out
-  ];
-  const { sandbox } = makeContext([
-    makeSheet('Roster', ROSTER_ROWS), makeSheet('Rota', rota), makeSheet('Sites', SITES_ROWS),
-  ], 'k');
-  sandbox.PropertiesService.getScriptProperties().setProperty('MR_PUBLIC_ROSTER', 'yes');
-
-  const pub = parse(sandbox.doGet({ parameter: {} }));
-  const got = Object.keys(pub.rotations.days).sort();
-  t('the public rota is exactly the window', got.join() === [day(0), day(7)].join(), got);
-  t('yesterday is not served', got.indexOf(day(-1)) === -1);
-  t('day eight is not served', got.indexOf(day(8)) === -1);
-  t('the sites config rides along, so the toggle can render',
-    !!pub.rotations.sites.GAL && pub.rotations.sites.GAL.ward.length === 2);
-  t('the window declares itself', pub.rotations.window_days === 7 &&
-    pub.rotations.from === day(0) && pub.rotations.to === day(7),
-    [pub.rotations.from, pub.rotations.to]);
-  t('and still no warnings, which can quote rota cells', pub.warnings.length === 0);
-
-  const full = parse(sandbox.doGet({ parameter: { key: 'k' } }));
-  t('the keyed payload still carries every day',
-    Object.keys(full.rotations.days).length === 4, Object.keys(full.rotations.days).length);
+  const {sandbox, byName, drive} = withPostBox();
+  const unrelated = sandbox.DriveApp.createFolder('Other data').createFile('private.txt','private','text/plain');
+  t('facilitator cannot read an unrelated Drive file', post(sandbox, {key:'k', action:'recording', id:unrelated.getId()}).status === 'error');
+  post(sandbox, {key:'fk', action:'feedback', record:SUBMISSION});
+  byName.Feedback.__rows()[1][3] = unrelated.getId();
+  t('a forged registration still cannot read an unrelated folder', post(sandbox, {key:'k', action:'recording', id:unrelated.getId()}).status === 'error');
+  post(sandbox, {key:'k', action:'collected', submissions:[SUBMISSION.id]});
+  t('collect cleanup cannot trash an unrelated Drive file', !drive.trashed.includes(unrelated.getId()));
+  t('feedback clip count is bounded', post(sandbox, {key:'fk', action:'feedback', record:SUBMISSION, audio:Array(5).fill({data:'abc'})}).status === 'error');
+  t('feedback record is bounded to a Sheets cell', post(sandbox, {key:'fk', action:'feedback', record:{...SUBMISSION, text:'x'.repeat(45001)}}).status === 'error');
 }
-
-/* ---------- public saving -------------------------------------------------
-
-   The owner's second trade, stated as plainly as the first: with
-   MR_PUBLIC_SAVE set, any device that opens the site can save — a
-   draw, a board archive, a PDF — with no key at all. These tests hold
-   the boundary: off by default, a wrong key still refused outright,
-   and the verbs that destroy or replace stay keyed with the switch on.
-   -------------------------------------------------------------------------- */
-
 {
-  const { sandbox } = fresh('k');
-  const bare = (body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(body) } }));
-
-  const r = bare({ action: 'draw', date: '2026-09-03', site: 'G',
-    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] });
-  t('with the switch unset, a keyless save is refused', r.status === 'denied');
-  t('and the refusal blames the switch, not a key nobody entered',
-    /switched off/.test(r.message || ''), r);
-}
-
-{
-  const { sandbox } = fresh('k');
-  sandbox.PropertiesService.getScriptProperties().setProperty('MR_PUBLIC_SAVE', 'yes');
-  const bare = (body) => parse(sandbox.doPost({ postData: { contents: JSON.stringify(body) } }));
-
-  let r = bare({ action: 'draw', date: '2026-09-03', site: 'G',
-    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] });
-  t('switch on: a keyless draw records', r.status === 'ok', r);
-
-  r = bare({ action: 'docput', path: 'board-archive/2026-09-04.json', data: { a: 1 } });
-  t('switch on: a keyless board archive files', r.status === 'ok', r);
-  r = bare({ action: 'docget', path: 'board-archive/2026-09-04.json' });
-  t('and reads back keyless', r.status === 'ok' && r.data && r.data.a === 1, r);
-  r = bare({ action: 'doclist', dir: 'board-archive' });
-  t('and lists keyless', r.status === 'ok' && r.names.indexOf('2026-09-04.json') !== -1, r);
-  r = bare({ action: 'pdf', name: 'board-2026-09-04.pdf', html: '<p>board</p>' });
-  t('switch on: a keyless PDF renders', r.status === 'ok', r);
-
-  r = bare({ action: 'docdel', path: 'board-archive/2026-09-04.json' });
-  t('deleting keyless is refused, switch or no switch', r.status === 'denied', r);
-  r = bare({ roster: { residents: [] } });
-  t('the bare seed stays keyed', r.status === 'denied', r);
-  r = bare({ action: 'collect' });
-  t('the feedback post box stays keyed', r.status === 'denied', r);
-
-  r = bare({ key: 'wrong', action: 'draw', date: '2026-09-03', site: 'G',
-    entries: [{ role: 'pgy1_discussant', resident_id: 'r-1', name: 'Marisol Aguirre' }] });
-  t('a WRONG key is still a wrong key, never treated as keyless', r.status === 'denied', r);
-  t('and gets no switched-off excuse', !r.message, r);
+  const {sandbox, byName} = fresh('k');
+  const draw = site => post(sandbox, {key:'k', action:'draw', date:'2026-10-23', site, entries:[{name:'Example',role:'senior'}]});
+  draw('GAL'); draw('CL'); draw('GAL');
+  t('replacing one site preserves the other site draw', byName.Draws.__rows().length === 3);
 }
 
 /* ---------- report -------------------------------------------------------- */
