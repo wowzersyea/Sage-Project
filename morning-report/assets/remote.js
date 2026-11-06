@@ -32,14 +32,9 @@
      the roster, not for the room. */
   var PATHS = ["roster.json", "rotations.json"];
 
-  /* Option A, chosen knowingly: with this set to the /exec URL, every
-     visitor's wheel loads names and levels with nothing configured —
-     the endpoint serves that subset to a keyless GET only when its
-     owner has also set MR_PUBLIC_ROSTER in Script Properties, so
-     either side can switch it off alone. The rota, the draws, leave
-     windows and every write stay behind the key.
-
-     Tests override via global.MR_PUBLIC_ENDPOINT before this loads. */
+  /* The built-in endpoint is a setup convenience, never permission to
+     fetch names or save documents anonymously. MR_KEY is required.
+     Tests may override its URL with MR_PUBLIC_ENDPOINT. */
   /* The same-origin corridor (a Cloudflare Pages Function at /mr-api)
      is tried first for every request, because institutional networks —
      hospital WiFi among them — block script.google.com wholesale, and
@@ -168,18 +163,11 @@
      single answer rather than each hitting the endpoint.
      ------------------------------------------------------------------ */
 
-  /* Where a write goes, and with what key. A configured device uses
-     its settings. An unconfigured one falls back to the site's built-in
-     endpoint with no key at all — the owner has said, out loud, that
-     easy saving from any device is worth strangers being able to do
-     the same. The endpoint holds the other half of that decision
-     (MR_PUBLIC_SAVE) and refuses keyless saves while it is off;
-     deleting and re-seeding stay keyed no matter what. */
+  /* Every shared read and write uses the configured facilitator key. */
   function writeTarget() {
     loadSettings();
     var key, direct;
     if (configured()) { key = state.key; direct = state.endpoint; }
-    else if (PUBLIC_ENDPOINT) { key = ""; direct = PUBLIC_ENDPOINT; }
     else return null;
     var urls = PROXY ? [PROXY, direct] : [direct];
     return { urls: urls, key: key };
@@ -226,8 +214,6 @@
       direct = state.endpoint +
         (state.endpoint.indexOf("?") === -1 ? "?" : "&") +
         "key=" + encodeURIComponent(state.key);
-    } else if (PUBLIC_ENDPOINT) {
-      direct = PUBLIC_ENDPOINT;           /* keyless: the public subset */
     } else {
       return Promise.resolve(null);
     }
@@ -296,7 +282,7 @@
      means "I have nothing", which is what an absent file means too. */
   function get(path) {
     if (PATHS.indexOf(path) === -1) return Promise.resolve(null);
-    if (!configured() && !PUBLIC_ENDPOINT) return Promise.resolve(null);
+    if (!configured()) return Promise.resolve(null);
     return fetchAll().then(function (r) {
       if (!r || !r.ok || !r.data) return null;
       return r.data[path] || null;
@@ -347,7 +333,7 @@
   function confirmDraw(session) {
     var t = writeTarget();
     if (!t) {
-      return Promise.resolve({ ok: false, error: "No shared roster is set up on this browser." });
+      return Promise.resolve({ ok: false, error: "Add the facilitator key in Morning Report Settings to use the shared roster." });
     }
     var entries = (session && session.entries ? session.entries : []).filter(function (e) {
       return e && (e.name || e.resident_id);
@@ -492,7 +478,7 @@
       ok: !!(state.result && state.result.ok),
       denied: !!(state.result && state.result.denied),
       public: !!(state.result && state.result.public),
-      sourced: configured() || !!PUBLIC_ENDPOINT,
+      sourced: configured(),
       error: state.result && !state.result.ok ? state.result.error : "",
       warnings: (state.result && state.result.warnings) || [],
       counts: (state.result && state.result.counts) || { residents: 0, days: 0 },
@@ -511,7 +497,7 @@
   /* A short line for the shared bar. Null when there is nothing to say. */
   function summary() {
     var s = status();
-    if (!s.configured && !PUBLIC_ENDPOINT) return null;
+    if (!s.configured) return null;
     if (!s.tried) return { kind: "wait", text: "Checking the shared roster…" };
     if (s.ok) {
       if (isEmpty()) return { kind: "warn", text: "Shared roster: sheet is empty" };
@@ -528,6 +514,7 @@
 
   var api = {
     PATHS: PATHS,
+    defaultEndpoint: PUBLIC_ENDPOINT,
     settings: settings,
     setSettings: setSettings,
     forget: forget,

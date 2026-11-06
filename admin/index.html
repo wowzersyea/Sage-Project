@@ -101,12 +101,11 @@ a{color:var(--accent-sky)}
 </head>
 <body>
 
-<!-- ── PASSCODE GATE ── -->
+<!-- Faculty authentication -->
 <div id="gate" class="gate">
   <h1>Faculty Admin</h1>
-  <p>Enter the faculty passcode to review assessment results.</p>
-  <input id="pass" type="password" placeholder="Passcode" autocomplete="current-password">
-  <button class="btn" onclick="unlock()">Unlock</button>
+  <p>Sign in with your faculty account to review assessment results.</p>
+  <a class="btn" href="/admin/">Faculty Sign In</a>
   <div id="gate-err" class="gate-err"></div>
 </div>
 
@@ -132,55 +131,55 @@ a{color:var(--accent-sky)}
 </div>
 
 <script>
-// Same Apps Script Web App URL used by the assessments.
-const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzVGqv0Ot-L9BtUzcWhq8XTpmOEZSGqVFwD0kPLSRfKBFVvTlRLMdzmtWXZuaPf6adz/exec';
+// The proxy verifies faculty identity before reading any submissions.
+const ENDPOINT = '/assessment-api/admin';
 
 let ALL = [];
 let FILTER = 'all';
 const LETTERS = ['A','B','C','D','E','F','G','H'];
+let loadVersion = 0;
 
-document.getElementById('pass').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
-
-function unlock(){
-  const key = document.getElementById('pass').value.trim();
-  if(!key){ return; }
-  sessionStorage.setItem('sageAdminKey', key);
-  loadData();
-}
-function logout(){
+function clearResults(){
   sessionStorage.removeItem('sageAdminKey');
   ALL = [];
   FILTER = 'all';
-  document.getElementById('list').replaceChildren();
   document.getElementById('filters').replaceChildren();
+  document.getElementById('count-sub').textContent = '';
+  document.getElementById('list').replaceChildren();
   document.getElementById('modal').replaceChildren();
-  document.getElementById('pass').value = '';
   closeDetail();
   document.getElementById('dash').style.display='none';
   document.getElementById('gate').style.display='block';
 }
 
+function logout(){
+  loadVersion++;
+  clearResults();
+  location.assign('/cdn-cgi/access/logout');
+}
+
 async function loadData(){
-  const key = sessionStorage.getItem('sageAdminKey');
-  if(!key) return;
+  const version = ++loadVersion;
+  clearResults();
   document.getElementById('gate-err').textContent = 'Checking…';
   try{
-    const res = await fetch(ENDPOINT + '?key=' + encodeURIComponent(key));
+    const res = await fetch(ENDPOINT, {cache: 'no-store'});
     const data = await res.json();
-    if(data.status !== 'ok'){
-      logout();
-      document.getElementById('gate-err').textContent = 'Incorrect passcode.';
+    if(version !== loadVersion) return;
+    if(!res.ok || data.status !== 'ok' || !Array.isArray(data.submissions)){
+      document.getElementById('gate-err').textContent = 'Faculty sign-in is required, or the service is unavailable.';
       sessionStorage.removeItem('sageAdminKey');
       return;
     }
-    ALL = data.submissions || [];
+    ALL = data.submissions.filter(s => s && typeof s === 'object' && !Array.isArray(s));
     document.getElementById('gate').style.display='none';
     document.getElementById('dash').style.display='block';
     renderFilters();
     renderList();
   }catch(err){
-    logout();
-    document.getElementById('gate-err').textContent = 'Could not reach the server. Check the endpoint URL.';
+    if(version !== loadVersion) return;
+    clearResults();
+    document.getElementById('gate-err').textContent = 'Could not load results. Please sign in again or retry.';
   }
 }
 
@@ -190,9 +189,8 @@ function renderFilters(){
   el.replaceChildren();
   types.forEach(t => {
     const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'pill' + (t===FILTER ? ' active' : '');
-    button.textContent = t==='all' ? 'All assessments' : t;
+    button.className = 'pill' + (t === FILTER ? ' active' : '');
+    button.textContent = t === 'all' ? 'All assessments' : t;
     button.addEventListener('click', () => setFilter(t));
     el.appendChild(button);
   });
@@ -245,18 +243,18 @@ function openDetail(idx){
   }
 
   // Resident with raw answers only (no answer key stored — legacy/client save)
-  if(!s.domains && s.answers){
+  if(!Array.isArray(s.domains) && Array.isArray(s.answers)){
     body += `<div class="domain-block"><div class="domain-title">Answers (${s.answers.length})</div>`;
-    s.answers.forEach(a=>{
+    s.answers.filter(a => a && typeof a === 'object').forEach(a=>{
       body += `<div class="q"><div class="q-text"><strong>${esc(a.questionId)}</strong></div>
         <div class="freetext"><div class="lbl">Their answer</div>${esc(a.answer)}</div></div>`;
     });
     body += `</div><p style="color:var(--text-muted);font-size:.82rem">Answer key not stored for this assessment (scored server-side).</p>`;
   }
   // Domain-scored assessments
-  else if(s.domains){
+  else if(Array.isArray(s.domains)){
     s.domains.forEach(d=>{
-      if(!d.answers || !d.answers.length) return;
+      if(!d || !Array.isArray(d.answers) || !d.answers.length) return;
       const dpct = d.asked ? Math.round((d.correct/d.asked)*100) : null;
       body += `<div class="domain-block"><div class="domain-title">${esc(d.domain)}${dpct!==null?` — ${dpct}%`:''}</div>`;
       d.answers.forEach(a=> body += renderQuestion(a));
@@ -280,6 +278,7 @@ function closeDetail(){ document.getElementById('overlay').classList.remove('ope
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetail(); });
 
 function renderQuestion(a){
+  if(!a || typeof a !== 'object' || Array.isArray(a)) return '';
   const correct = a.correct===true || a.score===1;
   const icon = correct ? '<span class="q-icon ok">✓</span>' : '<span class="q-icon no">✗</span>';
   let html = `<div class="q"><div class="q-top">${icon}
@@ -320,8 +319,11 @@ function renderQuestion(a){
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-// Auto-unlock if a key is already in this session
-if(sessionStorage.getItem('sageAdminKey')) loadData();
+// Recheck faculty authentication on every load, including back/forward restores.
+sessionStorage.removeItem('sageAdminKey');
+window.addEventListener('pagehide', () => { loadVersion++; clearResults(); });
+window.addEventListener('pageshow', event => { if(event.persisted) loadData(); });
+loadData();
 </script>
 </body>
 </html>

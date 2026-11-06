@@ -121,153 +121,60 @@ function doGet(e) {
     var key = e && e.parameter && e.parameter.key;
     if (authorised(key)) return json(buildPayload());
 
-    /* No key at all, and the owner has switched the public roster on:
-       serve names and levels, nothing else. A WRONG key is still
-       denied — a chief with a typo in their settings should be told
-       so, not silently downgraded to the view-only roster and left
-       wondering why the confirm button is dead. */
-    if (!key && publicRosterEnabled()) return json(buildPublicPayload());
-
     return json({ status: 'denied' });
   } catch (err) {
     return json({ status: 'error', message: String(err && err.message || err) });
   }
 }
 
-/* ---------- the public roster ----------------------------------------
-
-   A deliberate decision, not a default. With MR_PUBLIC_ROSTER set to
-   any non-empty value in Script Properties, a keyless GET serves the
-   residents' names and levels — which is what lets every device in the
-   residency open the wheel with nothing set up, and also means anyone
-   on the internet who finds the URL can read those names. The owner
-   chose that trade knowingly; delete the property and it is off again
-   in seconds, no redeploy.
-
-   What it serves is the minimum the wheel needs and nothing that was
-   ever promised privacy beyond names:
-
-     - names, levels, ids, short names, active flags
-     - the rota for a rolling window only — today plus the next
-       PUBLIC_ROTA_DAYS days, so the presenting toggle and duty filter
-       work everywhere without publishing a year-long map of where
-       every named resident will be
-     - NO draws, NO leave windows, NO warnings (warnings can quote
-       names from rota cells, so they stay keyed too)
-   ------------------------------------------------------------------ */
-
-/* The owner's second out-loud trade: with MR_PUBLIC_SAVE set, a device
-   with no key at all may record a draw, file documents, and render
-   PDFs — so any computer that opens the site can hit Save and it
-   lands centrally. Saving is additive. The verbs that destroy or
-   replace (docdel, the bare-POST seed, publish) stay keyed, so the
-   worst a stranger can do is add files, never remove or rewrite.
-   A WRONG key is still denied outright, never downgraded. Delete the
-   property and keyless saving is off in seconds, no redeploy. */
-function publicSaveEnabled() {
-  var v = PropertiesService.getScriptProperties().getProperty('MR_PUBLIC_SAVE');
-  return !!(v && String(v).trim());
-}
-
-var PUBLIC_SAVE_ACTIONS = ['draw', 'docput', 'docget', 'doclist', 'pdf'];
-
-function publicRosterEnabled() {
-  var v = PropertiesService.getScriptProperties().getProperty('MR_PUBLIC_ROSTER');
-  return !!(v && String(v).trim());
-}
-
-/* The rota rides along, but only a rolling window: today plus the next
-   PUBLIC_ROTA_DAYS days. That is everything the wheel ever filters by —
-   the page's date is today or tomorrow — while refusing the thing that
-   would actually be new exposure: a downloadable year-long map of where
-   every named resident will be. What this serves is roughly the week's
-   assignments, which is what gets taped to a workroom door. */
-var PUBLIC_ROTA_DAYS = 7;
-
-function buildPublicPayload() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var full = readRoster(ss, []);
-  var residents = full.map(function (p) {
-    return {
-      id: p.id, name: p.name, sort_name: p.sort_name,
-      level: p.level, short: p.short, active: p.active,
-      unavailable: []
-    };
-  });
-
-  var tz = ss.getSpreadsheetTimeZone();
-  var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
-  var end = Utilities.formatDate(new Date(Date.now() + PUBLIC_ROTA_DAYS * 86400000), tz, 'yyyy-MM-dd');
-
-  /* Warnings from these reads can quote names out of rota cells, so
-     they go into throwaway arrays and never onto the public payload. */
-  var rota = readRota(ss, indexNames(full), []);
-  var rotations = null;
-  if (rota.days) {
-    var days = {};
-    Object.keys(rota.days).forEach(function (d) {
-      if (d >= today && d <= end) days[d] = rota.days[d];
-    });
-    rotations = {
-      source: 'sheet',
-      academic_year: academicYear(),
-      from: today,
-      to: end,
-      window_days: PUBLIC_ROTA_DAYS,
-      tasks: rota.tasks,
-      sites: readSites(ss, rota.tasks, []),
-      days: days
-    };
-  }
-
-  return {
-    status: 'ok',
-    public: true,
-    generated: new Date().toISOString(),
-    warnings: [],
-    roster: { source: 'sheet', academic_year: academicYear(), residents: residents },
-    rotations: rotations
-  };
-}
+/* Roster, documents and all management operations require MR_KEY.
+   Legacy MR_PUBLIC_ROSTER and MR_PUBLIC_SAVE properties are ignored.
+   Only feedback submission accepts the separate, weaker feedback key. */
 
 function doPost(e) {
   try {
+    if (!e || !e.postData || typeof e.postData.contents !== 'string' ||
+        e.postData.contents.length > 12 * 1024 * 1024) {
+      return json({ status: 'error', message: 'Request is too large or missing.' });
+    }
     var body = {};
     try { body = JSON.parse(e.postData.contents); } catch (parseErr) { body = {}; }
+
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ status: 'denied' });
 
     /* Submitting feedback is the one thing the weaker key may do, and
        it may do it whether or not the stronger key was configured. */
     if (body.action === 'feedback') {
       if (!maySubmit(body.key)) return json({ status: 'denied' });
-      return json(takeFeedback(body));
+      return json(withWriteLock(function () { return takeFeedback(body); }));
     }
 
-    var publicSave = !body.key && publicSaveEnabled() &&
-      PUBLIC_SAVE_ACTIONS.indexOf(String(body.action || '')) !== -1;
-    if (!publicSave && !authorised(body.key)) {
-      if (!body.key) {
-        return json({ status: 'denied',
-          message: 'Saving without a key is switched off at this endpoint.' });
-      }
-      return json({ status: 'denied' });
+    if (!authorised(body.key)) {
+      return json({ status: 'denied', message: 'Add the facilitator key in Morning Report Settings to access the shared roster and documents.' });
     }
 
-    if (body.action === 'draw') return json(recordDraw(body));
+    if (body.action === 'draw') return json(withWriteLock(function () { return recordDraw(body); }));
 
-    if (body.action === 'docput') return json(docPut(body));
+    if (body.action === 'docput') return json(withWriteLock(function () { return docPut(body); }));
     if (body.action === 'docget') return json(docGet(body));
     if (body.action === 'doclist') return json(docList(body));
-    if (body.action === 'docdel') return json(docRemove(body));
-    if (body.action === 'pdf') return json(boardPdf(body));
+    if (body.action === 'docdel') return json(withWriteLock(function () { return docRemove(body); }));
+    if (body.action === 'pdf') return json(withWriteLock(function () { return boardPdf(body); }));
 
     if (body.action === 'collect') return json(pendingFeedback());
     if (body.action === 'recording') return json(oneRecording(body.id));
-    if (body.action === 'collected') return json(dropCollected(body.submissions));
+    if (body.action === 'collected') return json(withWriteLock(function () { return dropCollected(body.submissions); }));
 
-    return json(seedFrom(body));                 // no action: the original seed
+    return json(withWriteLock(function () { return seedFrom(body); }));                 // no action: the original seed
   } catch (err) {
     return json({ status: 'error', message: String(err && err.message || err) });
   }
+}
+
+function withWriteLock(write) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try { return write(); } finally { lock.releaseLock(); }
 }
 
 function authorised(key) {
@@ -396,6 +303,7 @@ function docPut(body) {
     return { status: 'error', message: 'Nothing to store.' };
   }
   var text = JSON.stringify(body.data);
+  if (text.length > 2 * 1024 * 1024) return { status: 'error', message: 'Document is too large.' };
   var existing = docFile(parts, true);
   if (existing) existing.setContent(text);
   else docDir(parts.dir, true).createFile(parts.name, text, 'application/json');
@@ -503,7 +411,17 @@ function takeFeedback(body) {
     return { status: 'error', message: 'A submission needs an id and a session.' };
   }
 
+  if (!/^[A-Za-z0-9._-]{1,160}$/.test(String(rec.id)) ||
+      !/^[A-Za-z0-9._-]{1,160}$/.test(String(rec.session)) ||
+      JSON.stringify(rec).length > 45000) {
+    return { status: 'error', message: 'Invalid or oversized feedback record.' };
+  }
   var clips = Array.isArray(body.audio) ? body.audio : [];
+  if (clips.length > 4 || clips.reduce(function (total, clip) {
+    return total + (clip && typeof clip.data === 'string' ? clip.data.length : 0);
+  }, 0) > 10 * 1024 * 1024) {
+    return { status: 'error', message: 'Too many recordings or too much audio. Send fewer recordings.' };
+  }
   for (var i = 0; i < clips.length; i++) {
     if (clips[i] && typeof clips[i].data === 'string' && clips[i].data.length > MAX_CLIP) {
       return { status: 'error', message: 'A recording was too large to accept. Send the feedback without it.' };
@@ -558,10 +476,28 @@ function pendingFeedback() {
   return { status: 'ok', pending: pending, unreadable: unreadable };
 }
 
+/* A Drive id is not an authorization grant. Require both post-box
+   registration and membership in the configured feedback-audio folder. */
+function feedbackRecording(id) {
+  var folderId = PropertiesService.getScriptProperties().getProperty('MR_AUDIO_FOLDER');
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.feedback);
+  if (!folderId || !sh) throw new Error('Not a feedback recording.');
+  var registered = sh.getDataRange().getValues().slice(1).some(function (row) {
+    return splitList(row[3]).indexOf(String(id)) !== -1;
+  });
+  if (!registered) throw new Error('Not a feedback recording.');
+  var file = DriveApp.getFileById(String(id));
+  var parents = file.getParents();
+  while (parents.hasNext()) {
+    if (String(parents.next().getId()) === String(folderId)) return file;
+  }
+  throw new Error('Not a feedback recording.');
+}
+
 function oneRecording(id) {
   if (!id) return { status: 'error', message: 'No recording was named.' };
   try {
-    var file = DriveApp.getFileById(String(id));
+    var file = feedbackRecording(id);
     var blob = file.getBlob();
     return {
       status: 'ok',
@@ -595,7 +531,7 @@ function dropCollected(submissions) {
   for (var i = rows.length - 1; i >= 1; i--) {
     if (!want[String(rows[i][2] || '')]) continue;
     splitList(rows[i][3]).forEach(function (id) {
-      try { DriveApp.getFileById(id).setTrashed(true); binned++; }
+      try { feedbackRecording(id).setTrashed(true); binned++; }
       catch (e) { /* already gone, which is the state we wanted */ }
     });
     sh.deleteRow(i + 1);
@@ -840,7 +776,7 @@ function recordDraw(body) {
   var values = sh.getDataRange().getValues();
   for (var r = 1; r < values.length; r++) {
     if (!String(values[r][0] || '').trim()) continue;
-    if (asDate(values[r][0]) === date) continue;          // this date is being rewritten
+    if (asDate(values[r][0]) === date && norm(values[r][1]) === norm(body.site || '')) continue;          // this date is being rewritten
     kept.push(values[r].slice(0, DRAWS_HEADERS.length));
   }
   var replaced = (values.length - 1) - kept.length;

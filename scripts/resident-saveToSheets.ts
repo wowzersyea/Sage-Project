@@ -23,6 +23,7 @@ const SHEETS_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbzVGqv0Ot-L9BtUzcWhq8XTpmOEZSGqVFwD0kPLSRfKBFVvTlRLMdzmtWXZuaPf6adz/exec";
 
 interface SaveArgs {
+  submissionId: string; // Persist once with the attempt and reuse on retries.
   residentName: string;
   residentEmail: string;
   goals: LearningGoals;
@@ -104,6 +105,8 @@ export async function saveResidentToSheets(args: SaveArgs): Promise<void> {
   const totalPossible = summary.mcqTotal + summary.freeTextTotal;
 
   const payload = {
+    submissionId: args.submissionId,
+    writeKey: process.env.ASSESSMENT_WRITE_KEY,
     assessmentType: "Resident",
     timestamp: (submittedAt || new Date()).toISOString(),
     name: residentName,
@@ -117,13 +120,15 @@ export async function saveResidentToSheets(args: SaveArgs): Promise<void> {
     domains,
   };
 
-  try {
-    await fetch(SHEETS_ENDPOINT, {
+  if (!process.env.ASSESSMENT_WRITE_KEY) throw new Error('Assessment writer is not configured.');
+    const response = await fetch(SHEETS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(25000),
     });
-  } catch (e) {
-    console.warn("Could not save resident results to Sheets:", e);
-  }
+    const result = await response.json();
+    if (!response.ok || result.status !== 'ok' || result.submissionId !== args.submissionId) {
+      throw new Error('Assessment results were not confirmed as saved.');
+    }
 }

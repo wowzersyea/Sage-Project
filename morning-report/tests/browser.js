@@ -7,6 +7,27 @@
    no executablePath at all, which makes Playwright use its own download
    (`npx playwright install chromium`). */
 const fs = require('fs');
+const { chromium } = require('playwright');
+
+// Keep external fonts and analytics from controlling local test readiness.
+const launch = chromium.launch.bind(chromium);
+chromium.launch = async function (options) {
+  const browser = await launch(options);
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = async function (options) {
+    const context = await newContext(options);
+    await context.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (/^(fonts\.googleapis\.com|fonts\.gstatic\.com|www\.googletagmanager\.com|www\.google-analytics\.com)$/.test(url.hostname)) {
+        return route.fulfill({status: 200, contentType: url.hostname.startsWith('fonts.') ? 'text/css' : 'application/javascript', body: ''});
+      }
+      if (url.hostname === 'script.google.com') return route.abort();
+      return route.continue();
+    });
+    return context;
+  };
+  return browser;
+};
 
 const CI_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const LOCAL = [

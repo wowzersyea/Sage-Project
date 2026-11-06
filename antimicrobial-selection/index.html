@@ -290,7 +290,7 @@
         <div class="confirm-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
-        <h2 id="confirm-headline">Assessment Submitted</h2>
+        <h2 id="confirm-headline">Assessment Complete</h2>
         <p id="confirm-sub"></p>
         <p style="font-size:0.88rem;color:var(--text-muted);margin-top:1rem;">Your responses have been packaged for faculty review. Use the buttons below to deliver them.</p>
         <div class="confirm-actions">
@@ -797,16 +797,7 @@ async function saveResultsToSheet(payload) {
     fullPayload: payload
   };
 
-  try {
-    await fetch(SHEETS_ENDPOINT, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sheetsPayload)
-    });
-  } catch(e) {
-    console.warn('Could not save to Sheets:', e);
-  }
+  await SageSubmission.submit(sheetsPayload, document.getElementById('screen-confirm'));
 }
 
 function emailReport() {
@@ -905,5 +896,6 @@ function checkAdmin() {
 window.addEventListener('hashchange', checkAdmin);
 checkAdmin();
 </script>
+<script src="../assets/assessment-submit.js"></script>
 </body>
 </html>

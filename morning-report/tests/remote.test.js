@@ -616,170 +616,28 @@ const stub = `
     await ctx6.close();
   }
 
-  /* ---- 11f. the site's built-in roster (option A) ------------------
-
-     A device with nothing set up at all opens the wheel and sees the
-     names, because the site carries the public endpoint and the
-     endpoint owner switched the public subset on. Saving keyless is
-     the owner's second stated trade: a bare device's saves go to the
-     endpoint (which holds its own MR_PUBLIC_SAVE switch), while the
-     identified lanes still never leave the device and a configured
-     device is untouched.
-     ------------------------------------------------------------------- */
-
+  /* An unconfigured device never reads or writes shared data. */
   {
-    const PUB_BODY = {
-      status: 'ok', public: true, generated: '2026-08-25T12:00:00Z', warnings: [],
-      roster: { source: 'sheet', academic_year: '2026-2027',
-        residents: SHARED_ROSTER.residents.map(r => Object.assign({}, r, { unavailable: [] })) },
-      rotations: null,
-    };
-
     const ctx = await b.newContext();
-    const p7 = await ctx.newPage();
-    p7.on('pageerror', e => errs.push('pageerror: ' + e.message));
-    await p7.addInitScript(fake);
-    await p7.addInitScript('window.MR_PUBLIC_ENDPOINT = ' + JSON.stringify(ENDPOINT) + ';');
-    await p7.addInitScript(stub);
-    await p7.goto(BASE + '/morning-report/roster/', { waitUntil: 'networkidle' });
-    await p7.evaluate(d => { window.__mr.body = d; }, PUB_BODY);
-
-    const r7 = await p7.evaluate(async () => {
-      MRRemote.reload();
-      const roster = await MRRoster.load();
-      return {
-        configured: MRRemote.configured(),
-        names: roster.residents.length,
-        pub: MRRemote.status().public,
-        chip: MRRemote.summary(),
-      };
-    });
-    t('a bare device gets the roster from the site itself', r7.names === 3, r7.names);
-    t('without being configured', r7.configured === false);
-    t('and knows it is the public subset', r7.pub === true);
-    t('the bar names the shared roster without crying view-only',
-      /Shared roster/.test((r7.chip || {}).text || '') && !/view only/.test((r7.chip || {}).text || ''), r7.chip);
-
-    /* the wheel itself */
-    await p7.evaluate(d => { window.__mr.body = d; }, PUB_BODY);
-    await p7.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
-    await p7.waitForFunction(() => window.wheels && wheels.pgy1 && wheels.pgy1.people.length > 0,
-      null, { timeout: 8000 });
-    t('the wheel has people on a device with nothing set up',
-      await p7.evaluate(() => wheels.pgy1.people.length > 0 && wheels.senior.people.length > 0));
-
-    /* the rota window: the endpoint now publishes the next seven days,
-       so the site toggle and duty filter work on a device with nothing
-       set up. The fixture serves one day — today — the way the real
-       window always contains today. */
-    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-      .toISOString().slice(0, 10);
-    const PUB_ROTA = Object.assign({}, PUB_BODY, {
-      rotations: {
-        source: 'sheet', academic_year: '2026-2027',
-        from: today, to: today, window_days: 7,
-        tasks: SHARED_ROTATIONS.tasks,
-        sites: SHARED_ROTATIONS.sites,
-        days: { [today]: { 'GAL Ward Int': ['r-1'], 'GAL Ward Sr': ['r-2'], 'CLC Ward Sr': ['r-3'] } },
-      },
-    });
-    await p7.evaluate(d => { window.__mr.body = d; }, PUB_ROTA);
-    await p7.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
-    await p7.waitForFunction(() => window.wheels && wheels.pgy1 && wheels.pgy1.people.length > 0,
-      null, { timeout: 8000 });
-    t('the presenting toggle appears on a bare device once the rota is public',
-      await p7.isVisible('#presenting-wrap'));
-    t('with a button per site',
-      await p7.evaluate(() =>
-        Array.from(document.querySelectorAll('#presenting button'))
-          .map(x => x.textContent).join(',')) === 'Galveston,Clear Lake',
-      await p7.evaluate(() =>
-        Array.from(document.querySelectorAll('#presenting button')).map(x => x.textContent)));
-
-    /* both wheels landed on a bare device: the chicken dinner button
-       is live, because saving keyless is the point now */
-    const hint = await p7.evaluate(() => {
-      wheels.pgy1.winner = wheels.pgy1.people[0];
-      wheels.senior.winner = wheels.senior.people[0];
-      renderConfirm();
-      return {
-        visible: !document.getElementById('confirm').hidden,
-        disabled: document.getElementById('confirmBtn').disabled,
-        note: document.getElementById('confirm-note').textContent,
-      };
-    });
-    t('a finished draw shows the confirm bar', hint.visible === true);
-    t('and the button is live on a device with nothing set up', hint.disabled === false, hint);
-    t('with the normal recording sentence', /Records these two/.test(hint.note), hint.note);
-
-    /* saves go through, keyless; the identified lanes never do */
-    const wrote = await p7.evaluate(async () => {
+    const page = await ctx.newPage();
+    await page.addInitScript(fake);
+    await page.addInitScript('window.MR_PUBLIC_ENDPOINT = '+JSON.stringify(ENDPOINT)+';');
+    await page.addInitScript(stub);
+    await page.goto(BASE+'/morning-report/settings/', {waitUntil:'networkidle'});
+    t('settings prefills the endpoint so only the key is needed', await page.inputValue('#endpoint') === ENDPOINT);
+    const anonymous = await page.evaluate(async () => {
       window.__mr.calls.length = 0;
-      const put = await MRStore.write('sessions/x.json', { a: 1 });
-      const res = await MRRemote.confirmDraw({ date: '2026-09-03',
-        entries: [{ role: 'r', resident_id: 'r-1', name: 'n' }] });
-      const bodies = window.__mr.calls.filter(c => c.method === 'POST')
-        .map(c => JSON.parse(c.body));
-      return { put, confirm: res.ok,
-               actions: bodies.map(b => b.action), keys: bodies.map(b => b.key) };
+      const read = await MRRemote.fetchAll();
+      const draw = await MRRemote.confirmDraw({date:'2026-10-23', entries:[{name:'Example'}]});
+      return {read, draw, writes:MRRemote.canWrite(), calls:window.__mr.calls.length};
     });
-    t('a bare device saves a session document to the endpoint',
-      wrote.put === true && wrote.actions.indexOf('docput') !== -1, wrote);
-    t('and records the draw', wrote.confirm === true && wrote.actions.indexOf('draw') !== -1, wrote);
-    t('both with no key at all', wrote.keys.every(k => k === ''), wrote.keys);
-
-    const fenced = await p7.evaluate(async () => {
-      window.__mr.calls.length = 0;
-      await MRStore.write('working-board.json', { w: 1 });
-      await MRStore.write('working/2026-09-03.json', { w: 1 });
-      await MRStore.write('manifests/m.json', { w: 1 });
-      return window.__mr.calls.length;
-    });
-    t('the identified lanes still never leave a bare device', fenced === 0, fenced);
-
-    t('the bar stops claiming nothing will be saved',
-      await p7.evaluate(() => /shared store/.test(document.getElementById('mr-bar').textContent)),
-      await p7.evaluate(() => document.getElementById('mr-bar').textContent.trim().slice(0, 90)));
-
-    /* the endpoint's save switch is off: the sentence blames the
-       switch, not a key nobody entered */
-    const savedOff = await p7.evaluate(async () => {
-      window.__mr.mode = 'denied';
-      const r = await MRRemote.confirmDraw({ date: '2026-09-03',
-        entries: [{ role: 'r', name: 'n' }] });
-      window.__mr.mode = 'ok';
-      return r.error;
-    });
-    t('a keyless save the endpoint refuses reads as switched off',
-      /switched off/.test(savedOff), savedOff);
-
-    /* the endpoint owner switches it off: a sentence, not a blank */
-    const off = await p7.evaluate(async () => {
-      window.__mr.mode = 'denied';
-      MRRemote.reload();
-      await MRRemote.fetchAll();
-      return MRRemote.status().error;
-    });
-    t('switched off at the endpoint reads as switched off, not as a bad key',
-      /switched off/.test(off), off);
-    await p7.evaluate(() => { window.__mr.mode = 'ok'; });
-
-    /* a configured device on the same build is untouched */
-    await p7.evaluate(d => {
-      MRRemote.setSettings({ endpoint: d.e, key: d.k, remember: false });
-      window.__mr.body = d.body;
-    }, { e: ENDPOINT, k: KEY, body: okBody() });
-    const keyed = await p7.evaluate(async () => {
-      MRRemote.reload();
-      window.__mr.calls.length = 0;
-      const rot = await MRStore.read('rotations.json');
-      return { hasRota: !!(rot && rot.days), url: window.__mr.calls[0].url,
-               pub: MRRemote.status().public };
-    });
-    t('a configured device still sends its key', /key=/.test(keyed.url), keyed.url);
-    t('and still gets the rota', keyed.hasRota === true);
-    t('and is not marked public', keyed.pub === false);
-
+    t('anonymous roster reads do not reach the server', anonymous.read === null && anonymous.calls === 0, anonymous);
+    t('anonymous saves are disabled and explain the key requirement', !anonymous.writes && !anonymous.draw.ok && /facilitator key/.test(anonymous.draw.error), anonymous);
+    await page.evaluate(body => { window.__mr.body = body; }, okBody());
+    await page.fill('#key', KEY);
+    await page.click('#save');
+    await page.waitForFunction(() => MRRemote.status().ok);
+    t('entering the key restores shared access', await page.evaluate(() => MRRemote.configured() && MRRemote.canWrite()));
     await ctx.close();
   }
 
@@ -826,6 +684,7 @@ const stub = `
       sessionStorage.setItem('__px__', JSON.stringify({ mode: 'ok', body: d }));
       window.__mr.body = d;
     }, PUB);
+    await p9.evaluate(d => MRRemote.setSettings({endpoint:d.endpoint, key:d.key}), {endpoint:ENDPOINT, key:KEY});
 
     const viaProxy = await p9.evaluate(async () => {
       sessionStorage.setItem('__pxcalls__', '[]');

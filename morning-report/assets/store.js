@@ -654,8 +654,7 @@
   api.whenReady = restore().then(function () {
     if (global.MRRemote) {
       global.MRRemote.onChange(renderBars);
-      /* Sourced covers both a configured device and the site's public
-         roster — either way there is something to fetch on load. */
+      /* Only configured devices may fetch the shared roster. */
       var mrst = global.MRRemote.status();
       if (mrst.configured || mrst.sourced) global.MRRemote.fetchAll().then(renderBars);
     }
