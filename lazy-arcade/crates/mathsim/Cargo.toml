@@ -1,0 +1,17 @@
+[package]
+name = "mathsim"
+version = "0.1.0"
+edition = "2021"
+
+# Zero dependencies on purpose. The RNG layer is consensus-critical: it must
+# agree bit-for-bit with the TypeScript engine, and a transitive crate bump
+# silently changing a hash implementation is exactly the failure we cannot
+# tolerate. SHA-256/HMAC are implemented in-tree and covered by RFC 4231
+# test vectors in src/sha256.rs.
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

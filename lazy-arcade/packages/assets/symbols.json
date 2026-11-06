@@ -1,0 +1,301 @@
+{
+  "note": "Symbol -> art source map. Every paying symbol is a WHOLE owned Lion, identified by the trait it wears (identifiesTrait) but licensed by tokenId. tools/atlas-build/check-licensing.py enforces ownership in CI (spec Sec. 5.3).",
+  "rarityMethod": "statistical rarity: sum of 1/r_t across a token's traits, r_t = count_t / 10078",
+  "symbols": [
+    {
+      "id": "WILD",
+      "tier": "wild",
+      "source": "COMMISSIONED",
+      "status": "BLOCKED_PENDING_ART",
+      "reason": "Spec Sec. 6.3 assigns WILD to a Signature Series lion. The operator holds 73 Lions and NONE of them are Signature Series, so no Signature art is licensed to this project. Per Sec. 5.3 the remedy is commissioned original art in the same style, not sourcing the trait elsewhere.",
+      "brief": "Original 'Pride Wild' crest in Lazy Lions house style. Must not reproduce any Signature Series character."
+    },
+    {
+      "id": "SCATTER",
+      "tier": "scatter",
+      "source": "COMMISSIONED",
+      "status": "OK",
+      "reason": "The $LAZY coin is project branding, not a collection trait."
+    },
+    {
+      "id": "P1",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4230,
+      "identifiesTrait": "Crown",
+      "status": "OK",
+      "note": "TOP SYMBOL. The big winner, by request."
+    },
+    {
+      "id": "P2",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5216,
+      "identifiesTrait": "LAZY Hat",
+      "status": "OK"
+    },
+    {
+      "id": "P3",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4522,
+      "identifiesTrait": "Shades",
+      "status": "OK"
+    },
+    {
+      "id": "P4",
+      "tier": "premium",
+      "source": "OWNED_TOKEN",
+      "tokenId": 482,
+      "identifiesTrait": "Leopard Fur Coat",
+      "status": "OK",
+      "note": "Cropped to `bust` so the coat is in shot; a head crop hides the trait the symbol is named for."
+    },
+    {
+      "id": "M1",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4837,
+      "identifiesTrait": "Bucket Hat",
+      "status": "OK"
+    },
+    {
+      "id": "M2",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 840,
+      "identifiesTrait": "Monocle",
+      "status": "OK"
+    },
+    {
+      "id": "M3",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5813,
+      "identifiesTrait": "BTC Eyes",
+      "status": "OK"
+    },
+    {
+      "id": "M4",
+      "tier": "mid",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1506,
+      "identifiesTrait": "Sheriff Hat",
+      "status": "OK"
+    },
+    {
+      "id": "L1",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 2038,
+      "identifiesTrait": "Police Hat",
+      "status": "OK"
+    },
+    {
+      "id": "L2",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1725,
+      "identifiesTrait": "Horns",
+      "status": "OK"
+    },
+    {
+      "id": "L3",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 4117,
+      "identifiesTrait": "Pirate Hat",
+      "status": "OK"
+    },
+    {
+      "id": "L4",
+      "tier": "low",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5348,
+      "identifiesTrait": "Black Cap",
+      "status": "OK"
+    },
+    {
+      "id": "CUB:P1",
+      "tier": "premium",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 32010,
+      "status": "OK",
+      "identifiesTrait": "1/1 Special",
+      "note": "One of one. Lazy Cubs marks a Special by the ABSENCE of traits -- {\"Age\":\"Special\"} and nothing else -- which is how this was found rather than chosen. Struck as a gold medallion because its painted swirl backdrop cannot be keyed out and should not be."
+    },
+    {
+      "id": "CUB:P2",
+      "tier": "premium",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 2195,
+      "status": "OK",
+      "identifiesTrait": "1/1 Special",
+      "note": "The second one of one, and the only other in a 63-token holding. Glitch art: the datamosh smears the subject across its own background, so there is no boundary to cut along. Framed as a medallion for the same reason as P1."
+    },
+    {
+      "id": "CUB:M1",
+      "tier": "mid",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 21095,
+      "identifiesTrait": "Crown",
+      "status": "OK",
+      "note": "Whole Cub, not a trait crop. Demoted from premium when the 1/1s took P1 and P2."
+    },
+    {
+      "id": "CUB:M2",
+      "tier": "mid",
+      "game": "cubcluster",
+      "source": "OWNED_CUB",
+      "tokenId": 3097,
+      "identifiesTrait": "LAZY Hat",
+      "status": "OK",
+      "note": "Whole Cub, not a trait crop. Bare Stoner eyes, so this is the one Cub that blinks."
+    },
+    {
+      "id": "CUB:L1",
+      "tier": "low",
+      "game": "cubcluster",
+      "source": "ASSERTED_PERMISSION",
+      "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
+      "tokenId": 1,
+      "status": "OK",
+      "reason": "Lazy Milk, real Lazy Drinks NFT art. The operator holds ZERO of token id 1 on-chain and has asserted separate permission to use it. Recorded as ASSERTED_PERMISSION rather than OWNED_DRINK so the provenance is not misread later as verified ownership.",
+      "verification": "none on-chain; rests on the operator's statement",
+      "note": "highest-paying low symbol in Cub Cluster, by request"
+    },
+    {
+      "id": "CUB:L2",
+      "tier": "low",
+      "game": "cubcluster",
+      "source": "OWNED_DRINK",
+      "status": "OK",
+      "reason": "Lazy Juice, real NFT art. Operator holds 11 of token id 0.",
+      "contract": "0x65f9f7f4a4ddd517b35c9357f575f0f1df431cbc",
+      "tokenId": 0
+    },
+    {
+      "id": "TV:P1",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7234,
+      "identifiesTrait": "Top Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Black-and-gold mane, lizard blue body, shades."
+    },
+    {
+      "id": "TV:P2",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5443,
+      "identifiesTrait": "Halo",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Ice mane, purple fur coat, anime eyes."
+    },
+    {
+      "id": "TV:P3",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 5523,
+      "identifiesTrait": "Gladiator Armour",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Bust crop so the armour is in shot, like the default set's fur coat."
+    },
+    {
+      "id": "TV:P4",
+      "tier": "premium",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 6159,
+      "identifiesTrait": "Santa Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Rainbow top knot on a black body."
+    },
+    {
+      "id": "TV:M1",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1328,
+      "identifiesTrait": "Zebra",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Zebra body, bunny ears, bubble gum."
+    },
+    {
+      "id": "TV:M2",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 1589,
+      "identifiesTrait": "Galaxy",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Galaxy body under a straw hat."
+    },
+    {
+      "id": "TV:M3",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7250,
+      "identifiesTrait": "Zombie",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Zombie body, shades, tongue out."
+    },
+    {
+      "id": "TV:M4",
+      "tier": "mid",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7213,
+      "identifiesTrait": "Safari Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Water goggles, Ethereum shirt."
+    },
+    {
+      "id": "TV:L1",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 7184,
+      "identifiesTrait": "Gold Chain",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Bloody mane, straw hat."
+    },
+    {
+      "id": "TV:L2",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 8908,
+      "identifiesTrait": "Spinner Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Fire top knot, grey body."
+    },
+    {
+      "id": "TV:L3",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 9315,
+      "identifiesTrait": "Spinner Hat",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Rainbow mane, zombie body."
+    },
+    {
+      "id": "TV:L4",
+      "tier": "low",
+      "game": "traitvault",
+      "source": "OWNED_TOKEN",
+      "tokenId": 2790,
+      "identifiesTrait": "Monocle",
+      "status": "OK",
+      "note": "Trait Vault's own set -- Pride and Trait Vault shipped the same twelve Lions, one game wearing two colour schemes. Business shirt, smirk."
+    }
+  ]
+}
