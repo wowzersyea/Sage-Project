@@ -46,7 +46,6 @@
 </script>
 </head>
 <body>
-<script src="../assets/gate.js?v=7"></script>
 
 <div id="mr-bar"></div>
 
@@ -195,8 +194,8 @@
 
 </main>
 
-<script src="../assets/remote.js?v=7"></script>
-<script src="../assets/store.js?v=7"></script>
+<script src="../assets/remote.js?v=8"></script>
+<script src="../assets/store.js?v=8"></script>
 <script src="../assets/relay.js?v=7"></script>
 <script src="../assets/qr.js?v=7"></script>
 <script>
@@ -226,10 +225,8 @@
     warns.innerHTML = "";
 
     if (!s.configured) {
-      txt.textContent = (s.sourced && s.tried && s.ok)
-        ? "Using the site's built-in shared roster. Draws and board saves go to the shared " +
-          "store. Add the facilitator key below for the full rota and publishing."
-        : "No shared roster configured. This browser uses the data folder only.";
+      txt.textContent = "No shared roster configured. Resident lists are not loaded automatically. " +
+        "The archived draw can use your data folder or a private roster configured below.";
       return;
     }
     if (!s.tried) { txt.textContent = "Checking the endpoint…"; return; }

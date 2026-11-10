@@ -616,16 +616,9 @@ const stub = `
     await ctx6.close();
   }
 
-  /* ---- 11f. the site's built-in roster (option A) ------------------
-
-     A device with nothing set up at all opens the wheel and sees the
-     names, because the site carries the public endpoint and the
-     endpoint owner switched the public subset on. Saving keyless is
-     the owner's second stated trade: a bare device's saves go to the
-     endpoint (which holds its own MR_PUBLIC_SAVE switch), while the
-     identified lanes still never leave the device and a configured
-     device is untouched.
-     ------------------------------------------------------------------- */
+  /* ---- 11f. visitors never load resident lists ---------------------
+     The built-in endpoint still saves de-identified documents, but
+     fetching names requires explicitly configured private access. */
 
   {
     const PUB_BODY = {
@@ -654,63 +647,15 @@ const stub = `
         chip: MRRemote.summary(),
       };
     });
-    t('a bare device gets the roster from the site itself', r7.names === 3, r7.names);
+    t('a bare device has no resident list', r7.names === 0, r7.names);
     t('without being configured', r7.configured === false);
-    t('and knows it is the public subset', r7.pub === true);
-    t('the bar names the shared roster without crying view-only',
-      /Shared roster/.test((r7.chip || {}).text || '') && !/view only/.test((r7.chip || {}).text || ''), r7.chip);
-
-    /* the wheel itself */
-    await p7.evaluate(d => { window.__mr.body = d; }, PUB_BODY);
+    t('no public roster was loaded', r7.pub === false);
+    t('no roster status is shown', r7.chip === null, r7.chip);
+    t('no roster GET was sent', await p7.evaluate(() =>
+      window.__mr.calls.every(c => c.method !== 'GET')));
     await p7.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
-    await p7.waitForFunction(() => window.wheels && wheels.pgy1 && wheels.pgy1.people.length > 0,
-      null, { timeout: 8000 });
-    t('the wheel has people on a device with nothing set up',
-      await p7.evaluate(() => wheels.pgy1.people.length > 0 && wheels.senior.people.length > 0));
-
-    /* the rota window: the endpoint now publishes the next seven days,
-       so the site toggle and duty filter work on a device with nothing
-       set up. The fixture serves one day — today — the way the real
-       window always contains today. */
-    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-      .toISOString().slice(0, 10);
-    const PUB_ROTA = Object.assign({}, PUB_BODY, {
-      rotations: {
-        source: 'sheet', academic_year: '2026-2027',
-        from: today, to: today, window_days: 7,
-        tasks: SHARED_ROTATIONS.tasks,
-        sites: SHARED_ROTATIONS.sites,
-        days: { [today]: { 'GAL Ward Int': ['r-1'], 'GAL Ward Sr': ['r-2'], 'CLC Ward Sr': ['r-3'] } },
-      },
-    });
-    await p7.evaluate(d => { window.__mr.body = d; }, PUB_ROTA);
-    await p7.goto(BASE + '/morning-report/draw/', { waitUntil: 'networkidle' });
-    await p7.waitForFunction(() => window.wheels && wheels.pgy1 && wheels.pgy1.people.length > 0,
-      null, { timeout: 8000 });
-    t('the presenting toggle appears on a bare device once the rota is public',
-      await p7.isVisible('#presenting-wrap'));
-    t('with a button per site',
-      await p7.evaluate(() =>
-        Array.from(document.querySelectorAll('#presenting button'))
-          .map(x => x.textContent).join(',')) === 'Galveston,Clear Lake',
-      await p7.evaluate(() =>
-        Array.from(document.querySelectorAll('#presenting button')).map(x => x.textContent)));
-
-    /* both wheels landed on a bare device: the chicken dinner button
-       is live, because saving keyless is the point now */
-    const hint = await p7.evaluate(() => {
-      wheels.pgy1.winner = wheels.pgy1.people[0];
-      wheels.senior.winner = wheels.senior.people[0];
-      renderConfirm();
-      return {
-        visible: !document.getElementById('confirm').hidden,
-        disabled: document.getElementById('confirmBtn').disabled,
-        note: document.getElementById('confirm-note').textContent,
-      };
-    });
-    t('a finished draw shows the confirm bar', hint.visible === true);
-    t('and the button is live on a device with nothing set up', hint.disabled === false, hint);
-    t('with the normal recording sentence', /Records these two/.test(hint.note), hint.note);
+    t('the archived wheels are empty without private setup', await p7.evaluate(() =>
+      wheels.pgy1.people.length === 0 && wheels.senior.people.length === 0));
 
     /* saves go through, keyless; the identified lanes never do */
     const wrote = await p7.evaluate(async () => {
@@ -752,17 +697,6 @@ const stub = `
     });
     t('a keyless save the endpoint refuses reads as switched off',
       /switched off/.test(savedOff), savedOff);
-
-    /* the endpoint owner switches it off: a sentence, not a blank */
-    const off = await p7.evaluate(async () => {
-      window.__mr.mode = 'denied';
-      MRRemote.reload();
-      await MRRemote.fetchAll();
-      return MRRemote.status().error;
-    });
-    t('switched off at the endpoint reads as switched off, not as a bad key',
-      /switched off/.test(off), off);
-    await p7.evaluate(() => { window.__mr.mode = 'ok'; });
 
     /* a configured device on the same build is untouched */
     await p7.evaluate(d => {
@@ -826,6 +760,10 @@ const stub = `
       sessionStorage.setItem('__px__', JSON.stringify({ mode: 'ok', body: d }));
       window.__mr.body = d;
     }, PUB);
+    await p9.evaluate(d => {
+      MRRemote.setSettings({ endpoint: d.endpoint, key: d.key, remember: false });
+    }, { endpoint: ENDPOINT, key: KEY });
+    await p9.evaluate(() => MRRemote.fetchAll());
 
     const viaProxy = await p9.evaluate(async () => {
       sessionStorage.setItem('__pxcalls__', '[]');

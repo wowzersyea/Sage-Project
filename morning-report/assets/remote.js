@@ -32,14 +32,9 @@
      the roster, not for the room. */
   var PATHS = ["roster.json", "rotations.json"];
 
-  /* Option A, chosen knowingly: with this set to the /exec URL, every
-     visitor's wheel loads names and levels with nothing configured —
-     the endpoint serves that subset to a keyless GET only when its
-     owner has also set MR_PUBLIC_ROSTER in Script Properties, so
-     either side can switch it off alone. The rota, the draws, leave
-     windows and every write stay behind the key.
-
-     Tests override via global.MR_PUBLIC_ENDPOINT before this loads. */
+  /* The built-in endpoint remains available for de-identified document
+     storage. Resident lists require an explicitly configured endpoint
+     and key; visitors never fetch a public roster. */
   /* The same-origin corridor (a Cloudflare Pages Function at /mr-api)
      is tried first for every request, because institutional networks —
      hospital WiFi among them — block script.google.com wholesale, and
@@ -226,8 +221,6 @@
       direct = state.endpoint +
         (state.endpoint.indexOf("?") === -1 ? "?" : "&") +
         "key=" + encodeURIComponent(state.key);
-    } else if (PUBLIC_ENDPOINT) {
-      direct = PUBLIC_ENDPOINT;           /* keyless: the public subset */
     } else {
       return Promise.resolve(null);
     }
@@ -253,9 +246,7 @@
       .then(function (body) {
         if (!body || typeof body !== "object") throw new Error("The endpoint did not return JSON.");
         if (body.status === "denied") {
-          return finish(configured()
-            ? { ok: false, denied: true, error: "That key was not accepted." }
-            : { ok: false, error: "The site's built-in roster is switched off at the endpoint." });
+          return finish({ ok: false, denied: true, error: "That key was not accepted." });
         }
         if (body.status !== "ok") {
           return finish({ ok: false, error: body.message || "The endpoint reported a problem." });
@@ -296,7 +287,7 @@
      means "I have nothing", which is what an absent file means too. */
   function get(path) {
     if (PATHS.indexOf(path) === -1) return Promise.resolve(null);
-    if (!configured() && !PUBLIC_ENDPOINT) return Promise.resolve(null);
+    if (!configured()) return Promise.resolve(null);
     return fetchAll().then(function (r) {
       if (!r || !r.ok || !r.data) return null;
       return r.data[path] || null;
@@ -492,7 +483,7 @@
       ok: !!(state.result && state.result.ok),
       denied: !!(state.result && state.result.denied),
       public: !!(state.result && state.result.public),
-      sourced: configured() || !!PUBLIC_ENDPOINT,
+      sourced: configured(),
       error: state.result && !state.result.ok ? state.result.error : "",
       warnings: (state.result && state.result.warnings) || [],
       counts: (state.result && state.result.counts) || { residents: 0, days: 0 },
@@ -511,7 +502,7 @@
   /* A short line for the shared bar. Null when there is nothing to say. */
   function summary() {
     var s = status();
-    if (!s.configured && !PUBLIC_ENDPOINT) return null;
+    if (!s.configured) return null;
     if (!s.tried) return { kind: "wait", text: "Checking the shared roster…" };
     if (s.ok) {
       if (isEmpty()) return { kind: "warn", text: "Shared roster: sheet is empty" };

@@ -878,7 +878,7 @@ const FAKE_API = `
     !!document.querySelector('input[name="r-overall"]'));
   await strangerCtx.close();
 
-  t('the read-out sits behind the front-door code like every other tool', gatedSummary);
+  t('the read-out opens without a passcode', !gatedSummary);
   t('the form does not, because it is scanned off a slide by people leaving the room',
      !gatedForm && formUsable, { gatedForm, formUsable });
 

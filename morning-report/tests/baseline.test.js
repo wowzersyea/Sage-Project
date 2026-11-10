@@ -614,7 +614,7 @@ const FAKE_BOX = `
   const short = await stranger.evaluate(() => ({ href: location.pathname + location.search }));
   await strangerCtx.close();
 
-  t('the read-out sits behind the front-door code like every other tool', gatedSummary);
+  t('the read-out opens without a passcode', !gatedSummary);
   t('the form does not, because it is scanned off a code by somebody outside the workroom',
      !gatedForm && formUsable, { gatedForm, formUsable });
   t('the short address lands on the form and carries the round with it',
