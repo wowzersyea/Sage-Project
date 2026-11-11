@@ -28,6 +28,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
+from digest_verify import verify_digest
+
 # Initialize the Anthropic client
 client = anthropic.Anthropic()
 
@@ -70,6 +72,27 @@ def load_memory():
         with open(MEMORY_FILE, 'r', encoding="utf-8") as f:
             return json.load(f)
     return {"reviewed_dois": [], "reviewed_titles": [], "articles": []}
+
+
+def previously_reviewed_list(memory, limit=150):
+    """Titles (with DOIs) of past reviews for the do-not-repeat prompt section.
+
+    Uses the structured article records; `reviewed_titles` is line-scraped and
+    mostly holds DOI lines and stray sentences, so it is only a fallback.
+    """
+    lines = []
+    for a in memory.get("articles", [])[-limit:]:
+        title = (a.get("title") or "").strip()
+        if title:
+            doi = (a.get("doi") or "").strip()
+            lines.append(f"- {title}" + (f" ({doi})" if doi else ""))
+    if not lines:
+        lines = [f"- {t}" for t in memory.get("reviewed_titles", [])[-50:]]
+    return "\n".join(lines)
+
+
+# Report from digest_verify for the current run, saved into the digest JSON.
+VERIFICATION: dict = {}
 
 
 def save_memory(memory):
@@ -537,7 +560,7 @@ def generate_digest():
 
     # Load memory of previously reviewed articles
     memory = load_memory()
-    previously_reviewed = "\n".join(memory.get("reviewed_titles", [])[-50:])  # Last 50 titles
+    previously_reviewed = previously_reviewed_list(memory)
     if not previously_reviewed:
         previously_reviewed = "None - this is the first digest."
 
@@ -636,9 +659,19 @@ def generate_digest():
 
         print("Digest generated successfully!")
 
+        # Check DOIs, open-access status and repeats against Crossref / Europe PMC /
+        # Unpaywall, and re-review abstract-only papers that have PMC full text.
+        print("Verifying DOIs and free full text...")
+        digest_content, report = verify_digest(digest_content, memory, client=client,
+                                              window_start=digest_start.strftime('%Y-%m-%d'))
+        VERIFICATION.clear()
+        VERIFICATION.update(report)
+        print("  " + ", ".join(f"{k} {v}" for k, v in report.items() if k != "items"))
+
         # Update memory with newly reviewed articles
         new_articles = extract_articles_from_response(digest_content)
         memory["reviewed_titles"].extend(new_articles)
+        memory["reviewed_dois"].extend(i["doi"] for i in report["items"] if i["doi"])
         memory["last_run"] = today.isoformat()
 
         # Extract structured article records for topic-linking
@@ -677,6 +710,8 @@ def save_digest(content):
         "generated_at": datetime.now().isoformat(),
         "content": content
     }
+    if VERIFICATION:
+        digest_data["verification"] = dict(VERIFICATION)
     
     json_path = f"literature-monitor/digests/{file_date}.json"
     with open(json_path, "w", encoding="utf-8") as f:
