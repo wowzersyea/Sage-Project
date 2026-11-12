@@ -140,6 +140,10 @@ async function page(opts = {}) {
   p.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
   await p.goto(PAGE);
   await p.waitForTimeout(1400);
+  // Bonus screens wait for a press in manual play. A check that happens to
+  // trigger a bonus must not hang on one, so they close themselves here; the
+  // bookend checks set this back to Infinity to test the real behaviour.
+  await p.evaluate(() => { SCREEN_WAIT_MS = 60; });
   return { p, ctx, errs };
 }
 
@@ -1597,16 +1601,29 @@ console.log("\nProduction distinctness");
     // the feature-end card: buy a Trait Vault round and watch the banner
     document.querySelector('[data-game="traitvault"]').click();
     await sleep(450);
+    // The ending is ONE card. It used to be up to three banners -- "Feature
+    // total", a tier banner and "Feature complete" -- each counting the same
+    // money again.
     turbo = true; muted = true; buyNext = true;
-    const seen = [];
+    const seen = [], outros = new Set();
+    let outroGone = false, bannerAfterOutro = false;
     const iv = setInterval(() => {
+      const on = document.getElementById("banner").classList.contains("on");
       const t = document.getElementById("bannerBig").textContent;
-      if (t && !seen.includes(t)) seen.push(t);
-    }, 50);
+      if (on && t && !seen.includes(t)) seen.push(t);
+      const o = document.querySelector(".roundcard.outro");
+      if (o) outros.add(o);
+      if (outros.size && !o) outroGone = true;
+      if (outroGone && on) bannerAfterOutro = true;
+    }, 40);
     await doSpin();
     clearInterval(iv);
+    const outro = [...outros][0];
+    const rec = history[history.length - 1];
     return { shared, tokenOverlap, rungs, lit, shownInCluster, hiddenInPride,
-             banners: seen };
+             banners: seen, outros: outros.size, bannerAfterOutro,
+             kicker: outro ? outro.querySelector(".rc-kick").textContent : "",
+             outroAmount: outro ? +outro.dataset.amount : null, owed: Math.round(rec.win) };
   });
   check("Trait Vault's twelve are all its own art", r.shared.length === 0,
         r.shared.join(",") || "12/12 distinct");
@@ -1618,11 +1635,232 @@ console.log("\nProduction distinctness");
   check("the ladder lights the live rung and marks the climbed ones",
         r.lit === "ddL..", r.lit);
   check("the ladder does not leak into other games", r.hiddenInPride);
-  check("a feature closes with a total card",
-        r.banners.some(t => /feature complete/i.test(t)),
-        `banners seen: ${r.banners.join(" | ") || "none"}`);
+  check("a feature closes with exactly one total card",
+        r.outros === 1 && /complete/i.test(r.kicker),
+        `${r.outros} closing card(s), "${r.kicker}"`);
+  check("the closing card shows what the feature paid", r.outroAmount === r.owed,
+        `card ${r.outroAmount} vs paid ${r.owed}`);
+  check("no tier banner follows the closing card", !r.bannerAfterOutro,
+        `banners: ${r.banners.join(" | ") || "none"}`);
   check("no runtime errors around distinctness", errs.length === 0,
         errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* ------------------------------------------------------- round presentation */
+/* The round is PLAYED, not replayed. Each check below fails on the play loop it
+   replaced: free spins were board swaps on a 300ms timer, tumbles repainted all
+   twenty cells, a big win was counted two to four times, the banner fired
+   before the board showed what won, a 0.3x return got a chime, and the bonus
+   screens dismissed themselves. */
+console.log("\nRound presentation");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    let spins = 0;
+    const oSpin = animateSpin;
+    animateSpin = async (...a) => { spins++; return oSpin(...a); };
+    const out = {};
+
+    // 1. every free spin lands on spinning reels
+    for (const g of ["pride", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click(); await sleep(300);
+      turbo = true; buyNext = true;
+      const s0 = spins; await doSpin();
+      out["fs_" + g] = spins - s0;
+    }
+
+    // 2. a tumble moves only the cells that change. Column 1 loses rows 1-2
+    //    (one survivor falls two rows, one stays put, two refill); column 4
+    //    loses its bottom row (three survivors fall one row, one refills).
+    //    Columns 2, 3 and 5 must not be touched at all.
+    turbo = false;
+    document.querySelector('[data-game="cubcluster"]').click(); await sleep(300);
+    const grid = [];
+    for (let c = 0; c < 5; c++) grid.push([L1, L2, M1, M2].map((s, i) => [L1, L2, M1, M2][(i + c) % 4]));
+    buildReels(grid);
+    const marks = new Set(["0:1", "0:2", "3:3"]);
+    const next = grid.map((col, c) => {
+      const keep = col.filter((_, row) => !marks.has(c + ":" + row));
+      const fresh = Array(4 - keep.length).fill(P1);
+      return fresh.concat(keep);
+    });
+    const before = [...document.getElementById("reels").children].map(r => [...r.querySelectorAll(".sym")]);
+    const moved = await animateTumble(marks, next);
+    const after = [...document.getElementById("reels").children].map(r => [...r.querySelectorAll(".sym")]);
+    let untouched = 0, wrong = 0;
+    for (const c of [1, 2, 4]) for (let row = 0; row < 4; row++) if (before[c][row] === after[c][row]) untouched++;
+    for (let c = 0; c < 5; c++) for (let row = 0; row < 4; row++) {
+      const img = after[c][row].querySelector("img");
+      const want = symName(next[c][row], "cubcluster");
+      if (img && img.alt !== want) wrong++;
+    }
+    const stayed = before[0][3] === after[0][3];
+    out.tumble = { moved, untouched, wrong, stayed };
+
+    // 3. one count-up per result, and the board explains a big win first
+    serverSeed = new Uint8Array(32).map((_, i) => (i * 13 + 5) & 0xff);
+    const client = document.getElementById("fClient").value;
+    const find = (pred, g = "cubcluster") => {
+      for (let n = 1; n < 6000; n++) {
+        const rng = makeRng(serverSeed, client, n, g);
+        const o = g === "cubcluster" ? spinCluster(rng) : spinVault(rng, {});
+        if (pred(o)) return n;
+      }
+      return -1;
+    };
+    const bet = +document.getElementById("bet").value;
+    const play = async (n) => {
+      nonce = n - 1;
+      const c0 = countUps, chimes = { n: 0 };
+      const oChime = winChime, oCoins = coins;
+      winChime = (...a) => { chimes.n++; return oChime(...a); };
+      coins = (...a) => { chimes.n++; return oCoins(...a); };
+      let floatAt = null, bannerAt = null; const t0 = performance.now();
+      const iv = setInterval(() => {
+        if (floatAt === null && document.querySelector("#screen .floatwin")) floatAt = performance.now() - t0;
+        if (bannerAt === null && document.getElementById("banner").classList.contains("on")) bannerAt = performance.now() - t0;
+      }, 20);
+      await doSpin();
+      clearInterval(iv);
+      winChime = oChime; coins = oCoins;
+      const rec = history[history.length - 1];
+      return { countUps: countUps - c0, chimes: chimes.n, floatAt, bannerAt,
+               mult: rec.mult, readout: document.getElementById("winOut").textContent, owed: fmt(rec.win) };
+    };
+    turbo = true;
+    const nZero = find(o => o.base + o.feature === 0);
+    const nSmall = find(o => { const m = o.base + o.feature; return m > 1.2 && m < 10; });
+    // Cub Cluster's smallest cluster pays about 2x, so it never returns less
+    // than the stake; Trait Vault's two-of-a-kind lines do, all the time.
+    const nQuiet = find(o => { const m = o.base + o.feature; return m >= 0.25 && m <= 1 && !o.fs; }, "traitvault");
+    const nBig = find(o => o.base + o.feature >= 20 && o.frames.length >= 3);
+    out.zero = await play(nZero);
+    out.small = await play(nSmall);
+    out.big = await play(nBig);
+    document.querySelector('[data-game="traitvault"]').click(); await sleep(300);
+    out.quiet = await play(nQuiet);
+    out.nums = { nZero, nSmall, nQuiet, nBig };
+    turbo = false;
+    return out;
+  });
+  check("every Pride free spin lands on spinning reels", r.fs_pride === 10, `${r.fs_pride} reel spins for 10 free spins`);
+  check("every Lion's Share free spin lands on spinning reels", r.fs_traitvault === 10,
+        `${r.fs_traitvault} reel spins for 10 free spins`);
+  check("a tumble moves exactly the cells that change", r.tumble.moved === 7, `${r.tumble.moved} moved, 7 change`);
+  check("columns the tumble did not touch keep their cells", r.tumble.untouched === 12,
+        `${r.tumble.untouched}/12 cells kept`);
+  check("a survivor with nothing cleared beneath it does not move", r.tumble.stayed);
+  check("the board after the tumble is the engine's board", r.tumble.wrong === 0, `${r.tumble.wrong} cells differ`);
+  check("a losing spin counts nothing", r.zero.countUps === 0 && r.zero.chimes === 0,
+        `${r.zero.countUps} count-up(s), ${r.zero.chimes} chime(s)`);
+  check("a winning spin counts up exactly once", r.small.countUps === 1,
+        `${r.small.countUps} count-ups for a ${r.small.mult.toFixed(2)}x win`);
+  check("a tumble chain counts up exactly once", r.big.countUps === 1,
+        `${r.big.countUps} count-ups for a ${r.big.mult.toFixed(2)}x chain`);
+  check("the board shows the win before the big-win screen",
+        r.big.floatAt !== null && (r.big.bannerAt === null || r.big.floatAt < r.big.bannerAt),
+        `amount over the winners at ${Math.round(r.big.floatAt)}ms, banner at ${Math.round(r.big.bannerAt)}ms`);
+  check("the fixtures were all found", Object.values(r.nums).every(n => n > 0), JSON.stringify(r.nums));
+  check("a return at or below the stake is not celebrated",
+        r.quiet.mult >= 0.25 && r.quiet.countUps === 0 && r.quiet.chimes === 0 && r.quiet.readout === r.quiet.owed,
+        `${r.quiet.mult.toFixed(2)}x: ${r.quiet.countUps} count-up(s), ${r.quiet.chimes} chime(s), readout ${r.quiet.readout}`);
+  check("the readout ends on the exact round total", r.small.readout === r.small.owed && r.big.readout === r.big.owed,
+        `${r.small.readout}/${r.small.owed}, ${r.big.readout}/${r.big.owed}`);
+  check("no runtime errors in the play loop", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* The win ladder and the bonus screens, at real speed. */
+console.log("\nWin ladder and bonus screens");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true; turbo = false;
+    const out = {};
+    document.querySelector('[data-game="traitvault"]').click(); await sleep(300);
+    const bet = 100, amount = 75 * bet;
+
+    // the label upgrades in order while the count climbs; one press lands the
+    // exact total, a second press closes the screen
+    busy = true;
+    const labels = [];
+    const iv = setInterval(() => {
+      const t = document.getElementById("bannerBig").textContent;
+      if (t && labels[labels.length - 1] !== t) labels.push(t);
+    }, 30);
+    const c0 = countUps;
+    const job = bigWin(amount, { bet, stake: bet, shown: 0 });
+    await sleep(4300);
+    const midLabels = labels.slice();
+    press();
+    await sleep(150);
+    out.skipped = document.getElementById("bannerAmt").textContent;
+    out.topLabel = document.getElementById("bannerBig").textContent;
+    press();
+    const tClose = performance.now();
+    await job;
+    out.closeMs = performance.now() - tClose;
+    clearInterval(iv);
+    busy = false;
+    out.midLabels = midLabels; out.want = fmt(amount); out.countUps = countUps - c0;
+
+    // the intro waits for the player in manual play...
+    SCREEN_WAIT_MS = Infinity;
+    buyNext = true;
+    const spin = doSpin();
+    let cardAt = null; const t0 = performance.now();
+    while (performance.now() - t0 < 5000 && !document.querySelector(".roundcard")) await sleep(40);
+    cardAt = performance.now() - t0;
+    await sleep(3500);
+    out.stillWaiting = !!document.querySelector(".roundcard");
+    press();
+    await sleep(700);
+    out.closedOnPress = !document.querySelector(".roundcard:not(.out)");
+    // ...and leaving mid-bonus still pays the round in full
+    const b0 = balance;
+    await sleep(1200);
+    document.querySelector('[data-game="pride"]').click();
+    await spin;
+    const rec = history[history.length - 1];
+    out.settled = { paid: +(balance - b0).toFixed(6), owed: +rec.win.toFixed(6), busy };
+    out.cardAt = cardAt;
+
+    // in turbo the screens close themselves after about three seconds
+    document.querySelector('[data-game="traitvault"]').click(); await sleep(300);
+    turbo = true; buyNext = true;
+    let seenAt = null, goneAt = null; const t1 = performance.now();
+    const iv2 = setInterval(() => {
+      const c = document.querySelector(".roundcard:not(.out)");
+      if (c && seenAt === null) seenAt = performance.now() - t1;
+      if (!c && seenAt !== null && goneAt === null) goneAt = performance.now() - t1;
+    }, 25);
+    await doSpin();
+    clearInterval(iv2);
+    turbo = false; SCREEN_WAIT_MS = 60;
+    out.turboIntroMs = goneAt - seenAt;
+    return out;
+  });
+  const order = ["Big win", "Mega win", "Superb win", "Epic win"];
+  check("the big-win label climbs the tiers in order",
+        r.midLabels.length >= 2 && r.midLabels.every((t, i) => t === order[i]),
+        r.midLabels.join(" > "));
+  check("one press lands the exact total on the top tier", r.skipped === r.want && r.topLabel === "Epic win",
+        `${r.skipped} "${r.topLabel}", owed ${r.want}`);
+  check("a second press closes the big-win screen", r.closeMs < 400, `${Math.round(r.closeMs)}ms`);
+  check("a big win is one count-up", r.countUps === 1, `${r.countUps}`);
+  check("the bonus intro waits for the player in manual play", r.stillWaiting,
+        `card up at ${Math.round(r.cardAt)}ms, still waiting 3.5s later: ${r.stillWaiting}`);
+  check("a press dismisses the bonus intro", r.closedOnPress);
+  check("leaving mid-bonus still pays the round in full",
+        Math.abs(r.settled.paid - r.settled.owed) < 1e-6 && !r.settled.busy,
+        `paid ${r.settled.paid}, owed ${r.settled.owed}, busy=${r.settled.busy}`);
+  check("in turbo the bonus intro closes itself after about 3s",
+        r.turboIntroMs > 2500 && r.turboIntroMs < 4200, `${Math.round(r.turboIntroMs)}ms`);
+  check("no runtime errors at the bonus screens", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }
 

@@ -807,6 +807,53 @@ footer{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7
   background:linear-gradient(180deg,var(--panel),var(--panel-2));
   box-shadow:0 10px 30px -14px #000}
 footer b{color:var(--hot)}
+
+/* ---- round presentation ------------------------------------------------- */
+/* The amount a board paid, over the symbols that paid it. */
+.floatwin{position:absolute;z-index:8;pointer-events:none;white-space:nowrap;
+  font-family:var(--mono);font-weight:900;font-size:clamp(17px,2.6vw,28px);
+  color:#FFE07A;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+  text-shadow:-2px -2px 0 #3A0A08,2px -2px 0 #3A0A08,-2px 2px 0 #3A0A08,
+              2px 2px 0 #3A0A08,0 3px 0 rgba(0,0,0,.5),0 0 20px rgba(255,180,40,.55)}
+/* Free spins left, the running bonus total and the tumble total: the chips
+   that carry them grow while they are live, and bump when they change. */
+.chip.big{font-size:12px;padding:5px 12px;border-color:var(--gold);color:var(--gold-3);
+  box-shadow:0 0 16px -4px var(--gold)}
+.chip.big b{font-size:14px}
+.chip.bump{animation:chipBump .38s cubic-bezier(.2,1.5,.4,1)}
+@keyframes chipBump{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+/* The bonus bookends take a press, so unlike the old feature card they catch
+   the pointer. */
+.roundcard{position:absolute;inset:0;z-index:9;display:grid;place-items:center;
+  overflow:hidden;cursor:pointer;padding:12px}
+.roundcard::after{content:"";position:absolute;inset:0;background:rgba(6,4,10,.8);
+  animation:fiFade .3s ease-out both}
+.rc-body{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;
+  gap:6px;text-align:center;max-width:100%;
+  animation:fiIn .58s cubic-bezier(.2,1.5,.35,1) .12s both}
+.rc-kick{font-family:var(--mono);font-size:clamp(10px,1.5vw,13px);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold-2)}
+.rc-title{font-family:var(--serif,ui-serif,Georgia,serif);font-size:clamp(24px,5.4vw,54px);
+  line-height:1.02;color:var(--gold-3);text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 34px var(--gold)}
+.rc-tier{font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+  font-size:clamp(14px,2.8vw,26px);min-height:1.1em;
+  background:linear-gradient(180deg,#FFF6DC,var(--gold) 48%,#C4860E);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.rc-tier.up,.banner .big.up{animation:thump .45s ease-out}
+.rc-amt{font-family:var(--mono);font-weight:900;line-height:.95;color:#FFD54A;
+  font-size:clamp(40px,11vw,112px);font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  text-shadow:-5px -5px 0 #3A0A08,0 -6px 0 #3A0A08,5px -5px 0 #3A0A08,6px 0 0 #3A0A08,
+    5px 5px 0 #3A0A08,0 6px 0 #3A0A08,-5px 5px 0 #3A0A08,-6px 0 0 #3A0A08,
+    0 11px 0 rgba(0,0,0,.42),0 0 48px rgba(255,180,40,.5)}
+.rc-sub{font-family:var(--mono);font-size:clamp(10px,1.4vw,13px);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold-2)}
+.rc-hint{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-top:12px;animation:rcHint 1.5s ease-in-out infinite}
+@keyframes rcHint{0%,100%{opacity:.45}50%{opacity:1}}
+.roundcard.out{animation:fiOut .28s ease-in both}
+@media (prefers-reduced-motion: reduce){
+  .roundcard::after,.rc-body,.rc-hint,.roundcard.out,.chip.bump,.rc-tier.up,.banner .big.up{animation:none}
+}
 .hidden{display:none!important}
 </style>
 
@@ -828,13 +875,14 @@ footer b{color:var(--hot)}
 
       <div class="topbar">
         <span class="chip" id="chipMode">Base game</span>
-        <span class="chip hidden" id="chipFS">Free spin <b><span id="fsN">0</span>/10</b></span>
+        <span class="chip hidden" id="chipFS">Free spins left <b id="fsLeft">0</b></span>
         <!-- The tumble ladder, on screen where the mechanic happens. It lived
              only in a text chip ("tumble 2 · x2"), which is a caption, not a
              game object: every studio that ships tumbles pins the live
              multiplier where the eye already is. -->
         <span class="ladder hidden" id="tumbleLadder" aria-label="Tumble multiplier ladder"></span>
-        <span class="chip hidden" id="chipFeat">Feature <b id="featTotal">0</b></span>
+        <span class="chip hidden" id="chipTumble">Tumble win <b id="tumbleWin">0</b></span>
+        <span class="chip hidden" id="chipFeat">Total win <b id="featTotal">0</b></span>
         <span class="chip" id="chipMax">Max win <b id="maxWinLbl">2,000×</b></span>
         <button class="chip" id="infoBtn" style="cursor:pointer">Info</button>
       </div>
@@ -1417,13 +1465,18 @@ function prideEval(grid,multWilds,pays,marks){
 function prideFreeSpins(rng,strips,pays){
   let feature=0, nft=false; const frames=[];
   for(let i=0;i<10;i++){
+    const before=feature;
     const d2=drawGridPride(strips,rng), g2=d2.grid, m2=new Set();
     if(d2.crowned===REELS) nft=true;
     feature+=prideEval(g2,true,pays,m2);
     let sc=0; for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(g2[r][row]===SCAT) sc++;
     feature+=pays[SCAT][Math.min(sc,REELS)]||0;
+    // spin/fs/paid/won are PRESENTATION ONLY: they tell the play loop to land
+    // this board on spinning reels, what the counter reads, and what this one
+    // spin paid. They read values already computed and draw nothing.
     frames.push({grid:g2,marks:m2,label:`free spin ${i+1}/10 · ×2 wilds`,
-                 crowned:d2.crowned});
+                 crowned:d2.crowned, spin:true, fs:{n:i+1,of:10},
+                 paid:feature-before, won:feature});
   }
   return {feature,frames,nft};
 }
@@ -1436,7 +1489,7 @@ function spinPride(rng,stripsOverride){
   let scat=0;
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(grid[r][row]===SCAT) scat++;
   base+=pays[SCAT][Math.min(scat,REELS)]||0;
-  const frames=[{grid,marks:new Set(marks),label:null,crowned:d.crowned}];
+  const frames=[{grid,marks:new Set(marks),label:null,crowned:d.crowned,spin:true,paid:base}];
   let feature=0, fs=false;
   if(scat>=3){
     fs=true;
@@ -1488,7 +1541,8 @@ function spinCluster(rng){
   for(;;){
     const {total,remove}=clusterFind(grid,pays);
     if(total===0){ frames.push({grid:grid.map(c=>c.slice()),marks:new Set(),
-                     label:chain?`chain ended after ${chain}`:null, won:base+feature}); break; }
+                     label:chain?`chain ended after ${chain}`:null, won:base+feature,
+                     spin:chain===0, paid:0}); break; }
     const mult=LADDER[Math.min(chain,LADDER.length-1)];
     const paid=total*mult;
     if(chain===0) base+=paid; else feature+=paid;
@@ -1499,7 +1553,8 @@ function spinCluster(rng){
     // the worst error at 172% -- 44.4 shown against 16.3 truly won.
     frames.push({grid:grid.map(c=>c.slice()),marks:new Set(remove),
                  label:`tumble ${chain+1} · ×${mult}`, won:base+feature,
-                 ladderStep:Math.min(chain,LADDER.length-1)});
+                 ladderStep:Math.min(chain,LADDER.length-1),
+                 spin:chain===0, paid});
     // clear, fall, refill from the top
     const ng=[];
     for(let r=0;r<REELS;r++){
@@ -1587,7 +1642,7 @@ function vaultFreeSpins(rng){
     feature+=win;
     frames.push({grid,marks,label:"lion's share",won:feature,
                  rowMult:rowMult.slice(),orbs:landed,spinWin:win,paidRows,wins,
-                 spinNo:spin+1});
+                 spinNo:spin+1, spin:true, fs:{n:spin+1,of:FREE_SPINS}, paid:win});
   }
   return {feature,frames};
 }
@@ -1603,7 +1658,7 @@ function spinVault(rng,state){
   for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
     if(grid[r][row]===SCAT){ scat++; scatMarks.add(r+":"+row); }
   }
-  const frames=[{grid,marks,scatter:scatMarks,label:null,wins}];
+  const frames=[{grid,marks,scatter:scatMarks,label:null,wins,spin:true,paid:base}];
 
   let feature=0, fs=false;
   if(scat>=SCATTERS_TO_TRIGGER){
@@ -3757,38 +3812,320 @@ function paintGrid(grid,marks){
    made of the same cast as the reels rather than of typography.
    Built rather than commissioned: a rendered cutscene is an asset, but the
    staging, timing and weight of one are just sequencing. */
-async function featureIntro(title,sub){
-  if(turbo){ await sleep(220); return; }
-  const scr=$("screen");
-  const card=document.createElement("div");
-  card.className="fintro";
-  const lion=(SYMBOL_ART.default&&SYMBOL_ART.default.P1)
-    ? `<img class="fi-lion" src="${SYMBOL_ART.default.P1.uri}" alt="">` : "";
-  // Structure taken from the reference's own bonus card: a small "you won N
-  // free spins" header states the AWARD, the feature name below states its
-  // IDENTITY, and the body explains the mechanic. Leading with the name alone
-  // tells a first-time player what the round is called but not what they got.
-  card.innerHTML=`<div class="fi-wipe"></div>
-    <div class="fi-body">${lion}
-      <div class="fi-text">
-        <em>You won ${FREE_SPINS} free spins</em>
-        <b>${title}</b><span>${sub||""}</span></div></div>`;
-  scr.appendChild(card);
-  $("reels").classList.add("blown");
-  if(reduceMotion){ await sleep(900); }
-  else{
-    duckMusic(0.7,1800);
-    riser(0.62);
-    await sleep(120); gunshot(0.75);
-    await sleep(320); jackpotHit(1.0);
-    // a burst of coins timed to the strike, using the existing fx layer
-    if(typeof coins==="function") coins(46,1.15);
-    await sleep(1500);
+/* ============================ round presentation ============================
+   A round is PLAYED, not replayed. The maths settles the whole round before the
+   first reel moves -- that is what makes it replayable from the seed -- and the
+   frames it returns used to be flicked past on a 300ms timer: ten free spins in
+   about three seconds, with nothing spinning. Everything below exists to turn
+   that script back into a game: each free spin lands on real reels, tumbles
+   fall, every result is counted up once, and the bonus is framed by screens
+   that wait for the player.
+
+   Nothing here may touch an outcome. It reads frames; it never draws. */
+let abortRound=false;      // a game switch mid-round: stop presenting, settle now
+let presses=0;             // taps / Space / Enter while a round is running
+let screenOpen=false;      // a bonus screen is up and owns Space and Enter
+let countUps=0;            // count-up animations started (one per result; asserted by test)
+let skipScreens=false;     // autoplay setting: bonus screens close themselves
+/* Manual play waits for the player at the bonus screens. The browser gate
+   shortens this so a test that happens to trigger a bonus does not hang. */
+let SCREEN_WAIT_MS=Infinity;
+const quick=()=>turbo||reduceMotion;
+/* A sleep the round can cut short. A game switch mid-bonus must not sit out a
+   two-second pause on a board that is no longer on screen. */
+function nap(ms){
+  if(abortRound||ms<=0) return Promise.resolve();
+  return new Promise(r=>{
+    const t=setTimeout(fin,ms), iv=setInterval(()=>{ if(abortRound) fin(); },60);
+    function fin(){ clearTimeout(t); clearInterval(iv); r(); }
+  });
+}
+const pressWaiters=new Set();
+function press(){
+  presses++; skipRollup=true;
+  for(const w of [...pressWaiters]) w();
+}
+/* Resolves on the next press, after `ms`, or at once if the round is abandoned. */
+function waitPress(ms){
+  return new Promise(done=>{
+    let t=null;
+    const iv=setInterval(()=>{ if(abortRound) fin(); },80);
+    function fin(){ clearTimeout(t); clearInterval(iv); pressWaiters.delete(fin); done(); }
+    pressWaiters.add(fin);
+    if(Number.isFinite(ms)) t=setTimeout(fin,ms);
+  });
+}
+/* Bonus screens wait in manual play. They close themselves after 3s in turbo,
+   or under autoplay with Skip Screens on -- the convention for both. */
+function screenAutoMs(){ return (turbo||(autoLeft>0&&skipScreens)) ? 3000 : SCREEN_WAIT_MS; }
+function hintText(){
+  if(turbo||(autoLeft>0&&skipScreens)) return "continuing…";
+  return matchMedia("(pointer: coarse)").matches ? "tap to continue" : "press anywhere to continue";
+}
+function scatterCount(grid){ let n=0; for(const col of grid) for(const s of col) if(s===SCAT) n++; return n; }
+
+/* ---- the win ladder -------------------------------------------------------
+   Four tiers by multiple of the BET, as the reference does it: 15x, 30x, 45x
+   and 60x. Ours ran 15/40/100/250 with a fixed 1.5s count, so a 60x and a 240x
+   wore the same label for the same time. The label now UPGRADES while the count
+   climbs past each threshold, each upgrade lands on its own beat, and the
+   length of the count is how the machine says how much was won. */
+const WIN_TIERS=[{x:15,name:"Big win"},{x:30,name:"Mega win"},
+                 {x:45,name:"Superb win"},{x:60,name:"Epic win"}];
+function tierOf(mult){ let t=0; WIN_TIERS.forEach((w,i)=>{ if(mult>=w.x) t=i+1; }); return t; }
+/* Count `amount` into `amtEl`, upgrading `tierEl` at each threshold crossed.
+   Waypoints are the thresholds below the total, then the total; every leg gets
+   the same time so every upgrade gets the same weight. One press jumps to the
+   exact total. */
+async function countTiers(amtEl,tierEl,amount,ctx,celebrate){
+  countUps++;
+  const bet=ctx.bet, top=celebrate?tierOf(amount/bet):0;
+  const pts=[0];
+  for(let i=0;i<top;i++) if(WIN_TIERS[i].x*bet<amount) pts.push(WIN_TIERS[i].x*bet);
+  pts.push(amount);
+  const leg=quick()?110:1900, lastLeg=quick()?240:2400;
+  let shown=0;
+  const upgrade=t=>{
+    if(!tierEl||t<=shown) return;
+    shown=t; tierEl.textContent=WIN_TIERS[t-1].name;
+    tierEl.classList.remove("up"); void tierEl.offsetWidth; tierEl.classList.add("up");
+    jackpotFanfare(t); if(!quick()) coins(22+t*22,1.05+t*.08);
+  };
+  skipRollup=false; const p0=presses;
+  const cut=()=>skipRollup||abortRound||presses!==p0;
+  for(let i=1;i<pts.length&&!cut();i++){
+    const a=pts[i-1], b=pts[i], last=i===pts.length-1, dur=last?lastLeg:leg, t0=performance.now();
+    await new Promise(done=>{
+      (function tick(now){
+        if(cut()) return done();
+        const k=Math.min(1,(now-t0)/dur);
+        const v=a+(b-a)*(last?1-Math.pow(1-k,2.2):k);
+        amtEl.textContent=fmt(v);
+        const tn=Math.min(top,tierOf(v/bet)); if(tn>shown) upgrade(tn);
+        if(k<1){ counterTick(k,shown); requestAnimationFrame(tick); } else done();
+      })(t0);
+    });
   }
+  amtEl.textContent=fmt(amount);
+  if(top>shown) upgrade(top);
+  skipRollup=false;
+}
+/* A big win takes the screen. It only ever follows the board explaining the
+   win, never precedes it, and it waits until the tumbles have finished. */
+async function bigWin(amount,ctx){
+  if(abortRound) return;
+  const b=$("banner");
+  b.classList.remove("epic");
+  $("bannerBig").textContent=""; $("bannerAmt").textContent="0"; $("bannerSub").textContent="";
+  b.classList.add("on");
+  duckMusic(0.85,quick()?600:4000);
+  await countTiers($("bannerAmt"),$("bannerBig"),amount,ctx,true);
+  b.classList.toggle("epic",tierOf(amount/ctx.bet)>=4);
+  $("bannerSub").textContent=`${(amount/ctx.bet).toFixed(1)}× your bet`;
+  await waitPress(quick()?220:1700);        // hold the total; a press closes it early
+  b.classList.remove("on");
+}
+/* What a result does to the cabinet.
+   At or below the stake it is a loss, however it is dressed, so it updates the
+   readout and nothing else: no chime, no count-up, no coins. Above the stake it
+   gets one count-up -- in the readout, or on the big-win screen past 15x. */
+async function presentResult(amount,ctx){
+  const el=$("winOut");
+  if(amount<=0||abortRound) return;
+  const from=ctx.shown, to=ctx.shown+amount;
+  ctx.shown=to;
+  if(amount<=ctx.stake){ el.textContent=fmt(to); return; }
+  const mult=amount/ctx.bet;
+  if(mult>=WIN_TIERS[0].x){ await bigWin(amount,ctx); el.textContent=fmt(to); return; }
+  winChime(Math.min(3,1+Math.floor(mult)));
+  await countUp(amount,mult,0,from);
+  if(mult>=5) coins(18,.9);
+}
+
+/* ---- the board --------------------------------------------------------------
+   Win marks are applied to the cells already on screen rather than by
+   rebuilding the reels: a tumble has to move the very nodes that won. */
+function highlightWin(grid,marks){
+  [...$("reels").children].forEach((reel,r)=>{
+    reel.querySelectorAll(".sym").forEach((c,row)=>{
+      c.classList.remove("pop","dim","settle","burst");
+      c.style.animationDelay="";
+      if(!marks) return;
+      if(marks.has(r+":"+row)){
+        void c.offsetWidth; c.classList.add("pop");
+        c.style.animationDelay=(r*55)+"ms";       // left to right, the way lines pay
+        const sym=grid[r]&&grid[r][row];
+        setTimeout(()=>{ if(c.isConnected&&sym!=null) shineSymbol(c,sym,760); }, r*55);
+      } else c.classList.add("dim");
+    });
+  });
+}
+/* The amount a board paid, over the symbols that paid it. */
+function floatWin(marks,amount){
+  if(!marks||!marks.size||amount<=0) return;
+  const scr=$("screen"), sR=scr.getBoundingClientRect(), reels=[...$("reels").children];
+  let x=0,y=0,n=0;
+  for(const key of marks){
+    const [r,row]=key.split(":").map(Number);
+    const c=reels[r]&&reels[r].querySelectorAll(".sym")[row]; if(!c) continue;
+    const b=c.getBoundingClientRect(); x+=b.left+b.width/2; y+=b.top+b.height/2; n++;
+  }
+  if(!n) return;
+  const el=document.createElement("div");
+  el.className="floatwin"; el.textContent=fmt(amount); el.setAttribute("aria-hidden","true");
+  el.style.left=(x/n-sR.left)+"px"; el.style.top=(y/n-sR.top)+"px";
+  scr.appendChild(el);
+  const dur=quick()?420:1150;
+  if(reduceMotion){ setTimeout(()=>el.remove(),dur); return; }
+  el.animate([
+    {transform:"translate(-50%,-30%) scale(.6)",opacity:0},
+    {transform:"translate(-50%,-50%) scale(1.08)",opacity:1,offset:.22},
+    {transform:"translate(-50%,-62%) scale(1)",opacity:1,offset:.75},
+    {transform:"translate(-50%,-92%) scale(.96)",opacity:0}
+  ],{duration:dur,easing:"cubic-bezier(.25,.6,.3,1)",fill:"forwards"}).onfinish=()=>el.remove();
+}
+function setChip(id,value){
+  const el=$(id); if(!el) return;
+  el.textContent=fmt(value);
+  const chip=el.closest(".chip"); if(!chip) return;
+  chip.classList.remove("hidden","bump"); void chip.offsetWidth; chip.classList.add("bump");
+}
+
+/* ---- tumbles ----------------------------------------------------------------
+   Winners burst, the survivors FALL by the number of cells cleared beneath
+   them, and the refill drops in from above, staggered row by row. Only cells
+   that change position move; a column nothing left is not touched at all.
+   Timings follow the reference engine: about 0.10s for a one-row fall, plus
+   about 0.05s per extra row, refills 0.05s apart -- the drama is in the pause
+   before the burst, not in the fall. Returns how many cells it moved. */
+function dropCell(el,rows,cell,delay){
+  if(reduceMotion) return Promise.resolve();
+  const fall=turbo?60:100+50*(rows-1), bounce=turbo?0:90, dur=fall+bounce;
+  const frames=bounce
+    ? [{transform:`translateY(${-rows*cell}px)`,easing:"cubic-bezier(.55,0,1,.6)"},
+       {transform:"translateY(0)",offset:fall/dur,easing:"ease-out"},
+       {transform:`translateY(${-cell*0.07}px)`,offset:(fall+bounce*.45)/dur,easing:"ease-in"},
+       {transform:"translateY(0)"}]
+    : [{transform:`translateY(${-rows*cell}px)`},{transform:"translateY(0)"}];
+  const a=el.animate(frames,{duration:dur,delay:turbo?0:delay,fill:"backwards"});
+  return new Promise(r=>{ a.onfinish=r; a.oncancel=r; });
+}
+let lastTumbleMoved=0;     // cells the last tumble moved (asserted by test)
+async function animateTumble(marks,nextGrid){
+  const reels=[...$("reels").children], cell=cellPx();
+  const burst=[];
+  reels.forEach((reel,r)=>reel.querySelectorAll(".sym").forEach((c,row)=>{
+    if(marks&&marks.has(r+":"+row)) burst.push(c);
+  }));
+  if(burst.length){
+    burst.forEach(c=>{ c.classList.remove("pop","settle","dim"); void c.offsetWidth; c.classList.add("burst"); });
+    blip(980,.05,"triangle",.03,1460);
+    await nap(quick()?70:300);
+  }
+  const jobs=[]; let moved=0;
+  reels.forEach((reel,r)=>{
+    const strip=reel.querySelector(".strip"); if(!strip) return;
+    const cells=[...strip.children], cleared=[];
+    for(let row=0;row<ROWS;row++) if(marks&&marks.has(r+":"+row)) cleared.push(row);
+    if(!cleared.length) return;
+    const need=cleared.length, survivors=[];
+    for(let row=0;row<ROWS;row++) if(!cleared.includes(row)) survivors.push({el:cells[row],from:row});
+    cleared.forEach(row=>cells[row]&&cells[row].remove());
+    const fresh=[];
+    for(let j=0;j<need;j++) fresh.push(symCell(nextGrid[r][j]));
+    strip.prepend(...fresh);
+    survivors.forEach((s,t)=>{
+      if(!s.el) return;
+      const d=need+t-s.from;
+      if(d>0){ jobs.push(dropCell(s.el,d,cell,r*18)); moved++; }
+    });
+    fresh.forEach((el,j)=>{ jobs.push(dropCell(el,need,cell,(need-1-j)*50+r*18)); moved++; });
+  });
+  document.querySelectorAll("#reels .sym.dim").forEach(c=>c.classList.remove("dim"));
+  await Promise.all(jobs);
+  if(moved&&!quick()) thud(2);
+  lastTumbleMoved=moved;
+  return moved;
+}
+
+/* ---- bonus bookends ---------------------------------------------------------
+   Every shipped bonus opens on a screen that states the award and waits, and
+   closes on one that states the total and waits. Ours ran on timers: a 2.3s
+   card that dismissed itself, and an ending made of up to three banners all
+   counting the same money. */
+function roundCard(html,label){
+  const card=document.createElement("div");
+  card.className="roundcard";
+  card.setAttribute("role","status");
+  card.setAttribute("aria-live","assertive");
+  card.setAttribute("aria-label",label);
+  card.innerHTML=(quick()?"":`<div class="fi-wipe"></div>`)+`<div class="rc-body">${html}</div>`;
+  $("screen").appendChild(card);
+  return card;
+}
+async function closeCard(card){
+  if(!card||!card.isConnected) return;
   card.classList.add("out");
-  $("reels").classList.remove("blown");
-  await sleep(reduceMotion?60:340);
+  await sleep(reduceMotion?30:280);
   card.remove();
+}
+async function featureIntro(title,sub,awarded){
+  if(abortRound) return;
+  const art=SYMBOL_ART.default&&SYMBOL_ART.default.P1;
+  const lion=art?`<img class="fi-lion" src="${art.uri}" alt="">`:"";
+  screenOpen=true;
+  const card=roundCard(`${lion}
+      <span class="rc-kick">Congratulations</span>
+      <span class="rc-title">You won ${awarded} free spins</span>
+      <span class="rc-sub">${title} · ${sub}</span>
+      <span class="rc-hint">${hintText()}</span>`,
+    `You won ${awarded} free spins. ${title}: ${sub}.`);
+  $("reels").classList.add("blown");
+  if(!quick()){
+    duckMusic(0.7,1800); riser(0.62);
+    setTimeout(()=>gunshot(0.75),120);
+    setTimeout(()=>{ jackpotHit(1.0); coins(46,1.15); },440);
+  }
+  // A short floor before a press counts, so the tap meant for the last spin
+  // cannot dismiss a screen nobody has read.
+  await nap(quick()?150:700);
+  await waitPress(screenAutoMs());
+  $("reels").classList.remove("blown");
+  screenOpen=false;
+  await closeCard(card);
+}
+/* The ONE ending. It carries the tier escalation itself, so no separate tier
+   banner follows it -- that was the third count of the same money. */
+async function featureOutro(amount,spins,ctx,name){
+  if(abortRound) return;
+  screenOpen=true;
+  const card=roundCard(`
+      <span class="rc-kick">${name} complete</span>
+      <span class="rc-tier"></span>
+      <span class="rc-amt">0</span>
+      <span class="rc-sub">won in ${spins} free spin${spins===1?"":"s"} · ${(amount/ctx.bet).toFixed(2)}× your bet</span>
+      <span class="rc-hint" style="visibility:hidden">${hintText()}</span>`,
+    `${name} complete. You won ${fmt(amount)} in ${spins} free spins.`);
+  card.classList.add("outro");
+  card.dataset.amount=String(Math.round(amount));
+  kerching();
+  await countTiers(card.querySelector(".rc-amt"),card.querySelector(".rc-tier"),
+                   amount,ctx,amount>ctx.stake);
+  card.querySelector(".rc-hint").style.visibility="";
+  await waitPress(screenAutoMs());
+  screenOpen=false;
+  await closeCard(card);
+}
+async function celebrateScatters(grid){
+  const reels=[...$("reels").children]; let n=0;
+  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++)
+    if(grid[r][row]===SCAT){
+      const c=reels[r]&&reels[r].querySelectorAll(".sym")[row];
+      if(c){ c.classList.remove("dim","scat"); void c.offsetWidth; c.classList.add("scat"); }
+      if(!quick()){ const k=n; setTimeout(()=>scatterLand(k),k*130); }
+      n++;
+    }
+  await nap(quick()?150:950);
 }
 
 /* Pride pays 1024 ways and, until now, never showed one: winning symbols
@@ -3937,31 +4274,38 @@ function rollupMs(mult){
   if(turbo) return Math.min(380,120+decades*230);
   return Math.min(3200,150+decades*950);
 }
-async function countUp(target,mult,tier){
+/* `from` lets a result count on from what the readout already shows -- a base
+   win followed by a bonus is one round, and the readout is the round's total. */
+async function countUp(target,mult,tier,from=0){
+  countUps++;
   const el=$("winOut"), dur=rollupMs(mult||0), t0=performance.now();
   skipRollup=false;
   await new Promise(done=>{
     (function tick(now){
-      if(skipRollup) return done();
+      if(skipRollup||abortRound) return done();
       const k=Math.min(1,(now-t0)/dur);
       // Ease out: the count sprints away and settles onto the total.
       const e=1-Math.pow(1-k,2.2);
-      el.textContent=fmt(target*e);
+      el.textContent=fmt(from+target*e);
       if(k<1){ counterTick(k,tier||0); requestAnimationFrame(tick); } else done();
     })(t0);
   });
-  el.textContent=fmt(target);
+  el.textContent=fmt(from+target);
   skipRollup=false;
 }
 
 /* ============================== play loop =============================== */
+function featureName(g){ return g==="traitvault"?"Lion's Share":"Free Spins"; }
+function featureBlurb(g){
+  return g==="pride"?"every wild carries ×2"
+       : g==="traitvault"?"row multipliers stick and build":"multipliers build as you play";
+}
+
 async function doSpin(){
   if(busy) return;
   // The bed starts HERE, not at the controls. It used to be wired to the spin
   // button alone, so pressing SPACE span the reels in silence and so did every
-  // spin of an autoplay run -- which is how most of a session is played. Three
-  // entry points, one of them remembering. A spin is the thing that should
-  // start the music, so the spin starts it.
+  // spin of an autoplay run -- which is how most of a session is played.
   ac(); startMusic(); startRhythm();
   const bet=+$("bet").value;
   const buying=buyNext&&BUY_PRICE[game]!==undefined;
@@ -3971,156 +4315,168 @@ async function doSpin(){
   const stake = buying ? bet*BUY_PRICE[game] : useAnte ? bet*ANTE.pride.stake : bet;
   if(balance<stake){ autoLeft=0; buyNext=false; $("buy").setAttribute("aria-pressed","false");
                      flash("Out of credit"); return; }
-  busy=true; $("spin").disabled=true; $("winOut").textContent="0";
+  busy=true; abortRound=false; $("spin").disabled=true; $("winOut").textContent="0";
   balance-=stake; nonce++; updateHud();
+  // The round belongs to the game it was BET on. A tab switch mid-round used to
+  // record the new game against the old round's seed, and a replay of it then
+  // derived a round that was never played.
+  const g0=game;
 
   if(useAnte&&!ANTE_STRIPS) ANTE_STRIPS=anteStrips();
-  const rng=makeRng(serverSeed,$("fClient").value,nonce,game);
-  const out = buying ? buyFeature(rng,game)
-            : game==="pride" ? spinPride(rng,useAnte?ANTE_STRIPS:null)
-            : game==="cubcluster" ? spinCluster(rng)
+  const rng=makeRng(serverSeed,$("fClient").value,nonce,g0);
+  const out = buying ? buyFeature(rng,g0)
+            : g0==="pride" ? spinPride(rng,useAnte?ANTE_STRIPS:null)
+            : g0==="cubcluster" ? spinCluster(rng)
             : spinVault(rng,vaultState);
   if(buying){ buyNext=false; $("buy").setAttribute("aria-pressed","false"); }
-
-  const frames=out.frames&&out.frames.length?out.frames:[{grid:blankGrid(),marks:new Set()}];
-  const first=frames[0];
-  let scat=0;
-  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(first.grid[r][row]===SCAT) scat++;
-
-  clearCrownReels();
-  paintTumbleLadder(game==="cubcluster"?0:-1);
-  await animateSpin(first.grid,scat);
-  paintGrid(first.grid,first.marks.size?first.marks:null);
-  paintCrownReels(first.grid);
-
   const winMult=out.base+out.feature, win=winMult*bet;
 
-  // remaining frames: free spins, tumbles, hold & win
-  // Mark scatters so a trigger is legible before the feature starts.
-  if(scat>=1){
-    const reels=[...$("reels").children];
-    let seen=0;
-    for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++)
-      if(first.grid[r][row]===SCAT){
-        reels[r].querySelectorAll(".sym")[row]?.classList.add("scat");
-        // Escalating pitch per scatter: the third has to sound like more than
-        // the first, or the trigger lands with no build behind it.
-        if(!turbo){ const n=seen++; setTimeout(()=>scatterLand(n), n*130); }
-      }
-  }
-
-  // Feature intro. Pragmatic announces the round, runs it, then reports the
-  // total -- without the bookends a free-spin round just looks like fast spins.
-  if(out.fs && game!=="cubcluster"){
-    // The header already states the award, so the body states only the mechanic.
-    await featureIntro(game==="pride"?"Free Spins":"Lion's Share",
-                       game==="pride"?"every wild carries ×2"
-                                    :"row multipliers stick and build");
-  }
-  if(frames.length>1){
-    featTotal=0; $("chipFeat").classList.remove("hidden");
-    setMusicIntensity(true); setRhythmTempo(RHYTHM_FEATURE_BPM);
-  }
-  if(game==="traitvault"&&frames.length>1){
-    paintMultRail([0,0,0,0],null);
-    $("chipFS").classList.remove("hidden");
-  }
-  for(let i=1;i<frames.length;i++){
-    const f=frames[i];
-    $("chipMode").textContent=f.label||"Feature";
-    $("chipMode").classList.add("live");
-    // Running total across the feature: Pragmatic keeps this on screen the whole
-    // way through, and without it a 12-tumble chain is unreadable.
-    // Report, do not interpolate. A frame that knows what has been won says so;
-    // only a round that supplies nothing falls back to the ramp.
-    featTotal = f.won!=null ? f.won*bet
-                            : out.feature*bet*((i)/(frames.length-1));
-    $("featTotal").textContent=fmt(featTotal);
-    if(game==="cubcluster"){
-      // burst the cleared cells, then drop the new board in
-      const reels=[...$("reels").children];
-      frames[i-1]&&[...document.querySelectorAll(".sym.pop")].forEach(e=>e.classList.add("burst"));
-      await sleep(turbo?60:230);
-    }
-    paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
-    if(game==="pride") paintCrownReels(f.grid);
-    if(game==="cubcluster"&&f.ladderStep!=null) paintTumbleLadder(f.ladderStep);
-    if(game==="traitvault"&&f.rowMult){
-      $("fsN").textContent=f.spinNo!=null?f.spinNo:i;
-      await flyOrbs(f.orbs);
-      const bumped=new Set((f.orbs||[]).map(o=>o.row));
-      paintMultRail(f.rowMult,bumped,f.paidRows);
-      if(f.orbs&&f.orbs.length) orbLand(f.orbs.length,Math.max(...f.orbs.map(o=>o.val)));
-      if(f.spinWin>0){ spinWinPop(f.spinWin*bet); winChime(Math.min(4,1+Math.floor(f.spinWin))); }
-    }
-    if(!turbo) await sleep(game==="cubcluster"?260:300);
-    else await sleep(35);
-  }
-  if(frames.length>1){
-    kerching();
-    $("chipMode").classList.remove("live"); $("chipMode").textContent="Base game";
-    $("chipFS").classList.add("hidden");
-    setMusicIntensity(false); setRhythmTempo(RHYTHM_BASE_BPM);
-    $("featTotal").textContent=fmt(out.feature*bet);
-    if(out.fs && game!=="cubcluster" && out.feature>0){
-      coins(40,1.05);
-      await showBanner("Feature total",out.feature*bet,
-        `${(out.feature).toFixed(2)}× your bet`);
-    }
-    setTimeout(()=>$("chipFeat").classList.add("hidden"),turbo?300:2200);
-  }
+  // Presentation can be interrupted -- a game switch, an exception -- but the
+  // round was decided the moment the stake was taken, so it is ALWAYS settled.
+  let failure=null;
+  try{ await presentRound(out,{bet,stake,game:g0,shown:0}); }
+  catch(e){ failure=e; }
+  finally{ resetRoundUi(); }
 
   balance+=win;
   if(sessionStart===null) sessionStart=Date.now();   // clock starts on the first real spin
   S.spins++; S.staked+=stake; S.returned+=win;
   if(win>0) S.hits++;
   if(winMult>S.best) S.best=winMult;
-
-  if(winMult>0){
-    // Four tiers, from the reference's own ladder: BIG -> MEGA -> SUPER MEGA ->
-    // EPIC. We had three and no step between Mega and Epic, so everything from
-    // 50x to a max win arrived wearing the same two labels -- the ladder stopped
-    // escalating exactly where the wins get interesting.
-    const tier = winMult>=250?"Epic win"
-               : winMult>=100?"Super mega win"
-               : winMult>=40 ?"Mega win"
-               : winMult>=15 ?"Big win" : null;
-    if(tier){ coins(tier==="Epic win"?120:tier==="Super mega win"?85:tier==="Mega win"?55:30,1.25);
-              await showBanner(tier,win,`${winMult.toFixed(1)}× your bet`); }
-    else winChime(Math.min(3,1+Math.floor(winMult)));
-    await countUp(win,winMult,
-      tier==="Epic win"?3:tier==="Super mega win"?2:tier==="Mega win"?1:0);
-    if(winMult>=5) coins(18,.9);
-    // Then walk the lines, so the player learns what paid rather than only that
-    // something did. Base-game wins only: during a feature the frames are
-    // already advancing on their own clock.
-    if(game==="traitvault" && out.base>0) await showWinLines(first.wins,bet);
-    if(game==="pride" && out.base>0 && winMult>=15) await showWaysSweep(first.marks);
-  }
-  // A bonus needs a full stop. Every shipped tumble or free-spin game closes
-  // its feature with a TOTAL WIN card before play resumes; ours rolled the
-  // total into the counter and faded into the next spin, so the round never
-  // ended -- it just stopped happening.
-  if(out.fs && frames.length>1 && out.feature>0){
-    await showBanner("Feature complete", out.feature*bet,
-                     `${out.feature.toFixed(2)}× total from the feature`);
-  }
-  // The Lion comes LAST, after any coin celebration has finished. It is the
-  // bigger event and it should not be interrupted by a count-up finishing
-  // underneath it.
-  if(out.nft) await showNftWin();
   // The MODE the round was played in, not just its seed. A replay that reaches
   // for the plain spin function reproduces a different round for anything
-  // bought or ante-loaded: measured, a bought Pride round that paid 5.0971x
-  // replayed as 0.1811x, and an ante round that paid nothing replayed as
-  // 1.4231x. A player checking a win against a figure that does not match is
-  // the exact opposite of what a fairness feature is for.
-  history.push({nonce,game,client:$("fClient").value,bet:stake,win,mult:winMult,
+  // bought or ante-loaded.
+  history.push({nonce,game:g0,client:$("fClient").value,bet:stake,win,mult:winMult,
                 seed:hex(serverSeed),buy:!!buying,ante:!!useAnte,nft:!!out.nft});
   if(history.length>200) history.shift();
   logSpin(win,win/stake);
+  $("winOut").textContent=fmt(win);   // the readout always ends on the exact round total
   updateHud();
   busy=false; $("spin").disabled=false;
+  if(failure) throw failure;
+}
+
+/* The round, in the order a player meets it: the spin and its tumbles, the
+   base result, then -- if it triggered -- the bonus, framed by its two screens.
+   `ctx.shown` is what the readout has been told so far, so a base win followed
+   by a bonus counts on from where the base win left it. */
+async function presentRound(out,ctx){
+  const frames=out.frames&&out.frames.length?out.frames:[{grid:blankGrid(),marks:new Set(),spin:true}];
+  const fsStart=frames.findIndex(f=>f.fs);
+  const baseEnd=fsStart<0?frames.length:fsStart;
+  clearCrownReels();
+  paintTumbleLadder(ctx.game==="cubcluster"?0:-1);
+
+  if(baseEnd>0){
+    ctx.tumbling=ctx.game==="cubcluster"; ctx.seqWon=0;
+    await playFrames(frames,0,baseEnd,ctx,false);
+    const first=frames[0];
+    // A tumble chain is ONE result, its first win and its later ones alike;
+    // in a free-spin game the base result is the spin alone.
+    const baseCoins=(fsStart<0?out.base+out.feature:out.base)*ctx.bet;
+    if(baseCoins>ctx.stake&&!abortRound){
+      // Board first: walk the lines or sweep the ways, THEN count. It used to
+      // be the other way round -- the banner told the player they had won
+      // before the board showed them what.
+      if(ctx.game==="traitvault") await showWinLines(first.wins,ctx.bet);
+      if(ctx.game==="pride"&&baseCoins>=WIN_TIERS[0].x*ctx.bet) await showWaysSweep(first.marks);
+    }
+    await presentResult(baseCoins,ctx);
+  }
+
+  if(fsStart>=0&&!abortRound){
+    if(baseEnd>0) await celebrateScatters(frames[baseEnd-1].grid);
+    const g=ctx.game, awarded=frames[fsStart].fs.of;
+    // The bed lifts with the announcement: the bonus starts when it is told.
+    setMusicIntensity(true); setRhythmTempo(RHYTHM_FEATURE_BPM);
+    await featureIntro(featureName(g),featureBlurb(g),awarded);
+    featTotal=0;
+    if(g==="traitvault") paintMultRail([0,0,0,0],null);
+    $("chipMode").textContent=featureName(g); $("chipMode").classList.add("live");
+    ctx.tumbling=false;
+    const played=await playFrames(frames,fsStart,frames.length,ctx,true);
+    setMusicIntensity(false); setRhythmTempo(RHYTHM_BASE_BPM);
+    const featCoins=out.feature*ctx.bet;
+    await featureOutro(featCoins,played,ctx,featureName(g));
+    ctx.shown+=featCoins;
+    $("winOut").textContent=fmt(ctx.shown);
+  }
+  // The Lion comes LAST, after any coin celebration has finished. It is the
+  // bigger event and it should not be interrupted by a count finishing under it.
+  if(out.nft&&!abortRound) await showNftWin();
+}
+
+/* Play frames [from, to). A frame with `spin` lands on spinning reels; one
+   without it is the board a tumble left, and the cells fall into it. Returns
+   how many free spins were played. */
+async function playFrames(frames,from,to,ctx,feat){
+  let spins=0;
+  for(let k=from;k<to;k++){
+    if(abortRound) break;
+    const f=frames[k], prev=frames[k-1];
+    if(f.spin||!prev){
+      if(feat&&f.fs){
+        spins++;
+        $("chipFS").classList.add("big");
+        setChip("fsLeft",f.fs.of-f.fs.n);
+      }
+      ctx.seqWon=0; $("chipTumble").classList.add("hidden");
+      // Scatter anticipation only where scatters can still do something. In a
+      // round that cannot retrigger, three scatters pay a little and trigger
+      // nothing, and dragging the reels for them would be a tease.
+      const antic=(feat&&!f.retriggerable)?0:scatterCount(f.grid);
+      await animateSpin(f.grid,antic);
+    } else {
+      await animateTumble(prev.marks,f.grid);
+    }
+    if(abortRound) break;
+    if(ctx.game==="pride") paintCrownReels(f.grid);
+    await showBoard(f,ctx,feat);
+    if(f.retrigger&&!abortRound) await showBanner(`+${f.retrigger} free spins`,0,"retriggered");
+    if(f.capped&&!abortRound){ await showBanner("Max win",0,"the round ends here"); break; }
+  }
+  return spins;
+}
+
+/* What one board did: the orbs it dropped, the cells that won, and what it
+   paid -- shown over the winners and added to the running total. */
+async function showBoard(f,ctx,feat){
+  const marks=f.marks&&f.marks.size?f.marks:null;
+  if(f.rowMult){
+    await flyOrbs(f.orbs);
+    const bumped=new Set((f.orbs||[]).map(o=>o.row));
+    paintMultRail(f.rowMult,bumped,f.paidRows);
+    if(f.orbs&&f.orbs.length) orbLand(f.orbs.length,Math.max(...f.orbs.map(o=>o.val)));
+  }
+  highlightWin(f.grid,marks);
+  if(ctx.game==="cubcluster"&&f.ladderStep!=null) paintTumbleLadder(f.ladderStep);
+  const paid=(f.paid||0)*ctx.bet;
+  if(paid>0){
+    floatWin(marks,paid);
+    if(feat){
+      featTotal=(f.won!=null?f.won:0)*ctx.bet;
+      setChip("featTotal",featTotal);
+      if(!quick()) pluck(392*(1+Math.min(6,Math.log2(1+f.paid))*0.1),0.45,0.08,0.6);
+    } else if(ctx.tumbling){
+      ctx.seqWon+=paid; setChip("tumbleWin",ctx.seqWon);
+      if(!quick()) pluck(330*(1+Math.min(8,f.ladderStep||0)*0.12),0.4,0.08,0.6);
+    }
+  }
+  await nap(marks?(quick()?90:700):(quick()?30:200));
+}
+
+function resetRoundUi(){
+  for(const id of ["chipFS","chipFeat","chipTumble"]){
+    const c=$(id); if(c){ c.classList.add("hidden"); c.classList.remove("big","bump"); }
+  }
+  $("chipMode").classList.remove("live");
+  $("chipMode").textContent=game==="hilo"?"Card duel":"Base game";
+  setMusicIntensity(false); setRhythmTempo(RHYTHM_BASE_BPM);
+  $("banner").classList.remove("on","epic");
+  document.querySelectorAll("#screen .roundcard, #screen .floatwin").forEach(e=>e.remove());
+  $("reels").classList.remove("blown");
+  screenOpen=false;
+  if(game==="traitvault"&&$("multRail").children.length) paintMultRail([0,0,0,0],null);
 }
 function flash(msg){ $("chipMode").textContent=msg; setTimeout(()=>{
   $("chipMode").textContent = game==="hilo"?"Card duel":"Base game"; },1400); }
@@ -4528,6 +4884,9 @@ function selectGame(g){
     const won=hlSettle();
     setTimeout(()=>flash(`Hi/Lo round settled · +${fmt(won)}`),40);
   }
+  // Leaving mid-round abandons the PRESENTATION, never the round: doSpin
+  // settles it in full the moment its presenter returns.
+  if(busy) abortRound=true;
   game=g; stopAuto=true; autoLeft=0;
   setTheme(g); retuneMusic();
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.game===g)));
@@ -4712,9 +5071,9 @@ $("fReveal").addEventListener("click",()=>{
    paytable fired a real spin under the dialog. */
 function openModal(){ return document.querySelector(".modal.on"); }
 let modalOpener=null;
-// Tapping the screen slams the roll-up too -- on a phone there is no space bar,
-// and the counter is the thing the player is already looking at.
-$("screen").addEventListener("pointerdown",()=>{ if(busy) skipRollup=true; });
+// A tap on the screen is a press: it slams a count to its total, and it
+// answers a bonus screen. On a phone there is no space bar.
+$("screen").addEventListener("pointerdown",()=>{ if(busy) press(); });
 
 document.addEventListener("keydown",e=>{
   const open=openModal();
@@ -4730,8 +5089,10 @@ document.addEventListener("keydown",e=>{
   // counter to the total first. Without this, SPACE is dead for up to three
   // seconds after a big win and the machine feels like it has stopped
   // listening -- which is precisely when the player is most engaged.
+  // A bonus screen owns Space and Enter while it is up.
+  if(screenOpen&&(e.code==="Space"||e.key==="Enter")){ e.preventDefault(); press(); return; }
   if(e.code==="Space"&&!open&&game!=="hilo"&&busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
-    e.preventDefault(); skipRollup=true; return;
+    e.preventDefault(); press(); return;
   }
   if(e.code==="Space"&&!open&&game!=="hilo"&&!busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
     e.preventDefault(); ac(); doSpin();
