@@ -2051,32 +2051,178 @@ console.log("\nPride: the Lion's Crown");
 }
 
 /* -------------------------------------------------------------- reel curve */
+/* Every reel in a spin cruises at one speed, so a reel planned to stop late --
+   the one about to tease -- cannot be told apart until the reel before it
+   lands. The curve these replace ran every reel over the same distance, which
+   made a longer plan a slower reel from its first frame. */
 console.log("\nReel curve");
 {
   const { p, ctx } = await page();
   const r = await p.evaluate(() => {
-    const N = 4000;
-    let prev = null, vmax = 0, peak = 0, monotonic = true, lastV = null;
-    for (let i = 0; i <= N; i++) {
-      const k = i / N, d = reelEase(k);
-      peak = Math.max(peak, d);
-      if (prev !== null) {
-        const v = (d - prev) * N;
-        vmax = Math.max(vmax, v);
-        if (k > REEL_B && k < REEL_M) {
-          if (lastV !== null && v > lastV + 1e-6) monotonic = false;
+    const sample = (m) => {
+      const dt = 0.5; let prev = 0, vmax = 0, peak = 0, monotonic = true, lastV = null;
+      const decStart = m.T - Math.min(420, Math.max(90, m.T * 0.34));
+      const springStart = m.T - Math.min(420, Math.max(90, m.T * 0.34)) * 0.35;
+      for (let t = dt; t <= m.T + dt; t += dt) {
+        const d = m.pos(t), v = (d - prev) / dt;
+        vmax = Math.max(vmax, v); peak = Math.max(peak, d);
+        if (t > decStart + dt && t < springStart) {
+          if (lastV !== null && v > lastV + 1e-9) monotonic = false;
           lastV = v;
         }
+        prev = d;
       }
-      prev = d;
-    }
-    return { v: REEL_V, vmax, peak, end: reelEase(1), start: reelEase(0), monotonic };
+      return { vmax, peak, monotonic, end: m.pos(m.T + 5), start: m.pos(0), D: m.D, v: m.v };
+    };
+    const plain = reelMotion(2100, null, 0.036, 0.2);
+    const teasing = reelMotion(3600, 1950, 0.036, 0.2);
+    const turboR = reelMotion(390, null, 0.05, 0.08);
+    // Before the reel ahead of it lands, a teasing reel is exactly where any
+    // reel still cruising would be: same start, same speed, same ribbon.
+    const cruising = reelMotion(3600, null, 0.036, 0.2);
+    let maxGap = 0;
+    for (let t = 0; t < 1950; t += 5) maxGap = Math.max(maxGap, Math.abs(teasing.pos(t) - cruising.pos(t)));
+    // and it matches its plain neighbour until that neighbour starts to brake
+    for (let t = 0; t < 2100 - 420; t += 5) maxGap = Math.max(maxGap, Math.abs(teasing.pos(t) - plain.pos(t)));
+    // ...and afterwards it is genuinely slower.
+    const vAfter = (teasing.pos(2500) - teasing.pos(2490)) / 10;
+    return { plain: sample(plain), teasing: sample(teasing), turbo: sample(turboR), maxGap, vAfter };
   });
-  check("velocity never exceeds cruise", r.vmax <= r.v + 1e-6,
-        `peak ${r.vmax.toFixed(4)} vs cruise ${r.v.toFixed(4)}`);
-  check("deceleration is monotonic", r.monotonic);
-  check("travel overshoots the stop", r.peak > 1, `peak ${r.peak.toFixed(4)}`);
-  check("travel lands on exactly 1", Math.abs(r.end - 1) < 1e-12 && r.start === 0);
+  for (const [name, s] of Object.entries({ plain: r.plain, teasing: r.teasing, turbo: r.turbo })) {
+    check(`${name}: velocity never exceeds cruise`, s.vmax <= s.v + 1e-9,
+          `peak ${s.vmax.toFixed(5)} vs cruise ${s.v.toFixed(5)} cells/ms`);
+    check(`${name}: deceleration is monotonic`, s.monotonic);
+    check(`${name}: travel overshoots the stop`, s.peak > s.D, `peak ${s.peak.toFixed(3)} vs stop ${s.D.toFixed(3)}`);
+    check(`${name}: travel lands exactly on the stop`, Math.abs(s.end - s.D) < 1e-12 && s.start === 0);
+  }
+  check("a teasing reel matches a plain one until the reel before it lands", r.maxGap < 1e-9,
+        `max gap ${r.maxGap.toExponential(2)} cells`);
+  check("then it drops to the slower excited speed", r.vAfter < 0.036 * 0.5,
+        `${r.vAfter.toFixed(4)} cells/ms vs 0.0360 cruise`);
+  await ctx.close();
+}
+
+/* ------------------------------------------------- spin speeds and controls */
+console.log("\nSpin speeds, slam stop and market rules");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true;
+    document.querySelector('[data-game="pride"]').click(); await sleep(350);
+    const plainGrid = () => { const g = []; for (let a = 0; a < 5; a++) g.push([M1, M2, L1, L2]); return g; };
+    const time = async (fn) => { const t0 = performance.now(); await fn(); return performance.now() - t0; };
+    const out = {};
+    turbo = false; quickSpin = false;
+    out.normal = await time(() => animateSpin(plainGrid(), 0));
+    quickSpin = true; out.quick = await time(() => animateSpin(plainGrid(), 0)); quickSpin = false;
+    turbo = true; out.turbo = await time(() => animateSpin(plainGrid(), 0)); turbo = false;
+
+    // a press mid-spin lands the reels on the true result, early
+    const g = plainGrid(); g[2][1] = P2; g[4][3] = P3;
+    const job = animateSpin(g, 0);
+    const t0 = performance.now();
+    await sleep(400); press();
+    await job;
+    out.slam = performance.now() - t0;
+    const reels = [...document.getElementById("reels").children];
+    let wrong = 0;
+    for (let a = 0; a < 5; a++) for (let b = 0; b < 4; b++) {
+      const img = reels[a].querySelectorAll(".sym")[b].querySelector("img");
+      if (img && img.alt !== symName(g[a][b], "pride")) wrong++;
+    }
+    out.slamWrong = wrong;
+
+    // UK-style market: 2.5s minimum, no slam, no buy, no quick spin
+    applyMarket("uk");
+    out.ukQuickAllowed = !document.getElementById("speed").disabled;
+    quickSpin = true;   // even forced on, the market's rules win
+    const jobUk = animateSpin(plainGrid(), 0);
+    const tUk = performance.now();
+    await sleep(300); press();
+    await jobUk;
+    out.uk = performance.now() - tUk;
+    out.ukBuy = buyOptions().some(o => o.key === "feature");
+    quickSpin = false;
+    applyMarket("standard");
+    out.stdBuy = buyOptions().some(o => o.key === "feature");
+
+    // Space held runs turbo; releasing it ends turbo
+    document.dispatchEvent(new KeyboardEvent("keydown", { code: "Space", key: " ", repeat: true, bubbles: true }));
+    out.heldTurbo = turbo && turboHeld;
+    document.dispatchEvent(new KeyboardEvent("keyup", { code: "Space", key: " ", bubbles: true }));
+    out.releasedTurbo = turbo || turboHeld;
+    while (busy) await sleep(50);
+
+    // autoplay: stop on any win
+    serverSeed = new Uint8Array(32).map((_, i) => (i * 11 + 9) & 0xff); nonce = 0;
+    document.getElementById("apAnyWin").checked = true;
+    turboAuto = true;
+    const h0 = history.length;
+    await runAuto();
+    const played = history.slice(h0);
+    out.anyWin = { spins: played.length, lastWin: played.length ? played[played.length - 1].win : 0,
+                   earlierWins: played.slice(0, -1).filter(h => h.win > 0).length, turboAfter: turbo };
+    document.getElementById("apAnyWin").checked = false;
+
+    // autoplay: stop if a bonus is won
+    document.querySelector('[data-game="traitvault"]').click(); await sleep(300);
+    serverSeed = new Uint8Array(32).map((_, i) => (i * 5 + 1) & 0xff);
+    const client = document.getElementById("fClient").value;
+    let n0 = -1;
+    for (let n = 1; n < 3000; n++) if (spinVault(makeRng(serverSeed, client, n, "traitvault"), {}).fs) { n0 = n; break; }
+    nonce = Math.max(0, n0 - 6);
+    document.getElementById("apBonus").checked = true;
+    document.getElementById("apCount").value = "25";
+    const h1 = history.length;
+    await runAuto();
+    const p2 = history.slice(h1);
+    out.bonus = { n0, spins: p2.length, lastFs: p2.length ? p2[p2.length - 1].fs : false,
+                  lastNonce: p2.length ? p2[p2.length - 1].nonce : -1 };
+    document.getElementById("apBonus").checked = false;
+    turboAuto = false;
+
+    // settings: effects off means no effect voices; music off stops the bed
+    muted = false; ac();
+    let oscs = 0; const oc = actx.createOscillator.bind(actx);
+    actx.createOscillator = () => { oscs++; return oc(); };
+    sfxOff = true; winChime(3); blip(600, .05); const offOscs = oscs;
+    sfxOff = false; winChime(3); const onOscs = oscs - offOscs;
+    actx.createOscillator = oc;
+    startMusic(); startRhythm();
+    const musicBefore = !!music;
+    const box = document.getElementById("setMusic"); box.checked = false; box.dispatchEvent(new Event("change"));
+    out.settings = { offOscs, onOscs, musicBefore, musicAfter: !!music || !!rhythm };
+    box.checked = true; box.dispatchEvent(new Event("change"));
+    muted = true; stopMusic(); stopRhythm();
+
+    // battery saver thins the coin shower and stops ambient motion
+    batterySaver = true; syncSettingsUi();
+    parts = []; coins(100, 1);
+    out.saver = { parts: parts.length, cls: document.body.classList.contains("saver") };
+    batterySaver = false; syncSettingsUi(); parts = [];
+    return out;
+  });
+  check("a normal spin takes about 2.1s to its last stop", r.normal > 1950 && r.normal < 2600, `${Math.round(r.normal)}ms`);
+  check("quick spin drops the minimum", r.quick < r.normal * 0.6, `${Math.round(r.quick)}ms vs ${Math.round(r.normal)}ms`);
+  check("turbo is quicker still", r.turbo < r.quick && r.turbo < 700, `${Math.round(r.turbo)}ms`);
+  check("a press mid-spin stops the reels early", r.slam < 1100, `${Math.round(r.slam)}ms against ~2100`);
+  check("a slam stop lands the same grid a full spin would", r.slamWrong === 0, `${r.slamWrong} cells differ`);
+  check("the UK-style preset holds every spin to 2.5s and ignores the press", r.uk >= 2450, `${Math.round(r.uk)}ms`);
+  check("the UK-style preset removes quick spin and the feature buy", !r.ukQuickAllowed && !r.ukBuy && r.stdBuy);
+  check("holding Space runs turbo", r.heldTurbo);
+  check("releasing Space ends turbo", !r.releasedTurbo);
+  check("autoplay stops on the first win when asked",
+        r.anyWin.spins >= 1 && r.anyWin.lastWin > 0 && r.anyWin.earlierWins === 0,
+        `${r.anyWin.spins} spins, last paid ${Math.round(r.anyWin.lastWin)}`);
+  check("autoplay turbo ends with the run", r.anyWin.turboAfter === false);
+  check("autoplay stops when a bonus is won", r.bonus.n0 > 0 && r.bonus.lastFs && r.bonus.lastNonce === r.bonus.n0,
+        `bonus at nonce ${r.bonus.n0}, stopped at ${r.bonus.lastNonce} after ${r.bonus.spins} spins`);
+  check("sound effects off means no effect voices", r.settings.offOscs === 0 && r.settings.onOscs > 0,
+        `${r.settings.offOscs} off vs ${r.settings.onOscs} on`);
+  check("music off stops the bed", r.settings.musicBefore && !r.settings.musicAfter);
+  check("battery saver thins the coin shower", r.saver.parts <= 20 && r.saver.cls, `${r.saver.parts} coins for 100`);
+  check("no runtime errors in the controls", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }
 

@@ -71,18 +71,21 @@ const m = await p.evaluate(async () => {
   /* --- reel motion ------------------------------------------------------ */
   // Sample the curve rather than trusting it: peak velocity, monotonic
   // deceleration, overshoot, and exact landing.
+  // The reels follow reelMotion: one cruise speed for every reel in a spin.
   {
-    const N = 2000; let prev = null, vmax = 0, peak = 0, mono = true, last = null;
-    for (let i = 0; i <= N; i++) {
-      const k = i / N, d = reelEase(k);
-      peak = Math.max(peak, d);
-      if (prev !== null) {
-        const v = (d - prev) * N; vmax = Math.max(vmax, v);
-        if (k > REEL_B && k < REEL_M) { if (last !== null && v > last + 1e-6) mono = false; last = v; }
-      }
+    const mo = reelMotion(2100, null, 0.036, 0.2);
+    const dt = 0.5; let prev = 0, vmax = 0, peak = 0, mono = true, last = null;
+    const dec = mo.T - 420, spring = mo.T - 420 * 0.35;
+    for (let t = dt; t <= mo.T + dt; t += dt) {
+      const d = mo.pos(t), v = (d - prev) / dt;
+      vmax = Math.max(vmax, v); peak = Math.max(peak, d);
+      if (t > dec + dt && t < spring) { if (last !== null && v > last + 1e-9) mono = false; last = v; }
       prev = d;
     }
-    out.curve = { vmax, cruise: REEL_V, peak, mono, lands: Math.abs(reelEase(1) - 1) < 1e-12 };
+    const teasing = reelMotion(3600, 1950, 0.036, 0.2), cruising = reelMotion(3600, null, 0.036, 0.2);
+    let gap = 0; for (let t = 0; t < 1950; t += 5) gap = Math.max(gap, Math.abs(teasing.pos(t) - cruising.pos(t)));
+    out.curve = { vmax, cruise: mo.v, peak, mono, D: mo.D, lands: Math.abs(mo.pos(mo.T + 1) - mo.D) < 1e-12,
+                  teaseHidden: gap < 1e-9 };
   }
   out.canvas = typeof canvasSpinAll === "function" && !!document.querySelector("canvas");
   out.blur = typeof drawColumn === "function";
@@ -116,13 +119,9 @@ const m = await p.evaluate(async () => {
     out.rollup.landed = $("winOut").textContent;
     turbo = true; out.rollup.turbo = await t(500); turbo = false;
   }
-  out.tiers = (() => {
-    // Read the ladder off doSpin itself. The first pattern here required the
-    // "?" to sit flush against the number and so missed `winMult>=40 ?"Mega
-    // win"`, reporting a four-rung ladder as two.
-    const src = doSpin.toString();
-    return (src.match(/winMult>=\d+\s*\?\s*"[^"]+"/g) || []).length;
-  })();
+  // The ladder is a table now, not a chain of ternaries inside doSpin.
+  out.tiers = typeof WIN_TIERS !== "undefined" ? WIN_TIERS.length : 0;
+  out.tierAt = typeof WIN_TIERS !== "undefined" ? WIN_TIERS.map((t) => t.x) : [];
   out.coins = typeof coins === "function";
   out.winLines = typeof showWinLines === "function";
   out.banner = typeof showBanner === "function";
@@ -248,6 +247,58 @@ const m = await p.evaluate(async () => {
   return out;
 });
 
+/* The round flow and the controls, measured by playing them. */
+const flow = await p.evaluate(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const $ = (id) => document.getElementById(id);
+  muted = true; SCREEN_WAIT_MS = 60;
+  const out = {};
+  let spins = 0; const oSpin = animateSpin;
+  animateSpin = async (...a) => { spins++; return oSpin(...a); };
+  document.querySelector('[data-game="traitvault"]').click(); await sleep(300);
+  turbo = true; buyNext = true;
+  let outros = 0; const seen = new Set();
+  const iv = setInterval(() => { const o = document.querySelector(".roundcard.outro"); if (o && !seen.has(o)) { seen.add(o); outros++; } }, 30);
+  const c0 = countUps; const s0 = spins;
+  await doSpin(); clearInterval(iv);
+  out.fsSpins = spins - s0; out.fsCountUps = countUps - c0; out.outros = outros;
+  // a tumble: only changed cells move
+  turbo = false;
+  document.querySelector('[data-game="cubcluster"]').click(); await sleep(300);
+  const grid = []; for (let c = 0; c < 5; c++) grid.push([L1, L2, M1, M2]);
+  buildReels(grid);
+  const marks = new Set(["0:1", "0:2", "3:3"]);
+  const next = grid.map((col, c) => { const keep = col.filter((_, r) => !marks.has(c + ":" + r)); return Array(4 - keep.length).fill(P1).concat(keep); });
+  out.tumbleMoved = await animateTumble(marks, next);
+  // the intro waits for the player
+  document.querySelector('[data-game="pride"]').click(); await sleep(300);
+  SCREEN_WAIT_MS = Infinity; turbo = false; buyNext = true;
+  const job = doSpin();
+  await sleep(2600);
+  out.introWaits = !!document.querySelector(".roundcard");
+  document.querySelector('[data-game="traitvault"]').click();   // abandon: must still settle
+  const b0 = balance; await job;
+  out.settled = Math.abs((balance - b0) - history[history.length - 1].win) < 1e-6 && !busy;
+  SCREEN_WAIT_MS = 60;
+  // slam stop and pacing
+  const plain = () => { const g = []; for (let a = 0; a < 5; a++) g.push([M1, M2, L1, L2]); return g; };
+  document.querySelector('[data-game="pride"]').click(); await sleep(300);
+  let t0 = performance.now(); await animateSpin(plain(), 0); out.normalMs = performance.now() - t0;
+  quickSpin = true; t0 = performance.now(); await animateSpin(plain(), 0); out.quickMs = performance.now() - t0; quickSpin = false;
+  const j2 = animateSpin(plain(), 0); t0 = performance.now(); await sleep(350); press(); await j2;
+  out.slamMs = performance.now() - t0;
+  applyMarket("uk");
+  const j3 = animateSpin(plain(), 0); t0 = performance.now(); await sleep(350); press(); await j3;
+  out.ukMs = performance.now() - t0; out.ukBuy = buyOptions().some((o) => o.key === "feature");
+  applyMarket("standard");
+  out.autoStops = ["apAnyWin", "apBonus", "apUp", "apQuick", "apTurbo", "apSkip"].every((id) => !!$(id));
+  out.autoEnforced = /anyWin&&last/.test(runAuto.toString()) && /onBonus&&last/.test(runAuto.toString())
+                     && /upStop&&balance-autoBaseline>=upStop/.test(runAuto.toString());
+  out.settings = !!($("settings") && $("setMusic") && $("setSfx") && $("setSaver") && $("setMarket"));
+  out.holdTurbo = /e\.repeat/.test(document.querySelector("script").textContent);
+  return out;
+});
+
 /* reduced-motion rule presence has to be read from the stylesheet text */
 const reducedMotion = await p.evaluate(() =>
   [...document.querySelectorAll("style")].some((s) => /prefers-reduced-motion/.test(s.textContent)));
@@ -279,11 +330,16 @@ row(A, "Motion-blurred canvas reels", m.canvas && m.blur ? PASS : ABSENT,
 row(A, "Velocity never exceeds cruise", m.curve.vmax <= m.curve.cruise + 1e-6 ? PASS : ABSENT,
     `peak ${m.curve.vmax.toFixed(3)} vs cruise ${m.curve.cruise.toFixed(3)}`);
 row(A, "Monotonic deceleration", m.curve.mono ? PASS : ABSENT, "sampled over 2000 points");
-row(A, "Overshoot and settle", m.curve.peak > 1 && m.curve.lands ? PASS : ABSENT,
-    `peak ${m.curve.peak.toFixed(4)}, lands on exactly 1`);
-row(A, "Staggered reel stops", PASS, "base 520ms + 135ms per reel, stagger on stop not start");
+row(A, "Overshoot and settle", m.curve.peak > m.curve.D && m.curve.lands ? PASS : ABSENT,
+    `peak ${m.curve.peak.toFixed(3)} past a stop at ${m.curve.D.toFixed(3)} cells, lands exactly`);
+row(A, "Staggered reel stops", PASS, "1.5s minimum spin, then 150ms per reel, stagger on stop not start");
+row(A, "Every reel cruises at one speed", m.curve.teaseHidden ? PASS : ABSENT,
+    m.curve.teaseHidden ? "a teasing reel matches a cruising one until the reel before it lands"
+                        : "a longer plan is visibly slower from the start",
+    "The previous curve ran every reel over the same distance, so the reel about to " +
+    "tease turned slower from its first frame and gave the outcome away.");
 row(A, "Scatter anticipation", m.antic.firstOn !== null ? PASS : ABSENT,
-    `first light ${Math.round(m.antic.firstOn)}ms (reel 2 lands 655ms)`);
+    `first light ${Math.round(m.antic.firstOn)}ms (reel 2 lands 1650ms)`);
 row(A, "Anticipation does not spoil the result",
     m.antic.firstOn === null || m.antic.firstOn >= 500 ? PASS : ABSENT,
     `${Math.round(m.antic.firstOn)}ms -- must be after the first reel lands`);
@@ -301,7 +357,8 @@ row(B, "Skip pays out the exact total", m.rollup.landed === "4,321" ? PASS : ABS
     `showed ${m.rollup.landed}`);
 row(B, "Turbo compresses celebration", m.rollup.turbo < 500 ? PASS : PARTIAL,
     `${Math.round(m.rollup.turbo)}ms for a 500x`);
-row(B, "Tiered win banners", m.tiers >= 4 ? PASS : PARTIAL, `${m.tiers} tiers on the ladder`);
+row(B, "Tiered win banners", m.tiers >= 4 ? PASS : PARTIAL,
+    `${m.tiers} tiers at ${m.tierAt.join("x / ")}x, label upgrades as the count passes each`);
 row(B, "Win line walk-through", m.winLines ? PASS : ABSENT, "showWinLines present");
 row(B, "Particle / coin effects", m.coins ? PASS : ABSENT, "coins() present");
 
@@ -329,7 +386,16 @@ row(D, "Autoplay loss limit enforced", m.autoEnforced.loss ? PASS : ABSENT,
     "runAuto breaks on autoBaseline-balance >= lossStop");
 row(D, "Autoplay single-win stop enforced", m.autoEnforced.win ? PASS : ABSENT, "");
 row(D, "Autoplay cancels on game switch", m.autoEnforced.cancelOnSwitch ? PASS : ABSENT, "");
-row(D, "Turbo / quick spin", m.controls.turbo ? PASS : ABSENT, "");
+row(D, "Turbo / quick spin", m.controls.turbo && flow.quickMs < flow.normalMs * 0.6 ? PASS : PARTIAL,
+    `normal ${Math.round(flow.normalMs)}ms, quick ${Math.round(flow.quickMs)}ms`);
+row(D, "Hold Space or the spin button for turbo", flow.holdTurbo ? PASS : ABSENT, "keyboard auto-repeat and a 450ms hold");
+row(D, "Tap or Space stops the reels", flow.slamMs < 1100 ? PASS : ABSENT,
+    `${Math.round(flow.slamMs)}ms against ~2100ms, on the true result`);
+row(D, "Autoplay stops on any win, a bonus, balance up or down",
+    flow.autoStops && flow.autoEnforced ? PASS : PARTIAL, "offered and enforced in runAuto");
+row(D, "Market presets", flow.ukMs >= 2450 && !flow.ukBuy ? PASS : ABSENT,
+    `UK-style: ${Math.round(flow.ukMs)}ms minimum spin, tap-to-stop ignored, no feature buy`);
+row(D, "Separate music and sound-effect switches, battery saver", flow.settings ? PASS : ABSENT, "settings dialog");
 row(D, "Bet selector", m.controls.bet ? PASS : ABSENT, "");
 row(D, "Paytable and rules", m.controls.paytable ? PASS : ABSENT, "per-game rules text");
 row(D, "Feature buy", m.controls.buy ? PASS : ABSENT, "EV-neutral, price measured by simulation");
@@ -417,8 +483,22 @@ row(H, "Ambient idle motion", m.symAnim.idle && m.symAnim.idleDesynced ? PASS : 
     m.symAnim.idleDesynced ? "" :
       "Every tile sharing one phase makes the grid breathe as a single sheet.");
 
+const I = "Round flow";
+row(I, "Free spins land on spinning reels", flow.fsSpins === 10 ? PASS : ABSENT,
+    `${flow.fsSpins} reel spins in a 10-spin round`,
+    "They were board swaps on a 300ms timer: ten free spins in about three seconds.");
+row(I, "Tumbles fall, and only changed cells move", flow.tumbleMoved === 7 ? PASS : ABSENT,
+    `${flow.tumbleMoved} of 20 cells moved for a 3-cell clear`);
+row(I, "One count-up per result", flow.fsCountUps === 1 ? PASS : ABSENT,
+    `${flow.fsCountUps} count-up for a bought round`,
+    "A big bonus used to be counted up to four times: two banners, a tier banner and the readout.");
+row(I, "One closing card per bonus", flow.outros === 1 ? PASS : ABSENT, `${flow.outros} closing card`);
+row(I, "Bonus intro waits for the player", flow.introWaits ? PASS : ABSENT,
+    "manual play waits; turbo and autoplay-with-skip close it after 3s");
+row(I, "A round abandoned mid-bonus still settles in full", flow.settled ? PASS : ABSENT, "");
+
 /* ------------------------------------------------------------------ report */
-const order = [A, B, C, D, E, F, G, H];
+const order = [A, B, C, D, E, F, G, H, I];
 const tally = {};
 for (const r of rows) tally[r.verdict] = (tally[r.verdict] || 0) + 1;
 

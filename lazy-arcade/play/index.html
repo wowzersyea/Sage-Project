@@ -54,7 +54,13 @@ body{
       background:linear-gradient(180deg,var(--gold-3),var(--gold) 45%,var(--gold-2));
       -webkit-background-clip:text;background-clip:text;color:transparent;
       filter:drop-shadow(0 2px 0 rgba(0,0,0,.55))}
-.games{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.mastnav{display:flex;gap:6px;align-items:center;margin-left:auto;min-width:0}
+.games{display:flex;gap:6px;flex-wrap:wrap}
+.gearbtn{flex:0 0 auto;font-size:15px;line-height:1;cursor:pointer;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));color:var(--muted);
+  border:1px solid var(--line);border-radius:7px;padding:6px 10px;min-width:36px}
+.gearbtn:hover{color:var(--ink);border-color:var(--gold-2)}
+.gearbtn:focus-visible{outline:2px solid var(--data);outline-offset:2px}
 .tab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
      background:linear-gradient(180deg,var(--panel),var(--panel-2));color:var(--muted);
      border:1px solid var(--line);border-radius:7px;padding:8px 12px;cursor:pointer;
@@ -397,7 +403,7 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
    44px that finger targets want. Raised only where the pointer is COARSE, so
    desktop keeps its density and a phone gets something hittable. */
 @media (pointer: coarse){
-  .chip, .btn, .tab{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  .chip, .btn, .tab, .gearbtn{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
   #fClient, #fReveal{min-height:44px}
   /* a <select> ignores min-height in some engines; height forces it */
   #bet{height:44px;min-height:44px}
@@ -738,7 +744,8 @@ details.bench[open]>summary::before{content:"▾ "}
   .mast{gap:8px;padding:4px 8px}
   .logo{font-size:16px;letter-spacing:.1em}
   /* Tabs wrapped onto three rows and cost 94px. One scrolling row costs 38. */
-  .games{margin-left:0;flex-wrap:nowrap;overflow-x:auto;width:100%;
+  .mastnav{margin-left:0;width:100%}
+  .games{margin-left:0;flex-wrap:nowrap;overflow-x:auto;flex:1;min-width:0;
          scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .games::-webkit-scrollbar{display:none}
   .tab{flex:0 0 auto;padding:9px 10px;font-size:10px}
@@ -854,6 +861,25 @@ footer b{color:var(--hot)}
 @media (prefers-reduced-motion: reduce){
   .roundcard::after,.rc-body,.rc-hint,.roundcard.out,.chip.bump,.rc-tier.up,.banner .big.up{animation:none}
 }
+/* ---- settings -------------------------------------------------------------- */
+.setlist{display:flex;flex-direction:column;gap:2px;margin:6px 0 12px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:9px 2px;border-bottom:1px solid #241636;cursor:pointer}
+.setrow span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.setrow b{font-size:13px;color:var(--ink)}
+.setrow small{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5}
+.setrow input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);flex:0 0 auto}
+.setrow select{background:#241636;color:var(--ink);border:1px solid var(--line);border-radius:6px;
+  padding:6px 8px;font-family:var(--mono);font-size:11px;flex:0 0 auto}
+.setrow.off{opacity:.45;cursor:not-allowed}
+.autopanel .apcheck{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.autopanel .apcheck input{accent-color:var(--gold);width:15px;height:15px;margin:0}
+.autopanel .apcheck.off{opacity:.45;cursor:not-allowed}
+/* During a round the spin button is the stop button. */
+.spin.stop{background:radial-gradient(120% 120% at 30% 22%,#FFD9B0,#E8833A 42%,#9E4A12 100%);
+  box-shadow:0 6px 0 #6E3008,0 12px 26px -8px rgba(232,131,58,.6),inset 0 2px 0 rgba(255,255,255,.45)}
+/* Battery saver: no ambient motion anywhere. */
+.saver .sym img,.saver .sym img.tongue,.saver .rc-hint{animation:none!important}
 .hidden{display:none!important}
 </style>
 
@@ -861,11 +887,17 @@ footer b{color:var(--hot)}
 <div class="wrap">
   <div class="mast">
     <div class="logo">Lazy Arcade</div>
-    <div class="games" role="tablist" aria-label="Games">
-      <button class="tab" role="tab" aria-selected="true"  data-game="pride">Pride</button>
-      <button class="tab" role="tab" aria-selected="false" data-game="cubcluster">Cub Cluster</button>
-      <button class="tab" role="tab" aria-selected="false" data-game="traitvault">Trait Vault</button>
-      <button class="tab" role="tab" aria-selected="false" data-game="hilo">Rarity Hi/Lo</button>
+    <!-- Settings rides in the tab row, not the topbar: on a touch screen every
+         chip is 44px tall, so one more chip up there is a whole extra row, and
+         that row pushed the spin button below the fold on a 390x664 phone. -->
+    <div class="mastnav">
+      <div class="games" role="tablist" aria-label="Games">
+        <button class="tab" role="tab" aria-selected="true"  data-game="pride">Pride</button>
+        <button class="tab" role="tab" aria-selected="false" data-game="cubcluster">Cub Cluster</button>
+        <button class="tab" role="tab" aria-selected="false" data-game="traitvault">Trait Vault</button>
+        <button class="tab" role="tab" aria-selected="false" data-game="hilo">Rarity Hi/Lo</button>
+      </div>
+      <button class="gearbtn" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
     </div>
   </div>
 
@@ -922,6 +954,26 @@ footer b{color:var(--hot)}
             <button class="btn" id="infoClose">Close</button>
           </div>
         </div>
+        <div class="modal" id="settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+          <div class="sheet">
+            <h4 id="settingsTitle">Settings</h4>
+            <div class="setlist">
+              <label class="setrow"><span><b>Market rules</b><small id="marketNote"></small></span>
+                <select id="setMarket"><option value="standard">Standard</option><option value="uk">UK-style</option></select></label>
+              <label class="setrow"><span><b>Quick spin</b><small>Drops the 1.5s minimum spin. Reels still stop left to right.</small></span>
+                <input type="checkbox" id="setQuick"></label>
+              <label class="setrow"><span><b>Turbo in autoplay</b><small>Autoplay runs at turbo speed. By hand, hold Space or the spin button.</small></span>
+                <input type="checkbox" id="setTurbo"></label>
+              <label class="setrow"><span><b>Skip bonus screens in autoplay</b><small>Bonus screens close themselves after 3 seconds.</small></span>
+                <input type="checkbox" id="setSkip"></label>
+              <label class="setrow"><span><b>Music</b></span><input type="checkbox" id="setMusic" checked></label>
+              <label class="setrow"><span><b>Sound effects</b></span><input type="checkbox" id="setSfx" checked></label>
+              <label class="setrow"><span><b>Battery saver</b><small>Stops idle animation and the backdrop, and thins the coin showers.</small></span>
+                <input type="checkbox" id="setSaver"></label>
+            </div>
+            <button class="btn" id="settingsClose">Close</button>
+          </div>
+        </div>
         <div class="banner" id="banner">
           <div class="big" id="bannerBig"></div>
           <div class="amt" id="bannerAmt"></div>
@@ -958,6 +1010,14 @@ footer b{color:var(--hot)}
         <label>Stop if down <select id="apLoss">
           <option value="0">off</option><option value="5000">5,000</option>
           <option value="20000">20,000</option><option value="50000">50,000</option></select></label>
+        <label>Stop if up <select id="apUp">
+          <option value="0">off</option><option value="5000">5,000</option>
+          <option value="20000">20,000</option><option value="50000">50,000</option></select></label>
+        <label class="apcheck"><input type="checkbox" id="apAnyWin"> Stop on any win</label>
+        <label class="apcheck"><input type="checkbox" id="apBonus"> Stop if a bonus is won</label>
+        <label class="apcheck"><input type="checkbox" id="apQuick"> Quick spin</label>
+        <label class="apcheck"><input type="checkbox" id="apTurbo"> Turbo</label>
+        <label class="apcheck"><input type="checkbox" id="apSkip"> Skip screens</label>
       </div>
       <div class="deck">
         <div class="readout">
@@ -992,7 +1052,7 @@ footer b{color:var(--hot)}
         <div class="spinwrap">
           <div class="mini">
             <button class="btn" id="ante" aria-pressed="false">Ante</button>
-            <button class="btn" id="turbo" aria-pressed="false">Turbo</button>
+            <button class="btn" id="speed" aria-pressed="false">Speed: Normal</button>
             <button class="btn" id="sound" aria-pressed="true">Sound</button>
           </div>
           <div class="mini">
@@ -2008,7 +2068,7 @@ function sharedNoise(){
   return noiseCache;
 }
 function blip(freq,dur,type="square",gain=.05,slideTo){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), o=c.createOscillator();
   o.type=type; o.frequency.setValueAtTime(freq,c.currentTime);
   if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,c.currentTime+dur);
@@ -2020,7 +2080,7 @@ function blip(freq,dur,type="square",gain=.05,slideTo){
 /* Reel stop: a wooden knock, not a sine bleep. Click transient over a short
    pitched thump so five of them in a row read as five distinct stops. */
 function thud(index){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime, x=reelPan(index);
   const src=c.createBufferSource(); src.buffer=noiseBuffer(0.05);
   const bp=c.createBiquadFilter(); bp.type="bandpass";
@@ -2040,7 +2100,7 @@ function thud(index){
    to the reel that crowned, like the thud it replaces. */
 const CROWN_NOTES=[220,277.18,329.63,440,554.37];
 function crownStrike(nth,reel){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime, x=reelPan(reel);
   const note=CROWN_NOTES[Math.max(0,Math.min(nth-1,CROWN_NOTES.length-1))];
   const sub=c.createOscillator(); sub.type="sine";
@@ -2053,7 +2113,7 @@ function crownStrike(nth,reel){
   if(nth>=3) gunshot(0.45+0.15*nth);
 }
 function winChime(steps){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const scale=[523.25,659.25,783.99,987.77,1174.7,1396.9,1567.98,1975.5];
   for(let i=0;i<Math.min(steps,scale.length);i++){
     const c=ac(), t=c.currentTime+i*0.075;
@@ -2073,7 +2133,7 @@ function winChime(steps){
    before the player has read either number. A x10 or better also draws a shot. */
 const ORB_SCALE=[196.0,246.9,293.7,349.2,440.0,523.3,659.3,784.0,987.8,1174.7];
 function orbLand(count,topVal){
-  if(muted) return;
+  if(muted||sfxOff) return;
   for(let i=0;i<Math.min(count,6);i++){
     const step=Math.min(ORB_SCALE.length-1,
                         Math.round(Math.log2(Math.max(2,topVal||2))*2.4));
@@ -2088,7 +2148,7 @@ function orbLand(count,topVal){
    plus a low tone, started and stopped with the spin. */
 let reelLoopNode=null;
 function startReelLoop(){
-  if(muted||reelLoopNode) return;
+  if(muted||sfxOff||reelLoopNode) return;
   const c=ac(), t=c.currentTime;
   const src=c.createBufferSource();
   src.buffer=noiseBuffer(1.2); src.loop=true;
@@ -2124,7 +2184,7 @@ function stopReelLoop(){
    feel big. */
 let lastTick=0;
 function counterTick(progress,tier){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const now=performance.now();
   const gap=42+58*progress;            // slows as it approaches the total
   if(now-lastTick<gap) return;
@@ -2139,7 +2199,7 @@ function counterTick(progress,tier){
 /* Scatter landing, escalating by position. The third scatter has to sound like
    more than the first or a trigger arrives without warning. */
 function scatterLand(index){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime;
   const notes=[523.25,659.25,830.61,1046.5,1318.5];
   const f=notes[Math.min(index,notes.length-1)];
@@ -2154,7 +2214,7 @@ function scatterLand(index){
 /* Heartbeat under an anticipation. The riser alone is a rising tone; the pulse
    is what makes the wait feel like a wait. Tempo climbs across the drag. */
 function heartbeat(seconds){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t0=c.currentTime;
   let t=t0, gap=0.42;
   while(t<t0+seconds){
@@ -2171,7 +2231,7 @@ function heartbeat(seconds){
 
 /* Anticipation riser: pitch and filter climb together while a reel drags. */
 function riser(seconds){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime;
   const o=c.createOscillator(); o.type="sawtooth";
   o.frequency.setValueAtTime(180,t);
@@ -2208,7 +2268,7 @@ function duckMusic(depth,holdMs){
      3. a sub sine dropping an octave -- the chest thump
    All of it goes to the delay tail so it rings for a couple of seconds. */
 function jackpotHit(power,at){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime+(at||0), p=power||1;
 
   const crack=c.createBufferSource(); crack.buffer=noiseBuffer(0.12);
@@ -2241,7 +2301,7 @@ function jackpotHit(power,at){
 /* Escalating fanfare for Big / Mega / Epic: the hit, then a rising figure,
    then a second hit a fifth up so the bigger tiers land harder. */
 function jackpotFanfare(tier){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), strikes = tier>=4?4 : tier>=3?3 : tier>=2?2 : 1;
   // 0.44 at Big through 0.71 at Epic -- about -5dB to -11dB. The first version
   // scaled to 0.95, which is -26dB: that is not ducking the bed, it is muting
@@ -2277,7 +2337,7 @@ function jackpotFanfare(tier){
    the SWELL  a long sub rising an octave under a slow-attack detuned pad,
               still opening while the coins rain. */
 function lionsCrownFanfare(){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime;
   if(musicDuck){
     const g=musicDuck.gain;
@@ -2325,7 +2385,7 @@ function lionsCrownFanfare(){
    Rendered straight into a buffer -- for plucks this short that is cheaper and
    more accurate than wiring a DelayNode feedback loop per note. */
 function pluck(freq,dur,gain,bright,x,when){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), sr=c.sampleRate;
   const n=Math.max(1,Math.floor(sr/freq));            // delay line = one period
   const len=Math.floor(sr*dur);
@@ -2359,7 +2419,7 @@ function pluck(freq,dur,gain,bright,x,when){
 
 /* A gunshot: crack, body, and a tail that decays into the room. */
 function gunshot(power){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime, p=power==null?1:power;
   const crack=c.createBufferSource(); crack.buffer=noiseBuffer(0.09);
   const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
@@ -2380,7 +2440,7 @@ function gunshot(power){
 
 /* Balance credit -- the ker-ching. Two struck partials a fifth apart. */
 function kerching(){
-  if(muted) return;
+  if(muted||sfxOff) return;
   const c=ac(), t=c.currentTime;
   for(const [f,dl,lvl] of [[1760,0,0.19],[2637,0.045,0.14],[3520,0.085,0.09]]){
     const o=c.createOscillator(); o.type="triangle";
@@ -2658,7 +2718,7 @@ function rhythmScheduleAhead(sec){
   }
 }
 function startRhythm(){
-  if(rhythm||muted) return;
+  if(rhythm||muted||musicOff) return;
   const c=ac();
   rhythm={bpm:RHYTHM_BASE_BPM, target:RHYTHM_BASE_BPM, next:c.currentTime+0.08,
           step:0, timer:null, stats:{chants:0,roars:0}};
@@ -2689,7 +2749,7 @@ const MUSIC_KEYS={
   hilo:       {freqs:[130.81,196,261.63,311.13],lfo:0.05, cutoff:700},  // C minor -- the card table
 };
 function startMusic(){
-  if(music||muted) return;
+  if(music||muted||musicOff) return;
   const c=ac();
   const k=MUSIC_KEYS[game]||MUSIC_KEYS.pride;
   const bus=c.createGain(); bus.gain.value=0.0;
@@ -2962,7 +3022,7 @@ function drawBackdrop(t){
   bgx.fillStyle=fade; bgx.fillRect(0,Math.floor(H*0.48),W,H);
 }
 function bgFrame(now){
-  if(now-bgLast>42){ bgLast=now; bgT=now; drawBackdrop(now); }   // ~24fps, ambient
+  if(now-bgLast>42&&!batterySaver){ bgLast=now; bgT=now; drawBackdrop(now); }   // ~24fps, ambient
   if(!reduceMotion) requestAnimationFrame(bgFrame);
 }
 function setTheme(game){
@@ -2993,6 +3053,7 @@ function fxResize(){
   fx.width=r.width*d; fx.height=r.height*d; fxc.setTransform(d,0,0,d,0,0);
 }
 function coins(n,power){
+  if(batterySaver) n=Math.ceil(n/5);
   const r=fx.getBoundingClientRect();
   for(let i=0;i<n;i++) parts.push({
     x:r.width*(.2+Math.random()*.6), y:r.height*.55,
@@ -3037,6 +3098,26 @@ const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString("en-US");
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAXWIN={pride:2000,cubcluster:2500,traitvault:5000};
+
+/* ---- market rules and player settings --------------------------------------
+   One object decides what this market permits, so a rule is switched in one
+   place rather than hunted through the play loop. The UK-style preset follows
+   the Gambling Commission's online game design rules: 2.5s minimum per spin,
+   no turbo, no quick spin, no player-led slam stop, and no feature buy. Loss
+   celebration is off in every market -- a return at or below the stake is a
+   loss however it is dressed. */
+const MARKETS={
+  standard:{name:"Standard",quickSpin:true,turbo:true,slamStop:true,buy:true,ante:true,
+            minSpinMs:0,celebrateLosses:false,
+            note:"Quick spin, turbo, tap-to-stop and feature buys are all available."},
+  uk:{name:"UK-style",quickSpin:false,turbo:false,slamStop:false,buy:false,ante:true,
+      minSpinMs:2500,celebrateLosses:false,
+      note:"2.5s minimum per spin. No turbo, quick spin, tap-to-stop or feature buy."}
+};
+let marketKey="standard", MARKET=MARKETS.standard;
+let quickSpin=false, turboAuto=false, musicOff=false, sfxOff=false, batterySaver=false;
+let turboHeld=false;       // Space or the spin button is being held down
+const SETTINGS_KEY="lazyArcade.settings.v1";
 
 /* ============================ reel machinery ============================ */
 const RAIL_MIN=46, RAIL_PHONE=34;  // .multrail .mrow min-width; see railPx()
@@ -3089,7 +3170,7 @@ function syncCell(){
    spin is invisible and would only compete with the motion blur. */
 let blinkTimer=null;
 function blinkOnce(){
-  if(busy||reduceMotion||document.hidden) return;
+  if(busy||reduceMotion||batterySaver||document.hidden) return;
   const eyes=[...document.querySelectorAll("#reels .sym img.blink")];
   if(!eyes.length) return;
   const el=eyes[Math.floor(Math.random()*eyes.length)];
@@ -3238,7 +3319,16 @@ function ensureReelCanvas(){
 }
 
 /* Spin every reel on the canvas. Resolves per reel through `onLand` so the
-   caller keeps the same staggered-stop sequencing it had before. */
+   caller keeps the same staggered-stop sequencing it had before.
+
+   Each reel follows its own `reelMotion`, and every reel CRUISES AT THE SAME
+   SPEED. They used to share one ribbon length over different durations, so a
+   reel planned to stop later -- the one about to tease a scatter -- turned
+   visibly slower from its very first frame, and told the player what was
+   coming before anything had landed. Now a long plan simply keeps cruising,
+   indistinguishable from the others, until the reel before it lands; only
+   then does it drop to its slower "excited" speed. */
+let spinCtl=null;      // the spin in flight: slam() brings every reel to rest now
 function canvasSpinAll(grid,plan,onLand){
   const cv=ensureReelCanvas(); if(!cv||!reelCtx) return false;
   const host=$("reels"), reels=[...host.children];
@@ -3254,84 +3344,127 @@ function canvasSpinAll(grid,plan,onLand){
   cv.style.opacity="1";
   reelCtx.setTransform(dpr,0,0,dpr,0,0);
 
-  const cell=cellPx(), BUF=turbo?7:16;
+  const cell=cellPx();
   const cols=reels.map((el,r)=>{
     const box=el.getBoundingClientRect();
-    // FINAL COLUMN FIRST, buffer beneath it -- the same order the DOM strip
-    // uses, and the order that makes the scroll run the right way. Built the
-    // other way round, `top` starts at the far end of the ribbon and a reel
-    // that has not begun its delay yet sits parked on the RESULT, showing the
-    // outcome before it spins and then scrolling away from it.
+    const m=reelMotion(plan[r].stop,plan[r].antic,plan[r].speed,plan[r].ov);
+    // FINAL COLUMN FIRST, ribbon beneath it -- the order that makes the scroll
+    // run the right way and keeps a reel that has not moved yet from sitting
+    // parked on the result.
     const seq=[];
     for(let row=0;row<ROWS;row++) seq.push(grid[r][row]);
-    for(let i=0;i<BUF;i++) seq.push(randomSym(r));
+    const len=Math.ceil(m.D)+ROWS+2;
+    while(seq.length<len) seq.push(randomSym(r));
     el.classList.add("spinning");
     return {r, x:box.left-hRect.left, w:box.width, y:box.top-hRect.top,
-            seq, BUF, top:0, prevTop:0, landed:false,
-            start:plan[r].delay, dur:plan[r].duration};
+            seq, m, top:m.D*cell, prevTop:m.D*cell, landed:false, slam:null};
   });
 
   const t0=performance.now();
   return new Promise(resolve=>{
+    spinCtl={
+      // Every reel still moving is brought to rest within a cell and a bit of
+      // its stop, left to right 35ms apart. The ribbon jumps -- invisible at
+      // speed, and the symbols it skips were filler -- and the result is the
+      // one already decided: a slam changes WHEN it is shown, never WHAT.
+      slam(){
+        const t=performance.now()-t0; let i=0;
+        for(const c of cols){
+          if(c.landed||c.slam||c.m.T-t<200) continue;
+          const rem=Math.min(c.m.D-c.m.pos(t),1.4);
+          c.slam={at:t+(i++)*35, from:c.m.D-rem, rem};
+        }
+      }
+    };
     (function frame(now){
       const t=now-t0;
       reelCtx.clearRect(0,0,cv.width,cv.height);
       let alive=false;
       for(const c of cols){
         if(c.landed) continue;
-        const k=Math.max(0,Math.min(1,(t-c.start)/c.dur));
+        const s=c.slam?slamPos(c,t):{p:c.m.pos(t),done:t>=c.m.T};
         c.prevTop=c.top;
-        c.top=(c.BUF*cell)*(1-reelEase(k));
+        c.top=(c.m.D-s.p)*cell;
         drawColumn(c,cell);
-        if(k>=1){
+        if(s.done){
           c.landed=true;
           reels[c.r].classList.remove("spinning");
           onLand&&onLand(c.r);
         } else alive=true;
       }
       if(alive) requestAnimationFrame(frame);
-      else{ reelCtx.clearRect(0,0,cv.width,cv.height); cv.style.opacity="0"; resolve(); }
+      else{ spinCtl=null; reelCtx.clearRect(0,0,cv.width,cv.height); cv.style.opacity="0"; resolve(); }
     })(performance.now());
   });
 }
+/* A slammed reel: from where the slam put it, decelerate past the stop and
+   settle back, the same shape as an ordinary landing, in a fifth of the time. */
+function slamPos(c,t){
+  const s=c.slam;
+  if(t<s.at) return {p:c.m.pos(t),done:false};
+  const u=t-s.at, Td=150, Ts=80, ov=Math.min(0.18,c.m.ov);
+  if(u<Td){ const k=u/Td; return {p:s.from+(s.rem+ov)*(2*k-k*k),done:false}; }
+  if(u<Td+Ts){ const k=(u-Td)/Ts; return {p:c.m.D+ov*(1+Math.cos(Math.PI*k))/2,done:false}; }
+  return {p:c.m.D,done:true};
+}
 
-/* Reel travel as a fraction of the distance, 0 -> 1.
+/* Reel travel, in cells, against time in ms.
  *
- * The curve it replaces was a plain cubic ease-out with an overshoot bolted on,
- * and measuring its velocity showed two faults that are invisible to the eye
- * but not to the hand:
+ *   T   when the reel comes to rest
+ *   Ta  when its anticipation begins (the reel before it has landed), or null
+ *   v   cruise speed in cells per ms -- the same for every reel in a spin
+ *   ov  how far past its stop the reel travels before settling back, in cells
  *
- *   * Velocity started at MAXIMUM and decayed from the first frame. A reel that
- *     is already at full speed the instant it is released has no mass; real ones
- *     accelerate, hold, then slow. There was no cruise at all.
- *   * The overshoot was inverted and mistimed. At 86% the reel had all but
- *     stopped, and the term then pushed `top` POSITIVE -- backwards, up the
- *     ribbon -- lurching a sixth of a cell at near full speed before snapping to
- *     rest. That is not an overshoot, it is a hitch.
- *
- * Three phases now: accelerate to cruise over the first tenth, hold constant
- * velocity to 72%, then a damped spring that carries the reel PAST its stop and
- * settles it back. Cruise speed is solved so the phases sum to exactly 1.
- */
-/* Four phases, and the constants are solved rather than dialled in.
- *
- * A damped-cosine spring was tried first and cannot do this. Its overshoot comes
- * from the sine term, and that same term makes velocity BULGE above cruise just
- * as deceleration starts -- the reel speeds up at the exact moment it should
- * begin slowing. Searching its whole constant space, the least bulge that still
- * overshoots visibly was 1.18x cruise. The form was the problem, not the tuning.
- *
- * So: accelerate to cruise, hold, then decelerate MONOTONICALLY past the stop,
- * and spring back from there. Velocity is matched at every junction and peaks
- * exactly at cruise -- measured, not assumed.
- *
- *   A  end of acceleration        B  end of cruise
- *   r  share of the settle spent springing back
- *   ov how far past the stop the reel travels, as a fraction of total travel
- *
- * Cruise speed is then solved so the four phases sum to exactly 1:
- *   V = (1 + ov) / (0.5(1-r)(1-B) + B - 0.5A)
- */
+ * Phases: accelerate from rest; cruise; if anticipating, ease down to 42% of
+ * cruise and hold there; decelerate MONOTONICALLY to rest a little past the
+ * stop; spring back onto it. Velocity is continuous at every junction except
+ * a slam, peaks exactly at cruise, and the total distance D is derived from
+ * the phases, so the reel lands on the result by construction rather than by
+ * a fudge at the end. The curve it replaces -- reelEase, kept below for
+ * reference -- put every reel over the same distance, which is what made a
+ * longer plan a slower reel. */
+function reelMotion(T,Ta,v,ov){
+  ov=ov==null?0.2:ov;
+  const ta=Math.min(140,T*0.12);
+  const td=Math.min(420,Math.max(90,T*0.34)), R=0.35;
+  const tDec=T-td, tSpring=T-td*R;
+  const va=v*0.42, tr=Math.min(320,td);
+  const anticOn=Ta!=null&&Ta>ta&&Ta<tDec;
+  const t1=anticOn?Ta:tDec;
+  const tRampEnd=anticOn?Math.min(tDec,Ta+tr):t1;
+  const vEnd=anticOn?v+(va-v)*((tRampEnd-Ta)/tr):v;
+  const A=0.5*v*ta, C=v*(t1-ta);
+  const Rr=anticOn?(v+vEnd)/2*(tRampEnd-Ta):0;
+  const H=anticOn?vEnd*(tDec-tRampEnd):0;
+  const Dd=vEnd*(tSpring-tDec)/2;
+  const D=A+C+Rr+H+Dd-ov;
+  function pos(t){
+    if(t<=0) return 0;
+    if(t<ta) return 0.5*v*t*t/ta;
+    if(t<t1) return A+v*(t-ta);
+    if(anticOn&&t<tRampEnd){ const u=t-Ta, vu=v+(va-v)*(u/tr); return A+C+(v+vu)/2*u; }
+    if(anticOn&&t<tDec) return A+C+Rr+vEnd*(t-tRampEnd);
+    if(t<tSpring){ const k=(t-tDec)/(tSpring-tDec); return A+C+Rr+H+Dd*(2*k-k*k); }
+    if(t<T){ const k=(t-tSpring)/(T-tSpring); return D+ov*(1+Math.cos(Math.PI*k))/2; }
+    return D;
+  }
+  return {T,D,ov,v,va,anticOn,pos};
+}
+
+/* Spin pacing, per mode. Normal follows the reference engine: a 1.5s minimum
+   before the first reel stops, then 0.15s between stops, left to right. Quick
+   spin drops the minimum and keeps the stagger. Turbo runs while Space or the
+   spin button is held, or under autoplay with turbo on. A market with a
+   minimum spin time stretches every plan to meet it. */
+function spinTiming(){
+  if(turbo&&MARKET.turbo) return {base:170, step:55, speed:0.050, ov:0.08};
+  if(quickSpin&&MARKET.quickSpin) return {base:450, step:150, speed:0.036, ov:0.2};
+  return {base:1500, step:150, speed:0.036, ov:0.2};
+}
+
+/* The previous travel curve, normalised over a fixed distance. No longer drives
+ * the reels -- see reelMotion -- and kept only because its constants document
+ * how the current phase shapes were arrived at. */
 const REEL_A=0.10, REEL_B=0.66, REEL_R=0.35, REEL_OV=0.025;
 const REEL_V=(1+REEL_OV)/(0.5*(1-REEL_R)*(1-REEL_B)+REEL_B-0.5*REEL_A);
 const REEL_DA=0.5*REEL_V*REEL_A;
@@ -3340,14 +3473,12 @@ const REEL_M=REEL_B+(1-REEL_R)*(1-REEL_B);
 function reelEase(k){
   if(k<=0) return 0;
   if(k>=1) return 1;
-  if(k<REEL_A) return 0.5*REEL_V*k*k/REEL_A;               // accelerate from rest
-  if(k<REEL_B) return REEL_DA+REEL_V*(k-REEL_A);           // cruise
-  if(k<REEL_M){                                            // decelerate past the stop
+  if(k<REEL_A) return 0.5*REEL_V*k*k/REEL_A;
+  if(k<REEL_B) return REEL_DA+REEL_V*(k-REEL_A);
+  if(k<REEL_M){
     const s=(k-REEL_B)/(REEL_M-REEL_B);
     return REEL_DB+(1+REEL_OV-REEL_DB)*(2*s-s*s);
   }
-  // spring back. cos gives zero velocity at BOTH ends, so it neither jerks on
-  // arrival nor lands moving.
   const u=(k-REEL_M)/(1-REEL_M);
   return 1+REEL_OV*(1+Math.cos(Math.PI*u))/2;
 }
@@ -3362,7 +3493,7 @@ function drawColumn(c,cell){
   // is one draw rather than several.
   // Reduced motion gets the reel, not the smear: a single crisp stamp per
   // symbol, no stretch. The spin still happens -- it just stops being a blur.
-  const steps=reduceMotion?1:Math.max(1,Math.min(4,Math.round(speed/(cell*0.5))));
+  const steps=(reduceMotion||batterySaver)?1:Math.max(1,Math.min(4,Math.round(speed/(cell*0.5))));
   const stretch=(!reduceMotion&&steps>1)?Math.min(2.6,1+speed/(cell*1.5)):1;
   ctx.save();
   ctx.beginPath(); ctx.rect(c.x,c.y,c.w,cell*ROWS); ctx.clip();
@@ -3439,7 +3570,7 @@ async function animateSpin(grid,scatterCount){
   const host=$("reels");
   const reels=[...host.children];
   startReelLoop();
-  const base=turbo?170:520, step=turbo?55:135;
+  const tm=spinTiming(), base=tm.base, step=tm.step;
 
   // The RESULT goes into the DOM up front and the canvas covers it while it
   // spins. That way landing is a reveal rather than a rebuild, and everything
@@ -3471,7 +3602,9 @@ async function animateSpin(grid,scatterCount){
   if(!turbo && scatterCount>=2){
     for(let r=2;r<REELS;r++){
       const seen=countScatUpTo(grid,r);
-      if(seen>=2) antic[r]=620+(seen-2)*520;
+      // About 1.5s of extra rope per teasing reel, as the reference engine
+      // gives it, and more for every scatter already showing.
+      if(seen>=2) antic[r]=1500+(seen-2)*700;
     }
   }
   // PRIDE: the crown drag. Scatters had the full treatment -- drag, dim,
@@ -3484,7 +3617,7 @@ async function animateSpin(grid,scatterCount){
   if(!turbo && game==="pride"){
     for(let r=2;r<REELS;r++){
       const seen=crownedUpTo(grid,r);
-      if(seen>=2) antic[r]=Math.max(antic[r],800+(seen-2)*700);
+      if(seen>=2) antic[r]=Math.max(antic[r],1500+(seen-2)*800);
     }
   }
   const anticStarted=new Array(REELS).fill(false);
@@ -3497,15 +3630,23 @@ async function animateSpin(grid,scatterCount){
     riser(secs); heartbeat(secs+0.1);
   };
 
-  const plan=[];
+  // Every reel starts NOW and they STOP in sequence. A teasing reel holds every
+  // reel after it as well: the extra rope is cumulative, so each reel that can
+  // still complete the trigger gets its own moment rather than the whole tease
+  // being spent on one. Its slowdown starts when the reel before it lands --
+  // the earliest honest moment -- which is `antic` below.
+  const plan=[]; let extra=0;
   for(let r=0;r<REELS;r++){
-    const extra=antic[r];
-    // Every reel starts NOW and they STOP in sequence -- which is what a real
-    // cabinet does, and what the staggered start got backwards. Delaying the
-    // start left reels 4 and 5 sitting motionless for up to half a second while
-    // the first three were already flying.
-    plan.push({delay:0, duration:base+r*step+extra});
+    extra+=antic[r];
+    plan.push({stop:base+r*step+extra, antic:null, speed:tm.speed, ov:tm.ov});
     if(!turbo) setTimeout(()=>blip(760+r*40,.04,"square",.025),r*step);
+  }
+  for(let r=1;r<REELS;r++) if(antic[r]) plan[r].antic=plan[r-1].stop;
+  // A market with a minimum spin time stretches the whole plan to meet it.
+  const longest=plan[REELS-1].stop;
+  if(MARKET.minSpinMs>longest){
+    const d=MARKET.minSpinMs-longest;
+    for(const p of plan){ p.stop+=d; if(p.antic!=null) p.antic+=d; }
   }
 
   const onLand=r=>{
@@ -3546,7 +3687,7 @@ async function animateSpin(grid,scatterCount){
     // anticipation handoff with it.
     const jobs=[];
     for(let r=0;r<REELS;r++){
-      jobs.push(spinReel(reels[r],grid[r],r,plan[r].duration,plan[r].delay)
+      jobs.push(spinReel(reels[r],grid[r],r,plan[r].stop,0)
         .then(()=>onLand(r)));
     }
     await Promise.all(jobs);
@@ -3607,7 +3748,7 @@ function spinWinPop(amount){
    join, never past a silhouette. The symbol changes appearance over time
    without a single pixel of it being moved. */
 function shineSymbol(cell,sym,ms){
-  if(reduceMotion||turbo) return;
+  if(reduceMotion||turbo||batterySaver) return;
   const size=Math.round(cellPx()*0.9);
   const sp=sprite(sym,game,size);
   if(!sp) return;
@@ -3843,6 +3984,9 @@ function nap(ms){
 const pressWaiters=new Set();
 function press(){
   presses++; skipRollup=true;
+  // A press while the reels are moving stops them on the result -- where the
+  // market allows a player-led stop at all.
+  if(spinCtl&&MARKET.slamStop) spinCtl.slam();
   for(const w of [...pressWaiters]) w();
 }
 /* Resolves on the next press, after `ms`, or at once if the round is abandoned. */
@@ -3934,7 +4078,7 @@ async function presentResult(amount,ctx){
   if(amount<=0||abortRound) return;
   const from=ctx.shown, to=ctx.shown+amount;
   ctx.shown=to;
-  if(amount<=ctx.stake){ el.textContent=fmt(to); return; }
+  if(amount<=ctx.stake&&!MARKET.celebrateLosses){ el.textContent=fmt(to); return; }
   const mult=amount/ctx.bet;
   if(mult>=WIN_TIERS[0].x){ await bigWin(amount,ctx); el.textContent=fmt(to); return; }
   winChime(Math.min(3,1+Math.floor(mult)));
@@ -4308,14 +4452,16 @@ async function doSpin(){
   // spin of an autoplay run -- which is how most of a session is played.
   ac(); startMusic(); startRhythm();
   const bet=+$("bet").value;
-  const buying=buyNext&&BUY_PRICE[game]!==undefined;
-  const useAnte=anteOn&&game==="pride"&&!buying;
+  const buying=buyNext&&BUY_PRICE[game]!==undefined&&MARKET.buy;
+  const useAnte=anteOn&&game==="pride"&&!buying&&MARKET.ante;
   // Stake is what the player actually pays: base bet, ante-loaded bet, or the
   // EV-neutral buy price. Session RTP is measured against this, not the bet.
   const stake = buying ? bet*BUY_PRICE[game] : useAnte ? bet*ANTE.pride.stake : bet;
   if(balance<stake){ autoLeft=0; buyNext=false; $("buy").setAttribute("aria-pressed","false");
                      flash("Out of credit"); return; }
-  busy=true; abortRound=false; $("spin").disabled=true; $("winOut").textContent="0";
+  busy=true; abortRound=false; $("winOut").textContent="0";
+  // During the round the spin button is the stop button.
+  $("spin").classList.add("stop"); $("spin").setAttribute("aria-label","Stop");
   balance-=stake; nonce++; updateHud();
   // The round belongs to the game it was BET on. A tab switch mid-round used to
   // record the new game against the old round's seed, and a replay of it then
@@ -4347,12 +4493,14 @@ async function doSpin(){
   // for the plain spin function reproduces a different round for anything
   // bought or ante-loaded.
   history.push({nonce,game:g0,client:$("fClient").value,bet:stake,win,mult:winMult,
-                seed:hex(serverSeed),buy:!!buying,ante:!!useAnte,nft:!!out.nft});
+                seed:hex(serverSeed),buy:!!buying,ante:!!useAnte,nft:!!out.nft,
+                fs:!!(out.frames&&out.frames.some(f=>f.fs))});
   if(history.length>200) history.shift();
   logSpin(win,win/stake);
   $("winOut").textContent=fmt(win);   // the readout always ends on the exact round total
   updateHud();
   busy=false; $("spin").disabled=false;
+  $("spin").classList.remove("stop"); $("spin").setAttribute("aria-label","Spin");
   if(failure) throw failure;
 }
 
@@ -4484,22 +4632,30 @@ function flash(msg){ $("chipMode").textContent=msg; setTimeout(()=>{
 async function runAuto(){
   if(autoLeft>0){ stopAuto=true; return; }
   autoLeft=+$("apCount").value; stopAuto=false; autoBaseline=balance;
-  const winStop=+$("apWin").value, lossStop=+$("apLoss").value;
+  const winStop=+$("apWin").value, lossStop=+$("apLoss").value, upStop=+$("apUp").value;
+  const anyWin=$("apAnyWin").checked, onBonus=$("apBonus").checked;
+  const wasTurbo=turbo;
+  if(turboAuto&&MARKET.turbo) turbo=true;
   $("auto").setAttribute("aria-pressed","true"); $("auto").textContent="Stop";
-  while(autoLeft>0&&!stopAuto&&balance>=+$("bet").value){
-    autoLeft--;
-    await doSpin();
-    const last=history[history.length-1];
-    // The single-win stop reads the COIN multiplier, and the Lion can arrive on
-    // a spin that pays nothing in coins -- so without its own line, autoplay
-    // would claim the biggest prize in the cabinet and keep grinding as though
-    // nothing had happened.
-    if(last&&last.nft){ flash("Auto stopped · the Lion"); break; }
-    if(winStop&&last&&last.mult>=winStop){ flash(`Auto stopped · ${last.mult.toFixed(1)}× hit`); break; }
-    if(lossStop&&autoBaseline-balance>=lossStop){ flash("Auto stopped · loss limit"); break; }
-    await sleep(turbo?10:110);
+  try{
+    while(autoLeft>0&&!stopAuto&&balance>=+$("bet").value){
+      autoLeft--;
+      await doSpin();
+      const last=history[history.length-1];
+      // The single-win stop reads the COIN multiplier, and the Lion can arrive
+      // on a spin that pays nothing in coins -- so it has its own line.
+      if(last&&last.nft){ flash("Auto stopped · the Lion"); break; }
+      if(anyWin&&last&&last.win>0){ flash("Auto stopped · a win"); break; }
+      if(onBonus&&last&&last.fs){ flash("Auto stopped · bonus won"); break; }
+      if(winStop&&last&&last.mult>=winStop){ flash(`Auto stopped · ${last.mult.toFixed(1)}× hit`); break; }
+      if(upStop&&balance-autoBaseline>=upStop){ flash("Auto stopped · balance up"); break; }
+      if(lossStop&&autoBaseline-balance>=lossStop){ flash("Auto stopped · loss limit"); break; }
+      await sleep(turbo?10:110);
+    }
+  } finally {
+    turbo=turboHeld||wasTurbo;
+    autoLeft=0; $("auto").setAttribute("aria-pressed","false"); $("auto").textContent="Auto";
   }
-  autoLeft=0; $("auto").setAttribute("aria-pressed","false"); $("auto").textContent="Auto";
 }
 
 /* ================================ hi/lo ================================= */
@@ -4673,12 +4829,12 @@ async function hlCash(){
    the measured EV-neutral figures -- there is no second table here to drift. */
 function buyOptions(){
   const out=[];
-  if(game==="pride"){
+  if(game==="pride"&&MARKET.ante){
     out.push({key:"ante", name:"Ante Bet",
       what:"Raises the stake and adds an extra $LAZY scatter to every reel, so free spins trigger about twice as often.",
       mult:ANTE.pride.stake});
   }
-  if(BUY_PRICE[game]!==undefined){
+  if(BUY_PRICE[game]!==undefined&&MARKET.buy){
     out.push({key:"feature", name: game==="pride"?"Buy Free Spins":"Buy Lion's Share",
       what: game==="pride"
         ? "Starts 10 free spins immediately. Every wild carries ×2."
@@ -4731,7 +4887,7 @@ function refreshCostLabels(){
     $("buy").disabled=false;
   }
   $("ante").textContent = anteOn ? `Ante ${fmt(bet*ANTE.pride.stake)}` : "Ante";
-  $("ante").style.display = game==="pride" ? "" : "none";
+  $("ante").style.display = (game==="pride"&&MARKET.ante) ? "" : "none";
 }
 /* Time played, and what it has cost.
  *
@@ -4900,12 +5056,11 @@ function selectGame(g){
   // sat on the slot deck showing a stale amount.
   $("cash").style.display=(isHilo&&hl.live)?"":"none";
   $("spin").style.display=isHilo?"none":"";
-  $("turbo").style.display=isHilo?"none":"";
+  $("speed").style.display=isHilo?"none":"";
   $("auto").style.display=isHilo?"none":"";
   $("deck").style.display=isHilo?"":"none";
   $("autoCfg").style.display=isHilo?"none":"";
   $("buy").style.display=isHilo?"none":"";
-  $("turbo").style.display=isHilo?"none":"";
   buyNext=false; $("buy").setAttribute("aria-pressed","false");
   if(!isHilo) refreshCostLabels(); else $("ante").style.display="none";
   if(isHilo) $("autoPanel").classList.remove("on");
@@ -5002,7 +5157,82 @@ $("infoClose").addEventListener("click",()=>$("info").classList.remove("on"));
 $("info").addEventListener("click",e=>{ if(e.target.id==="info") $("info").classList.remove("on"); });
 $("autoCfg").addEventListener("click",()=>$("autoPanel").classList.toggle("on"));
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>selectGame(t.dataset.game)));
-$("spin").addEventListener("click",()=>{doSpin();});
+/* The spin button: a click spins, or -- during a round -- presses (stops the
+   reels, slams a count, answers a bonus screen). Held down, it runs turbo
+   spins until released, where the market allows turbo. */
+let spinHoldTimer=null, spinHoldUsed=false;
+$("spin").addEventListener("click",()=>{
+  if(spinHoldUsed){ spinHoldUsed=false; return; }
+  if(busy) press(); else doSpin();
+});
+$("spin").addEventListener("pointerdown",()=>{
+  if(!MARKET.turbo) return;
+  clearTimeout(spinHoldTimer);
+  spinHoldTimer=setTimeout(async ()=>{
+    turboHeld=true; spinHoldUsed=true; turbo=true; ac();
+    while(turboHeld){ if(!busy) await doSpin(); else await sleep(60); }
+  },450);
+});
+const releaseSpin=()=>{
+  clearTimeout(spinHoldTimer);
+  if(turboHeld){ turboHeld=false; if(!(autoLeft>0&&turboAuto)) turbo=false; }
+};
+["pointerup","pointerleave","pointercancel"].forEach(ev=>$("spin").addEventListener(ev,releaseSpin));
+/* Settings. Kept in this browser only; nothing here reaches another viewer. */
+function saveSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY,JSON.stringify(
+    {market:marketKey,quickSpin,turboAuto,skipScreens,musicOff,sfxOff,batterySaver})); }catch(e){}
+}
+function loadSettings(){
+  let s=null;
+  try{ s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); }catch(e){ s=null; }
+  if(!s||typeof s!=="object") return;
+  quickSpin=!!s.quickSpin; turboAuto=!!s.turboAuto; skipScreens=!!s.skipScreens;
+  musicOff=!!s.musicOff; sfxOff=!!s.sfxOff; batterySaver=!!s.batterySaver;
+  applyMarket(s.market);
+}
+function applyMarket(key){
+  marketKey=MARKETS[key]?key:"standard"; MARKET=MARKETS[marketKey];
+  if(!MARKET.quickSpin) quickSpin=false;
+  if(!MARKET.buy) buyNext=false;
+  if(!MARKET.ante) anteOn=false;
+  syncSettingsUi();
+  if(game!=="hilo") refreshCostLabels();
+}
+function syncSettingsUi(){
+  const set=(id,on,allowed)=>{ const el=$(id); if(!el) return;
+    el.checked=!!on; el.disabled=allowed===false;
+    const row=el.closest(".setrow,.apcheck"); if(row) row.classList.toggle("off",allowed===false); };
+  set("setQuick",quickSpin,MARKET.quickSpin); set("apQuick",quickSpin,MARKET.quickSpin);
+  set("setTurbo",turboAuto,MARKET.turbo);    set("apTurbo",turboAuto,MARKET.turbo);
+  set("setSkip",skipScreens);                set("apSkip",skipScreens);
+  set("setMusic",!musicOff); set("setSfx",!sfxOff); set("setSaver",batterySaver);
+  $("setMarket").value=marketKey; $("marketNote").textContent=MARKET.note;
+  const sp=$("speed");
+  sp.textContent="Speed: "+(quickSpin?"Quick":"Normal");
+  sp.setAttribute("aria-pressed",String(quickSpin));
+  sp.disabled=!MARKET.quickSpin;
+  sp.title=MARKET.quickSpin?"Switch between normal and quick spins":"Quick spin is not allowed in this market";
+  document.body.classList.toggle("saver",batterySaver);
+}
+$("speed").addEventListener("click",()=>{
+  if(!MARKET.quickSpin) return;
+  quickSpin=!quickSpin; syncSettingsUi(); saveSettings();
+});
+$("settingsBtn").addEventListener("click",()=>{ modalOpener=$("settingsBtn"); syncSettingsUi(); $("settings").classList.add("on"); $("settingsClose").focus(); });
+$("settingsClose").addEventListener("click",()=>{ $("settings").classList.remove("on"); if(modalOpener) modalOpener.focus(); });
+$("settings").addEventListener("click",e=>{ if(e.target.id==="settings") $("settings").classList.remove("on"); });
+$("setMarket").addEventListener("change",e=>{ applyMarket(e.target.value); saveSettings(); });
+for(const id of ["setQuick","apQuick"]) $(id).addEventListener("change",e=>{ quickSpin=e.target.checked&&MARKET.quickSpin; syncSettingsUi(); saveSettings(); });
+for(const id of ["setTurbo","apTurbo"]) $(id).addEventListener("change",e=>{ turboAuto=e.target.checked&&MARKET.turbo; syncSettingsUi(); saveSettings(); });
+for(const id of ["setSkip","apSkip"]) $(id).addEventListener("change",e=>{ skipScreens=e.target.checked; syncSettingsUi(); saveSettings(); });
+$("setMusic").addEventListener("change",e=>{
+  musicOff=!e.target.checked;
+  if(musicOff){ stopMusic(); stopRhythm(); } else if(!muted){ ac(); startMusic(); startRhythm(); }
+  saveSettings();
+});
+$("setSfx").addEventListener("change",e=>{ sfxOff=!e.target.checked; if(sfxOff) stopReelLoop(); saveSettings(); });
+$("setSaver").addEventListener("change",e=>{ batterySaver=e.target.checked; syncSettingsUi(); saveSettings(); });
 $("auto").addEventListener("click",()=>{ac();runAuto();});
 $("ante").addEventListener("click",()=>{
   anteOn=!anteOn; $("ante").setAttribute("aria-pressed",String(anteOn));
@@ -5011,7 +5241,6 @@ $("ante").addEventListener("click",()=>{
 $("buy").addEventListener("click",()=>{ ac(); modalOpener=$("buy"); openBuyMenu(); });
 $("buyClose").addEventListener("click",()=>$("buyMenu").classList.remove("on"));
 $("bet").addEventListener("change",refreshCostLabels);
-$("turbo").addEventListener("click",()=>{turbo=!turbo;$("turbo").setAttribute("aria-pressed",String(turbo));});
 $("sound").addEventListener("click",()=>{
   muted=!muted; $("sound").setAttribute("aria-pressed",String(!muted));
   if(muted){ stopMusic(); stopRhythm(); } else { ac(); startMusic(); startRhythm(); }
@@ -5091,6 +5320,13 @@ document.addEventListener("keydown",e=>{
   // listening -- which is precisely when the player is most engaged.
   // A bonus screen owns Space and Enter while it is up.
   if(screenOpen&&(e.code==="Space"||e.key==="Enter")){ e.preventDefault(); press(); return; }
+  // Space HELD runs turbo spins, where the market allows turbo. The first
+  // keydown spins; the keyboard's own auto-repeat is what "held" means.
+  if(e.code==="Space"&&e.repeat&&!open&&game!=="hilo"&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
+    e.preventDefault();
+    if(MARKET.turbo){ turboHeld=true; turbo=true; if(!busy){ ac(); doSpin(); } }
+    return;
+  }
   if(e.code==="Space"&&!open&&game!=="hilo"&&busy&&!/INPUT|SELECT|SUMMARY/.test(e.target.tagName)){
     e.preventDefault(); press(); return;
   }
@@ -5098,8 +5334,12 @@ document.addEventListener("keydown",e=>{
     e.preventDefault(); ac(); doSpin();
   }
 });
+document.addEventListener("keyup",e=>{
+  if(e.code==="Space"&&turboHeld){ turboHeld=false; if(!(autoLeft>0&&turboAuto)) turbo=false; }
+});
 let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{
   syncCell(); fxResize(); if(game!=="hilo"&&!busy) buildReels(blankGrid()); },140);});
 
 syncCell(); fxResize(); refreshHash(); selectGame("pride"); startBlinks();
+loadSettings(); syncSettingsUi();
 </script>
