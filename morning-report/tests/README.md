@@ -31,7 +31,7 @@ nothing beyond `npm install playwright`.
 | `equity.test.js` | The four flags, the away adjustment, the CSV, and that nothing here reads `sessions/` |
 | `site.test.js` | Every page loads clean, every internal link resolves, and nothing writes `localStorage` |
 | `remote.test.js` | The optional shared endpoint: that the folder always wins, that the endpoint owns the people while the folder owns the log, that a refused key or a dead endpoint degrades instead of breaking, that only the two name-bearing paths are ever fetched, and that the key is not persisted unless asked |
-| `gate.test.js` | The front door: every page locked without the code, the page underneath genuinely hidden, a wrong code refused, the code remembered across pages and reloads — and that it stays a sign rather than a lock, by asserting it knows nothing about the endpoint key and a locked page has fetched no roster |
+| `access.test.js` | Every page opens without a passcode; visitor pages never fetch resident lists; the draw lives in Parked tools and starts empty; remembered private settings do not fetch names on the main pages. |
 | `confirm.test.js` | The chicken-dinner button: not offered after one wheel, what it posts, that a re-spin re-arms it and re-spinning onto the same person does not, that a new date is a new morning, and that a refused key or dead endpoint is shown and retryable |
 | `central.test.js` | The shared document store from the browser: a device with no folder saving and reading a board archive, `readAll` reaching it so the group report works, the folder still winning on read and a listing being the union of both — and that nothing identified (`working/`, `manifests/`, the live board autosave) is ever sent to it |
 | `stt.test.js` | The transcriber: a real recording off a (virtual) microphone through the real whisper model served from this repo, the transcript saved into the submission and read by the rollup, an undecodable file failing with a sentence, and nothing written to localStorage. Needs the fake-audio launch flags, which the suite sets itself. |
@@ -46,8 +46,7 @@ nothing beyond `npm install playwright`.
 `fakefs.js` stands in for the File System Access API and IndexedDB, backed by
 `localStorage` so a second tab sees the same folder — which is how the two-machine test
 in `roster.test.js` works. It is test scaffolding. The product keeps no DATA in `localStorage` and
-`site.test.js` asserts that, allowing exactly two named keys: the front-door code and
-the shared-roster endpoint settings when someone asks to be remembered. Anything else
+`site.test.js` asserts that, allowing only the shared-roster endpoint settings when someone asks to be remembered. Anything else
 appearing there fails the sweep.
 
 `roles.test.js` edits `content/roles.json` in place to run the acceptance test from the

@@ -472,6 +472,10 @@
     return up ? new Array(up + 1).join("../") : "./";
   }
 
+  function rosterToolsPage() {
+    return /\/morning-report\/(draw|roster|settings|publish)\//.test(location.pathname);
+  }
+
   function renderBar(el) {
     var b = base();
     el.className = "mr-bar";
@@ -505,7 +509,7 @@
       /* No folder, but the shared store takes this device's draws and
          board saves — "nothing will be saved" would be a lie that
          sends someone hunting for a folder a phone cannot have. */
-      label.innerHTML = "<span class='why'>No folder on this device — draws and board saves go to the shared store</span>";
+      label.innerHTML = "<span class='why'>No folder on this device — board saves go to the shared store</span>";
     } else {
       label.innerHTML = "<span class='why'>No data folder connected — nothing will be saved</span>";
     }
@@ -531,7 +535,7 @@
     /* The shared roster, when one is configured. It is a second source,
        not a second folder, so it gets a word rather than a control —
        the controls live on the settings page. */
-    var rem = global.MRRemote && global.MRRemote.summary && global.MRRemote.summary();
+    var rem = rosterToolsPage() && global.MRRemote && global.MRRemote.summary && global.MRRemote.summary();
     if (rem) {
       var chip = document.createElement("a");
       chip.className = "mr-remote " + rem.kind;
@@ -539,7 +543,7 @@
       chip.textContent = rem.text;
       chip.title = "Shared roster settings";
       st.appendChild(chip);
-    } else if (global.MRRemote && !state.ready) {
+    } else if (rosterToolsPage() && global.MRRemote && !state.ready) {
       /* No folder AND no shared roster: this device has no source of
          data at all, and saying only "no folder connected" points at
          the one thing a phone can never have. Silence was worse — an
@@ -654,10 +658,9 @@
   api.whenReady = restore().then(function () {
     if (global.MRRemote) {
       global.MRRemote.onChange(renderBars);
-      /* Sourced covers both a configured device and the site's public
-         roster — either way there is something to fetch on load. */
+      /* Only the archived scheduling tools need resident data. */
       var mrst = global.MRRemote.status();
-      if (mrst.configured || mrst.sourced) global.MRRemote.fetchAll().then(renderBars);
+      if (rosterToolsPage() && mrst.configured) global.MRRemote.fetchAll().then(renderBars);
     }
     return api.status();
   });

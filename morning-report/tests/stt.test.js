@@ -146,7 +146,7 @@ const fake = fs.readFileSync(__dirname + '/fakefs.js', 'utf8');
 
   // ---- nothing left this tab ---------------------------------------------
   const clean = await page.evaluate(() => Object.keys(localStorage)
-    .filter(k => !k.startsWith('__fake') && ['sage-mr-gate', 'sage-mr-remote'].indexOf(k) === -1));
+    .filter(k => !k.startsWith('__fake') && ['sage-mr-remote'].indexOf(k) === -1));
   t('the transcriber writes nothing to localStorage', clean.length === 0, clean);
 
   let failed = 0;

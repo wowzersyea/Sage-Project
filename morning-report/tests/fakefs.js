@@ -2,12 +2,8 @@
    backed by sessionStorage so it survives a reload the way a real
    FileSystemDirectoryHandle does. Test scaffolding only.
 
-   This is the shared preamble every suite installs, so it also carries
-   the front-door code — otherwise each suite would open onto the gate
-   instead of the page it means to test. gate.test.js clears it first
-   and drives the gate properly. */
+   Shared preamble for folder-backed browser tests. */
 (function(){
-  try { localStorage.setItem("sage-mr-gate", "2026"); } catch (e) { /* private mode */ }
   /* The site ships with a real public endpoint baked in. Tests must
      never touch the real network, so the preamble switches it off;
      the suite that tests the public path turns it back on against

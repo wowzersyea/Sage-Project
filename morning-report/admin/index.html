@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Administration | Morning Report</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="Setting up the shared data folder and the optional shared roster. Done once per machine, then not thought about again.">
+<meta name="description" content="Setting up the data folder and feedback QR code. Done once per machine, then not thought about again.">
 <link rel="stylesheet" href="../assets/mr.css?v=7">
 <style>
   .setup{margin-top:26px}
@@ -30,7 +30,6 @@
 </style>
 </head>
 <body>
-<script src="../assets/gate.js?v=7"></script>
 
 <div id="mr-bar"></div>
 
@@ -63,7 +62,6 @@
         <li>Do the same once on the other site's machine, pointing at the same synced folder.</li>
       </ol>
       <pre class="tree">MorningReport/
-  roster.json          names and the participation log — the one file with names in it
   casebank/            de-identified cases, permanent
   baseline/            the pre-intervention evaluation, permanent — the before picture
   sessions/            de-identified scorecards, permanent
@@ -77,22 +75,10 @@
     </div>
 
     <div class="setup panel">
-      <h2>Optional: a shared roster</h2>
-      <p class="lede">The folder is per-machine. If you would rather have one live answer to
-        <em>who is on service today</em> — editable by a chief from a phone, picked up by every
-        browser without anyone re-exporting anything — the roster and rota can come from a
-        Google Sheet behind a keyed endpoint instead.</p>
-      <ol>
-        <li><a href="../settings/">Settings</a> — paste the endpoint URL and key, once per browser.</li>
-        <li><a href="../publish/">Publish</a> — seed the sheet from the folder you already have.</li>
-        <li>After that, a chief edits the sheet. Swaps and sick calls need no export.</li>
-      </ol>
-      <p class="hint" style="margin-bottom:0"><a href="../settings/">Settings</a> also draws the QR code for
-        the presenter template: scan it and a phone can send feedback without anyone typing a URL, and
-        the board puts the same code on screen at the end of a session.</p>
-      <p class="hint">Entirely optional, and it degrades rather than misleads: with no endpoint,
-        or one that cannot be reached, everything falls back to the folder exactly as before.
-        The folder always wins over the endpoint, and the participation log never leaves it.</p>
+      <h2>Feedback QR code</h2>
+      <p class="lede"><a href="../settings/">Settings</a> has the QR code for the presenter
+        template. Scan it to send feedback from a phone; the board also shows the code at the end
+        of a session.</p>
     </div>
 
     <p class="backline">
@@ -107,8 +93,8 @@
   <div class="wrap"><p>Sage Project &mdash; Morning Report.</p></div>
 </footer>
 
-<script src="../assets/remote.js?v=7"></script>
-<script src="../assets/store.js?v=7"></script>
+<script src="../assets/remote.js?v=8"></script>
+<script src="../assets/store.js?v=8"></script>
 <script>MRStore.mountBar("mr-bar");</script>
 </body>
 </html>
