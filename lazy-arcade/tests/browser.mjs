@@ -153,6 +153,7 @@ console.log("\nRendering and structure");
   const { p, ctx, errs } = await page();
   for (const g of ["pride", "cubcluster", "traitvault"]) {
     const r = await p.evaluate(async (g) => {
+      PROFILE = "LOW";     // these fixtures are the 5x4 low-profile grids
       document.querySelector(`[data-game="${g}"]`).click();
       await new Promise((r) => setTimeout(r, 450));
       const strips = CONF[g].strips;
@@ -815,17 +816,24 @@ console.log("\nMax win");
   const r = await p.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const rows = [];
-    for (const g of ["pride", "cubcluster", "traitvault"]) {
+    // Both profiles: the label on the cabinet, the table it reads, and the cap
+    // the engine enforces must be one number for every engine.
+    for (const prof of ["LOW", "HIGH"]) for (const g of ["pride", "cubcluster", "traitvault"]) {
+      PROFILE = prof;
       document.querySelector(`[data-game="${g}"]`).click();
       await sleep(350);
+      const e = eng(g);
       const shown = +document.getElementById("chipMax").textContent.replace(/[^\d]/g, "");
       // Clamp a deliberately over-cap round and check both the total and that
       // the base/feature split survives -- session RTP is reported off that.
-      const cap = CONF[g].cap;
+      // (The high profile enforces its cap INSIDE the round; capWin is the low
+      // profile's settle-time clamp and is checked on the low engines only.)
+      const cap = CONF[e].cap;
       const o = capWin({ base: cap * 3, feature: cap * 7, fs: true, marks: new Set(), frames: [] }, cap);
-      rows.push({ g, shown, MAXWIN: MAXWIN[g], cap,
+      rows.push({ g: e, shown, MAXWIN: MAXWIN[e], cap, low: prof === "LOW",
                   clamped: o.base + o.feature, share: o.base / (o.base + o.feature) });
     }
+    PROFILE = "HIGH";
     document.querySelector('[data-game="hilo"]').click();
     await sleep(350);
     return { rows,
@@ -837,10 +845,10 @@ console.log("\nMax win");
         mismatched.length ? mismatched.map((x) => `${x.g}: shows ${x.shown}, caps ${x.cap}`).join("; ")
                           : r.rows.map((x) => `${x.g} ${x.cap}`).join(", "));
   check("an over-cap round is clamped to exactly the cap",
-        r.rows.every((x) => Math.abs(x.clamped - x.cap) < 1e-6),
-        r.rows.map((x) => `${x.g} -> ${x.clamped}`).join(", "));
+        r.rows.filter((x) => x.low).every((x) => Math.abs(x.clamped - x.cap) < 1e-6),
+        r.rows.filter((x) => x.low).map((x) => `${x.g} -> ${x.clamped}`).join(", "));
   check("clamping preserves the base/feature split",
-        r.rows.every((x) => Math.abs(x.share - 0.3) < 1e-9), "3:7 stays 3:7");
+        r.rows.filter((x) => x.low).every((x) => Math.abs(x.share - 0.3) < 1e-9), "3:7 stays 3:7");
   check("Hi/Lo's round cap matches the figure on the cabinet",
         r.hiloShown === r.hiloLiteral,
         `cabinet ${r.hiloShown}, code ${r.hiloLiteral}`);
@@ -874,14 +882,24 @@ console.log("\nRound replay");
                   buy: !!rec.buy, ante: !!rec.ante });
       anteOn = false; buyNext = false;
     };
-    for (let i = 0; i < 6; i++) {
-      await play("pride", { label: "pride" });
-      await play("pride", { label: "pride+ante", ante: true });
-      await play("pride", { label: "pride buy", buy: true });
-      await play("traitvault", { label: "traitvault" });
-      await play("traitvault", { label: "traitvault buy", buy: true });
-      await play("cubcluster", { label: "cubcluster" });
+    for (const prof of ["LOW", "HIGH"]) {
+      PROFILE = prof;
+      const t = prof === "HIGH" ? " high" : "";
+      for (let i = 0; i < 4; i++) {
+        await play("pride", { label: "pride" + t });
+        await play("pride", { label: "pride+ante" + t, ante: true });
+        await play("pride", { label: "pride buy" + t, buy: true });
+        await play("traitvault", { label: "traitvault" + t });
+        await play("traitvault", { label: "traitvault buy" + t, buy: true });
+        await play("cubcluster", { label: "cubcluster" + t });
+        if (prof === "HIGH") {
+          await play("cubcluster", { label: "cubcluster buy high", buy: true });
+          await play("cubcluster", { label: "cubcluster+ante high", ante: true });
+          await play("traitvault", { label: "traitvault+ante high", ante: true });
+        }
+      }
     }
+    PROFILE = "HIGH";
     const bad = runs.filter((x) => Math.abs(x.real - x.again) > 1e-9);
     const modes = new Set(runs.map((x) => x.kind));
     return { total: runs.length, bad: bad.length, modes: modes.size,
@@ -893,7 +911,7 @@ console.log("\nRound replay");
                  : `${r.total} rounds across ${r.modes} modes`);
   check("the history records how a round was played", r.recordsMode,
         "buy and ante flags present");
-  check("enough modes were exercised to mean anything", r.modes >= 5, `${r.modes} modes`);
+  check("enough modes were exercised to mean anything", r.modes >= 14, `${r.modes} modes`);
   check("no runtime errors while replaying", errs.length === 0, errs.slice(0, 2).join(" | "));
   await ctx.close();
 }
@@ -1584,7 +1602,9 @@ console.log("\nProduction distinctness");
     const tokenOverlap = [...tvTokens].filter(t => prideTokens.has(t));
 
     // the tumble ladder: rungs from the single shared constant, correct
-    // lit/done state, and absent outside Cub Cluster
+    // lit/done state, and absent outside Cub Cluster. The ladder is the LOW
+    // profile's mechanic; the high profile multiplies with spots instead.
+    PROFILE = "LOW";
     document.querySelector('[data-game="cubcluster"]').click();
     await sleep(450);
     paintTumbleLadder(2);
@@ -1599,6 +1619,7 @@ console.log("\nProduction distinctness");
     const hiddenInPride = el.classList.contains("hidden");
 
     // the feature-end card: buy a Trait Vault round and watch the banner
+    PROFILE = "HIGH";
     document.querySelector('[data-game="traitvault"]').click();
     await sleep(450);
     // The ending is ONE card. It used to be up to three banners -- "Feature
@@ -1659,6 +1680,7 @@ console.log("\nRound presentation");
   const r = await p.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     muted = true;
+    PROFILE = "LOW";     // fixtures are found with the low-profile engines
     let spins = 0;
     const oSpin = animateSpin;
     animateSpin = async (...a) => { spins++; return oSpin(...a); };
@@ -1861,6 +1883,279 @@ console.log("\nWin ladder and bonus screens");
   check("in turbo the bonus intro closes itself after about 3s",
         r.turboIntroMs > 2500 && r.turboIntroMs < 4200, `${Math.round(r.turboIntroMs)}ms`);
   check("no runtime errors at the bonus screens", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* ------------------------------------------------------------- high profile */
+/* The high-volatility profile: its own engines, a 7x7 board for Cub Cluster,
+   multiplier spots that belong to cells rather than symbols, Pride's crowns
+   that lock for the round, and Trait Vault's base-game orbs. */
+console.log("\nHigh profile");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    muted = true; PROFILE = "HIGH";
+    const out = { engines: {} };
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click(); await sleep(300);
+      out.engines[g] = { engine: eng(), cells: document.querySelectorAll("#reels .sym").length };
+    }
+    PROFILE = "LOW"; document.querySelector('[data-game="cubcluster"]').click(); await sleep(300);
+    out.lowCells = document.querySelectorAll("#reels .sym").length; out.lowEngine = eng();
+    PROFILE = "HIGH"; document.querySelector('[data-game="cubcluster"]').click(); await sleep(300);
+
+    // the 7x7 board renders exactly the grid the engine drew
+    const seed = new Uint8Array(32).map((_, i) => (i * 23 + 9) & 0xff);
+    const grid = chDraw(CONF["cubcluster-high"].strips, makeRng(seed, "c", 4, "cubcluster-high"));
+    await animateSpin(grid, 0);
+    const reels = [...document.getElementById("reels").children];
+    let wrong = 0, total = 0;
+    for (let c = 0; c < 7; c++) for (let row = 0; row < 7; row++) {
+      total++;
+      const img = reels[c].querySelectorAll(".sym")[row]?.querySelector("img");
+      const want = symName(grid[c][row], "cubcluster");
+      if (img && img.alt !== want) wrong++;
+    }
+    out.render = { wrong, total, overflow: document.body.scrollWidth > innerWidth + 1 };
+
+    // spots on screen are the spots of the board shown
+    const client = document.getElementById("fClient").value;
+    serverSeed = new Uint8Array(32).map((_, i) => (i * 3 + 1) & 0xff);
+    let pick = null;
+    for (let n = 1; n < 200 && !pick; n++) {
+      const o = playEngine("cubcluster-high", makeRng(serverSeed, client, n, "cubcluster-high"), "buy");
+      const f = o.frames.find((f) => f.spots && f.spots.flat().filter((v) => v >= 2).length >= 4);
+      if (f) pick = f;
+    }
+    paintSpots(pick.spots, pick.marks);
+    const marks = [...document.querySelectorAll("#reels .spotlayer")].map((l) => [...l.children]);
+    let spotWrong = 0;
+    for (let c = 0; c < 7; c++) for (let row = 0; row < 7; row++) {
+      const v = pick.spots[c][row], el = marks[c][row];
+      const ok = v >= 2 ? el.textContent === "×" + v && el.classList.contains("hot")
+               : v === 1 ? el.classList.contains("marked") && !el.textContent
+               : !el.textContent && !el.classList.contains("hot");
+      if (!ok) spotWrong++;
+    }
+    // spots stay put while symbols fall: a tumble moves cells, not the layer
+    const layerBefore = document.querySelector("#reels .spotlayer");
+    out.spots = { spotWrong, layerKept: !!layerBefore && layerBefore.isConnected };
+
+    // Pride high: a crowned reel stays still for the rest of the round
+    document.querySelector('[data-game="pride"]').click(); await sleep(300);
+    let pn = -1;
+    for (let n = 1; n < 4000 && pn < 0; n++) {
+      const o = playEngine("pride-high", makeRng(serverSeed, client, n, "pride-high"), "buy");
+      const fs = o.frames.filter((f) => f.fs);
+      if (fs.length >= 4 && fs[1].sticky && fs[1].sticky.some(Boolean)) pn = n;
+    }
+    nonce = pn - 1; turbo = true; buyNext = true;
+    const seen = []; const oSpin = animateSpin;
+    animateSpin = async (g, sc, opts = {}) => {
+      const held = opts.held || [];
+      let spunHeld = false;
+      const iv = setInterval(() => {
+        document.querySelectorAll("#reels .reel").forEach((el, r) => { if (held.includes(r) && el.classList.contains("spinning")) spunHeld = true; });
+      }, 10);
+      const res = await oSpin(g, sc, opts);
+      clearInterval(iv);
+      seen.push({ held: held.length, spunHeld, crownedHeld: held.every((r) => g[r].every((s) => s === P1)) });
+      return res;
+    };
+    await doSpin();
+    animateSpin = oSpin; turbo = false;
+    out.held = { nonce: pn, spins: seen.length, withHeld: seen.filter((s) => s.held).length,
+                 spunHeld: seen.some((s) => s.spunHeld), allCrowned: seen.every((s) => s.crownedHeld) };
+
+    // Trait Vault high: base-game orbs land, and a winning board is multiplied
+    document.querySelector('[data-game="traitvault"]').click(); await sleep(300);
+    let vn = -1;
+    for (let n = 1; n < 20000 && vn < 0; n++) {
+      const o = playEngine("traitvault-high", makeRng(serverSeed, client, n, "traitvault-high"), "spin");
+      const f = o.frames[0];
+      if (f.baseOrbs.length && f.lineWin > 0 && !o.fs) vn = n;
+    }
+    nonce = vn - 1; turbo = false;
+    let orbSeen = 0, multBanner = "";
+    const iv2 = setInterval(() => {
+      orbSeen = Math.max(orbSeen, document.querySelectorAll("#screen .borb").length);
+      const t = document.getElementById("bannerBig").textContent;
+      if (/^×\d+$/.test(t)) multBanner = t;
+    }, 20);
+    await doSpin();
+    clearInterval(iv2);
+    const rec = history[history.length - 1];
+    const o = rederiveRound(rec);
+    out.orbs = { vn, orbSeen, multBanner, sum: o.frames[0].orbSum, landed: o.frames[0].baseOrbs.length,
+                 readout: document.getElementById("winOut").textContent, owed: fmt(rec.win) };
+
+    // the buy menu offers the high engines' own prices
+    const priced = [];
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click(); await sleep(250);
+      const f = buyOptions().find((x) => x.key === "feature"), a = buyOptions().find((x) => x.key === "ante");
+      priced.push(f && a && f.mult === HIGH_BUY[eng()] && a.mult === HIGH_ANTE[eng()].stake);
+    }
+    out.priced = priced;
+    return out;
+  });
+  check("each tab plays its high-profile engine by default",
+        r.engines.pride.engine === "pride-high" && r.engines.cubcluster.engine === "cubcluster-high" &&
+        r.engines.traitvault.engine === "traitvault-high", JSON.stringify(r.engines));
+  check("Cub Cluster's high profile is a 7x7 board, its low profile 5x4",
+        r.engines.cubcluster.cells === 49 && r.lowCells === 20 && r.lowEngine === "cubcluster",
+        `${r.engines.cubcluster.cells} / ${r.lowCells} cells`);
+  check("the 7x7 board renders the engine's grid", r.render.wrong === 0 && !r.render.overflow,
+        `${r.render.wrong} of ${r.render.total} differ`);
+  check("the spots on screen are the spots of the board shown", r.spots.spotWrong === 0, `${r.spots.spotWrong} cells wrong`);
+  check("spots live in their own layer, beside the falling symbols", r.spots.layerKept);
+  check("a Pride high round with locked crowns was exercised", r.held.nonce > 0 && r.held.withHeld > 0,
+        `nonce ${r.held.nonce}, ${r.held.withHeld} of ${r.held.spins} spins had locked reels`);
+  check("a locked crown never spins", !r.held.spunHeld && r.held.allCrowned);
+  check("Trait Vault high: base-game orbs land and multiply a win",
+        r.orbs.vn > 0 && r.orbs.orbSeen === r.orbs.landed && r.orbs.multBanner === "×" + r.orbs.sum,
+        `${r.orbs.landed} orb(s) summing ×${r.orbs.sum}, ${r.orbs.orbSeen} shown, banner "${r.orbs.multBanner}"`);
+  check("and the readout lands on what the round paid", r.orbs.readout === r.orbs.owed, `${r.orbs.readout} / ${r.orbs.owed}`);
+  check("the buy menu offers each high engine's measured prices", r.priced.every(Boolean), JSON.stringify(r.priced));
+  check("no runtime errors in the high profile", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+{
+  // The 7x7 board must fit a phone with the spin button, like every other game.
+  const { p, ctx } = await page({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
+  const r = await p.evaluate(async () => {
+    PROFILE = "HIGH";
+    document.querySelector('[data-game="cubcluster"]').click();
+    await new Promise((res) => setTimeout(res, 400));
+    const R = (s) => document.querySelector(s).getBoundingClientRect();
+    const spin = R("#spin"), reels = R("#reels");
+    return { spinOk: spin.bottom <= innerHeight && spin.top >= 0, reelsOk: reels.bottom <= innerHeight,
+             cell: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cell")),
+             hOverflow: document.body.scrollWidth > innerWidth + 1 };
+  });
+  check("320x568: the 7x7 board and the spin button are on screen together", r.spinOk && r.reelsOk,
+        `reels ${r.reelsOk}, spin ${r.spinOk}`);
+  check("320x568: 7x7 cells stay big enough to read", r.cell >= 30, `${r.cell}px`);
+  check("320x568: the 7x7 board does not scroll sideways", !r.hOverflow);
+  await ctx.close();
+}
+
+/* ------------------------------------------------- symbol states and score */
+console.log("\nSymbol states and the adaptive score");
+{
+  const { p, ctx, errs } = await page();
+  const r = await p.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const out = {};
+    document.querySelector('[data-game="pride"]').click(); await sleep(300);
+    // every cell says what it is and what state it is in
+    const cells = [...document.querySelectorAll("#reels .sym")];
+    out.tagged = cells.every((c) => c.dataset.sym && c.dataset.state === "idle");
+    const c = cells[5], seq = [];
+    for (const st of ["land", "win", "explode", "idle"]) {
+      symState(c, st);
+      seq.push(`${c.dataset.state}:${["settle", "pop", "burst"].filter((k) => c.classList.contains(k)).join("") || "-"}`);
+    }
+    out.states = seq.join(" ");
+    // a registered animator takes exactly the states it claims
+    window.LazyArcadeAnimator = { calls: [], play(el, state, id) { this.calls.push(`${state}:${id}`); return state === "win"; } };
+    symState(c, "win");
+    const tookWin = c.dataset.state === "win" && !c.classList.contains("pop");
+    symState(c, "land");
+    const leftLand = c.classList.contains("settle");
+    out.hook = { tookWin, leftLand, calls: window.LazyArcadeAnimator.calls.join(",") };
+    delete window.LazyArcadeAnimator;
+    symState(c, "idle");
+
+    // the score: layers, idle fallback, the bass that survives the effects switch
+    muted = false; ac(); startMusic(); startRhythm();
+    out.startLayer = musicLayer;
+    turbo = true; await doSpin(); turbo = false;
+    out.afterSpin = musicLayer;
+    lastSpinAt = performance.now() - 11000;
+    await sleep(1300);
+    out.idle = musicLayer;
+    let srcs = 0; const cb = actx.createBufferSource.bind(actx);
+    actx.createBufferSource = () => { srcs++; return cb(); };
+    sfxOff = true;
+    curDest = musicBus(); pluck(220, 0.3, 0.1, 0.5); const inScore = srcs; curDest = null;
+    pluck(220, 0.3, 0.1, 0.5); const asEffect = srcs - inScore;
+    sfxOff = false; actx.createBufferSource = cb;
+    out.bass = { inScore, asEffect };
+    // small wins tick in three rising levels
+    const tiers = []; const ct = counterTick;
+    counterTick = (k, t) => { tiers.push(t); };
+    for (const m of [1.5, 3, 9]) await presentResult(100 * m, { bet: 100, stake: 100, shown: 0 });
+    counterTick = ct;
+    out.levels = [...new Set(tiers)].join(",");
+    // a big win steps the bed up a notch for every tier it passes
+    const bpms = new Set();
+    const iv = setInterval(() => { if (rhythm) bpms.add(rhythm.target); }, 20);
+    turbo = true; await bigWin(70 * 100, { bet: 100, stake: 100, shown: 0 }); turbo = false;
+    clearInterval(iv);
+    out.tiersBpm = [...bpms].sort((a, b) => a - b);
+    out.restored = rhythm ? rhythm.target : null;
+    out.FEAT = RHYTHM_FEATURE_BPM; out.BASE = RHYTHM_BASE_BPM;
+    muted = true; stopMusic(); stopRhythm();
+    return out;
+  });
+  check("every cell carries its symbol and its state", r.tagged);
+  check("land, win, explode and idle each set their own state", r.states === "land:settle win:pop explode:burst idle:-", r.states);
+  check("a registered animator takes the states it claims and no others",
+        r.hook.tookWin && r.hook.leftLand && /win:/.test(r.hook.calls), JSON.stringify(r.hook));
+  check("starting the bed brings the score out of idle", r.startLayer === "spin", r.startLayer);
+  check("the score falls back to idle ten seconds after the last spin", r.idle === "idle", `${r.afterSpin} -> ${r.idle}`);
+  check("the bass plays in the score even with effects switched off",
+        r.bass.inScore > 0 && r.bass.asEffect === 0, JSON.stringify(r.bass));
+  check("small wins tick in three rising levels", r.levels === "0,1,2", r.levels);
+  check("a big win steps the bed up with each tier it passes",
+        r.tiersBpm.filter((b) => b > r.FEAT).length >= 3, r.tiersBpm.join(" > "));
+  check("and the tempo comes back down afterwards", r.restored !== null && r.restored <= r.FEAT, `${r.restored} bpm`);
+  check("no runtime errors in states and score", errs.length === 0, errs.slice(0, 2).join(" | "));
+  await ctx.close();
+}
+
+/* --------------------------------------------------- portrait and landscape */
+console.log("\nPortrait and landscape");
+for (const [name, opts] of [["iPhone 12", devices["iPhone 12"]], ["Pixel 5", devices["Pixel 5"]]]) {
+  const { p, ctx } = await page(opts);
+  const r = await p.evaluate(async () => {
+    const R = (s) => document.querySelector(s).getBoundingClientRect();
+    const spin = R("#spin"), down = R("#betDown"), up = R("#betUp");
+    const mid = (b) => (b.top + b.bottom) / 2;
+    const sel = document.getElementById("bet"), i0 = sel.selectedIndex;
+    document.getElementById("betUp").click();
+    const stepped = sel.selectedIndex === i0 + 1 && document.getElementById("betCap").textContent === `Bet ${fmt(+sel.value)}`;
+    document.getElementById("betDown").click();
+    return { centred: Math.abs((spin.left + spin.right) / 2 - innerWidth / 2) <= 2,
+             flanked: down.right < spin.left && up.left > spin.right && Math.abs(mid(down) - mid(up)) < 1 && Math.abs(mid(down) - mid(spin)) < 3,
+             stepped, back: sel.selectedIndex === i0 };
+  });
+  check(`${name}: the spin button sits in the centre`, r.centred);
+  check(`${name}: bet minus and plus flank it`, r.flanked);
+  check(`${name}: they step the bet, and the bet is written under the spin button`, r.stepped && r.back);
+  await ctx.close();
+}
+for (const [name, opts] of [["iPhone 12 landscape", devices["iPhone 12 landscape"]], ["Pixel 5 landscape", devices["Pixel 5 landscape"]]]) {
+  const { p, ctx } = await page(opts);
+  const r = await p.evaluate(async () => {
+    const out = {};
+    for (const g of ["pride", "cubcluster", "traitvault"]) {
+      document.querySelector(`[data-game="${g}"]`).click();
+      await new Promise((res) => setTimeout(res, 400));
+      const R = (s) => document.querySelector(s).getBoundingClientRect();
+      const spin = R("#spin"), reels = R("#reels");
+      out[g] = { fits: spin.bottom <= innerHeight && reels.bottom <= innerHeight && spin.top >= 0,
+                 beside: spin.left >= reels.right, h: document.body.scrollWidth > innerWidth + 1 };
+    }
+    return out;
+  });
+  for (const g of ["pride", "cubcluster", "traitvault"]) {
+    check(`${name}: ${g} board and spin button on screen together`, r[g].fits);
+    check(`${name}: ${g} controls sit beside the board`, r[g].beside);
+    check(`${name}: ${g} does not scroll sideways`, !r[g].h);
+  }
   await ctx.close();
 }
 
@@ -2109,6 +2404,7 @@ console.log("\nSpin speeds, slam stop and market rules");
   const r = await p.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     muted = true;
+    PROFILE = "LOW";     // the autoplay fixtures are found with the low-profile engines
     document.querySelector('[data-game="pride"]').click(); await sleep(350);
     const plainGrid = () => { const g = []; for (let a = 0; a < 5; a++) g.push([M1, M2, L1, L2]); return g; };
     const time = async (fn) => { const t0 = performance.now(); await fn(); return performance.now() - t0; };

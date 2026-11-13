@@ -1,0 +1,11 @@
+# game: pride-high
+# symbols: WILD,SCAT,P1,P2,P3,P4,M1,M2,M3,M4,L1,L2,L3,L4
+coin_probability 0.03
+pay_scale 1.7824023591215665
+reel 0 3 0 7 8 9 12 13 14 15 18 18 18 18
+reel 6 3 0 7 8 9 12 13 14 15 16 16 16 16
+reel 8 2 0 7 8 9 12 13 14 15 16 16 16 16
+reel 6 3 0 7 8 9 12 13 14 15 16 16 16 16
+reel 0 3 0 7 8 9 12 13 14 15 18 18 18 18
+ante_mult 6
+ante_extra 3

@@ -50,7 +50,7 @@ pub fn pride_strips() -> StripSpec {
             (L1, 16), (L2, 16), (L3, 16), (L4, 16),
         ])
     };
-    StripSpec { weights: [outer, inner(6), inner(8), inner(6), outer] }
+    StripSpec { weights: vec![outer, inner(6), inner(8), inner(6), outer] }
 }
 
 pub fn pride_pays() -> PayTable {
@@ -99,7 +99,7 @@ pub fn cluster_strips() -> StripSpec {
     let reel = weights_from(&[
         (WILD, 8), (P1, 18), (P2, 20), (M1, 26), (M2, 28), (L1, 32), (L2, 34),
     ]);
-    StripSpec { weights: [reel, reel, reel, reel, reel] }
+    StripSpec { weights: vec![reel, reel, reel, reel, reel] }
 }
 
 /// Cluster pays grow super-linearly with size; the ladder below is the shape,
@@ -148,7 +148,7 @@ pub fn vault_strips() -> StripSpec {
         (M1, 11), (M2, 12), (M3, 13), (M4, 14),
         (L1, 17), (L2, 17), (L3, 18), (L4, 18),
     ]);
-    StripSpec { weights: [outer, inner, inner, inner, outer] }
+    StripSpec { weights: vec![outer, inner, inner, inner, outer] }
 }
 
 /// Per-LINE-bet pays. Two-of-a-kind on the two top premiums is what lifts this
@@ -192,3 +192,103 @@ pub fn vault_pays() -> PayTable {
 /// alongside the strips because it, not the strips, sets the meter's share of
 /// the RTP budget.
 pub const VAULT_COIN_PROBABILITY: f64 = 0.030;
+
+/* ------------------------------------------------------------------ */
+/* HIGH PROFILE                                                        */
+/* ------------------------------------------------------------------ */
+/* Starting points for the high-volatility profile. Same rule as above: the
+   SHAPE is chosen here, the level comes from `calibrate`, and nothing is real
+   until `simulate` confirms it at a spin count derived from the game's own
+   measured volatility. The scatter weights are set for a bonus roughly one
+   spin in 300 to 450, the reference range. */
+
+pub fn pride_high_strips() -> StripSpec {
+    let outer = weights_from(&[
+        (SCAT, 3), (P2, 7), (P3, 8), (P4, 9),
+        (M1, 12), (M2, 13), (M3, 14), (M4, 15),
+        (L1, 18), (L2, 18), (L3, 18), (L4, 18),
+    ]);
+    let inner = |wild: u32, scat: u32| {
+        weights_from(&[
+            (WILD, wild), (SCAT, scat), (P2, 7), (P3, 8), (P4, 9),
+            (M1, 12), (M2, 13), (M3, 14), (M4, 15),
+            (L1, 16), (L2, 16), (L3, 16), (L4, 16),
+        ])
+    };
+    // Reel 3 carries one scatter fewer: 3 on every reel triggered 1 in 273,
+    // 2 on every reel 1 in 876.
+    StripSpec { weights: vec![outer, inner(6, 3), inner(8, 2), inner(6, 3), outer] }
+}
+
+/// Pride's shape carries straight over: the Crown pays little per way because
+/// it only ever arrives as a stack, and the stack supplies the ways.
+pub fn pride_high_pays() -> PayTable {
+    pride_pays()
+}
+
+/// Seven reels, six paying symbols and the scatter. No wild.
+pub fn cluster_high_strips() -> StripSpec {
+    let reel = weights_from(&[
+        (SCAT, 1), (P1, 31), (P2, 32), (M1, 33), (M2, 34), (L1, 35), (L2, 36),
+    ]);
+    StripSpec { weights: vec![reel; crate::games::cluster_high::C7_REELS] }
+}
+
+/// Cluster pays by size, 5 to 15+, in the reference's shape: steep enough that
+/// a 15-cell cluster of a premium is a big hit before any spot multiplies it.
+pub fn cluster_high_pays() -> crate::games::cluster_high::ClusterPaysHigh {
+    use crate::games::cluster_high::{empty_pays, MIN_CLUSTER, PAY_SIZE_CAP};
+    const GROWTH: [f64; 11] = [1.0, 1.5, 2.2, 3.2, 4.5, 6.5, 9.0, 13.0, 18.0, 25.0, 35.0];
+    let bases: [(u8, f64); 6] = [(P1, 1.0), (P2, 0.75), (M1, 0.5), (M2, 0.4), (L1, 0.25), (L2, 0.2)];
+    let mut pays = empty_pays();
+    for (sym, base) in bases {
+        for size in MIN_CLUSTER..=PAY_SIZE_CAP {
+            pays[sym as usize][size] = base * GROWTH[size - MIN_CLUSTER];
+        }
+    }
+    pays
+}
+
+pub fn vault_high_strips() -> StripSpec {
+    let outer = weights_from(&[
+        (SCAT, 2), (P1, 5), (P2, 6), (P3, 7), (P4, 8),
+        (M1, 11), (M2, 12), (M3, 13), (M4, 14),
+        (L1, 18), (L2, 18), (L3, 19), (L4, 19),
+    ]);
+    let inner = weights_from(&[
+        (WILD, 5), (SCAT, 3), (P1, 5), (P2, 6), (P3, 7), (P4, 8),
+        (M1, 11), (M2, 12), (M3, 13), (M4, 14),
+        (L1, 17), (L2, 17), (L3, 18), (L4, 18),
+    ]);
+    StripSpec { weights: vec![outer, inner, inner, inner, outer] }
+}
+
+/// Per-LINE-bet pays. Two-of-a-kind pays on the four premiums only -- enough
+/// to lift the hit rate into the reference's 1-in-4-to-7 range for line games
+/// without the low profile's flood of sub-stake wins.
+pub fn vault_high_pays() -> PayTable {
+    let mut p = empty_paytable();
+    let set = |p: &mut PayTable, s: u8, v: [f64; 3]| {
+        p[s as usize][3] = v[0];
+        p[s as usize][4] = v[1];
+        p[s as usize][5] = v[2];
+    };
+    for (s, two) in [(P1, 0.5), (P2, 0.4), (P3, 0.3), (P4, 0.25)] {
+        p[s as usize][2] = two;
+    }
+    set(&mut p, P1, [6.0, 30.0, 150.0]);
+    set(&mut p, P2, [5.0, 24.0, 120.0]);
+    set(&mut p, P3, [4.0, 18.0, 90.0]);
+    set(&mut p, P4, [3.0, 14.0, 70.0]);
+    set(&mut p, M1, [2.0, 7.0, 35.0]);
+    set(&mut p, M2, [1.6, 6.0, 28.0]);
+    set(&mut p, M3, [1.3, 5.0, 22.0]);
+    set(&mut p, M4, [1.0, 4.0, 18.0]);
+    set(&mut p, L1, [0.6, 2.4, 12.0]);
+    set(&mut p, L2, [0.5, 2.0, 10.0]);
+    set(&mut p, L3, [0.45, 1.7, 8.5]);
+    set(&mut p, L4, [0.4, 1.5, 7.5]);
+    p
+}
+
+pub const VAULT_HIGH_ORB_PROBABILITY: f64 = 0.05;

@@ -40,9 +40,10 @@ npm run check       # everything below, in order
 Individually:
 
 ```sh
-npm run math:test        # 53 Rust tests, incl. RFC 4231 HMAC vectors
+npm run math:test        # Rust tests, incl. RFC 4231 HMAC vectors and all six engines
 npm run verify:golden    # TypeScript RNG must match Rust bit-for-bit
-npm run verify:play      # the page's odds, and the verifier's copy of the strips
+npm run verify:play      # the page's odds, the verifier's copy of the strips, and the
+                         # high profile reproduced EXACTLY, round by round
 npm run verify:browser   # the page itself, in a headless browser
 npm run verify:audio     # what actually reaches the speakers, in dBFS
 npm run gate:licensing   # no symbol may use art the operator does not own
@@ -63,6 +64,68 @@ The split matters: `verify:play` extracts the page's math and checks the odds,
 which leaves the entire renderer, money handling, keyboard and accessibility
 unproven. `verify:browser` covers that half, and each of its checks was proven
 to fail by breaking the page on purpose before the check was trusted.
+
+## The bench, as a player meets it
+
+`play/index.html` plays each round the way the reference's flagships do. The
+maths settles the whole round before the first reel moves -- that is what makes
+it replayable from the seed -- and the page plays that script back as a game:
+every free spin lands on spinning reels, tumbles fall cell by cell, each result
+is counted up once (and a return at or below the stake not at all), big wins
+climb a 15x/30x/45x/60x ladder whose label upgrades as the count passes each
+tier, and a bonus opens and closes on screens that wait for the player.
+
+Normal spins take the reference's 1.5s minimum with stops 0.15s apart; quick
+spin drops the minimum; holding Space or the spin button runs turbo; a tap,
+Space or Enter stops the reels on the result already decided. Every reel
+cruises at one speed, so a reel about to tease a scatter cannot be told apart
+until the reel before it lands. Autoplay stops on any win, a bonus, a single
+win over a limit, or a balance change. Settings carries the volatility profile,
+a market preset (a UK-style one holds spins to 2.5s and removes turbo, quick
+spin, the player-led stop and the feature buy), separate music and effects
+switches, and a battery saver. Portrait phones get a centred spin button with
+bet minus and plus either side; landscape phones put the board beside the
+controls.
+
+The score is synthesised in five layers -- idle, spin, win, bonus, big win --
+crossfaded over a second, falling back to idle ten seconds after the last spin.
+Every symbol's idle, land, win and explode states go through one function,
+`symState`, which a skeletal-animation runtime can take over by registering
+`window.LazyArcadeAnimator`.
+
+## Two volatility profiles
+
+Each slot has a LOW profile -- the original game, verified as it was -- and a
+HIGH profile built on the reference's distribution: a bonus about one spin in
+300 to 450, multipliers that build, retriggers, and max wins of 5,000x to
+10,000x enforced inside the round. Cub Cluster's high profile plays on 7x7 with
+Sugar Rush-style multiplier spots; Pride's crowns stick through its bonus and
+its wilds carry x2/x3/x5; Trait Vault's orbs land in the base game too. The page
+plays HIGH by default; production config (`VOLATILITY_PROFILE`) stays LOW
+pending spec Sec. 6.5. Mechanics, calibration method and every measured figure:
+[docs/HIGH-PROFILE.md](docs/HIGH-PROFILE.md).
+
+```sh
+cd crates/mathsim && cargo build --release
+W=../../packages/engine/src/paytables/weights/high
+
+# calibrate on the fast stream (a search), then verify on the production one
+./target/release/mathsim calibrate --game cubcluster-high --weights $W/cubcluster-high.weights \
+    --spins 2000000000 --rng fast
+./target/release/mathsim simulate --game cubcluster-high --weights $W/cubcluster-high.weights \
+    --spins 1000000000 --rng hmac
+
+# prices: bought rounds are played directly; the ante stake is solved per tier
+./target/release/mathsim buyprice --game pride-high --weights $W/pride-high.weights --rounds 4000000
+./target/release/mathsim ante --game pride-high --weights $W/pride-high.weights --spins 400000000 --rng fast
+
+# the Lion's odds with sticky crowns, and the exact outcomes the page must reproduce
+./target/release/mathsim nft --game pride-high --weights $W/pride-high.weights --feature-frequency F
+./target/release/mathsim golden-high --count 300
+
+# then regenerate the page's copy of the weights and prices
+node ../../tools/high-conf.mjs
+```
 
 ## The math harness
 
@@ -155,7 +218,8 @@ your client seed and a nonce, and it re-derives the reel stops locally.
 
 - No modulo-biased sampling anywhere.
 - No near-miss weighting, adaptive RNG, or per-player outcome shaping.
-- No HIGH volatility profile. The loader accepts alternate strip sets so it is a
-  data swap, but the HIGH strips are absent by design.
+- No HIGH profile in production. The HIGH strips now exist and are verified, and
+  the play-money bench plays them by default, but `VOLATILITY_PROFILE` stays LOW
+  until spec Sec. 6.5's decision is made.
 - No guessed contract addresses. `assertChainConfigResolved()` throws at startup
   while any `[CONFIRM]` constant is unresolved.

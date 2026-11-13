@@ -14,7 +14,7 @@ use game::*;
 use optimize::{optimize, OptimizeConfig, Targets};
 use rng::{HmacRng, Rng};
 use sha256::sha256;
-use sim::{run, GameKind, RngMode, RunConfig, Stats, HIST_BUCKETS, HIST_EDGES};
+use sim::{run, run_buy, GameKind, RngMode, RunConfig, Stats, HIST_BUCKETS, HIST_EDGES};
 use std::collections::HashMap;
 
 /// The exit band is PER GAME, because Pride is no longer a 97% machine.
@@ -30,10 +30,14 @@ use std::collections::HashMap;
 /// figure, added in the report, because a player is owed both numbers and the
 /// two are funded differently.
 fn exit_band(kind: GameKind) -> (f64, f64) {
-    match kind {
-        GameKind::Pride => (0.8695, 0.8705),
-        _ => (0.9695, 0.9705),
-    }
+    // The high profile's band is +/-0.0015 rather than +/-0.0005. Its
+    // volatility runs three to four times the low profile's, and resolving a
+    // +/-0.0005 band at that volatility takes billions of spins per run; at
+    // +/-0.0015 the derived spin count is a few hundred million to a couple of
+    // billion. The band and the spin count used are recorded in docs/.
+    let half = if kind.is_high() { 0.0015 } else { 0.0005 };
+    let t = kind.target_rtp();
+    (t - half, t + half)
 }
 
 fn main() {
@@ -53,6 +57,8 @@ fn main() {
         "ante" => cmd_ante(&flags),
         "hilo" => cmd_hilo(&flags),
         "golden" => cmd_golden(&flags),
+        "nft" => cmd_nft(&flags),
+        "golden-high" => cmd_golden_high(&flags),
         "help" | "--help" | "-h" => {
             println!("{USAGE}");
             0
@@ -68,13 +74,15 @@ fn main() {
 const USAGE: &str = "\
 mathsim <command> [flags]
 
-  simulate --game <pride|cubcluster|traitvault> [--spins N] [--bet N] [--seed N]
+  simulate --game <pride|cubcluster|traitvault|...-high> [--spins N] [--bet N] [--seed N]
            [--threads N] [--rng hmac|fast] [--weights FILE]
   optimize --game <...> [--target-rtp R] [--tolerance T] [--iters N]
            [--eval-spins N] [--seed N] [--threads N] [--out FILE]
-  calibrate --game <...> --weights FILE [--spins N] [--target-rtp R] [--out FILE]
+  calibrate --game <...> --weights FILE [--spins N] [--target-rtp R] [--rng hmac|fast] [--out FILE]
   buyprice --game <...> [--spins N]      EV-neutral price of buying the feature
-  ante     --game <...> [--spins N]      solve the ante scatter multiplier
+  ante     --game <...> [--spins N] [--mult M] [--rng fast]   solve the ante stake per tier
+  nft      --game pride-high [--rounds N] how often a free-spin round fills the board
+  golden-high [--count N] [--dir DIR] [--out FILE]  exact round outcomes for the page's port
   hilo     [--decisions N] [--deck collection|owned] [--n N] [--seed N]
   golden   [--count N] [--out FILE]
 
@@ -109,7 +117,7 @@ fn require_game(flags: &HashMap<String, String>) -> GameKind {
     match GameKind::parse(name) {
         Some(k) => k,
         None => {
-            eprintln!("--game must be one of: pride, cubcluster, traitvault");
+            eprintln!("--game must be one of: pride, cubcluster, traitvault, pride-high, cubcluster-high, traitvault-high");
             std::process::exit(2);
         }
     }
@@ -129,8 +137,8 @@ fn cmd_simulate(flags: &HashMap<String, String>) -> i32 {
     };
 
     let (strips, coin_probability, pay_scale) = match flags.get("weights") {
-        Some(path) => load_weights(path),
-        None => (kind.default_strips(), tables::VAULT_COIN_PROBABILITY, 1.0),
+        Some(path) => load_weights_for(kind, path),
+        None => (kind.default_strips(), kind.default_coin_probability(), 1.0),
     };
 
     let started = std::time::Instant::now();
@@ -167,7 +175,7 @@ fn cmd_simulate(flags: &HashMap<String, String>) -> i32 {
 fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
     let kind = require_game(flags);
     let targets = Targets {
-        rtp: flag(flags, "target-rtp", 0.97),
+        rtp: flag(flags, "target-rtp", kind.target_rtp()),
         tolerance: flag(flags, "tolerance", 0.0005),
         hit_frequency: flag(
             flags,
@@ -176,6 +184,9 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
                 GameKind::Pride => 0.38,
                 GameKind::CubCluster => 0.44,
                 GameKind::TraitVault => 0.44,
+                GameKind::PrideHigh => 0.25,
+                GameKind::CubClusterHigh => 0.33,
+                GameKind::TraitVaultHigh => 0.20,
             },
         ),
         volatility: flag(
@@ -186,6 +197,8 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
                 GameKind::CubCluster => 5.4,
                 // Matches the target in report().
                 GameKind::TraitVault => 5.5,
+                GameKind::PrideHigh | GameKind::CubClusterHigh => 12.0,
+                GameKind::TraitVaultHigh => 14.0,
             },
         ),
     };
@@ -258,7 +271,7 @@ fn cmd_optimize(flags: &HashMap<String, String>) -> i32 {
 fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
     let kind = require_game(flags);
     let spins: u64 = flag(flags, "spins", 20_000_000);
-    let target: f64 = flag(flags, "target-rtp", 0.97);
+    let target: f64 = flag(flags, "target-rtp", kind.target_rtp());
     let seed: u64 = flag(flags, "seed", 42);
     let threads: usize = flag(flags, "threads", default_threads());
 
@@ -269,9 +282,18 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
             return 2;
         }
     };
-    let (strips, coin_probability, scale0) = load_weights(&path);
+    let (strips, coin_probability, scale0) = load_weights_for(kind, &path);
+    // `--rng fast` is allowed HERE because calibration is a search: it solves a
+    // scale, and the solved scale is then verified by `simulate` on the
+    // production HMAC stream, which is the only figure that may be quoted. At
+    // high-profile volatility a calibration precise enough to land inside the
+    // band needs a billion spins or more, which the fast stream does in minutes.
+    let rng_mode = match flags.get("rng").map(String::as_str) {
+        Some("fast") => RngMode::Fast,
+        _ => RngMode::Hmac,
+    };
 
-    println!("calibrating {} at {spins} spins per point (production HMAC rng)", kind.id());
+    println!("calibrating {} at {spins} spins per point ({:?} rng)", kind.id(), rng_mode);
 
     // Trait Vault still needs two axes, but the first one is a SHARE, not an
     // absolute RTP. Orb probability sets how the return divides between base and
@@ -280,7 +302,7 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
     // now that it pays through it, the absolute figure moves the moment the
     // scale does, and the split it was solved for evaporates.
     let mut coin_probability = coin_probability;
-    if kind == GameKind::TraitVault {
+    if kind == GameKind::TraitVault || kind == GameKind::TraitVaultHigh {
         let target_feature: f64 = flag(flags, "target-feature-rtp", kind.target_feature_rtp());
         let target_share = target_feature / target;
         let measure_coin = |coin: f64, scale: f64| -> Stats {
@@ -289,7 +311,7 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
                 spins,
                 seed,
                 threads,
-                rng_mode: RngMode::Hmac,
+                rng_mode,
                 strips: strips.clone(),
                 coin_probability: coin,
                 pay_scale: scale,
@@ -346,7 +368,7 @@ fn cmd_calibrate(flags: &HashMap<String, String>) -> i32 {
             spins,
             seed,
             threads,
-            rng_mode: RngMode::Hmac,
+            rng_mode,
             strips: strips.clone(),
             coin_probability,
             pay_scale: scale,
@@ -436,10 +458,34 @@ fn cmd_buyprice(flags: &HashMap<String, String>) -> i32 {
     let threads: usize = flag(flags, "threads", default_threads());
     let path = flags.get("weights").cloned().unwrap_or_default();
     let (strips, coin_probability, pay_scale) = if path.is_empty() {
-        (kind.default_strips(), tables::VAULT_COIN_PROBABILITY, 1.0)
+        (kind.default_strips(), kind.default_coin_probability(), 1.0)
     } else {
-        load_weights(&path)
+        load_weights_for(kind, &path)
     };
+
+    if kind.is_high() {
+        // Play the bought round itself. Its EV is its price's numerator.
+        let rounds: u64 = flag(flags, "rounds", 20_000_000);
+        let rng_mode = match flags.get("rng").map(String::as_str) {
+            Some("fast") => RngMode::Fast,
+            _ => RngMode::Hmac,
+        };
+        let st = run_buy(&RunConfig {
+            kind, spins: rounds, seed: flag(flags, "seed", 42), threads,
+            rng_mode, strips, coin_probability, pay_scale, stake_mult: 1.0,
+        });
+        let target: f64 = flag(flags, "target-rtp", kind.target_rtp());
+        let ev = st.rtp();
+        println!("=== BUY FEATURE PRICE -- {} (bought rounds played directly) ===", kind.id());
+        println!("  rounds                : {} ({rng_mode:?} rng)", st.spins);
+        println!("  EV per bought round   : {:.4}x total bet  (+/- {:.4})", ev, st.rtp_ci95());
+        println!("  round volatility      : {:.3}", st.volatility());
+        println!("  max round observed    : {:.1}x", st.max_win);
+        println!();
+        println!("  EV-NEUTRAL BUY PRICE  : {:.4}x total bet  (returns {target:.5})", ev / target);
+        println!("  NOTE: ship behind a jurisdiction flag; banned in several markets, the UK among them.");
+        return 0;
+    }
 
     let stats = run(&RunConfig {
         kind, spins, seed: flag(flags, "seed", 42), threads,
@@ -488,19 +534,27 @@ fn cmd_buyprice(flags: &HashMap<String, String>) -> i32 {
 /// actually be charged for, each EV-neutral by construction.
 fn cmd_ante(flags: &HashMap<String, String>) -> i32 {
     let kind = require_game(flags);
-    if kind != GameKind::Pride {
-        eprintln!("only Pride has a scatter-triggered feature; ante does not apply to {}.", kind.id());
+    if matches!(kind, GameKind::CubCluster | GameKind::TraitVault) {
+        eprintln!("{} has no ante: its low profile is not priced for one.", kind.id());
         return 2;
     }
     let spins: u64 = flag(flags, "spins", 12_000_000);
-    let target: f64 = flag(flags, "target-rtp", 0.97);
+    let target: f64 = flag(flags, "target-rtp", kind.target_rtp());
     let threads: usize = flag(flags, "threads", default_threads());
     let seed: u64 = flag(flags, "seed", 42);
+    // As with calibrate: the stake is SOLVED, and at high-profile volatility a
+    // solve precise to a fraction of a percent needs hundreds of millions of
+    // spins per tier. The fast stream may search; the price is then checked on
+    // the production stream by verify-play-math and by `simulate`.
+    let rng_mode = match flags.get("rng").map(String::as_str) {
+        Some("fast") => RngMode::Fast,
+        _ => RngMode::Hmac,
+    };
     let path = flags.get("weights").cloned().unwrap_or_default();
     let (base_strips, coin_probability, pay_scale) = if path.is_empty() {
-        (kind.default_strips(), tables::VAULT_COIN_PROBABILITY, 1.0)
+        (kind.default_strips(), kind.default_coin_probability(), 1.0)
     } else {
-        load_weights(&path)
+        load_weights_for(kind, &path)
     };
 
     println!("=== ANTE TIERS -- {} ({spins} spins per tier) ===", kind.id());
@@ -508,27 +562,27 @@ fn cmd_ante(flags: &HashMap<String, String>) -> i32 {
     println!("  this strip length can express.\n");
     println!("  {:<10} {:>12} {:>14} {:>16}", "extra scat", "return/base", "feature freq", "EV-neutral stake");
 
+    // --mult scales every weight before the extra scatters go on, so a tier can
+    // add a fraction of a scatter (see StripSpec::ante).
+    let mult: u32 = flag(flags, "mult", 1);
+    println!("  strips scaled x{mult} before the extra scatters
+");
     for extra in 0..=3u32 {
-        let mut spec = base_strips.clone();
-        for reel in 0..REELS {
-            if spec.weights[reel][SCAT as usize] > 0 {
-                spec.weights[reel][SCAT as usize] += extra;
-            }
-        }
+        let spec = base_strips.ante(mult, extra);
         // Measure at stake 1.0 so the result is raw return per base bet; the
         // EV-neutral stake then falls straight out of it.
         let st = run(&RunConfig {
-            kind, spins, seed, threads, rng_mode: RngMode::Hmac,
+            kind, spins, seed, threads, rng_mode,
             strips: spec, coin_probability, pay_scale, stake_mult: 1.0,
         });
         let ret = st.rtp();
         let stake = ret / target;
         let freq = st.feature_frequency();
-        println!("  {:<10} {:>12.5} {:>14} {:>15.4}x",
+        println!("  {:<10} {:>12.5} {:>14} {:>15.4}x   (+/- {:.4})",
                  format!("+{extra}"),
                  ret,
                  if freq > 0.0 { format!("1 in {:.0}", 1.0 / freq) } else { "never".into() },
-                 stake);
+                 stake, st.rtp_ci95() / target);
     }
     println!("\n  Read: charging that stake for that scatter supply keeps RTP at {target:.5}.");
     println!("  +0 is the base game and must come out at 1.0000x -- if it does not,");
@@ -668,6 +722,12 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
     // scatter-triggered round with sticky multipliers and simply does not live
     // in the same range as a tumble game.
     let (target_hit, target_vol, vol_ceiling) = match kind {
+        // The high profile is a volatility product by design: hit rates in the
+        // reference's range (1 in 2.3-3.6 for tumble games, 1 in 4-7 for lines
+        // and ways) and no ceiling below the max-win cap itself.
+        GameKind::PrideHigh => (0.25, 12.0, 40.0),
+        GameKind::CubClusterHigh => (0.33, 12.0, 40.0),
+        GameKind::TraitVaultHigh => (0.20, 14.0, 40.0),
         GameKind::Pride => (0.38, 4.2, 5.5),
         GameKind::CubCluster => (0.44, 5.4, 5.5),
         // Lion's Share shifts weight into the feature: the Mane Meter paid out
@@ -697,7 +757,7 @@ fn report(kind: GameKind, s: &Stats, bet: u64, mode: RngMode, elapsed: std::time
     let feature_target = kind.target_feature_rtp();
     let split = format!(
         "{:.0} / {:.0}",
-        (0.97 - feature_target) * 100.0,
+        (kind.target_rtp() - feature_target) * 100.0,
         feature_target * 100.0
     );
 
@@ -788,7 +848,7 @@ fn print_weights(strips: &StripSpec, coin_probability: f64, pay_scale: f64) {
         print!("{name:>6}");
     }
     println!("{:>8}", "total");
-    for reel in 0..REELS {
+    for reel in 0..strips.weights.len() {
         print!("  {:<6}", reel + 1);
         for s in 0..NUM_SYMBOLS {
             print!("{:>6}", strips.weights[reel][s]);
@@ -812,14 +872,177 @@ fn save_weights(
     out.push_str(&format!("# symbols: {}\n", SYMBOL_NAMES.join(",")));
     out.push_str(&format!("coin_probability {coin_probability}\n"));
     out.push_str(&format!("pay_scale {pay_scale}\n"));
-    for reel in 0..REELS {
+    for reel in 0..strips.weights.len() {
         let row: Vec<String> = strips.weights[reel].iter().map(|w| w.to_string()).collect();
         out.push_str(&format!("reel {}\n", row.join(" ")));
+    }
+    // Carry the ante's definition over: it is a parameter of the game, set by
+    // hand, and a recalibration must not silently drop it.
+    if let Ok(old) = std::fs::read_to_string(path) {
+        for line in old.lines().filter(|l| l.trim_start().starts_with("ante_")) {
+            out.push_str(line.trim());
+            out.push('\n');
+        }
     }
     if let Some(parent) = std::path::Path::new(path).parent() {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(path, out)
+}
+
+/// Load a weights file and refuse one carrying the wrong number of reels for
+/// the game it is about to drive.
+fn load_weights_for(kind: GameKind, path: &str) -> (StripSpec, f64, f64) {
+    let (s, c, p) = load_weights(path);
+    if s.weights.len() != kind.reels() {
+        eprintln!("weights file {path} has {} reels; {} needs {}", s.weights.len(), kind.id(), kind.reels());
+        std::process::exit(2);
+    }
+    (s, c, p)
+}
+
+/// Exact outcomes of the high-profile games on the production HMAC stream, for
+/// fixed seeds, in every mode a player can use: spin, ante and buy.
+///
+/// The low profile's port is checked by golden RNG vectors plus a loose RTP
+/// convergence test -- loose enough to miss a slip that moves RTP by less than a
+/// percent. These are exact: the page must reproduce every round's base and
+/// feature to the last representable digit, which a reordered draw, a dropped
+/// retrigger or a misread spot rule cannot survive.
+fn cmd_golden_high(flags: &HashMap<String, String>) -> i32 {
+    use games::{cluster_high::CubClusterHigh, pride_high::PrideHigh, vault_high::TraitVaultHigh, GameState};
+    let count: u64 = flag(flags, "count", 300);
+    let dir = flags.get("dir").cloned().unwrap_or_else(|| "../../packages/engine/src/paytables/weights/high".into());
+    let out_path = flags.get("out").cloned().unwrap_or_else(|| "../../tests/golden/high.json".into());
+    let server_seed: Vec<u8> = (0..32u8).map(|i| i.wrapping_mul(29).wrapping_add(5)).collect();
+    let mut json = String::from("{
+  \"serverSeedHex\": \"");
+    json.push_str(&hex(&server_seed));
+    json.push_str("\",
+  \"client\": \"golden\",
+  \"engines\": {
+");
+    let mut first_engine = true;
+    for kind in [GameKind::PrideHigh, GameKind::CubClusterHigh, GameKind::TraitVaultHigh] {
+        let (strips, coin, scale) = load_weights_for(kind, &format!("{dir}/{}.weights", kind.id()));
+        // The ante's definition lives in the weights file (ante_mult, ante_extra),
+        // because it is a parameter of the game; its stake is a measurement and
+        // lives with the prices.
+        let (am, ae) = ante_def(&format!("{dir}/{}.weights", kind.id()));
+        let ante_spec = strips.ante(am, ae);
+        let mut rows: Vec<String> = Vec::new();
+        for mode in ["spin", "ante", "buy"] {
+            let spec = if mode == "ante" { &ante_spec } else { &strips };
+            for nonce in 0..count {
+                let mut rng = HmacRng::new(&server_seed, "golden", nonce, kind.id());
+                let (base, feature) = match kind {
+                    GameKind::PrideHigh => {
+                        let mut pays = tables::pride_high_pays();
+                        for r in pays.iter_mut() { for v in r.iter_mut() { *v *= scale; } }
+                        let g = PrideHigh::new(spec, pays, kind.max_win());
+                        if mode == "buy" { (0.0, g.free_spins(&mut rng, 10, g.cap).coins) }
+                        else { let o = g.spin(&mut rng); (o.base, o.feature) }
+                    }
+                    GameKind::CubClusterHigh => {
+                        let mut pays = tables::cluster_high_pays();
+                        for r in pays.iter_mut() { for v in r.iter_mut() { *v *= scale; } }
+                        let g = CubClusterHigh::new(spec, pays, kind.max_win());
+                        if mode == "buy" { (0.0, g.free_spins(&mut rng, 10, g.cap)) }
+                        else { let o = g.spin(&mut rng); (o.base, o.feature) }
+                    }
+                    _ => {
+                        let mut pays = tables::vault_high_pays();
+                        for r in pays.iter_mut() { for v in r.iter_mut() { *v *= scale; } }
+                        let g = TraitVaultHigh::new(spec, pays, coin, kind.max_win());
+                        if mode == "buy" { (0.0, g.free_spins(&mut rng, 10, g.cap)) }
+                        else { let o = g.spin(&mut rng, &mut GameState::default()); (o.base, o.feature) }
+                    }
+                };
+                rows.push(format!("      [\"{mode}\", {nonce}, {base:?}, {feature:?}]"));
+            }
+        }
+        if !first_engine { json.push_str(",
+"); }
+        first_engine = false;
+        json.push_str(&format!("    \"{}\": [
+{}
+    ]", kind.id(), rows.join(",
+")));
+    }
+    json.push_str("
+  }
+}
+");
+    match std::fs::write(&out_path, json) {
+        Ok(()) => { println!("wrote {out_path}: {} rounds per engine", count * 3); 0 }
+        Err(e) => { eprintln!("failed to write {out_path}: {e}"); 1 }
+    }
+}
+
+/// How often a Pride high-profile free-spin round fills the board.
+///
+/// Crowns stick in the round, so the Lion's odds are no longer the closed form
+/// q^5 per grid. They are measured here by playing rounds on their own --
+/// cheap, because a round is a dozen grids -- and combined with the trigger
+/// rate a full simulation measures.
+fn cmd_nft(flags: &HashMap<String, String>) -> i32 {
+    use games::pride_high::{PrideHigh, CROWN_STACK_NUM, CROWN_STACK_DENOM, NFT_PRIZE_X};
+    let kind = require_game(flags);
+    if kind != GameKind::PrideHigh {
+        eprintln!("nft applies to pride-high only; the low profile is closed form.");
+        return 2;
+    }
+    let rounds: u64 = flag(flags, "rounds", 50_000_000);
+    let threads: usize = flag(flags, "threads", default_threads());
+    let seed: u64 = flag(flags, "seed", 4242);
+    let (strips, _c, pay_scale) = match flags.get("weights") {
+        Some(p) => load_weights_for(kind, p),
+        None => (kind.default_strips(), 0.0, 1.0),
+    };
+    let mut pays = tables::pride_high_pays();
+    for row in pays.iter_mut() { for v in row.iter_mut() { *v *= pay_scale; } }
+    let hits: u64 = std::thread::scope(|scope| {
+        let hs: Vec<_> = (0..threads).map(|t| {
+            let strips = strips.clone();
+            let pays = pays;
+            scope.spawn(move || {
+                let g = PrideHigh::new(&strips, pays, kind.max_win());
+                let mut rng = rng::FastRng::new(seed ^ ((t as u64 + 1) << 32));
+                let n = rounds / threads as u64;
+                let mut h = 0u64;
+                for _ in 0..n {
+                    if g.free_spins(&mut rng, 10, f64::INFINITY).nft { h += 1; }
+                }
+                h
+            })
+        }).collect();
+        hs.into_iter().map(|h| h.join().unwrap()).sum()
+    });
+    let n = (rounds / threads as u64) * threads as u64;
+    let p_round = hits as f64 / n as f64;
+    let se = (p_round * (1.0 - p_round) / n as f64).sqrt();
+    let per_grid = (CROWN_STACK_NUM as f64 / CROWN_STACK_DENOM as f64).powi(REELS as i32);
+    let freq: f64 = flag(flags, "feature-frequency", 0.0);
+    println!("=== LION'S CROWN, HIGH PROFILE ===");
+    println!("  rounds simulated        : {n} (10-spin opening award, retriggers live)");
+    println!("  board filled            : {hits} round(s), 1 in {:.0} rounds  (+/- {:.2e})",
+             if p_round > 0.0 { 1.0 / p_round } else { f64::INFINITY }, 1.96 * se);
+    println!("  base grid, closed form  : 1 in {:.0}", 1.0 / per_grid);
+    if freq > 0.0 {
+        let per_spin = per_grid + freq * p_round;
+        println!("  per SPIN at trigger 1 in {:.0}: 1 in {:.0}", 1.0 / freq, 1.0 / per_spin);
+        println!("  jackpot RTP             : {:.5}  ({:.0}x prize)", per_spin * NFT_PRIZE_X, NFT_PRIZE_X);
+    } else {
+        println!("  pass --feature-frequency F (from simulate) for the per-spin rate and jackpot RTP");
+    }
+    0
+}
+
+/// `ante_mult` and `ante_extra` from a weights file; (1, 1) when absent.
+fn ante_def(path: &str) -> (u32, u32) {
+    let body = std::fs::read_to_string(path).unwrap_or_default();
+    let get = |k: &str| body.lines().find_map(|l| l.trim().strip_prefix(k).and_then(|v| v.trim().parse::<u32>().ok()));
+    (get("ante_mult").unwrap_or(1), get("ante_extra").unwrap_or(1))
 }
 
 fn load_weights(path: &str) -> (StripSpec, f64, f64) {
@@ -830,7 +1053,7 @@ fn load_weights(path: &str) -> (StripSpec, f64, f64) {
             std::process::exit(2);
         }
     };
-    let mut weights = [[0u32; NUM_SYMBOLS]; REELS];
+    let mut weights: Vec<[u32; NUM_SYMBOLS]> = Vec::new();
     let mut reel = 0usize;
     let mut coin_probability = tables::VAULT_COIN_PROBABILITY;
     let mut pay_scale = 1.0f64;
@@ -853,16 +1076,18 @@ fn load_weights(path: &str) -> (StripSpec, f64, f64) {
                 .split_whitespace()
                 .filter_map(|v| v.parse().ok())
                 .collect();
-            if values.len() != NUM_SYMBOLS || reel >= REELS {
+            if values.len() != NUM_SYMBOLS {
                 eprintln!("malformed weights file {path}: bad reel row");
                 std::process::exit(2);
             }
-            weights[reel].copy_from_slice(&values);
+            let mut row = [0u32; NUM_SYMBOLS];
+            row.copy_from_slice(&values);
+            weights.push(row);
             reel += 1;
         }
     }
-    if reel != REELS {
-        eprintln!("malformed weights file {path}: expected {REELS} reels, found {reel}");
+    if reel == 0 {
+        eprintln!("malformed weights file {path}: no reel rows");
         std::process::exit(2);
     }
     (StripSpec { weights }, coin_probability, pay_scale)

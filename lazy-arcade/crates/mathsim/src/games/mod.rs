@@ -1,7 +1,10 @@
 pub mod cluster;
+pub mod cluster_high;
 pub mod hilo;
 pub mod pride;
+pub mod pride_high;
 pub mod vault;
+pub mod vault_high;
 
 /// One resolved spin, in units of TOTAL BET.
 #[derive(Clone, Copy, Debug, Default)]

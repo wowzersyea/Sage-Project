@@ -28,13 +28,14 @@ pub const MIN_STRIP_LEN: usize = 120;
 /// Per-reel symbol weights. The optimizer's entire search space.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StripSpec {
-    pub weights: [[u32; NUM_SYMBOLS]; REELS],
+    /// One row per reel. Most games have five; Cub Cluster's high profile has seven.
+    pub weights: Vec<[u32; NUM_SYMBOLS]>,
 }
 
 /// Materialized virtual strips.
 #[derive(Clone, Debug)]
 pub struct Strips {
-    pub reels: [Vec<u8>; REELS],
+    pub reels: Vec<Vec<u8>>,
 }
 
 impl StripSpec {
@@ -47,7 +48,7 @@ impl StripSpec {
     /// rather than assumed to be "double the scatters".
     pub fn with_ante(&self, k: f64) -> StripSpec {
         let mut out = self.clone();
-        for reel in 0..REELS {
+        for reel in 0..out.weights.len() {
             let w = out.weights[reel][SCAT as usize];
             if w > 0 {
                 out.weights[reel][SCAT as usize] = ((w as f64) * k).round().max(1.0) as u32;
@@ -56,8 +57,37 @@ impl StripSpec {
         out
     }
 
+    /// The ante's strips: every weight multiplied by `mult`, then `extra` added
+    /// to the scatter on each reel that carries one. Scaling first is what lets
+    /// an ante add a FRACTION of a scatter: the high profile's reels carry one to
+    /// three scatters, and +1 on top of that raised the bonus rate 2.4 to 6.6
+    /// times -- an ante priced at 1.6 to 9.3 times the bet.
+    pub fn ante(&self, mult: u32, extra: u32) -> StripSpec {
+        let mut out = self.clone();
+        for w in out.weights.iter_mut() {
+            let had = w[SCAT as usize] > 0;
+            for v in w.iter_mut() { *v *= mult.max(1); }
+            if had { w[SCAT as usize] += extra; }
+        }
+        out
+    }
+
+    /// The common factor of every non-scatter weight: 1 for a spec as written,
+    /// `mult` for an ante spec. Lets a derived reel set (a bonus round's extra
+    /// wilds) scale with the ante instead of being diluted by it.
+    pub fn scale_factor(&self) -> u32 {
+        fn gcd(a: u32, b: u32) -> u32 { if b == 0 { a } else { gcd(b, a % b) } }
+        let mut g = 0;
+        for w in &self.weights {
+            for (s, &v) in w.iter().enumerate() {
+                if s != SCAT as usize && v > 0 { g = gcd(g, v); }
+            }
+        }
+        g.max(1)
+    }
+
     pub fn build(&self) -> Strips {
-        let reels: Vec<Vec<u8>> = (0..REELS).map(|r| build_strip(&self.weights[r])).collect();
+        let reels: Vec<Vec<u8>> = self.weights.iter().map(build_strip).collect();
         for (i, reel) in reels.iter().enumerate() {
             assert!(
                 reel.len() >= MIN_STRIP_LEN,
@@ -65,7 +95,7 @@ impl StripSpec {
                 reel.len()
             );
         }
-        Strips { reels: reels.try_into().expect("REELS entries") }
+        Strips { reels }
     }
 }
 

@@ -172,7 +172,7 @@ mod tests {
             w[L4 as usize] = 90;
             w[WILD as usize] = 5;
         }
-        CubCluster::new(&StripSpec { weights }, pays)
+        CubCluster::new(&StripSpec { weights: weights.to_vec() }, pays)
     }
 
     #[test]

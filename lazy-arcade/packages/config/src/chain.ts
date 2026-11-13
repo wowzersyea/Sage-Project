@@ -121,9 +121,16 @@ export const BET_INCREMENT_LAZY = 100n;
 /** Total-bet levels, in whole $LAZY (spec Sec. 6.1). */
 export const BET_LEVELS_LAZY = [100n, 200n, 300n, 500n, 1000n, 2500n, 5000n] as const;
 
-/** HIGH is scaffolded but MUST NOT ship (spec Sec. 6.5). The paytable loader
- *  accepts alternate strip sets, so flipping this is a data swap, not a
- *  code change -- but the HIGH strips are deliberately absent from this build. */
+/** The PRODUCTION profile. HIGH still MUST NOT ship without the decision spec
+ *  Sec. 6.5 reserves (it is the reference's distribution: rare bonuses,
+ *  multipliers, retriggers, 5,000-10,000x max wins).
+ *
+ *  The HIGH strips now exist and are verified -- games pride-high,
+ *  cubcluster-high and traitvault-high in crates/mathsim, weights in
+ *  packages/engine/src/paytables/weights/high/, method and measurements in
+ *  docs/HIGH-PROFILE.md -- and the play-money bench (play/index.html) plays
+ *  them by default with a switch back to LOW. Flipping this constant is what
+ *  would put HIGH in front of real stakes, and it is deliberately left at LOW. */
 export const VOLATILITY_PROFILE: "LOW" | "HIGH" = "LOW";
 
 /* ------------------------------------------------------------------ */

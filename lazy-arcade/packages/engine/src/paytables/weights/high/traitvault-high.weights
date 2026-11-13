@@ -1,0 +1,11 @@
+# game: traitvault-high
+# symbols: WILD,SCAT,P1,P2,P3,P4,M1,M2,M3,M4,L1,L2,L3,L4
+coin_probability 0.0655683869734935
+pay_scale 18.455484573468766
+reel 0 2 5 6 7 8 11 12 13 14 18 18 19 19
+reel 5 3 5 6 7 8 11 12 13 14 17 17 18 18
+reel 5 3 5 6 7 8 11 12 13 14 17 17 18 18
+reel 5 3 5 6 7 8 11 12 13 14 17 17 18 18
+reel 0 2 5 6 7 8 11 12 13 14 18 18 19 19
+ante_mult 6
+ante_extra 3

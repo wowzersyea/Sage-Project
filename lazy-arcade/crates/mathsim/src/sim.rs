@@ -1,7 +1,9 @@
 //! Monte Carlo harness (spec Sec. 6.2).
 
 use crate::game::*;
-use crate::games::{cluster::CubCluster, pride::Pride, vault::TraitVault, GameState, SpinOutcome};
+use crate::games::{cluster::CubCluster, cluster_high::CubClusterHigh, pride::Pride,
+                   pride_high::PrideHigh, vault::TraitVault, vault_high::TraitVaultHigh,
+                   GameState, SpinOutcome};
 use crate::rng::{FastRng, HmacRng, Rng};
 use crate::tables;
 
@@ -10,6 +12,11 @@ pub enum GameKind {
     Pride,
     CubCluster,
     TraitVault,
+    /// The high-volatility profile of each slot. A separate game id, so it
+    /// draws its own HMAC stream and its own seeds verify on their own.
+    PrideHigh,
+    CubClusterHigh,
+    TraitVaultHigh,
 }
 
 impl GameKind {
@@ -18,6 +25,9 @@ impl GameKind {
             "pride" => Some(GameKind::Pride),
             "cubcluster" | "cluster" => Some(GameKind::CubCluster),
             "traitvault" | "vault" => Some(GameKind::TraitVault),
+            "pride-high" => Some(GameKind::PrideHigh),
+            "cubcluster-high" | "cluster-high" => Some(GameKind::CubClusterHigh),
+            "traitvault-high" | "vault-high" => Some(GameKind::TraitVaultHigh),
             _ => None,
         }
     }
@@ -27,6 +37,35 @@ impl GameKind {
             GameKind::Pride => "pride",
             GameKind::CubCluster => "cubcluster",
             GameKind::TraitVault => "traitvault",
+            GameKind::PrideHigh => "pride-high",
+            GameKind::CubClusterHigh => "cubcluster-high",
+            GameKind::TraitVaultHigh => "traitvault-high",
+        }
+    }
+
+    pub const ALL: [GameKind; 6] = [
+        GameKind::Pride, GameKind::CubCluster, GameKind::TraitVault,
+        GameKind::PrideHigh, GameKind::CubClusterHigh, GameKind::TraitVaultHigh,
+    ];
+
+    pub fn is_high(&self) -> bool {
+        matches!(self, GameKind::PrideHigh | GameKind::CubClusterHigh | GameKind::TraitVaultHigh)
+    }
+
+    /// Reels a weights file for this game must carry.
+    pub fn reels(&self) -> usize {
+        match self {
+            GameKind::CubClusterHigh => crate::games::cluster_high::C7_REELS,
+            _ => REELS,
+        }
+    }
+
+    /// The coin RTP this game is calibrated to. Pride funds the Lion out of
+    /// its coin return, in both profiles.
+    pub fn target_rtp(&self) -> f64 {
+        match self {
+            GameKind::Pride | GameKind::PrideHigh => 0.87,
+            _ => 0.97,
         }
     }
 
@@ -35,6 +74,16 @@ impl GameKind {
             GameKind::Pride => tables::pride_strips(),
             GameKind::CubCluster => tables::cluster_strips(),
             GameKind::TraitVault => tables::vault_strips(),
+            GameKind::PrideHigh => tables::pride_high_strips(),
+            GameKind::CubClusterHigh => tables::cluster_high_strips(),
+            GameKind::TraitVaultHigh => tables::vault_high_strips(),
+        }
+    }
+
+    pub fn default_coin_probability(&self) -> f64 {
+        match self {
+            GameKind::TraitVaultHigh => tables::VAULT_HIGH_ORB_PROBABILITY,
+            _ => tables::VAULT_COIN_PROBABILITY,
         }
     }
 
@@ -54,6 +103,11 @@ impl GameKind {
             // and a cap that binds often is a cap that makes the published
             // figure a fiction.
             GameKind::TraitVault => 5_000.0,
+            // The high profile's ceilings sit in the reference's range. They
+            // are enforced INSIDE the round: reaching one ends the round.
+            GameKind::PrideHigh => 5_000.0,
+            GameKind::CubClusterHigh => 5_000.0,
+            GameKind::TraitVaultHigh => 10_000.0,
         }
     }
 
@@ -72,6 +126,11 @@ impl GameKind {
             // less than a third of the return does not justify a round the
             // player waits ~1 spin in 60 to see.
             GameKind::TraitVault => 0.32,
+            // The reference spends a third or more of its return on the bonus;
+            // that, not the base game, is where the high profile lives.
+            GameKind::PrideHigh => 0.36,
+            GameKind::CubClusterHigh => 0.38,
+            GameKind::TraitVaultHigh => 0.40,
         }
     }
 
@@ -79,8 +138,11 @@ impl GameKind {
     /// wilds to reels 2-4; Cub Cluster has no such restriction.
     pub fn wild_forbidden_reels(&self) -> &'static [usize] {
         match self {
-            GameKind::Pride | GameKind::TraitVault => &[0, 4],
+            GameKind::Pride | GameKind::TraitVault | GameKind::PrideHigh | GameKind::TraitVaultHigh => &[0, 4],
             GameKind::CubCluster => &[],
+            // No wild at all in the high cluster profile; the optimizer may not
+            // introduce one on any reel.
+            GameKind::CubClusterHigh => &[0, 1, 2, 3, 4, 5, 6],
         }
     }
 }
@@ -110,10 +172,15 @@ enum Machine {
     Pride(Pride),
     Cluster(CubCluster),
     Vault(TraitVault),
+    PrideHigh(PrideHigh),
+    ClusterHigh(CubClusterHigh),
+    VaultHigh(TraitVaultHigh),
 }
 
 impl Machine {
     fn build(kind: GameKind, spec: &StripSpec, coin_probability: f64, pay_scale: f64) -> Machine {
+        assert_eq!(spec.weights.len(), kind.reels(),
+                   "{} needs {} reels of weights, got {}", kind.id(), kind.reels(), spec.weights.len());
         match kind {
             GameKind::Pride => {
                 let mut pays = tables::pride_pays();
@@ -134,7 +201,45 @@ impl Machine {
                 scale_paytable(&mut pays, pay_scale);
                 Machine::Vault(TraitVault::new(spec, pays, coin_probability))
             }
+            GameKind::PrideHigh => {
+                let mut pays = tables::pride_high_pays();
+                scale_paytable(&mut pays, pay_scale);
+                Machine::PrideHigh(PrideHigh::new(spec, pays, kind.max_win()))
+            }
+            GameKind::CubClusterHigh => {
+                let mut pays = tables::cluster_high_pays();
+                for row in pays.iter_mut() {
+                    for v in row.iter_mut() {
+                        *v *= pay_scale;
+                    }
+                }
+                Machine::ClusterHigh(CubClusterHigh::new(spec, pays, kind.max_win()))
+            }
+            GameKind::TraitVaultHigh => {
+                let mut pays = tables::vault_high_pays();
+                scale_paytable(&mut pays, pay_scale);
+                Machine::VaultHigh(TraitVaultHigh::new(spec, pays, coin_probability, kind.max_win()))
+            }
         }
+    }
+
+    /// A BOUGHT round: the free-spin round on its own, opened with the
+    /// 3-scatter award of 10 spins. The high profile awards more spins for
+    /// more scatters, so a bought round is NOT the average natural trigger and
+    /// must be priced by playing it -- see `run_buy`.
+    fn buy(&self, rng: &mut impl Rng) -> SpinOutcome {
+        let mut out = SpinOutcome { feature_triggered: true, ..SpinOutcome::default() };
+        match self {
+            Machine::PrideHigh(g) => {
+                let r = g.free_spins(rng, 10, g.cap);
+                out.feature = r.coins;
+                out.nft_won = r.nft;
+            }
+            Machine::ClusterHigh(g) => out.feature = g.free_spins(rng, 10, g.cap),
+            Machine::VaultHigh(g) => out.feature = g.free_spins(rng, 10, g.cap),
+            _ => panic!("the low profile prices its buy from natural triggers (cmd_buyprice)"),
+        }
+        out
     }
 
     #[inline]
@@ -143,6 +248,9 @@ impl Machine {
             Machine::Pride(g) => g.spin(rng),
             Machine::Cluster(g) => g.spin(rng),
             Machine::Vault(g) => g.spin(rng, state),
+            Machine::PrideHigh(g) => g.spin(rng),
+            Machine::ClusterHigh(g) => g.spin(rng),
+            Machine::VaultHigh(g) => g.spin(rng, state),
         }
     }
 }
@@ -338,6 +446,49 @@ pub fn run(cfg: &RunConfig) -> Stats {
     })
 }
 
+/// Play `cfg.spins` BOUGHT rounds and record each as one outcome, so
+/// `rtp()` is the bought round's EV in units of total bet.
+pub fn run_buy(cfg: &RunConfig) -> Stats {
+    let threads = cfg.threads.max(1);
+    let per_thread = cfg.spins / threads as u64;
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..threads)
+            .map(|t| {
+                let strips = cfg.strips.clone();
+                let (kind, seed, mode, coin_p, scale) =
+                    (cfg.kind, cfg.seed, cfg.rng_mode, cfg.coin_probability, cfg.pay_scale);
+                scope.spawn(move || {
+                    let machine = Machine::build(kind, &strips, coin_p, scale);
+                    let mut stats = Stats::default();
+                    let cap = kind.max_win();
+                    match mode {
+                        RngMode::Fast => {
+                            let mut rng = FastRng::new(seed ^ ((t as u64 + 1) << 32));
+                            for _ in 0..per_thread {
+                                stats.record(&apply_win_cap(machine.buy(&mut rng), cap));
+                            }
+                        }
+                        RngMode::Hmac => {
+                            let server_seed = derive_server_seed(seed);
+                            let client_seed = format!("mathsim-buy-{t}");
+                            for i in 0..per_thread {
+                                let mut rng = HmacRng::new(&server_seed, &client_seed, i, kind.id());
+                                stats.record(&apply_win_cap(machine.buy(&mut rng), cap));
+                            }
+                        }
+                    }
+                    stats
+                })
+            })
+            .collect();
+        let mut total = Stats::default();
+        for h in handles {
+            total.merge(&h.join().expect("buy worker panicked"));
+        }
+        total
+    })
+}
+
 /// Clamp a spin to the game's published maximum win.
 ///
 /// The cap applies to the SETTLED TOTAL, so base and feature are scaled down
@@ -407,7 +558,7 @@ mod tests {
 
     #[test]
     fn no_simulated_spin_can_exceed_the_published_max_win() {
-        for kind in [GameKind::Pride, GameKind::CubCluster, GameKind::TraitVault] {
+        for kind in GameKind::ALL {
             let stats = run(&RunConfig {
                 kind,
                 spins: 200_000,

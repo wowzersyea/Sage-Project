@@ -126,7 +126,7 @@ pub fn optimize(cfg: &OptimizeConfig) -> OptimizeResult {
             // through a worse single-weight state.
             let moves = 1 + rng.below(2) as usize;
             for _ in 0..moves {
-                let reel = rng.below(REELS as u32) as usize;
+                let reel = rng.below(candidate.weights.len() as u32) as usize;
                 let symbol = rng.below(NUM_SYMBOLS as u32) as usize;
                 if !is_legal(cfg.kind, &candidate, reel, symbol) {
                     continue;
@@ -136,7 +136,7 @@ pub fn optimize(cfg: &OptimizeConfig) -> OptimizeResult {
                 let next = (current + delta).max(if symbol == WILD as usize { 0 } else { 1 });
                 candidate.weights[reel][symbol] = next as u32;
             }
-            for reel in 0..REELS {
+            for reel in 0..candidate.weights.len() {
                 let total: u32 = candidate.weights[reel].iter().sum();
                 if total < MIN_STRIP_LEN as u32 {
                     // Restore the strip-length floor by padding the commonest low.
@@ -235,7 +235,7 @@ mod tests {
             seed: 8,
         };
         let result = optimize(&cfg);
-        for reel in 0..REELS {
+        for reel in 0..result.strips.weights.len() {
             let total: u32 = result.strips.weights[reel].iter().sum();
             assert!(total >= MIN_STRIP_LEN as u32, "reel {reel} has {total} stops");
         }

@@ -240,7 +240,7 @@ mod tests {
                 w[L4 as usize] -= 5;
             }
         }
-        Pride::new(&StripSpec { weights }, pays_with(P1, 1.0, 2.0, 5.0))
+        Pride::new(&StripSpec { weights: weights.to_vec() }, pays_with(P1, 1.0, 2.0, 5.0))
     }
 
     #[test]

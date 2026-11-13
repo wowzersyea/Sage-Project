@@ -91,6 +91,9 @@
       <option value="pride">PRIDE - 1024 ways</option>
       <option value="cubcluster">CUB CLUSTER - cluster pays</option>
       <option value="traitvault">TRAIT VAULT - 40 lines</option>
+      <option value="pride-high">PRIDE (high volatility)</option>
+      <option value="cubcluster-high">CUB CLUSTER (high volatility) - 7x7</option>
+      <option value="traitvault-high">TRAIT VAULT (high volatility)</option>
       <option value="hilo">RARITY HI/LO</option>
     </select>
 
@@ -121,6 +124,11 @@ const STRIPS = {
   pride:      [146, 153, 150, 158, 159],
   cubcluster: [159, 166, 168, 166, 171],
   traitvault: [158, 149, 160, 167, 144],
+  // The high profile is a separate game id with its own strips. Cub Cluster's
+  // high profile draws EVERY CELL from its reel's strip -- seven per reel.
+  "pride-high":      [153, 151, 152, 151, 153],
+  "cubcluster-high": [202, 202, 202, 202, 202, 202, 202],
+  "traitvault-high": [152, 154, 154, 154, 152],
   // Hi/Lo draws a RARITY RANK, not a card from the full collection. It sat at
   // 10078 -- the pre-rarity deck size -- long after the game moved to ranks
   // 0..100, so this page derived an ordinal out of 10,078 while the game drew
@@ -239,8 +247,26 @@ document.getElementById("go").addEventListener("click", async () => {
   // never used and tell an honest player their spin did not reproduce. That is
   // the same failure this file's STRIPS comment records, one level deeper --
   // the drift there was in the numbers, here it would be in their ORDER.
+  if (game === "cubcluster-high") {
+    // Seven draws per reel, reel by reel, top row first. Tumble refills follow
+    // in the game, drawn the same way, after the first board is evaluated.
+    const box = document.createElement("div");
+    box.className = "stops";
+    for (let i = 0; i < lengths.length; i++) {
+      const cells = [];
+      for (let row = 0; row < 7; row++) cells.push(await rng.below(lengths[i]));
+      const d = document.createElement("div");
+      d.className = "stop";
+      d.innerHTML = "<b>Reel " + (i + 1) + "</b>" + cells.join(", ") +
+                    '<span style="color:var(--muted)"> / ' + lengths[i] + "</span>";
+      box.appendChild(d);
+    }
+    out.innerHTML = lines.join("\n");
+    out.appendChild(box);
+    return;
+  }
   for (let i = 0; i < lengths.length; i++) {
-    if (game === "pride") {
+    if (game === "pride" || game === "pride-high") {
       const roll = await rng.below(CROWN_DENOM);
       crowned.push(roll < CROWN_NUM);
       lines.push("  reel " + (i + 1) + " crown roll = " + roll + " / " + CROWN_DENOM +
@@ -249,7 +275,12 @@ document.getElementById("go").addEventListener("click", async () => {
     stops.push(await rng.below(lengths[i]));
   }
 
-  if (game === "pride" && crowned.length && crowned.every(Boolean)) {
+  if (game === "traitvault-high") {
+    lines.push("");
+    lines.push("  Base-game orbs are drawn next: one draw per cell, reel by reel, and a value");
+    lines.push("  draw for each orb that lands.");
+  }
+  if ((game === "pride" || game === "pride-high") && crowned.length && crowned.every(Boolean)) {
     lines.push("");
     lines.push("  ALL FIVE REELS CROWNED -- this round won the Lion's Crown.");
   }
@@ -262,7 +293,7 @@ document.getElementById("go").addEventListener("click", async () => {
   stops.forEach((s, i) => {
     const d = document.createElement("div");
     d.className = "stop";
-    const crown = game === "pride" && crowned[i];
+    const crown = (game === "pride" || game === "pride-high") && crowned[i];
     d.innerHTML = "<b>" + label + " " + (i + 1) + (crown ? " \u2014 CROWNED" : "") + "</b>" + s +
                   '<span style="color:var(--muted)"> / ' + lengths[i] + "</span>";
     if (crown) d.style.borderColor = "#F3C34A";

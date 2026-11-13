@@ -1,0 +1,6 @@
+{
+  "_note": "Measured, not guessed. buy: `mathsim buyprice` playing bought rounds directly on the production HMAC stream (4M rounds; 1.5M for Cub Cluster). ante stake: `mathsim ante --mult M --rng fast`, the tier matching ante_mult/ante_extra in each weights file. Written by hand from those runs; tools/high-conf.mjs carries them into the page.",
+  "pride-high":      {"buy": 144.1076, "ante": {"stake": 1.2516}},
+  "cubcluster-high": {"buy": 169.8087, "ante": {"stake": 1.2172}},
+  "traitvault-high": {"buy": 147.1777, "ante": {"stake": 1.2708}}
+}

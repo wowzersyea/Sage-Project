@@ -149,6 +149,45 @@ at exactly ten per grid, and it fails on the conditional version.
 
 ---
 
+## 0.9 The Pragmatic pass: the round is played, and the distribution has a profile
+
+A gameplay review against Pragmatic's flagships (Gates of Olympus, Sweet
+Bonanza, Sugar Rush, Big Bass) found the cabinet's maths and fairness close to
+shipped quality and its presentation rudimentary in one specific way: the round
+was REPLAYED, not played. This pass closed that, and gave Sec. 0's distribution
+decision a switch instead of a veto.
+
+| Finding | What shipped |
+|---|---|
+| Free spins were board swaps on a 300ms timer -- ten in about three seconds | Every free spin lands on spinning reels, under a free-spins-left counter and a running total |
+| Tumbles repainted all twenty cells | Winners burst, survivors fall by the cells cleared beneath them, refills drop in 50ms apart; only cells that change move |
+| A big bonus was counted up as many as four times | One count-up per result; one closing card per bonus, carrying the tier escalation |
+| The banner fired before the board showed what won | Board first: amount over the winners, lines and ways walked, then the big-win screen, after the tumbles |
+| A 0.3x return got a chime and a count-up | A return at or below the stake updates the readout and nothing else |
+| Win tiers 15/40/100/250 with a fixed 1.5s count | 15/30/45/60x, the label upgrading live as the count passes each, tempo stepping with it |
+| Bonus screens closed on timers | They wait for a press in manual play; 3s auto-close in turbo or autoplay with skip screens |
+| A teasing reel turned slower from its first frame | Every reel cruises at one speed; the tease starts when the reel before it lands |
+| No slam stop, turbo a toggle, autoplay with two stops | Tap/Space/Enter stops on the result; hold for turbo; quick spin; autoplay stops on any win, a bonus, or balance up/down |
+| Nothing a market could switch off | One MARKETS table; a UK-style preset (2.5s spins, no turbo, quick spin, slam stop or buy) |
+| Cub Cluster's 5x4 geometry capped its hit rate at 10.4% | HIGH profile: 7x7, every cell its own draw, Sugar Rush-style multiplier spots |
+| No retriggers anywhere | Every HIGH bonus retriggers |
+| No multiplier escalation outside Trait Vault's round | HIGH: Pride's wilds carry x2/x3/x5 and its crowns stick; Trait Vault's orbs land in the base game too |
+
+The HIGH profile, its calibration and its verification are written up in
+[HIGH-PROFILE.md](HIGH-PROFILE.md). The LOW profile is untouched and still
+verified as it was; production config stays LOW (`VOLATILITY_PROFILE`), since
+spec Sec. 6.5 reserves that decision.
+
+Still not code, and stated as such: recorded audio stems (the score is
+synthesised, now in five crossfaded layers), commissioned animated art
+(the symbol-state seam takes a Spine runtime when there is one), and a PixiJS
+render layer. Pixi is deferred deliberately: it is a parallel client, with the
+art moved out of inline base64 into an asset pipeline the licensing gate and
+atlas tools would have to follow, and it must pass the same browser gate before
+the single-file bench can retire. The bench now meets every presentation
+criterion the benchmark measures, so the port buys performance headroom and an
+asset pipeline rather than anything a player sees today.
+
 ## 0.8 The production-grade pass: three distinct games, and what still is not code
 
 A full review of all four games against what Hacksaw actually ships, and what

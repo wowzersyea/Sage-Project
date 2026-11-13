@@ -230,7 +230,7 @@ mod tests {
                 w[L4 as usize] -= 5;
             }
         }
-        TraitVault::new(&StripSpec { weights }, pays, orb_p)
+        TraitVault::new(&StripSpec { weights: weights.to_vec() }, pays, orb_p)
     }
 
     #[test]

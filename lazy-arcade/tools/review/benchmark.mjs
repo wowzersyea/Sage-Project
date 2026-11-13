@@ -48,6 +48,8 @@ const rows = [];
 const row = (cat, name, verdict, evidence, note = "") =>
   rows.push({ cat, name, verdict, evidence, note });
 
+let devices;
+({ devices } = await import("playwright"));
 const browser = await chromium.launch(
   process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -262,14 +264,15 @@ const flow = await p.evaluate(async () => {
   const c0 = countUps; const s0 = spins;
   await doSpin(); clearInterval(iv);
   out.fsSpins = spins - s0; out.fsCountUps = countUps - c0; out.outros = outros;
-  // a tumble: only changed cells move
-  turbo = false;
+  // a tumble: only changed cells move (a 5x4 fixture, so the LOW profile)
+  turbo = false; PROFILE = "LOW";
   document.querySelector('[data-game="cubcluster"]').click(); await sleep(300);
   const grid = []; for (let c = 0; c < 5; c++) grid.push([L1, L2, M1, M2]);
   buildReels(grid);
   const marks = new Set(["0:1", "0:2", "3:3"]);
   const next = grid.map((col, c) => { const keep = col.filter((_, r) => !marks.has(c + ":" + r)); return Array(4 - keep.length).fill(P1).concat(keep); });
   out.tumbleMoved = await animateTumble(marks, next);
+  PROFILE = "HIGH";
   // the intro waits for the player
   document.querySelector('[data-game="pride"]').click(); await sleep(300);
   SCREEN_WAIT_MS = Infinity; turbo = false; buyNext = true;
@@ -298,6 +301,71 @@ const flow = await p.evaluate(async () => {
   out.holdTurbo = /e\.repeat/.test(document.querySelector("script").textContent);
   return out;
 });
+
+/* The high profile, the score and the symbol seam, measured by playing them. */
+const hi = await p.evaluate(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  muted = true; SCREEN_WAIT_MS = 60; PROFILE = "HIGH";
+  const out = {};
+  const seed = new Uint8Array(32).map((_, i) => (i * 7 + 13) & 0xff);
+  // rounds that retrigger and rounds that hit the cap, per engine
+  out.retrig = {}; out.capEnds = {};
+  for (const id of HIGH_IDS) {
+    let re = 0, capOk = true, capSeen = 0;
+    for (let n = 0; n < 1500; n++) {
+      const o = playEngine(id, makeRng(seed, "b", n, id), "buy");
+      if (o.frames.some((f) => f.retrigger)) re++;
+      const ci = o.frames.findIndex((f) => f.capped);
+      if (ci >= 0) { capSeen++; if (ci !== o.frames.length - 1) capOk = false; }
+    }
+    out.retrig[id] = re; out.capEnds[id] = { capSeen, capOk };
+  }
+  // spots persist across free spins; base orbs multiply
+  let persist = false;
+  for (let n = 0; n < 400 && !persist; n++) {
+    const o = playEngine("cubcluster-high", makeRng(seed, "s", n, "cubcluster-high"), "buy");
+    const spins = o.frames.filter((f) => f.spin);
+    if (spins.length > 1 && spins[1].spots.flat().some((v) => v >= 2)) persist = true;
+  }
+  out.persist = persist;
+  let orbOk = false;
+  for (let n = 0; n < 30000 && !orbOk; n++) {
+    const f = playEngine("traitvault-high", makeRng(seed, "o", n, "traitvault-high"), "spin").frames[0];
+    if (f.lineWin > 0 && f.orbSum > 0 && Math.abs(f.paid - Math.min(f.lineWin * f.orbSum, CONF["traitvault-high"].cap)) < 1e-9) orbOk = true;
+  }
+  out.orbOk = orbOk;
+  // the score's layers and its idle fallback
+  out.layers = typeof LAYERS === "object" ? Object.keys(LAYERS) : [];
+  out.idleFallback = /performance\.now\(\)-lastSpinAt>10000/.test(document.querySelector("script").textContent);
+  // the symbol seam
+  const c = document.querySelector("#reels .sym");
+  window.LazyArcadeAnimator = { play: () => true };
+  symState(c, "win");
+  out.hook = c.dataset.state === "win" && !c.classList.contains("pop");
+  delete window.LazyArcadeAnimator; symState(c, "idle");
+  out.states = typeof SYMBOL_STATES !== "undefined" ? SYMBOL_STATES.join("/") : "";
+  out.profile = !!document.getElementById("setProfile") && PROFILE === "HIGH" && eng("cubcluster") === "cubcluster-high";
+  return out;
+});
+const phone = {};
+for (const [name, dev] of [["portrait", "iPhone 12"], ["landscape", "iPhone 12 landscape"]]) {
+  const pc = await browser.newContext(devices[dev]); const pp = await pc.newPage();
+  await pp.goto(PAGE); await pp.waitForTimeout(1200);
+  phone[name] = await pp.evaluate(async () => {
+    const res = {};
+    for (const g of ["pride", "cubcluster"]) {
+      document.querySelector(`[data-game="${g}"]`).click();
+      await new Promise((r) => setTimeout(r, 400));
+      const R = (s) => document.querySelector(s).getBoundingClientRect();
+      const sp = R("#spin"), re = R("#reels");
+      res[g] = { onScreen: sp.bottom <= innerHeight && re.bottom <= innerHeight,
+                 centred: Math.abs((sp.left + sp.right) / 2 - innerWidth / 2) <= 2,
+                 beside: sp.left >= re.right };
+    }
+    return res;
+  });
+  await pc.close();
+}
 
 /* reduced-motion rule presence has to be read from the stylesheet text */
 const reducedMotion = await p.evaluate(() =>
@@ -497,8 +565,32 @@ row(I, "Bonus intro waits for the player", flow.introWaits ? PASS : ABSENT,
     "manual play waits; turbo and autoplay-with-skip close it after 3s");
 row(I, "A round abandoned mid-bonus still settles in full", flow.settled ? PASS : ABSENT, "");
 
+const J = "High profile";
+row(J, "Every bonus can retrigger",
+    Object.values(hi.retrig).every((n) => n > 0) ? PASS : ABSENT,
+    Object.entries(hi.retrig).map(([k, v]) => `${k} ${v}/1500 rounds`).join(", "));
+row(J, "Reaching the max win ends the round at once",
+    Object.values(hi.capEnds).every((c) => c.capOk) ? PASS : ABSENT,
+    Object.entries(hi.capEnds).map(([k, v]) => `${k} ${v.capSeen} capped`).join(", "));
+row(J, "Multiplier spots persist through the bonus", hi.persist ? PASS : ABSENT, "Cub Cluster high, 7x7");
+row(J, "Base-game orbs multiply a winning spin", hi.orbOk ? PASS : ABSENT, "Trait Vault high, the reference's rule");
+row(J, "Volatility profile switch", hi.profile ? PASS : ABSENT, "Settings: High (default) / Low");
+
+const K = "Score, states and layouts";
+row(K, "Adaptive score with an idle fallback",
+    hi.layers.join() === "idle,spin,win,bonus,bigwin" && hi.idleFallback ? PASS : PARTIAL,
+    `${hi.layers.join(" / ")}, 1s crossfades, idle after 10s`);
+row(K, "Symbol states behind one seam, Spine-ready", hi.hook && hi.states === "idle/land/win/explode" ? PASS : ABSENT,
+    "window.LazyArcadeAnimator takes any state it claims");
+row(K, "Portrait: centred spin, board and button on screen",
+    phone.portrait.pride.onScreen && phone.portrait.cubcluster.onScreen && phone.portrait.pride.centred ? PASS : ABSENT,
+    "iPhone 12, 5x4 and 7x7");
+row(K, "Landscape: board beside the controls, both on screen",
+    phone.landscape.pride.onScreen && phone.landscape.cubcluster.onScreen && phone.landscape.pride.beside ? PASS : ABSENT,
+    "iPhone 12 landscape, 5x4 and 7x7");
+
 /* ------------------------------------------------------------------ report */
-const order = [A, B, C, D, E, F, G, H, I];
+const order = [A, B, C, D, E, F, G, H, I, J, K];
 const tally = {};
 for (const r of rows) tally[r.verdict] = (tally[r.verdict] || 0) + 1;
 

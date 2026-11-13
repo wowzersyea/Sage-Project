@@ -94,8 +94,8 @@ body{
    the multiplier rail the old `1fr` grid shrank to its content, and cellPx()
    measured that collapsed width to compute --cell -- a loop that settled on
    cells about 40% smaller than the screen could carry. */
-.reels{display:grid;grid-template-columns:repeat(5,var(--cell));gap:2px;padding:2px}
-.reel{position:relative;overflow:hidden;height:calc(var(--cell)*4);
+.reels{display:grid;grid-template-columns:repeat(var(--reels,5),var(--cell));gap:2px;padding:2px}
+.reel{position:relative;overflow:hidden;height:calc(var(--cell)*var(--rows,4));
       background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.18))}
 .reel.anticipate{box-shadow:inset 0 0 0 2px var(--gold),0 0 22px -6px var(--gold);
                  animation:antic .5s ease-in-out infinite alternate}
@@ -645,6 +645,8 @@ canvas#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
    so a player who cannot separate the two hues still reads it correctly. */
 .ro .v.loss{color:#E8788A}
 .spinwrap{display:flex;gap:9px;align-items:center;justify-content:flex-end}
+.minis{display:flex;gap:9px;align-items:center}
+.betstep,.betcap{display:none}
 .spin{position:relative;width:clamp(78px,13vw,100px);height:clamp(78px,13vw,100px);
   border-radius:50%;border:none;cursor:pointer;font-family:var(--mono);font-weight:800;
   font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#231402;
@@ -766,13 +768,83 @@ details.bench[open]>summary::before{content:"▾ "}
      a browser check asserts they agree. */
   .multrail .mrow{min-width:34px}
   .mbadge{font-size:12px;padding:4px 5px;border-radius:7px}
+
+  /* PORTRAIT LAYOUT. The board on top; beneath it the readouts on one row; then
+     a spin button in the CENTRE with bet minus and plus either side of it and
+     the bet written underneath; then every other control on one row that
+     scrolls sideways, the way the game tabs already do. Measured against the
+     layout it replaces, the deck comes out shorter, so the spin button sits
+     higher on every phone the gate checks. */
+  .deck{display:flex;flex-direction:column;gap:8px}
+  .readout{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ro .v{font-size:14px}
+  .deck:not(.hilo) .betrow{display:none}
+  .spinwrap{display:grid;width:100%;justify-content:stretch;gap:6px 14px;
+    grid-template-columns:1fr auto auto auto 1fr;
+    grid-template-areas:". down spin up ." ". . cap . ." "minis minis minis minis minis"}
+  .betstep{display:inline-flex;align-items:center;justify-content:center;
+    width:46px;height:46px;border-radius:50%;font-size:22px;font-weight:700;padding:0}
+  #betDown{grid-area:down} #betUp{grid-area:up} #spin{grid-area:spin}
+  .betcap{display:block;grid-area:cap;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);margin-top:-2px}
+  .deck.hilo .betstep,.deck.hilo .betcap{display:none}
+  .minis{grid-area:minis;width:100%;overflow-x:auto;flex-wrap:nowrap;gap:6px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start}
+  .minis::-webkit-scrollbar{display:none}
+  .mini{display:contents}
+  .minis .btn{flex:0 0 auto}
 }
+
+/* LANDSCAPE PHONES -- wide and short, 340-430px tall. Every 44px touch row is
+   an eighth of the screen, so the board takes the whole left of the cabinet at
+   full height, and the status chips, readouts and controls stack down the
+   right: chips, readouts, then the spin button with bet minus and plus, then
+   the other controls on one row that scrolls sideways. The logo and the
+   max-win chip give their rows up -- the tabs say where you are, and the max
+   win is in Info and the paytable. */
+@media (orientation: landscape) and (max-height: 500px){
+  /* A landscape phone can be under 300px tall once the browser's own chrome
+     is gone (the Pixel 5 profile is 293px), so the page's own margins go too. */
+  body{padding-top:4px;padding-bottom:4px}
+  .cabinet{padding:6px}
+  .logo{display:none}
+  #chipMax{display:none}
+  .machine{display:grid;grid-template-columns:minmax(0,1fr) 240px;grid-template-rows:auto 1fr;
+    gap:6px 8px;align-items:start}
+  .machine>.title{display:none}
+  .machine>.screen{grid-column:1;grid-row:1 / span 2}
+  .machine>.topbar{grid-column:2;grid-row:1;flex-wrap:nowrap}
+  .machine>.deck{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:6px;
+    align-items:stretch;padding:8px}
+  .machine>.autopanel,.machine>.hlbtns,.machine>.hlextra{grid-column:1/-1}
+  .deck .readout{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
+  .deck .ro .v{font-size:13px}
+  .deck:not(.hilo) .betrow{display:none}
+  .spinwrap{display:grid;width:100%;justify-content:stretch;gap:6px 10px;
+    grid-template-columns:1fr auto auto auto 1fr;
+    grid-template-areas:". down spin up ." "minis minis minis minis minis"}
+  .spin{width:66px;height:66px}
+  .betstep{display:inline-flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border-radius:50%;font-size:20px;font-weight:700;padding:0}
+  #betDown{grid-area:down} #betUp{grid-area:up} #spin{grid-area:spin}
+  .deck.hilo .betstep{display:none}
+  .minis{grid-area:minis;width:100%;overflow-x:auto;flex-wrap:nowrap;gap:6px;
+    scrollbar-width:none;justify-content:flex-start}
+  .minis::-webkit-scrollbar{display:none}
+  .mini{display:contents}
+  .minis .btn{flex:0 0 auto}
+}
+
 /* Short screens -- a small phone in portrait, or any phone in landscape -- have
    the opposite problem: enough width, almost no height. Trim vertical furniture.
    620px catches a 320x568 handset, where the compaction above still left the
    spin button 45px past the fold, and clears a Pixel 5 (727) and an iPhone 12
    (664) untouched. */
 @media (max-height: 620px){
+  /* Tighter vertical rhythm, which buys the 7x7 board its last 9px: at 30px
+     cells it stood exactly that far past the fold on a 320x568 phone. */
+  .wrap{gap:8px}
+  .machine{gap:6px}
   .mast{padding:2px 8px}
   .logo{font-size:15px}
   .title{display:none}          /* the game name is already on its selected tab */
@@ -861,6 +933,30 @@ footer b{color:var(--hot)}
 @media (prefers-reduced-motion: reduce){
   .roundcard::after,.rc-body,.rc-hint,.roundcard.out,.chip.bump,.rc-tier.up,.banner .big.up{animation:none}
 }
+/* ---- high-profile overlays --------------------------------------------------- */
+/* Multiplier spots sit over the cells, not in them, so a tumble moves the
+   symbols and leaves the spots where they are. */
+.spotlayer{position:absolute;inset:0;pointer-events:none;z-index:3}
+.spotmark{position:absolute;left:0;right:0;height:var(--cell);display:flex;align-items:flex-end;
+  justify-content:flex-end;padding:4px 5px;font-family:var(--mono);font-weight:900;
+  font-size:clamp(9px,calc(var(--cell)*.2),15px);color:#FFE07A;letter-spacing:-.02em;
+  text-shadow:-1px -1px 0 #3A0A08,1px -1px 0 #3A0A08,-1px 1px 0 #3A0A08,1px 1px 0 #3A0A08}
+.spotmark.marked{box-shadow:inset 0 0 0 2px rgba(243,195,74,.35);border-radius:10px}
+.spotmark.hot{border-radius:10px;
+  background:radial-gradient(circle at 50% 60%,rgba(255,150,40,calc(.14 + var(--heat)*.32)),rgba(255,150,40,0) 70%);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,#FF9A46 calc(45% + var(--heat)*55%),#8A3A08)}
+.spotmark.firing{animation:spotfire .55s ease-out}
+@keyframes spotfire{0%{transform:scale(1)}35%{transform:scale(1.12);filter:brightness(1.6)}100%{transform:scale(1)}}
+.wmult{position:absolute;right:6px;bottom:5px;z-index:4;font-family:var(--mono);font-weight:900;
+  font-size:clamp(10px,calc(var(--cell)*.22),17px);color:#FFE07A;padding:1px 5px;border-radius:6px;
+  background:linear-gradient(180deg,#C2400B,#6E1A03);border:1px solid #FF9A46;pointer-events:none}
+.borb{z-index:7}
+/* Pride high: a crowned reel locked for the rest of the bonus. */
+.reel.held::before{content:"LOCKED";position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  z-index:5;font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.14em;color:#231402;
+  background:linear-gradient(180deg,var(--gold-3),var(--gold));padding:2px 6px;border-radius:5px;
+  pointer-events:none}
+@media (prefers-reduced-motion: reduce){ .spotmark.firing{animation:none} }
 /* ---- settings -------------------------------------------------------------- */
 .setlist{display:flex;flex-direction:column;gap:2px;margin:6px 0 12px}
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:14px;
@@ -958,6 +1054,9 @@ footer b{color:var(--hot)}
           <div class="sheet">
             <h4 id="settingsTitle">Settings</h4>
             <div class="setlist">
+              <label class="setrow"><span><b>Volatility</b><small>High plays the reference&rsquo;s distribution:
+                rare bonuses, multipliers and retriggers. Low is the original, calmer game.</small></span>
+                <select id="setProfile"><option value="HIGH">High</option><option value="LOW">Low</option></select></label>
               <label class="setrow"><span><b>Market rules</b><small id="marketNote"></small></span>
                 <select id="setMarket"><option value="standard">Standard</option><option value="uk">UK-style</option></select></label>
               <label class="setrow"><span><b>Quick spin</b><small>Drops the 1.5s minimum spin. Reels still stop left to right.</small></span>
@@ -1050,18 +1149,26 @@ footer b{color:var(--hot)}
         </div>
 
         <div class="spinwrap">
-          <div class="mini">
-            <button class="btn" id="ante" aria-pressed="false">Ante</button>
-            <button class="btn" id="speed" aria-pressed="false">Speed: Normal</button>
-            <button class="btn" id="sound" aria-pressed="true">Sound</button>
+          <div class="minis">
+            <div class="mini">
+              <button class="btn" id="ante" aria-pressed="false">Ante</button>
+              <button class="btn" id="speed" aria-pressed="false">Speed: Normal</button>
+              <button class="btn" id="sound" aria-pressed="true">Sound</button>
+            </div>
+            <div class="mini">
+              <button class="btn" id="auto">Auto</button>
+              <button class="btn" id="autoCfg">Limits</button>
+              <button class="btn" id="buy">Buy</button>
+              <button class="btn" id="deck">Deck: rarity 0-100</button>
+            </div>
           </div>
-          <div class="mini">
-            <button class="btn" id="auto">Auto</button>
-            <button class="btn" id="autoCfg">Limits</button>
-            <button class="btn" id="buy">Buy</button>
-            <button class="btn" id="deck">Deck: rarity 0-100</button>
-          </div>
+          <!-- Portrait phones: bet minus and plus either side of a centred spin
+               button, the current bet beneath it. Hidden on wider layouts,
+               where the bet select sits in its own row. -->
+          <button class="btn betstep" id="betDown" aria-label="Lower the bet">−</button>
           <button class="spin" id="spin">Spin</button>
+          <button class="btn betstep" id="betUp" aria-label="Raise the bet">+</button>
+          <span class="betcap" id="betCap" aria-hidden="true">Bet 100</span>
         </div>
       </div>
     </div>
@@ -1729,6 +1836,396 @@ function spinVault(rng,state){
   return capWin({base,feature,fs,marks,frames},CONF.traitvault.cap);
 }
 
+/* ============================ HIGH PROFILE ================================
+   The high-volatility profile of each slot, ported 1:1 from
+   crates/mathsim/src/games/{pride,cluster,vault}_high.rs. Each is its own game
+   id ("pride-high", ...), so it draws its own HMAC stream and its rounds verify
+   on their own. The RNG DRAW ORDER is part of each port; reorder a call and the
+   game still plays, as a different game from the one that was measured.
+
+   Values between the markers below are generated from the calibrated weights
+   files (packages/engine/src/paytables/weights/high/*.weights) by
+   tools/high-conf.mjs -- edit those, not this. */
+/* @@@HIGH_CONF@@@ */
+// GENERATED by tools/high-conf.mjs from weights/high/*.weights and prices.json.
+const HIGH_CONF={
+  "pride-high":{scale:1.7824023591215665,cap:5000,
+     w:[[0,3,0,7,8,9,12,13,14,15,18,18,18,18],
+       [6,3,0,7,8,9,12,13,14,15,16,16,16,16],
+       [8,2,0,7,8,9,12,13,14,15,16,16,16,16],
+       [6,3,0,7,8,9,12,13,14,15,16,16,16,16],
+       [0,3,0,7,8,9,12,13,14,15,18,18,18,18]]},
+  "cubcluster-high":{scale:1.4327648767827275,cap:5000,
+     w:[[0,1,31,32,0,0,33,34,0,0,35,36,0,0],
+       [0,1,31,32,0,0,33,34,0,0,35,36,0,0],
+       [0,1,31,32,0,0,33,34,0,0,35,36,0,0],
+       [0,1,31,32,0,0,33,34,0,0,35,36,0,0],
+       [0,1,31,32,0,0,33,34,0,0,35,36,0,0],
+       [0,1,31,32,0,0,33,34,0,0,35,36,0,0],
+       [0,1,31,32,0,0,33,34,0,0,35,36,0,0]]},
+  "traitvault-high":{scale:18.455484573468766,cap:10000,orbP:0.0655683869734935,
+     w:[[0,2,5,6,7,8,11,12,13,14,18,18,19,19],
+       [5,3,5,6,7,8,11,12,13,14,17,17,18,18],
+       [5,3,5,6,7,8,11,12,13,14,17,17,18,18],
+       [5,3,5,6,7,8,11,12,13,14,17,17,18,18],
+       [0,2,5,6,7,8,11,12,13,14,18,18,19,19]]}
+};
+const HIGH_BUY={"pride-high":144.1076,"cubcluster-high":169.8087,"traitvault-high":147.1777};
+const HIGH_ANTE={"pride-high":{mult:6,extraScatter:3,stake:1.2516},"cubcluster-high":{mult:8,extraScatter:1,stake:1.2172},"traitvault-high":{mult:6,extraScatter:3,stake:1.2708}};
+const HIGH_VERIFIED={};
+/* @@@HIGH_CONF_END@@@ */
+const HIGH_IDS=["pride-high","cubcluster-high","traitvault-high"];
+const C7=7;
+const PH_CROWN_FS=150, PH_RETRIGGER=5, PH_WILD_V=[2,3,5], PH_WILD_W=[60,30,10],
+      PH_WILD_CAP=25, PH_FS_WILD_BOOST=18;
+const CH_SPOT_CAP=128, CH_PAY_CAP=15, CH_MIN=5, CH_FS_START_MARKED=false, CH_FS_DROP=11;
+const VH_BASE_V=[2,3,4,5,6,8,10,25,50], VH_BASE_W=[300,240,170,110,70,50,35,15,10],
+      VH_FS_V=[2,3,4,5,8,10,15,25], VH_FS_W=[320,250,170,110,70,45,25,10],
+      VH_ROW_CAP=100, VH_BASE_PPM=2200, VH_RETRIGGER=5, VH_FS_WILD_BOOST=10;
+const HIGH_MAX_FS=500;   // a guard, not a mechanic: never binds in measurement
+
+/* Each round plays on its own reels: Pride and Trait Vault add wilds to reels
+   2-4, Cub Cluster drops its commonest low. Derived from the base weights the
+   same way the Rust derives them, so the two cannot drift. */
+/* The common factor of every non-scatter weight: 1 as written, the ante's
+   multiplier under the ante (StripSpec::scale_factor). */
+function scaleFactor(w){
+  const gcd=(a,b)=>b?gcd(b,a%b):a; let g=0;
+  for(const r of w) r.forEach((v,s)=>{ if(s!==SCAT&&v>0) g=gcd(g,v); });
+  return Math.max(1,g);
+}
+function highFsWeights(id,w){
+  const out=w.map(r=>r.slice());
+  if(id==="cubcluster-high"){ for(const r of out) r[CH_FS_DROP]=0; }
+  else{
+    const boost=(id==="pride-high"?PH_FS_WILD_BOOST:VH_FS_WILD_BOOST)*scaleFactor(w);
+    for(const r of [1,2,3]) out[r][WILD]+=boost;
+  }
+  return out;
+}
+/* Strips for an engine, optionally under the ante: every weight multiplied by
+   `mult`, then `extraScatter` added on each reel that carries a scatter --
+   which is how the ante adds a FRACTION of a scatter (StripSpec::ante). The
+   round's reels are derived after, so they scale with it. */
+function highReels(id,ante){
+  let w=HIGH_CONF[id].w.map(r=>r.slice());
+  if(ante){
+    const m=Math.max(1,ante.mult||1);
+    w=w.map(r=>{ const had=r[SCAT]>0, o=r.map(v=>v*m); if(had) o[SCAT]+=ante.extraScatter; return o; });
+  }
+  return {strips:w.map(buildStrip), fsStrips:highFsWeights(id,w).map(buildStrip)};
+}
+for(const id of HIGH_IDS) if(HIGH_CONF[id]){
+  CONF[id]=HIGH_CONF[id];
+  Object.assign(CONF[id],highReels(id,0));
+}
+function priderShape(scale){
+  const p=Array.from({length:NSYM},()=>[0,0,0,0,0,0]);
+  const set=(s,v)=>{p[s][3]=v[0];p[s][4]=v[1];p[s][5]=v[2];};
+  set(P1,[.10,.35,1.40]); set(P2,[.30,1.20,6.00]); set(P3,[.24,.90,4.50]); set(P4,[.20,.70,3.50]);
+  set(M1,[.12,.40,1.60]);  set(M2,[.10,.32,1.30]); set(M3,[.08,.26,1.05]); set(M4,[.07,.22,.85]);
+  set(L1,[.05,.14,.55]);   set(L2,[.04,.12,.45]);  set(L3,[.035,.10,.38]); set(L4,[.03,.08,.32]);
+  set(SCAT,[1,3,20]);
+  return p.map(r=>r.map(v=>v*scale));
+}
+function clusterHighPays(scale){
+  const G=[1,1.5,2.2,3.2,4.5,6.5,9,13,18,25,35];
+  const base={[P1]:1,[P2]:.75,[M1]:.5,[M2]:.4,[L1]:.25,[L2]:.2};
+  const p=Array.from({length:NSYM},()=>new Array(CH_PAY_CAP+1).fill(0));
+  for(const s in base) for(let n=CH_MIN;n<=CH_PAY_CAP;n++) p[s][n]=base[s]*G[n-CH_MIN]*scale;
+  return p;
+}
+function vaultHighPays(scale){
+  const p=Array.from({length:NSYM},()=>[0,0,0,0,0,0]);
+  const set=(s,v)=>{p[s][3]=v[0];p[s][4]=v[1];p[s][5]=v[2];};
+  set(P1,[6,30,150]); set(P2,[5,24,120]); set(P3,[4,18,90]); set(P4,[3,14,70]);
+  set(M1,[2,7,35]);   set(M2,[1.6,6,28]); set(M3,[1.3,5,22]); set(M4,[1,4,18]);
+  set(L1,[.6,2.4,12]);set(L2,[.5,2,10]);  set(L3,[.45,1.7,8.5]); set(L4,[.4,1.5,7.5]);
+  p[P1][2]=.5; p[P2][2]=.4; p[P3][2]=.3; p[P4][2]=.25;
+  return p.map(r=>r.map(v=>v*scale));
+}
+if(CONF["pride-high"]) PAYS["pride-high"]=priderShape(CONF["pride-high"].scale);
+if(CONF["cubcluster-high"]) PAYS["cubcluster-high"]=clusterHighPays(CONF["cubcluster-high"].scale);
+if(CONF["traitvault-high"]) PAYS["traitvault-high"]=vaultHighPays(CONF["traitvault-high"].scale);
+const scatIn=g=>{ let n=0; for(const c of g) for(const s of c) if(s===SCAT) n++; return n; };
+
+/* ---- PRIDE, high profile ------------------------------------------------- */
+function phSpins(n){ return n<3?0:n===3?10:n===4?12:15; }
+/* Two draws per reel, ALWAYS, even on a reel already crowned: a sticky crown
+   must not shift the stream. */
+function phDraw(strips,rng,crownNum,sticky){
+  const g=[];
+  for(let r=0;r<REELS;r++){
+    const st=strips[r], roll=rng.below(CROWN_DENOM), stop=rng.below(st.length), col=[];
+    if(sticky[r]||roll<crownNum){ sticky[r]=true; for(let row=0;row<ROWS;row++) col.push(P1); }
+    else for(let row=0;row<ROWS;row++) col.push(st[(stop+row)%st.length]);
+    g.push(col);
+  }
+  return g;
+}
+/* Ways; with `mults`, each way is weighted by the SUM of the multipliers on
+   the wilds it uses (x1 with none), capped at x25. */
+function phEval(grid,mults,pays,marks){
+  let total=0;
+  for(let s=P1;s<NSYM;s++){
+    let len=0; while(len<REELS&&grid[len].some(c=>c===s||c===WILD)) len++;
+    if(len<3) continue;
+    const pay=pays[s][len]; if(!pay) continue;
+    if(!mults){
+      let ways=1; for(let r=0;r<len;r++) ways*=grid[r].filter(c=>c===s||c===WILD).length;
+      total+=pay*ways;
+    }else{
+      let dp=new Array(PH_WILD_CAP+1).fill(0); dp[0]=1;
+      for(let r=0;r<len;r++){
+        const nx=new Array(PH_WILD_CAP+1).fill(0);
+        const nat=grid[r].filter(c=>c===s).length;
+        for(let k=0;k<=PH_WILD_CAP;k++){
+          if(!dp[k]) continue;
+          nx[k]+=dp[k]*nat;
+          for(let row=0;row<ROWS;row++) if(grid[r][row]===WILD)
+            nx[Math.min(PH_WILD_CAP,k+mults[r][row])]+=dp[k];
+        }
+        dp=nx;
+      }
+      let acc=0; for(let k=0;k<=PH_WILD_CAP;k++) acc+=dp[k]*(k===0?1:k);
+      total+=pay*acc;
+    }
+    if(marks) for(let r=0;r<len;r++) for(let row=0;row<ROWS;row++)
+      if(grid[r][row]===s||grid[r][row]===WILD) marks.add(r+":"+row);
+  }
+  return total;
+}
+function phFreeSpins(rng,award,room,reels){
+  const pays=PAYS["pride-high"], sticky=[false,false,false,false,false];
+  const wt=PH_WILD_W.reduce((a,b)=>a+b,0);
+  let left=award, spins=0, coins=0, nft=false; const frames=[];
+  while(left>0&&spins<HIGH_MAX_FS){
+    left--; spins++;
+    const before=coins;
+    const g=phDraw(reels.fsStrips,rng,PH_CROWN_FS,sticky);
+    nft=nft||sticky.every(Boolean);
+    const mults=g.map(()=>new Array(ROWS).fill(0));
+    for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++) if(g[r][row]===WILD){
+      let pick=rng.below(wt);
+      for(let i=0;i<PH_WILD_W.length;i++){ if(pick<PH_WILD_W[i]){ mults[r][row]=PH_WILD_V[i]; break; } pick-=PH_WILD_W[i]; }
+    }
+    const sc=scatIn(g), marks=new Set();
+    coins+=phEval(g,mults,pays,marks)+(pays[SCAT][Math.min(sc,REELS)]||0);
+    // spin/fs/paid/won/mults/sticky are presentation only.
+    const f={grid:g,marks,spin:true,retriggerable:true,fs:{n:spins,of:spins+left},
+             paid:coins-before,won:coins,mults,sticky:sticky.slice(),
+             crowned:sticky.filter(Boolean).length,label:`free spin ${spins}`};
+    if(coins>=room){ f.paid=room-before; f.won=room; f.capped=true; frames.push(f);
+                     return {coins:room,nft,frames,spins}; }
+    if(sc>=3){ left+=PH_RETRIGGER; f.retrigger=PH_RETRIGGER; }
+    frames.push(f);
+  }
+  return {coins,nft,frames,spins};
+}
+function spinPrideHigh(rng,reels){
+  const C=CONF["pride-high"], pays=PAYS["pride-high"], R=reels||C;
+  const fresh=[false,false,false,false,false];
+  const grid=phDraw(R.strips,rng,CROWN_NUM,fresh);
+  let nft=fresh.every(Boolean);
+  const sc=scatIn(grid), marks=new Set();
+  const base=Math.min(phEval(grid,null,pays,marks)+(pays[SCAT][Math.min(sc,REELS)]||0),C.cap);
+  const frames=[{grid,marks,spin:true,paid:base,crowned:fresh.filter(Boolean).length}];
+  let feature=0, fs=false;
+  if(base>=C.cap) frames[0].capped=true;
+  else{
+    const award=phSpins(sc);
+    if(award>0){ fs=true; const r=phFreeSpins(rng,award,C.cap-base,R); feature=r.coins;
+                 nft=nft||r.nft; frames.push(...r.frames); }
+  }
+  return {base,feature,fs,marks,frames,nft};
+}
+
+/* ---- CUB CLUSTER, high profile ------------------------------------------- */
+function chSpins(n){ return n<3?0:[10,12,15,20,30][Math.min(n,7)-3]; }
+/* EVERY CELL its own draw, reel-major, top row first. */
+function chDraw(strips,rng){
+  const g=[];
+  for(let r=0;r<C7;r++){ const st=strips[r], col=[];
+    for(let row=0;row<C7;row++) col.push(st[rng.below(st.length)]); g.push(col); }
+  return g;
+}
+const chZero=v=>Array.from({length:C7},()=>new Array(C7).fill(v));
+/* Pay every cluster, multiplied by the SUM of the spot multipliers under it
+   (read before this explosion updates them), and mark it for removal. */
+function chEval(grid,spots,pays,remove,clusters){
+  let total=0; const seen=new Set();
+  for(let r=0;r<C7;r++) for(let row=0;row<C7;row++){
+    const s=grid[r][row], key=r+":"+row;
+    if(seen.has(key)||s===SCAT||s===WILD) continue;
+    const stack=[[r,row]], comp=[]; seen.add(key);
+    while(stack.length){
+      const [c,rr]=stack.pop(); comp.push([c,rr]);
+      for(const [nc,nr] of [[c-1,rr],[c+1,rr],[c,rr-1],[c,rr+1]]){
+        if(nc<0||nc>=C7||nr<0||nr>=C7) continue;
+        const k2=nc+":"+nr;
+        if(!seen.has(k2)&&grid[nc][nr]===s){ seen.add(k2); stack.push([nc,nr]); }
+      }
+    }
+    if(comp.length<CH_MIN) continue;
+    const pay=pays[s][Math.min(comp.length,CH_PAY_CAP)]; if(!pay) continue;
+    let mult=0; for(const [c,rr] of comp) if(spots[c][rr]>=2) mult+=spots[c][rr];
+    const paid=pay*(mult||1);
+    total+=paid;
+    for(const [c,rr] of comp) remove.add(c+":"+rr);
+    if(clusters) clusters.push({sym:s,size:comp.length,mult:mult||1,paid,cells:comp.map(([c,rr])=>c+":"+rr)});
+  }
+  return total;
+}
+function chTumble(grid,remove,rng,strips){
+  for(let r=0;r<C7;r++){
+    const keep=[]; for(let row=0;row<C7;row++) if(!remove.has(r+":"+row)) keep.push(grid[r][row]);
+    const need=C7-keep.length; if(!need) continue;
+    const st=strips[r], fresh=[];
+    for(let i=0;i<need;i++) fresh.push(st[rng.below(st.length)]);
+    grid[r]=fresh.concat(keep);
+  }
+}
+/* One tumble sequence. Pushes a frame per board it shows; `meta` carries the
+   frame fields the caller wants on the FIRST frame (the spin). */
+function chSequence(grid,spots,rng,room,strips,frames,meta,wonBase){
+  const pays=PAYS["cubcluster-high"];
+  let win=0, first=true;
+  for(;;){
+    const remove=new Set(), clusters=[];
+    const before=spots.map(c=>c.slice());
+    const paid=chEval(grid,spots,pays,remove,clusters);
+    const f={grid:grid.map(c=>c.slice()),marks:new Set(remove),spin:first,spots:before,clusters,
+             paid:0,won:wonBase+win};
+    if(first) Object.assign(f,meta);
+    first=false;
+    if(paid===0){ frames.push(f); break; }
+    if(win+paid>=room){ f.paid=room-win; f.won=wonBase+room; f.capped=true; frames.push(f);
+                        return {win:room,scatters:scatIn(grid),capped:true}; }
+    win+=paid; f.paid=paid; f.won=wonBase+win;
+    for(const key of remove){
+      const [c,rr]=key.split(":").map(Number), v=spots[c][rr];
+      spots[c][rr]= v===0?1 : v===1?2 : Math.min(v*2,CH_SPOT_CAP);
+    }
+    f.spotsAfter=spots.map(c=>c.slice());
+    frames.push(f);
+    chTumble(grid,remove,rng,strips);
+  }
+  return {win,scatters:scatIn(grid),capped:false};
+}
+function chFreeSpins(rng,award,room,reels){
+  const spots=chZero(CH_FS_START_MARKED?1:0);
+  let left=award, played=0, total=0; const frames=[];
+  while(left>0&&played<HIGH_MAX_FS){
+    left--; played++;
+    const grid=chDraw(reels.fsStrips,rng);
+    const meta={fs:{n:played,of:played+left},retriggerable:true,label:`free spin ${played}`};
+    const seq=chSequence(grid,spots,rng,room-total,reels.fsStrips,frames,meta,total);
+    total+=seq.win;
+    if(seq.capped) return {total:room,frames,spins:played};
+    const add=chSpins(seq.scatters);
+    if(add){ left+=add; frames[frames.length-1].retrigger=add; }
+  }
+  return {total,frames,spins:played};
+}
+function spinClusterHigh(rng,reels){
+  const C=CONF["cubcluster-high"], R=reels||C, frames=[];
+  const grid=chDraw(R.strips,rng);
+  const seq=chSequence(grid,chZero(0),rng,C.cap,R.strips,frames,{},0);
+  let base=seq.win, feature=0, fs=false;
+  if(!seq.capped){
+    const award=chSpins(seq.scatters);
+    if(award>0){ fs=true; const r=chFreeSpins(rng,award,C.cap-base,R); feature=r.total; frames.push(...r.frames); }
+  }
+  return {base,feature,fs,marks:new Set(),frames};
+}
+
+/* ---- TRAIT VAULT, high profile ------------------------------------------- */
+function vhSpins(n){ return n<3?0:n===3?10:n===4?12:15; }
+function vhDraw(strips,rng){
+  const g=[];
+  for(let r=0;r<REELS;r++){ const st=strips[r], stop=rng.below(st.length), col=[];
+    for(let row=0;row<ROWS;row++) col.push(st[(stop+row)%st.length]); g.push(col); }
+  return g;
+}
+/* One threshold draw per cell, reel-major; a value draw per orb. */
+function vhOrbs(rng,ppm,V,W,land){
+  const wt=W.reduce((a,b)=>a+b,0);
+  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++){
+    if(rng.below(1000000)<ppm){
+      let pick=rng.below(wt);
+      for(let i=0;i<W.length;i++){ if(pick<W[i]){ land(r,row,V[i]); break; } pick-=W[i]; }
+    }
+  }
+}
+function vhFreeSpins(rng,award,room,reels){
+  const C=CONF["traitvault-high"], pays=PAYS["traitvault-high"];
+  const ppm=Math.round(C.orbP*1000000), rowMult=new Array(ROWS).fill(0);
+  let left=award, played=0, total=0; const frames=[];
+  while(left>0&&played<HIGH_MAX_FS){
+    left--; played++;
+    const grid=vhDraw(reels.fsStrips,rng), landed=[];
+    vhOrbs(rng,ppm,VH_FS_V,VH_FS_W,(r,row,v)=>{ rowMult[row]=Math.min(rowMult[row]+v,VH_ROW_CAP); landed.push({reel:r,row,val:v}); });
+    const marks=new Set(), paidRows=new Set(), wins=[];
+    const win=vaultLines(grid,pays,rowMult,marks,paidRows,wins);
+    total+=win;
+    const f={grid,marks,label:"lion's share",won:total,rowMult:rowMult.slice(),orbs:landed,spinWin:win,
+             paidRows,wins,spinNo:played,spin:true,retriggerable:true,
+             fs:{n:played,of:played+left},paid:win,rowCap:VH_ROW_CAP};
+    if(total>=room){ f.paid=room-(total-win); f.won=room; f.capped=true; frames.push(f);
+                     return {total:room,frames,spins:played}; }
+    if(scatIn(grid)>=3){ left+=VH_RETRIGGER; f.retrigger=VH_RETRIGGER; }
+    frames.push(f);
+  }
+  return {total,frames,spins:played};
+}
+function spinVaultHigh(rng,reels){
+  const C=CONF["traitvault-high"], pays=PAYS["traitvault-high"], R=reels||C;
+  const grid=vhDraw(R.strips,rng), orbs=[]; let orbSum=0;
+  vhOrbs(rng,VH_BASE_PPM,VH_BASE_V,VH_BASE_W,(r,row,v)=>{ orbs.push({reel:r,row,val:v}); orbSum+=v; });
+  const marks=new Set(), wins=[];
+  const lines=vaultLines(grid,pays,[0,0,0,0],marks,null,wins);
+  const base=Math.min(lines*(orbSum>0?orbSum:1),C.cap);
+  const frames=[{grid,marks,spin:true,paid:base,wins,baseOrbs:orbs,orbSum,lineWin:lines}];
+  let feature=0, fs=false;
+  if(base>=C.cap) frames[0].capped=true;
+  else{
+    const award=vhSpins(scatIn(grid));
+    if(award>0){ fs=true; const r=vhFreeSpins(rng,award,C.cap-base,R); feature=r.total; frames.push(...r.frames); }
+  }
+  return {base,feature,fs,marks,frames};
+}
+
+/* A BOUGHT high-profile round: the round on its own, opened with the
+   3-scatter award of 10 spins, and priced by playing exactly that round
+   (`mathsim buyprice`), not by averaging natural triggers -- those award 12
+   or 15 when more scatters land. */
+function buyHigh(rng,id){
+  const C=CONF[id];
+  if(id==="pride-high"){ const r=phFreeSpins(rng,10,C.cap,C);
+    return {base:0,feature:r.coins,fs:true,marks:new Set(),frames:r.frames,nft:r.nft}; }
+  if(id==="cubcluster-high"){ const r=chFreeSpins(rng,10,C.cap,C);
+    return {base:0,feature:r.total,fs:true,marks:new Set(),frames:r.frames}; }
+  const r=vhFreeSpins(rng,10,C.cap,C);
+  return {base:0,feature:r.total,fs:true,marks:new Set(),frames:r.frames};
+}
+/* Any engine, any mode: the one dispatch the play loop, the replay and the
+   tests all share. */
+const ANTE_REELS={};
+function anteReels(id){ return ANTE_REELS[id]||(ANTE_REELS[id]=highReels(id,HIGH_ANTE[id])); }
+function playEngine(id,rng,mode){
+  if(mode==="buy") return HIGH_IDS.includes(id) ? buyHigh(rng,id) : buyFeature(rng,id);
+  const ante=mode==="ante";
+  switch(id){
+    case "pride": return spinPride(rng,ante?anteStrips():null);
+    case "cubcluster": return spinCluster(rng);
+    case "traitvault": return spinVault(rng,{});
+    case "pride-high": return spinPrideHigh(rng,ante?anteReels(id):null);
+    case "cubcluster-high": return spinClusterHigh(rng,ante?anteReels(id):null);
+    case "traitvault-high": return spinVaultHigh(rng,ante?anteReels(id):null);
+  }
+  throw new Error("unknown engine "+id);
+}
+
 /* ---- RARITY HI/LO ---- */
 const HOUSE=0.97, MIN_P=0.05, ROUND_CAP=5000;
 
@@ -1979,6 +2476,22 @@ function symbolHTML(s,g){
    through a small shared bus with a feedback-delay tail, so hits have some air
    around them instead of sounding like a phone alarm. */
 let actx=null, muted=false, busGain=null, verbSend=null, masterLimiter=null, musicDuck=null;
+/* Where a voice connects. Effects go straight to the master bus; while the
+   rhythm bed is being scheduled, `curDest` points at the music bus instead, so
+   the WHOLE score -- drone and bed -- can crossfade between layers and duck as
+   one, and the bass (which shares pluck() with the win-line effects) is not
+   silenced by the sound-effects switch. */
+let curDest=null, rhythmBus=null;
+function dest(){ return curDest||busGain; }
+function musicBus(){
+  if(!rhythmBus){
+    const c=ac();
+    if(!musicDuck){ musicDuck=c.createGain(); musicDuck.gain.value=1; musicDuck.connect(busGain); }
+    rhythmBus=c.createGain(); rhythmBus.gain.value=LAYERS[musicLayer].rhythm;
+    rhythmBus.connect(musicDuck);
+  }
+  return rhythmBus;
+}
 function ac(){
   if(!actx){
     actx=new (window.AudioContext||window.webkitAudioContext)();
@@ -2037,9 +2550,9 @@ function toBus(g,x){
   if(x&&actx.createStereoPanner){
     const pn=actx.createStereoPanner();
     pn.pan.value=Math.max(-1,Math.min(1,x));
-    g.connect(pn); pn.connect(busGain); return pn;
+    g.connect(pn); pn.connect(dest()); return pn;
   }
-  g.connect(busGain); return g;
+  g.connect(dest()); return g;
 }
 function reelPan(index){ return ((index||0)-2)/2*0.55; }
 
@@ -2051,10 +2564,16 @@ function env(node,peak,attack,decay,when){
   node.connect(g);
   return g;
 }
+/* Noise from a FIXED seed. A transient made of fresh random noise peaks at a
+   different height every time it plays -- the audio gate measured the same
+   fanfare 0.8 dB apart on two runs, enough to move it across its band and the
+   whole mix across its 16 dB spread. Seeded noise sounds identical to the ear
+   and renders identically every time, so the levels mean something. */
 function noiseBuffer(seconds){
   const c=ac(), n=Math.floor(c.sampleRate*seconds), b=c.createBuffer(1,n,c.sampleRate);
   const d=b.getChannelData(0);
-  for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+  let x=0x9E3779B9;
+  for(let i=0;i<n;i++){ x^=x<<13; x^=x>>>17; x^=x<<5; d[i]=((x>>>0)/4294967296)*2-1; }
   return b;
 }
 /* The rhythm bed fires two of these a beat, forever. Building a fresh buffer
@@ -2307,8 +2826,14 @@ function jackpotFanfare(tier){
   // scaled to 0.95, which is -26dB: that is not ducking the bed, it is muting
   // it, and the round comes back to silence rather than to music.
   duckMusic(0.35+0.09*tier, 700+220*tier);
-  jackpotHit(0.85+0.15*tier);
-  if(tier>=2) setTimeout(()=>gunshot(0.9),90);
+  jackpotHit(0.75+0.1*tier);
+  // The follow-ups are scheduled on the AUDIO clock, not with setTimeout. A
+  // timer fires on wall time, and against an offline render -- or a busy main
+  // thread -- it lands wherever the render clock happens to be, so the same
+  // fanfare measured -5.2 dBFS in one render and -1.2 in the next. The gunshot
+  // also scales with the tier: at a flat 0.9 it put tiers 2-4 at -0.3 dBFS,
+  // all the same height, so no tier sounded bigger than the one below.
+  if(tier>=2) gunshot(0.07*(tier-1),0.09);
   const notes=[261.6,392.0,523.3,659.3,784.0,1046.5];
   for(let i=0;i<notes.length;i++){
     const t=c.currentTime+0.16+i*0.085;
@@ -2319,7 +2844,11 @@ function jackpotFanfare(tier){
     const g=env(lp,0.05,0.005,0.2,t); g.connect(busGain); g.connect(verbSend);
     o.start(t); o.stop(t+0.28);
   }
-  for(let s=1;s<strikes;s++) setTimeout(()=>jackpotHit(0.7+0.2*s), 620*s);
+  // Repeat strikes ring at the same partials as the first hit while its 1.7s
+  // tail is still sounding, so they add almost coherently: at 0.72 the second
+  // strike alone lifted tier 2 by 5 dB, into the limiter, level with tiers 3
+  // and 4. More strikes, not louder ones, is what makes a bigger tier bigger.
+  for(let s=1;s<strikes;s++) jackpotHit(0.42+0.1*s, 0.62*s);
 }
 /* The Lion's Crown. Not jackpotFanfare(4) -- that is the sound of a big COIN
    win one notch up, and this is not a coin win at all. Three moves synthesis
@@ -2385,13 +2914,17 @@ function lionsCrownFanfare(){
    Rendered straight into a buffer -- for plucks this short that is cheaper and
    more accurate than wiring a DelayNode feedback loop per note. */
 function pluck(freq,dur,gain,bright,x,when){
-  if(muted||sfxOff) return;
+  if(muted||(sfxOff&&!curDest)) return;
   const c=ac(), sr=c.sampleRate;
   const n=Math.max(1,Math.floor(sr/freq));            // delay line = one period
   const len=Math.floor(sr*dur);
   const buf=c.createBuffer(1,len,sr), d=buf.getChannelData(0);
   const line=new Float32Array(n);
-  for(let i=0;i<n;i++) line[i]=Math.random()*2-1;     // pluck excitation
+  // Seeded excitation, for the same reason as noiseBuffer: a pluck excited by
+  // fresh random noise peaks at a different height every time, and the Lion's
+  // Crown -- a cascade of them -- moved 0.7 dB between identical renders.
+  let sd=0x85EBCA6B^Math.round(freq*16);
+  for(let i=0;i<n;i++){ sd^=sd<<13; sd^=sd>>>17; sd^=sd<<5; line[i]=((sd>>>0)/4294967296)*2-1; }
   // Feedback just under 1 sustains; the two-tap average is the lowpass that
   // makes the top harmonics die first, which is what reads as "string".
   const damp=bright==null?0.5:bright, fb=0.996;
@@ -2418,9 +2951,9 @@ function pluck(freq,dur,gain,bright,x,when){
 }
 
 /* A gunshot: crack, body, and a tail that decays into the room. */
-function gunshot(power){
+function gunshot(power,at){
   if(muted||sfxOff) return;
-  const c=ac(), t=c.currentTime, p=power==null?1:power;
+  const c=ac(), t=c.currentTime+(at||0), p=power==null?1:power;
   const crack=c.createBufferSource(); crack.buffer=noiseBuffer(0.09);
   const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
   crack.connect(hp);
@@ -2475,12 +3008,12 @@ function kickDrum(t,g){
   const o=c.createOscillator(); o.type="sine";
   o.frequency.setValueAtTime(150,t);
   o.frequency.exponentialRampToValueAtTime(46,t+0.09);
-  env(o,g,0.002,0.16,t).connect(busGain);
+  env(o,g,0.002,0.16,t).connect(dest());
   o.start(t); o.stop(t+0.2);
   const click=c.createBufferSource(); click.buffer=sharedNoise(); click.loop=true;
   const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=4000;
   click.connect(hp);
-  env(hp,g*0.25,0.001,0.02,t).connect(busGain);
+  env(hp,g*0.25,0.001,0.02,t).connect(dest());
   click.start(t); click.stop(t+0.03);
 }
 function snareDrum(t,g){
@@ -2489,12 +3022,12 @@ function snareDrum(t,g){
   const n=c.createBufferSource(); n.buffer=sharedNoise(); n.loop=true;
   const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1900; bp.Q.value=0.7;
   n.connect(bp);
-  const ng=env(bp,g,0.001,0.11,t); ng.connect(busGain); ng.connect(verbSend);
+  const ng=env(bp,g,0.001,0.11,t); ng.connect(dest()); ng.connect(verbSend);
   n.start(t); n.stop(t+0.13);
   const o=c.createOscillator(); o.type="triangle";
   o.frequency.setValueAtTime(230,t);
   o.frequency.exponentialRampToValueAtTime(160,t+0.06);
-  env(o,g*0.6,0.001,0.07,t).connect(busGain);
+  env(o,g*0.6,0.001,0.07,t).connect(dest());
   o.start(t); o.stop(t+0.09);
 }
 function hatTick(t,g,open){
@@ -2503,7 +3036,7 @@ function hatTick(t,g,open){
   const n=c.createBufferSource(); n.buffer=sharedNoise(); n.loop=true;
   const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=6800;
   n.connect(hp);
-  env(hp,g,0.001,open?0.20:0.035,t).connect(busGain);
+  env(hp,g,0.001,open?0.20:0.035,t).connect(dest());
   n.start(t); n.stop(t+(open?0.24:0.05));
 }
 
@@ -2528,13 +3061,13 @@ function lionRoar(gain,when){
     const flg=c.createGain(); flg.gain.value=0.45;
     fl.connect(flg).connect(am.gain); fl.start(t); fl.stop(t+1.3);
     o.connect(lp).connect(am);
-    const eg=env(am,g0,0.05,1.2,t); eg.connect(busGain); eg.connect(verbSend);
+    const eg=env(am,g0,0.05,1.2,t); eg.connect(dest()); eg.connect(verbSend);
     o.start(t); o.stop(t+1.3);
   }
   const n=c.createBufferSource(); n.buffer=sharedNoise(); n.loop=true;
   const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1300; bp.Q.value=0.6;
   n.connect(bp);
-  env(bp,g0*0.5,0.06,1.1,t).connect(busGain);
+  env(bp,g0*0.5,0.06,1.1,t).connect(dest());
   n.start(t); n.stop(t+1.2);
 }
 
@@ -2627,13 +3160,13 @@ function whistle(freq,dur,gain,when){
   g.gain.exponentialRampToValueAtTime(gain,t+0.05);
   g.gain.setValueAtTime(gain,t+dur*0.6);
   g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-  o.connect(g); g.connect(busGain); g.connect(verbSend);
+  o.connect(g); g.connect(dest()); g.connect(verbSend);
   o.start(t); o.stop(t+dur+0.05);
   // breath
   const air=c.createBufferSource(); air.buffer=sharedNoise(); air.loop=true;
   const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=freq*2; bp.Q.value=9;
   air.connect(bp);
-  const ag=env(bp,gain*0.22,0.05,dur,t); ag.connect(busGain);
+  const ag=env(bp,gain*0.22,0.05,dur,t); ag.connect(dest());
   air.start(t); air.stop(t+dur+0.05);
 }
 
@@ -2646,7 +3179,7 @@ function chordStab(tones,when,gain){
     o.frequency.setValueAtTime(f,when);
     const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1900;
     o.connect(lp);
-    const g=env(lp,gain,0.02,0.5,when); g.connect(busGain); g.connect(verbSend);
+    const g=env(lp,gain,0.02,0.5,when); g.connect(dest()); g.connect(verbSend);
     o.start(when); o.stop(when+0.6);
   }
 }
@@ -2669,6 +3202,10 @@ function chordStab(tones,when,gain){
    rhythmScheduleAhead() to lay out bars synchronously -- the render measures
    the same code the player hears, not a copy of it. */
 function scheduleRhythmStep(t){
+  curDest=musicBus();
+  try{ scheduleRhythmStepInner(t); } finally { curDest=null; }
+}
+function scheduleRhythmStepInner(t){
   const c=ac();
   const step=rhythm.step, slot=step%8, bar=Math.floor(step/8)%16, cbar=bar%4;
   const hot=musicIntense, ch=CHORDS[cbar];
@@ -2720,6 +3257,9 @@ function rhythmScheduleAhead(sec){
 function startRhythm(){
   if(rhythm||muted||musicOff) return;
   const c=ac();
+  // Starting the bed means play has started: bring the score out of IDLE, or
+  // the bed would run on a bus faded to silence.
+  if(musicLayer==="idle") setMusicLayer("spin");
   rhythm={bpm:RHYTHM_BASE_BPM, target:RHYTHM_BASE_BPM, next:c.currentTime+0.08,
           step:0, timer:null, stats:{chants:0,roars:0}};
   const tick=()=>{
@@ -2768,7 +3308,7 @@ function startMusic(){
      to hear -- competes with a drone instead of landing on top of it. */
   if(!musicDuck){ musicDuck=c.createGain(); musicDuck.gain.value=1; musicDuck.connect(busGain); }
   filt.connect(bus).connect(musicDuck);
-  bus.gain.linearRampToValueAtTime(0.026,c.currentTime+3.5);
+  bus.gain.linearRampToValueAtTime(LAYERS[musicLayer].drone,c.currentTime+3.5);
   music={bus,voices,lfo,filt};
 }
 /* Re-key the running bed when the game changes, by RAMP rather than restart --
@@ -2794,6 +3334,30 @@ function retuneMusic(){
    how they know when it has ended. Same drone, lifted a fifth with the filter
    opened and a faster sweep under it. */
 let musicIntense=false;
+/* ---- adaptive score ----------------------------------------------------------
+   Five layers, crossfaded over a second, after the reference's sound system:
+   IDLE when nobody has spun for ten seconds (the drone alone, low), SPIN while
+   play is running (drone and bed), WIN while a result counts (the bed a touch
+   forward), BONUS through a free-spin round (the lifted key the round already
+   had), and BIGWIN under the big-win screen, where the bed drops back and
+   steps up in tempo with every tier the count passes. */
+const LAYERS={idle:{drone:0.016,rhythm:0},  spin:{drone:0.026,rhythm:1},
+              win:{drone:0.030,rhythm:1.12}, bonus:{drone:0.042,rhythm:1},
+              bigwin:{drone:0.022,rhythm:0.35}};
+let musicLayer="idle", lastSpinAt=0;
+function setMusicLayer(name){
+  if(!LAYERS[name]) return;
+  musicLayer=name;
+  if(!actx) return;
+  const t=actx.currentTime, L=LAYERS[name];
+  const ramp=(param,to)=>{ param.cancelScheduledValues(t); param.setValueAtTime(Math.max(param.value,0.0002),t);
+                           param.linearRampToValueAtTime(Math.max(to,0.0001),t+1.0); };
+  if(music) ramp(music.bus.gain,L.drone);
+  if(rhythmBus) ramp(rhythmBus.gain,L.rhythm);
+}
+setInterval(()=>{
+  if(!busy&&musicLayer!=="idle"&&lastSpinAt&&performance.now()-lastSpinAt>10000) setMusicLayer("idle");
+},1000);
 function setMusicIntensity(on){
   if(!music||musicIntense===!!on) return;
   musicIntense=!!on;
@@ -2809,9 +3373,7 @@ function setMusicIntensity(on){
   });
   music.lfo.frequency.cancelScheduledValues(t);
   music.lfo.frequency.linearRampToValueAtTime(on?0.16:0.045,t+0.7);
-  music.bus.gain.cancelScheduledValues(t);
-  music.bus.gain.setValueAtTime(Math.max(music.bus.gain.value,0.0002),t);
-  music.bus.gain.linearRampToValueAtTime(on?0.042:0.026,t+0.7);
+  setMusicLayer(on?"bonus":"spin");
 }
 function stopMusic(){
   if(!music) return;
@@ -3097,7 +3659,33 @@ let hl={n:RARITY_RANKS,mode:"rarity",card:null,mult:1,risk:0,live:false,hist:[],
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString("en-US");
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const MAXWIN={pride:2000,cubcluster:2500,traitvault:5000};
+const MAXWIN={pride:2000,cubcluster:2500,traitvault:5000,
+              "pride-high":5000,"cubcluster-high":5000,"traitvault-high":10000};
+
+/* ---- volatility profile ------------------------------------------------------
+   Each slot has two profiles. LOW is the original game, verified as it was. HIGH
+   is the reference's distribution -- multipliers, retriggers, a bonus about one
+   spin in 300 to 450 and max wins of 5,000x and up -- and is a separate game id
+   with its own HMAC stream. The tab picks the game, the profile picks which of
+   its two engines plays it. */
+let PROFILE="HIGH";
+function eng(g){
+  g=g||game;
+  if(g==="hilo") return "hilo";
+  const h=g+"-high";
+  return PROFILE==="HIGH"&&CONF[h] ? h : g;
+}
+/* The DISPLAYED grid. The maths keeps REELS/ROWS for its 5x4 games; the
+   presentation reads these, which follow the engine on screen. */
+let GR=REELS, GH=ROWS;
+function setGrid(){
+  const big=eng()==="cubcluster-high";
+  GR=big?C7:REELS; GH=big?C7:ROWS;
+  const st=document.documentElement.style;
+  st.setProperty("--reels",GR); st.setProperty("--rows",GH);
+}
+function buyPrice(e){ return HIGH_BUY[e]!==undefined ? HIGH_BUY[e] : BUY_PRICE[e]; }
+function anteStake(e){ return HIGH_ANTE[e] ? HIGH_ANTE[e].stake : e==="pride" ? ANTE.pride.stake : undefined; }
 
 /* ---- market rules and player settings --------------------------------------
    One object decides what this market permits, so a rule is switched in one
@@ -3136,7 +3724,12 @@ function railPx(){
   if(window.innerWidth<=520) return RAIL_PHONE+4;
   return Math.ceil(Math.min(74, Math.max(RAIL_MIN, window.innerWidth*0.056)) + 4);
 }
-function cellPx(){
+/* The cell size in force. syncCell computes it, and for a bigger board shrinks
+   it until the spin button is on screen; everything that draws reads it from
+   here, so the canvas reels and the DOM board can never disagree about it. */
+let cellNow=0;
+function cellPx(){ return cellNow||idealCellPx(); }
+function idealCellPx(){
   // Constrained by BOTH axes: width alone gives ~183px cells on a desktop,
   // which pushes the reels past the fold and hides the controls.
   //
@@ -3145,16 +3738,40 @@ function cellPx(){
   // computed.
   const host=$("screen")||$("reels");
   const w=host.clientWidth-railPx()*2-14;
-  const byWidth=(w-8)/5*0.96;
-  const byHeight=(window.innerHeight*0.52)/ROWS;
   // The floor used to be a flat 44, which on a 320px handset was larger than
   // the width available and forced the overflow back regardless of the reserve
   // above. Below that the reels give way rather than the rail: a symbol a few
   // pixels smaller still reads, a multiplier sliced in half does not.
-  return Math.max(Math.min(44,Math.floor(byWidth)),Math.round(Math.min(byWidth,byHeight,118)));
+  const fit=(cols,rows)=>{
+    // A short landscape phone gives the board the whole left of the cabinet,
+    // so it may use far more of the height than a portrait layout can.
+    const frac=(window.innerWidth>window.innerHeight&&window.innerHeight<=500)?0.72:0.52;
+    const byWidth=(w-8)/cols*0.96, byHeight=(window.innerHeight*frac)/rows;
+    // The 44px floor protects a 5x4 board from shrinking under the multiplier
+    // rail; on a 7x7 board it overrode the height limit and pushed seven rows
+    // off a landscape phone, so a bigger board floors at 30.
+    const floor=rows>ROWS?30:44;
+    return Math.max(Math.min(floor,Math.floor(byWidth)),Math.round(Math.min(byWidth,byHeight,118)));
+  };
+  return fit(GR,GH);
 }
 function syncCell(){
-  document.documentElement.style.setProperty("--cell",cellPx()+"px");
+  cellNow=idealCellPx();
+  document.documentElement.style.setProperty("--cell",cellNow+"px");
+  // A 7x7 board sized by width alone stands 23px taller than the 5x4 one on a
+  // 320x568 phone, and the 5x4 layout leaves the spin button only 13px above
+  // the fold. So a bigger board gives way, a pixel at a time, until the spin
+  // button is on screen -- measured against the real layout, never below 30px.
+  const sp=$("spin");
+  const shortLandscape=window.innerWidth>window.innerHeight&&window.innerHeight<=500;
+  if((GH>ROWS||shortLandscape)&&sp&&sp.offsetParent){
+    const over=()=>sp.getBoundingClientRect().bottom>window.innerHeight
+                 ||$("reels").getBoundingClientRect().bottom>window.innerHeight;
+    for(let i=0;i<40&&cellNow>30&&over();i++){
+      cellNow--;
+      document.documentElement.style.setProperty("--cell",cellNow+"px");
+    }
+  }
   // The rail reads its row height from --cell, so it only needs rebuilding if
   // it has not been built yet; the badges re-align themselves on resize.
   if($("multRail") && !$("multRail").children.length) buildMultRail();
@@ -3188,20 +3805,52 @@ function startBlinks(){
 function symCell(sym,g){
   const c=document.createElement("div");
   c.className="sym "+(SYM[sym]?SYM[sym].cls:"");
+  c.dataset.sym=SYM[sym]?SYM[sym].id:"";
+  c.dataset.state="idle";
   c.innerHTML=symbolHTML(sym,g);
   return c;
 }
+/* ---- symbol states ------------------------------------------------------------
+   Every symbol has four states: IDLE (the ambient bob, blink, tongue and mane,
+   always on), LAND (the settle as its reel stops), WIN (the rear-up, the mane
+   swing and the specular sweep) and EXPLODE (the burst before a tumble). They
+   used to be classes applied ad hoc at five call sites; they go through here
+   now, so the state is recorded on the cell and there is ONE seam to animate.
+
+   That seam is the hook for skeletal animation. A Spine runtime -- or anything
+   else -- registers `window.LazyArcadeAnimator = { play(el, state, symbolId) }`
+   and returns true for the states it handles; the CSS state is then skipped
+   for that cell. Return false, or register nothing, and the built-in animation
+   plays. The art is the operator's, so commissioned skeletons drop in here
+   without the play loop changing. */
+const SYMBOL_STATES=["idle","land","win","explode"];
+const STATE_CLASS={land:"settle",win:"pop",explode:"burst"};
+function symState(el,state){
+  if(!el||!SYMBOL_STATES.includes(state)) return;
+  el.dataset.state=state;
+  const hook=window.LazyArcadeAnimator;
+  if(hook&&typeof hook.play==="function"){
+    let took=false;
+    try{ took=hook.play(el,state,el.dataset.sym)===true; }catch(e){ took=false; }
+    if(took){ el.classList.remove("settle","pop","burst"); return; }
+  }
+  el.classList.remove("settle","pop","burst");
+  if(state==="idle") return;
+  void el.offsetWidth;
+  el.classList.add(STATE_CLASS[state]);
+}
 function buildReels(grid){
   const host=$("reels"); host.innerHTML="";
-  for(let r=0;r<REELS;r++){
+  for(let r=0;r<GR;r++){
     const reel=document.createElement("div"); reel.className="reel";
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++) strip.appendChild(symCell(grid[r][row]));
+    for(let row=0;row<GH;row++) strip.appendChild(symCell(grid[r][row]));
     reel.appendChild(strip); host.appendChild(reel);
   }
 }
 function randomSym(reelIdx){
-  const st=CONF[game==="hilo"?"pride":game].strips[reelIdx];
+  const e=game==="hilo"?"pride":eng();
+  const st=CONF[e].strips[Math.min(reelIdx,CONF[e].strips.length-1)];
   return st[Math.floor(Math.random()*st.length)];
 }
 
@@ -3346,14 +3995,15 @@ function canvasSpinAll(grid,plan,onLand){
 
   const cell=cellPx();
   const cols=reels.map((el,r)=>{
+    if(plan[r].held) return {r, held:true, landed:true};   // stays where it is
     const box=el.getBoundingClientRect();
     const m=reelMotion(plan[r].stop,plan[r].antic,plan[r].speed,plan[r].ov);
     // FINAL COLUMN FIRST, ribbon beneath it -- the order that makes the scroll
     // run the right way and keeps a reel that has not moved yet from sitting
     // parked on the result.
     const seq=[];
-    for(let row=0;row<ROWS;row++) seq.push(grid[r][row]);
-    const len=Math.ceil(m.D)+ROWS+2;
+    for(let row=0;row<GH;row++) seq.push(grid[r][row]);
+    const len=Math.ceil(m.D)+GH+2;
     while(seq.length<len) seq.push(randomSym(r));
     el.classList.add("spinning");
     return {r, x:box.left-hRect.left, w:box.width, y:box.top-hRect.top,
@@ -3496,7 +4146,7 @@ function drawColumn(c,cell){
   const steps=(reduceMotion||batterySaver)?1:Math.max(1,Math.min(4,Math.round(speed/(cell*0.5))));
   const stretch=(!reduceMotion&&steps>1)?Math.min(2.6,1+speed/(cell*1.5)):1;
   ctx.save();
-  ctx.beginPath(); ctx.rect(c.x,c.y,c.w,cell*ROWS); ctx.clip();
+  ctx.beginPath(); ctx.rect(c.x,c.y,c.w,cell*GH); ctx.clip();
   const k0=Math.floor(c.top/cell);
   const x=c.x+(c.w-size)/2;
 
@@ -3507,9 +4157,9 @@ function drawColumn(c,cell){
   // signal and lives in CSS.
   ctx.globalAlpha=1;
   const tile=tileSprite(Math.round(c.w-6),Math.round(cell-6));
-  for(let k=k0;k<=k0+ROWS;k++){
+  for(let k=k0;k<=k0+GH;k++){
     const y=c.y+k*cell-c.top;
-    if(y>c.y+cell*ROWS||y+cell<c.y) continue;
+    if(y>c.y+cell*GH||y+cell<c.y) continue;
     if(tile) ctx.drawImage(tile,c.x+3,y+3);
   }
   const h=size*stretch, dy=(h-size)/2;
@@ -3519,11 +4169,11 @@ function drawColumn(c,cell){
     // the symbol actually is this frame -- carrying more of it, so the streak
     // trails behind the symbol instead of smearing evenly either side of it.
     ctx.globalAlpha=(stamp===0?1.5:0.7)/steps;
-    for(let k=k0;k<=k0+ROWS;k++){
+    for(let k=k0;k<=k0+GH;k++){
       const sp=sprite(c.seq[Math.max(0,Math.min(c.seq.length-1,k))],game,size);
       if(!sp) continue;
       const y=c.y+k*cell-c.top+lag;
-      if(y>c.y+cell*ROWS||y+cell<c.y) continue;
+      if(y>c.y+cell*GH||y+cell<c.y) continue;
       ctx.drawImage(sp,x,y+pad-dy,size,h);
     }
   }
@@ -3537,7 +4187,7 @@ function spinReel(reelEl,finalCol,reelIdx,duration,delay){
   return new Promise(resolve=>{
     const cell=cellPx(), BUF=turbo?6:14;
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++) strip.appendChild(symCell(finalCol[row]));
+    for(let row=0;row<GH;row++) strip.appendChild(symCell(finalCol[row]));
     for(let i=0;i<BUF;i++) strip.appendChild(symCell(randomSym(reelIdx)));
     reelEl.innerHTML=""; reelEl.appendChild(strip);
     reelEl.classList.add("blur");
@@ -3555,10 +4205,10 @@ function spinReel(reelEl,finalCol,reelIdx,duration,delay){
       thud(reelIdx);
       if(!turbo&&!reduceMotion){
         const cells=strip.querySelectorAll(".sym");
-        for(let i=0;i<ROWS&&i<cells.length;i++){
+        for(let i=0;i<GH&&i<cells.length;i++){
           const c=cells[i];
           c.style.animationDelay=(i*22)+"ms";
-          c.classList.add("settle");
+          symState(c,"land");
         }
       }
       resolve();
@@ -3566,7 +4216,12 @@ function spinReel(reelEl,finalCol,reelIdx,duration,delay){
   });
 }
 
-async function animateSpin(grid,scatterCount){
+/* `opts.held` lists reels that do not spin this time -- Pride high's crowned
+   reels, which stay crowned for the rest of the bonus and so stay STILL while
+   the others turn. `opts.crownMin` is how many crowned reels it takes to start
+   the crown tease. */
+async function animateSpin(grid,scatterCount,opts={}){
+  const held=new Set(opts.held||[]);
   const host=$("reels");
   const reels=[...host.children];
   startReelLoop();
@@ -3576,9 +4231,9 @@ async function animateSpin(grid,scatterCount){
   // spins. That way landing is a reveal rather than a rebuild, and everything
   // downstream -- win marks, the row slam, orb targets -- addresses real cells
   // that have been in the document since the spin began.
-  for(let r=0;r<REELS;r++){
+  for(let r=0;r<GR;r++){
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++) strip.appendChild(symCell(grid[r][row]));
+    for(let row=0;row<GH;row++) strip.appendChild(symCell(grid[r][row]));
     reels[r].innerHTML=""; reels[r].appendChild(strip);
   }
 
@@ -3598,9 +4253,9 @@ async function animateSpin(grid,scatterCount){
   //
   // The drag escalates. A third scatter showing has to buy more rope than the
   // second, or the biggest moment in the game is paced like the smallest.
-  const antic=new Array(REELS).fill(0);
+  const antic=new Array(GR).fill(0);
   if(!turbo && scatterCount>=2){
-    for(let r=2;r<REELS;r++){
+    for(let r=2;r<GR;r++){
       const seen=countScatUpTo(grid,r);
       // About 1.5s of extra rope per teasing reel, as the reference engine
       // gives it, and more for every scatter already showing.
@@ -3615,14 +4270,19 @@ async function animateSpin(grid,scatterCount){
   // justifies them to land. Outranks the scatter drag where both apply: a
   // third scatter buys free spins, a fifth crown buys the Lion.
   if(!turbo && game==="pride"){
-    for(let r=2;r<REELS;r++){
+    // In the high profile's bonus, crowns stick: two locked crowns would tease
+    // every remaining spin of the round. There the tease waits for a third.
+    const crownMin=opts.crownMin||2;
+    for(let r=2;r<GR;r++){
+      if(held.has(r)) continue;
       const seen=crownedUpTo(grid,r);
-      if(seen>=2) antic[r]=Math.max(antic[r],1500+(seen-2)*800);
+      if(seen>=crownMin) antic[r]=Math.max(antic[r],1500+(seen-crownMin)*800);
     }
   }
-  const anticStarted=new Array(REELS).fill(false);
+  for(const r of held) antic[r]=0;
+  const anticStarted=new Array(GR).fill(false);
   const beginAnticipation=r=>{
-    if(r>=REELS||!antic[r]||anticStarted[r]) return;
+    if(r>=GR||!antic[r]||anticStarted[r]) return;
     anticStarted[r]=true;
     reels[r].classList.add("anticipate");
     host.classList.add("anticipating");
@@ -3636,14 +4296,14 @@ async function animateSpin(grid,scatterCount){
   // being spent on one. Its slowdown starts when the reel before it lands --
   // the earliest honest moment -- which is `antic` below.
   const plan=[]; let extra=0;
-  for(let r=0;r<REELS;r++){
+  for(let r=0;r<GR;r++){
     extra+=antic[r];
-    plan.push({stop:base+r*step+extra, antic:null, speed:tm.speed, ov:tm.ov});
+    plan.push({stop:base+r*step+extra, antic:null, speed:tm.speed, ov:tm.ov, held:held.has(r)});
     if(!turbo) setTimeout(()=>blip(760+r*40,.04,"square",.025),r*step);
   }
-  for(let r=1;r<REELS;r++) if(antic[r]) plan[r].antic=plan[r-1].stop;
+  for(let r=1;r<GR;r++) if(antic[r]) plan[r].antic=plan[r-1].stop;
   // A market with a minimum spin time stretches the whole plan to meet it.
-  const longest=plan[REELS-1].stop;
+  const longest=plan[GR-1].stop;
   if(MARKET.minSpinMs>longest){
     const d=MARKET.minSpinMs-longest;
     for(const p of plan){ p.stop+=d; if(p.antic!=null) p.antic+=d; }
@@ -3667,9 +4327,9 @@ async function animateSpin(grid,scatterCount){
     beginAnticipation(r+1);
     if(!turbo&&!reduceMotion){
       const cells=reels[r].querySelectorAll(".sym");
-      for(let i=0;i<ROWS&&i<cells.length;i++){
+      for(let i=0;i<GH&&i<cells.length;i++){
         cells[i].style.animationDelay=(i*22)+"ms";
-        cells[i].classList.add("settle");
+        symState(cells[i],"land");
       }
     }
   };
@@ -3686,7 +4346,8 @@ async function animateSpin(grid,scatterCount){
     // without canvas quietly lost the landing entirely, and would now lose the
     // anticipation handoff with it.
     const jobs=[];
-    for(let r=0;r<REELS;r++){
+    for(let r=0;r<GR;r++){
+      if(plan[r].held) continue;
       jobs.push(spinReel(reels[r],grid[r],r,plan[r].stop,0)
         .then(()=>onLand(r)));
     }
@@ -3697,9 +4358,9 @@ async function animateSpin(grid,scatterCount){
 }
 function crownedUpTo(grid,upto){
   let n=0;
-  for(let r=0;r<upto&&r<REELS;r++){
+  for(let r=0;r<upto&&r<GR;r++){
     let all=true;
-    for(let row=0;row<ROWS;row++) if(grid[r][row]!==P1){ all=false; break; }
+    for(let row=0;row<GH;row++) if(grid[r][row]!==P1){ all=false; break; }
     if(all) n++;
   }
   return n;
@@ -3714,7 +4375,7 @@ function shakeScreen(power){
 }
 function countScatUpTo(grid,upto){
   let n=0;
-  for(let r=0;r<upto;r++) for(let row=0;row<ROWS;row++) if(grid[r][row]===SCAT) n++;
+  for(let r=0;r<upto;r++) for(let row=0;row<GH;row++) if(grid[r][row]===SCAT) n++;
   return n;
 }
 
@@ -3800,7 +4461,7 @@ async function showWinLines(wins,bet){
   label.className="lineLabel"; $("screen").appendChild(label);
   for(const w of top){
     const cells=[];
-    for(let r=0;r<REELS;r++){
+    for(let r=0;r<GR;r++){
       const c=reels[r]&&reels[r].querySelectorAll(".sym")[w.line[r]];
       if(c) cells.push({c,on:r<w.count});
     }
@@ -3853,15 +4514,15 @@ function slamRow(row,val){
    the same --cell height the reels use rather than being positioned by hand. */
 function buildMultRail(){
   const rail=$("multRail"); rail.innerHTML="";
-  for(let row=0;row<ROWS;row++){
+  for(let row=0;row<GH;row++){
     const d=document.createElement("div"); d.className="mrow";
     const b=document.createElement("span"); b.className="mbadge"; b.textContent="×1";
     d.appendChild(b); rail.appendChild(d);
   }
 }
-function paintMultRail(rowMult,bumped,paidRows){
+function paintMultRail(rowMult,bumped,paidRows,cap=ROW_MULT_CAP){
   const badges=$("multRail").querySelectorAll(".mbadge");
-  for(let row=0;row<ROWS;row++){
+  for(let row=0;row<GH;row++){
     const b=badges[row]; if(!b) continue;
     const v=rowMult?rowMult[row]:0;
     b.textContent="×"+(v||1);
@@ -3875,7 +4536,7 @@ function paintMultRail(rowMult,bumped,paidRows){
     // and light the row on the grid to match
     // Heat is the multiplier's share of the ceiling, on a log curve so the
     // early steps are still visible: x2 already reads hot, x25 reads molten.
-    const heat = v>0 ? Math.min(1, Math.log(v)/Math.log(ROW_MULT_CAP)) : 0;
+    const heat = v>0 ? Math.min(1, Math.log(v)/Math.log(cap)) : 0;
     for(const reel of $("reels").children){
       const c=reel.querySelectorAll(".sym")[row];
       if(!c) continue;
@@ -3924,16 +4585,16 @@ async function flyOrbs(orbs){
    site was passing null into branches that could no longer fire. */
 function paintGrid(grid,marks){
   const host=$("reels"); const reels=[...host.children];
-  for(let r=0;r<REELS;r++){
+  for(let r=0;r<GR;r++){
     const strip=document.createElement("div"); strip.className="strip";
-    for(let row=0;row<ROWS;row++){
+    for(let row=0;row<GH;row++){
       const c=document.createElement("div");
       c.className="sym "+(SYM[grid[r][row]]?SYM[grid[r][row]].cls:"");
       c.innerHTML=symbolHTML(grid[r][row]);
       const key=r+":"+row;
       if(marks){
         if(marks.has(key)){
-          c.classList.add("pop");
+          symState(c,"win");
           // Left to right, the direction the lines pay in.
           c.style.animationDelay=(r*55)+"ms";
           const sym=grid[r][row];
@@ -4001,7 +4662,12 @@ function waitPress(ms){
 }
 /* Bonus screens wait in manual play. They close themselves after 3s in turbo,
    or under autoplay with Skip Screens on -- the convention for both. */
-function screenAutoMs(){ return (turbo||(autoLeft>0&&skipScreens)) ? 3000 : SCREEN_WAIT_MS; }
+function screenAutoMs(){
+  const auto=(turbo||(autoLeft>0&&skipScreens)) ? 3000 : Infinity;
+  // SCREEN_WAIT_MS is Infinity in play, so this is exactly the rule above; the
+  // browser gate shortens it so a bonus inside a long check does not cost 6s.
+  return Math.min(auto,SCREEN_WAIT_MS);
+}
 function hintText(){
   if(turbo||(autoLeft>0&&skipScreens)) return "continuing…";
   return matchMedia("(pointer: coarse)").matches ? "tap to continue" : "press anywhere to continue";
@@ -4034,6 +4700,7 @@ async function countTiers(amtEl,tierEl,amount,ctx,celebrate){
     shown=t; tierEl.textContent=WIN_TIERS[t-1].name;
     tierEl.classList.remove("up"); void tierEl.offsetWidth; tierEl.classList.add("up");
     jackpotFanfare(t); if(!quick()) coins(22+t*22,1.05+t*.08);
+    if(ctx.onTier) ctx.onTier(t);
   };
   skipRollup=false; const p0=presses;
   const cut=()=>skipRollup||abortRound||presses!==p0;
@@ -4063,7 +4730,13 @@ async function bigWin(amount,ctx){
   $("bannerBig").textContent=""; $("bannerAmt").textContent="0"; $("bannerSub").textContent="";
   b.classList.add("on");
   duckMusic(0.85,quick()?600:4000);
+  const back=musicLayer, bpm0=rhythm?rhythm.target:RHYTHM_BASE_BPM;
+  setMusicLayer("bigwin");
+  ctx.onTier=t=>setRhythmTempo(RHYTHM_FEATURE_BPM+8*t);
   await countTiers($("bannerAmt"),$("bannerBig"),amount,ctx,true);
+  ctx.onTier=null;
+  setRhythmTempo(bpm0);
+  setMusicLayer(back==="bigwin"?"spin":back);
   b.classList.toggle("epic",tierOf(amount/ctx.bet)>=4);
   $("bannerSub").textContent=`${(amount/ctx.bet).toFixed(1)}× your bet`;
   await waitPress(quick()?220:1700);        // hold the total; a press closes it early
@@ -4082,7 +4755,13 @@ async function presentResult(amount,ctx){
   const mult=amount/ctx.bet;
   if(mult>=WIN_TIERS[0].x){ await bigWin(amount,ctx); el.textContent=fmt(to); return; }
   winChime(Math.min(3,1+Math.floor(mult)));
-  await countUp(amount,mult,0,from);
+  // Small wins tick in three rising levels -- under 2x, under 5x, and up to the
+  // first big-win tier -- so the count says roughly how much before it lands.
+  const level=mult<2?0:mult<5?1:2;
+  const back=musicLayer;
+  setMusicLayer("win");
+  await countUp(amount,mult,level,from);
+  if(back!=="win") setMusicLayer(back==="bigwin"?"spin":back);
   if(mult>=5) coins(18,.9);
 }
 
@@ -4092,11 +4771,12 @@ async function presentResult(amount,ctx){
 function highlightWin(grid,marks){
   [...$("reels").children].forEach((reel,r)=>{
     reel.querySelectorAll(".sym").forEach((c,row)=>{
-      c.classList.remove("pop","dim","settle","burst");
+      c.classList.remove("dim");
+      symState(c,"idle");
       c.style.animationDelay="";
       if(!marks) return;
       if(marks.has(r+":"+row)){
-        void c.offsetWidth; c.classList.add("pop");
+        symState(c,"win");
         c.style.animationDelay=(r*55)+"ms";       // left to right, the way lines pay
         const sym=grid[r]&&grid[r][row];
         setTimeout(()=>{ if(c.isConnected&&sym!=null) shineSymbol(c,sym,760); }, r*55);
@@ -4105,7 +4785,7 @@ function highlightWin(grid,marks){
   });
 }
 /* The amount a board paid, over the symbols that paid it. */
-function floatWin(marks,amount){
+function floatWin(marks,amount,tag){
   if(!marks||!marks.size||amount<=0) return;
   const scr=$("screen"), sR=scr.getBoundingClientRect(), reels=[...$("reels").children];
   let x=0,y=0,n=0;
@@ -4116,7 +4796,7 @@ function floatWin(marks,amount){
   }
   if(!n) return;
   const el=document.createElement("div");
-  el.className="floatwin"; el.textContent=fmt(amount); el.setAttribute("aria-hidden","true");
+  el.className="floatwin"; el.textContent=fmt(amount)+(tag?"  "+tag:""); el.setAttribute("aria-hidden","true");
   el.style.left=(x/n-sR.left)+"px"; el.style.top=(y/n-sR.top)+"px";
   scr.appendChild(el);
   const dur=quick()?420:1150;
@@ -4162,7 +4842,7 @@ async function animateTumble(marks,nextGrid){
     if(marks&&marks.has(r+":"+row)) burst.push(c);
   }));
   if(burst.length){
-    burst.forEach(c=>{ c.classList.remove("pop","settle","dim"); void c.offsetWidth; c.classList.add("burst"); });
+    burst.forEach(c=>{ c.classList.remove("dim"); symState(c,"explode"); });
     blip(980,.05,"triangle",.03,1460);
     await nap(quick()?70:300);
   }
@@ -4170,10 +4850,10 @@ async function animateTumble(marks,nextGrid){
   reels.forEach((reel,r)=>{
     const strip=reel.querySelector(".strip"); if(!strip) return;
     const cells=[...strip.children], cleared=[];
-    for(let row=0;row<ROWS;row++) if(marks&&marks.has(r+":"+row)) cleared.push(row);
+    for(let row=0;row<GH;row++) if(marks&&marks.has(r+":"+row)) cleared.push(row);
     if(!cleared.length) return;
     const need=cleared.length, survivors=[];
-    for(let row=0;row<ROWS;row++) if(!cleared.includes(row)) survivors.push({el:cells[row],from:row});
+    for(let row=0;row<GH;row++) if(!cleared.includes(row)) survivors.push({el:cells[row],from:row});
     cleared.forEach(row=>cells[row]&&cells[row].remove());
     const fresh=[];
     for(let j=0;j<need;j++) fresh.push(symCell(nextGrid[r][j]));
@@ -4262,7 +4942,7 @@ async function featureOutro(amount,spins,ctx,name){
 }
 async function celebrateScatters(grid){
   const reels=[...$("reels").children]; let n=0;
-  for(let r=0;r<REELS;r++) for(let row=0;row<ROWS;row++)
+  for(let r=0;r<GR;r++) for(let row=0;row<GH;row++)
     if(grid[r][row]===SCAT){
       const c=reels[r]&&reels[r].querySelectorAll(".sym")[row];
       if(c){ c.classList.remove("dim","scat"); void c.offsetWidth; c.classList.add("scat"); }
@@ -4280,10 +4960,10 @@ async function celebrateScatters(grid){
 async function showWaysSweep(marks){
   if(turbo||reduceMotion||!marks||!marks.size) return;
   const reels=[...$("reels").children];
-  for(let r=0;r<REELS;r++){
+  for(let r=0;r<GR;r++){
     const cells=reels[r].querySelectorAll(".sym");
     let hit=false;
-    for(let row=0;row<ROWS;row++){
+    for(let row=0;row<GH;row++){
       if(marks.has(r+":"+row)&&cells[row]){
         hit=true;
         cells[row].classList.remove("wavehit"); void cells[row].offsetWidth;
@@ -4305,7 +4985,7 @@ async function showWaysSweep(marks){
    multiplier IS and how far it has come. */
 function paintTumbleLadder(step){
   const el=$("tumbleLadder");
-  if(step<0||game!=="cubcluster"){ el.classList.add("hidden"); return; }
+  if(step<0||eng()!=="cubcluster"){ el.classList.add("hidden"); return; }
   if(!el.children.length)
     el.innerHTML=LADDER_UI.map(v=>`<i>×${v}</i>`).join("");
   el.classList.remove("hidden");
@@ -4316,18 +4996,21 @@ function paintTumbleLadder(step){
 }
 const LADDER_UI=[1,2,3,5,8];   // mirrors LADDER in spinCluster; asserted by test
 
-function paintCrownReels(grid){
+function paintCrownReels(grid,held){
   const reels=$("reels").children;
-  for(let r=0;r<REELS;r++){
+  for(let r=0;r<GR;r++){
     const el=reels[r]; if(!el) continue;
     let all=true;
-    for(let row=0;row<ROWS;row++) if(!grid[r]||grid[r][row]!==P1){ all=false; break; }
+    for(let row=0;row<GH;row++) if(!grid[r]||grid[r][row]!==P1){ all=false; break; }
+    // A locked reel keeps its gold without the landing sweep replaying on
+    // every spin of the round.
+    if(all&&held&&held.includes(r)&&el.classList.contains("crowned")) continue;
     el.classList.remove("crowned");
     if(all){ void el.offsetWidth; el.classList.add("crowned"); }
   }
 }
 function clearCrownReels(){
-  for(const el of $("reels").children) el.classList.remove("crowned");
+  for(const el of $("reels").children) el.classList.remove("crowned","held");
 }
 
 /* The Lion's Crown. Not a bigger banner -- a different object, because it is
@@ -4439,10 +5122,13 @@ async function countUp(target,mult,tier,from=0){
 }
 
 /* ============================== play loop =============================== */
-function featureName(g){ return g==="traitvault"?"Lion's Share":"Free Spins"; }
+function featureName(g){ return /^traitvault/.test(g)?"Lion's Share":"Free Spins"; }
 function featureBlurb(g){
-  return g==="pride"?"every wild carries ×2"
-       : g==="traitvault"?"row multipliers stick and build":"multipliers build as you play";
+  return {pride:"every wild carries ×2",
+          traitvault:"row multipliers stick and build",
+          "pride-high":"crowns stick · wilds carry ×2, ×3 or ×5",
+          "cubcluster-high":"multiplier spots stay for the whole round",
+          "traitvault-high":"row multipliers stick and build to ×100"}[g]||"multipliers build as you play";
 }
 
 async function doSpin(){
@@ -4452,14 +5138,17 @@ async function doSpin(){
   // spin of an autoplay run -- which is how most of a session is played.
   ac(); startMusic(); startRhythm();
   const bet=+$("bet").value;
-  const buying=buyNext&&BUY_PRICE[game]!==undefined&&MARKET.buy;
-  const useAnte=anteOn&&game==="pride"&&!buying&&MARKET.ante;
+  const e0=eng();
+  const buying=buyNext&&buyPrice(e0)!==undefined&&MARKET.buy&&!anteOn;
+  const useAnte=anteOn&&anteStake(e0)!==undefined&&!buying&&MARKET.ante;
   // Stake is what the player actually pays: base bet, ante-loaded bet, or the
   // EV-neutral buy price. Session RTP is measured against this, not the bet.
-  const stake = buying ? bet*BUY_PRICE[game] : useAnte ? bet*ANTE.pride.stake : bet;
+  const stake = buying ? bet*buyPrice(e0) : useAnte ? bet*anteStake(e0) : bet;
   if(balance<stake){ autoLeft=0; buyNext=false; $("buy").setAttribute("aria-pressed","false");
                      flash("Out of credit"); return; }
   busy=true; abortRound=false; $("winOut").textContent="0";
+  lastSpinAt=performance.now();
+  if(musicLayer!=="bonus") setMusicLayer("spin");
   // During the round the spin button is the stop button.
   $("spin").classList.add("stop"); $("spin").setAttribute("aria-label","Stop");
   balance-=stake; nonce++; updateHud();
@@ -4468,19 +5157,18 @@ async function doSpin(){
   // derived a round that was never played.
   const g0=game;
 
-  if(useAnte&&!ANTE_STRIPS) ANTE_STRIPS=anteStrips();
-  const rng=makeRng(serverSeed,$("fClient").value,nonce,g0);
-  const out = buying ? buyFeature(rng,g0)
-            : g0==="pride" ? spinPride(rng,useAnte?ANTE_STRIPS:null)
-            : g0==="cubcluster" ? spinCluster(rng)
-            : spinVault(rng,vaultState);
+  // The ENGINE id seeds the stream: a high-profile round is a different game
+  // from its low-profile twin and verifies as one.
+  const mode=buying?"buy":useAnte?"ante":"spin";
+  const rng=makeRng(serverSeed,$("fClient").value,nonce,e0);
+  const out=playEngine(e0,rng,mode);
   if(buying){ buyNext=false; $("buy").setAttribute("aria-pressed","false"); }
   const winMult=out.base+out.feature, win=winMult*bet;
 
   // Presentation can be interrupted -- a game switch, an exception -- but the
   // round was decided the moment the stake was taken, so it is ALWAYS settled.
   let failure=null;
-  try{ await presentRound(out,{bet,stake,game:g0,shown:0}); }
+  try{ await presentRound(out,{bet,stake,game:g0,engine:e0,shown:0}); }
   catch(e){ failure=e; }
   finally{ resetRoundUi(); }
 
@@ -4492,7 +5180,7 @@ async function doSpin(){
   // The MODE the round was played in, not just its seed. A replay that reaches
   // for the plain spin function reproduces a different round for anything
   // bought or ante-loaded.
-  history.push({nonce,game:g0,client:$("fClient").value,bet:stake,win,mult:winMult,
+  history.push({nonce,game:g0,engine:e0,client:$("fClient").value,bet:stake,win,mult:winMult,
                 seed:hex(serverSeed),buy:!!buying,ante:!!useAnte,nft:!!out.nft,
                 fs:!!(out.frames&&out.frames.some(f=>f.fs))});
   if(history.length>200) history.shift();
@@ -4500,6 +5188,7 @@ async function doSpin(){
   $("winOut").textContent=fmt(win);   // the readout always ends on the exact round total
   updateHud();
   busy=false; $("spin").disabled=false;
+  lastSpinAt=performance.now();
   $("spin").classList.remove("stop"); $("spin").setAttribute("aria-label","Spin");
   if(failure) throw failure;
 }
@@ -4513,7 +5202,8 @@ async function presentRound(out,ctx){
   const fsStart=frames.findIndex(f=>f.fs);
   const baseEnd=fsStart<0?frames.length:fsStart;
   clearCrownReels();
-  paintTumbleLadder(ctx.game==="cubcluster"?0:-1);
+  clearOverlays();
+  paintTumbleLadder(ctx.engine==="cubcluster"?0:-1);
 
   if(baseEnd>0){
     ctx.tumbling=ctx.game==="cubcluster"; ctx.seqWon=0;
@@ -4534,12 +5224,12 @@ async function presentRound(out,ctx){
 
   if(fsStart>=0&&!abortRound){
     if(baseEnd>0) await celebrateScatters(frames[baseEnd-1].grid);
-    const g=ctx.game, awarded=frames[fsStart].fs.of;
+    const g=ctx.engine, awarded=frames[fsStart].fs.of;
     // The bed lifts with the announcement: the bonus starts when it is told.
     setMusicIntensity(true); setRhythmTempo(RHYTHM_FEATURE_BPM);
     await featureIntro(featureName(g),featureBlurb(g),awarded);
     featTotal=0;
-    if(g==="traitvault") paintMultRail([0,0,0,0],null);
+    if(ctx.game==="traitvault") paintMultRail([0,0,0,0],null);
     $("chipMode").textContent=featureName(g); $("chipMode").classList.add("live");
     ctx.tumbling=false;
     const played=await playFrames(frames,fsStart,frames.length,ctx,true);
@@ -4558,7 +5248,7 @@ async function presentRound(out,ctx){
    without it is the board a tumble left, and the cells fall into it. Returns
    how many free spins were played. */
 async function playFrames(frames,from,to,ctx,feat){
-  let spins=0;
+  let spins=0, lastSticky=null;
   for(let k=from;k<to;k++){
     if(abortRound) break;
     const f=frames[k], prev=frames[k-1];
@@ -4573,12 +5263,17 @@ async function playFrames(frames,from,to,ctx,feat){
       // round that cannot retrigger, three scatters pay a little and trigger
       // nothing, and dragging the reels for them would be a tease.
       const antic=(feat&&!f.retriggerable)?0:scatterCount(f.grid);
-      await animateSpin(f.grid,antic);
+      // Pride high: reels crowned earlier in the round are locked in place.
+      const held=lastSticky?lastSticky.map((s,r)=>s?r:-1).filter(r=>r>=0):[];
+      document.querySelectorAll("#reels .reel").forEach((el,r)=>el.classList.toggle("held",held.includes(r)));
+      await animateSpin(f.grid,antic,{held,crownMin:f.sticky?3:2});
+      if(f.sticky) lastSticky=f.sticky;
+      f._held=held;
     } else {
       await animateTumble(prev.marks,f.grid);
     }
     if(abortRound) break;
-    if(ctx.game==="pride") paintCrownReels(f.grid);
+    if(ctx.game==="pride") paintCrownReels(f.grid,f._held);
     await showBoard(f,ctx,feat);
     if(f.retrigger&&!abortRound) await showBanner(`+${f.retrigger} free spins`,0,"retriggered");
     if(f.capped&&!abortRound){ await showBanner("Max win",0,"the round ends here"); break; }
@@ -4590,17 +5285,24 @@ async function playFrames(frames,from,to,ctx,feat){
    paid -- shown over the winners and added to the running total. */
 async function showBoard(f,ctx,feat){
   const marks=f.marks&&f.marks.size?f.marks:null;
+  if(f.spots) paintSpots(f.spots,marks);
+  if(f.mults) paintWildMults(f.grid,f.mults);
   if(f.rowMult){
     await flyOrbs(f.orbs);
     const bumped=new Set((f.orbs||[]).map(o=>o.row));
-    paintMultRail(f.rowMult,bumped,f.paidRows);
+    paintMultRail(f.rowMult,bumped,f.paidRows,f.rowCap||ROW_MULT_CAP);
     if(f.orbs&&f.orbs.length) orbLand(f.orbs.length,Math.max(...f.orbs.map(o=>o.val)));
   }
   highlightWin(f.grid,marks);
-  if(ctx.game==="cubcluster"&&f.ladderStep!=null) paintTumbleLadder(f.ladderStep);
+  if(ctx.engine==="cubcluster"&&f.ladderStep!=null) paintTumbleLadder(f.ladderStep);
   const paid=(f.paid||0)*ctx.bet;
+  // Base-game orbs (Trait Vault high): they land with the board, and if it
+  // won they fly into the amount and multiply it -- the reference's rule.
+  if(f.baseOrbs&&f.baseOrbs.length) await showBaseOrbs(f,ctx,paid);
   if(paid>0){
-    floatWin(marks,paid);
+    // A spot-multiplied cluster says by how much, beside what it paid.
+    const m=f.clusters?Math.max(0,...f.clusters.map(c=>c.mult)):0;
+    floatWin(marks,paid,m>1?`×${m}`:"");
     if(feat){
       featTotal=(f.won!=null?f.won:0)*ctx.bet;
       setChip("featTotal",featTotal);
@@ -4613,6 +5315,76 @@ async function showBoard(f,ctx,feat){
   await nap(marks?(quick()?90:700):(quick()?30:200));
 }
 
+/* ---- high-profile overlays ----------------------------------------------------
+   Spots belong to CELLS, not symbols: a tumble moves the symbols and the spot
+   stays where it is. So they live in their own layer on each reel, beside the
+   strip rather than inside it, and only change when a board is shown. */
+function clearOverlays(){
+  document.querySelectorAll("#reels .spotmark, #screen .borb").forEach(e=>e.remove());
+}
+function paintSpots(spots,marks){
+  const reels=[...$("reels").children];
+  reels.forEach((reel,r)=>{
+    let layer=reel.querySelector(".spotlayer");
+    if(!layer){ layer=document.createElement("div"); layer.className="spotlayer"; layer.setAttribute("aria-hidden","true"); reel.appendChild(layer); }
+    for(let row=0;row<GH;row++){
+      const v=spots[r]?spots[r][row]:0;
+      let m=layer.children[row];
+      if(!m){ m=document.createElement("div"); m.className="spotmark"; m.style.top=`calc(var(--cell)*${row})`; layer.appendChild(m); }
+      m.className="spotmark"+(v===1?" marked":v>=2?" hot":"")+(marks&&marks.has(r+":"+row)&&v>=2?" firing":"");
+      m.textContent=v>=2?"×"+v:"";
+      m.style.setProperty("--heat",v>=2?Math.min(1,Math.log2(v)/7).toFixed(3):"0");
+    }
+  });
+}
+/* Pride high: the multiplier each wild carries, on the wild itself. */
+function paintWildMults(grid,mults){
+  const reels=[...$("reels").children];
+  reels.forEach((reel,r)=>reel.querySelectorAll(".sym").forEach((c,row)=>{
+    const old=c.querySelector(".wmult"); if(old) old.remove();
+    if(grid[r]&&grid[r][row]===WILD&&mults[r]&&mults[r][row]){
+      const b=document.createElement("span"); b.className="wmult"; b.setAttribute("aria-hidden","true");
+      b.textContent="×"+mults[r][row]; c.appendChild(b);
+    }
+  }));
+}
+/* Trait Vault high: base-game orbs land on their cells; a winning board pulls
+   them into the amount, which is multiplied by their sum. */
+async function showBaseOrbs(f,ctx,paid){
+  const scr=$("screen"), sR=scr.getBoundingClientRect(), reels=[...$("reels").children];
+  const els=[];
+  for(const o of f.baseOrbs){
+    const cell=reels[o.reel]&&reels[o.reel].querySelectorAll(".sym")[o.row]; if(!cell) continue;
+    const c=cell.getBoundingClientRect();
+    const el=document.createElement("div"); el.className="orb borb"; el.innerHTML=svgOrb(o.val);
+    scr.appendChild(el);
+    const b=el.getBoundingClientRect();
+    el.style.left=(c.left-sR.left+(c.width-b.width)/2)+"px";
+    el.style.top=(c.top-sR.top+(c.height-b.height)/2)+"px";
+    if(!quick()) el.animate([{transform:"scale(.3) rotate(-120deg)",opacity:0},{transform:"scale(1.15)",opacity:1,offset:.6},{transform:"scale(1)",opacity:1}],{duration:420,fill:"both"});
+    els.push(el);
+  }
+  orbLand(els.length,Math.max(...f.baseOrbs.map(o=>o.val)));
+  await nap(quick()?80:520);
+  if(paid>0&&f.lineWin>0){
+    // into the middle of the board, where the amount is about to appear
+    const host=$("reels").getBoundingClientRect();
+    const cx=host.left+host.width/2-sR.left, cy=host.top+host.height/2-sR.top;
+    await Promise.all(els.map((el,i)=>{
+      const b=el.getBoundingClientRect();
+      const dx=cx-(b.left-sR.left+b.width/2), dy=cy-(b.top-sR.top+b.height/2);
+      if(quick()){ el.remove(); return Promise.resolve(); }
+      const a=el.animate([{transform:"translate(0,0) scale(1)"},{transform:`translate(${dx}px,${dy}px) scale(.4)`,opacity:.9}],
+                         {duration:460,delay:i*70,easing:"cubic-bezier(.35,.02,.2,1)",fill:"forwards"});
+      return new Promise(r=>{ a.onfinish=()=>{ el.remove(); r(); }; });
+    }));
+    showBanner(`×${f.orbSum}`,0,`orbs multiply the win`);
+    await nap(quick()?100:900);
+  } else {
+    els.forEach(el=>el.remove());
+  }
+}
+
 function resetRoundUi(){
   for(const id of ["chipFS","chipFeat","chipTumble"]){
     const c=$(id); if(c){ c.classList.add("hidden"); c.classList.remove("big","bump"); }
@@ -4623,6 +5395,7 @@ function resetRoundUi(){
   $("banner").classList.remove("on","epic");
   document.querySelectorAll("#screen .roundcard, #screen .floatwin").forEach(e=>e.remove());
   $("reels").classList.remove("blown");
+  document.querySelectorAll("#reels .reel.held").forEach(el=>el.classList.remove("held"));
   screenOpen=false;
   if(game==="traitvault"&&$("multRail").children.length) paintMultRail([0,0,0,0],null);
 }
@@ -4828,18 +5601,21 @@ async function hlCash(){
 /* What each game actually sells. Prices come from BUY_PRICE / ANTE, which are
    the measured EV-neutral figures -- there is no second table here to drift. */
 function buyOptions(){
-  const out=[];
-  if(game==="pride"&&MARKET.ante){
+  const out=[], e=eng();
+  if(anteStake(e)!==undefined&&MARKET.ante){
     out.push({key:"ante", name:"Ante Bet",
       what:"Raises the stake and adds an extra $LAZY scatter to every reel, so free spins trigger about twice as often.",
-      mult:ANTE.pride.stake});
+      mult:anteStake(e)});
   }
-  if(BUY_PRICE[game]!==undefined&&MARKET.buy){
-    out.push({key:"feature", name: game==="pride"?"Buy Free Spins":"Buy Lion's Share",
-      what: game==="pride"
-        ? "Starts 10 free spins immediately. Every wild carries ×2."
-        : "Starts 10 free spins immediately. Multiplier orbs stamp whole rows, sticky and additive.",
-      mult:BUY_PRICE[game]});
+  if(buyPrice(e)!==undefined&&MARKET.buy){
+    const what={
+      pride:"Starts 10 free spins immediately. Every wild carries ×2.",
+      traitvault:"Starts 10 free spins immediately. Multiplier orbs stamp whole rows, sticky and additive.",
+      "pride-high":"Starts 10 free spins immediately. Crowns stick for the round; wilds carry ×2, ×3 or ×5; three scatters add five spins.",
+      "cubcluster-high":"Starts 10 free spins immediately. Multiplier spots build and stay for the whole round; scatters retrigger.",
+      "traitvault-high":"Starts 10 free spins immediately. Rows build to ×100 and stick; three scatters add five spins."
+    }[e];
+    out.push({key:"feature", name: /^traitvault/.test(e)?"Buy Lion's Share":"Buy Free Spins", what, mult:buyPrice(e)});
   }
   return out;
 }
@@ -4848,6 +5624,9 @@ function openBuyMenu(){
   const bet=+$("bet").value, opts=buyOptions();
   for(const o of opts){
     const cost=bet*o.mult, afford=balance>=cost;
+    // The ante disables the buy while it is on, as the reference does: the two
+    // are priced as separate ways of reaching the same round.
+    const blocked=o.key==="feature"&&anteOn;
     const card=document.createElement("div"); card.className="buycard";
     card.innerHTML=`<div class="bc-top">
         <b>${o.name}</b>
@@ -4855,7 +5634,7 @@ function openBuyMenu(){
         <span class="bc-price">${fmt(cost)}</span>
         <span class="bc-mult">${o.mult.toFixed(4)}× your bet · $LAZY</span>
       </div>
-      <button ${afford?"":"disabled"}>${afford?"Buy":"Balance too low"}</button>`;
+      <button ${afford&&!blocked?"":"disabled"}>${blocked?"Turn the ante off to buy":afford?"Buy":"Balance too low"}</button>`;
     card.querySelector("button").addEventListener("click",()=>{
       if(busy) return;
       $("buyMenu").classList.remove("on");
@@ -4875,6 +5654,9 @@ function openBuyMenu(){
 
 function refreshCostLabels(){
   const bet=+$("bet").value;
+  if($("betCap")) $("betCap").textContent=`Bet ${fmt(bet)}`;
+  if($("betDown")){ const sel=$("bet"); $("betDown").disabled=sel.selectedIndex<=0;
+                    $("betUp").disabled=sel.selectedIndex>=sel.options.length-1; }
   // The chip opens the menu now, so it names the cheapest thing on offer rather
   // than reflecting a toggle state that no longer exists. A game with nothing to
   // sell hides it outright: a disabled "Buy n/a" advertises a door that is not
@@ -4886,8 +5668,9 @@ function refreshCostLabels(){
     $("buy").textContent=`Buy from ${fmt(bet*low)}`;
     $("buy").disabled=false;
   }
-  $("ante").textContent = anteOn ? `Ante ${fmt(bet*ANTE.pride.stake)}` : "Ante";
-  $("ante").style.display = (game==="pride"&&MARKET.ante) ? "" : "none";
+  const st=anteStake(eng());
+  $("ante").textContent = anteOn&&st ? `Ante ${fmt(bet*st)}` : "Ante";
+  $("ante").style.display = (st!==undefined&&MARKET.ante&&game!=="hilo") ? "" : "none";
 }
 /* Time played, and what it has cost.
  *
@@ -4965,13 +5748,12 @@ function logSpin(win,mult){
    goes on passing while the page diverges. */
 function rederiveRound(rec){
   const seed=Uint8Array.from(rec.seed.match(/../g).map(h=>parseInt(h,16)));
-  const rng=makeRng(seed,rec.client,rec.nonce,rec.game);
-  return rec.buy  ? buyFeature(rng,rec.game)
-       : rec.game==="pride" ? spinPride(rng, rec.ante ? anteStrips() : null)
-       : rec.game==="cubcluster" ? spinCluster(rng) : spinVault(rng,{});
+  const e=rec.engine||rec.game;
+  const rng=makeRng(seed,rec.client,rec.nonce,e);
+  return playEngine(e,rng,rec.buy?"buy":rec.ante?"ante":"spin");
 }
 function replay(rec){
-  if(!rec||busy||rec.game!==game) return;
+  if(!rec||busy||rec.game!==game||(rec.engine||rec.game)!==eng()) return;
   const out=rederiveRound(rec);
   const f=out.frames[0];
   paintGrid(f.grid,f.marks&&f.marks.size?f.marks:null);
@@ -4980,8 +5762,8 @@ function replay(rec){
   flash(`Replay #${rec.nonce}${mode} · ${(out.base+out.feature).toFixed(2)}×${out.nft?" · THE LION":""}`);
 }
 function blankGrid(){
-  const g=[]; for(let r=0;r<REELS;r++){const c=[];
-    for(let row=0;row<ROWS;row++) c.push(randomSym(r)); g.push(c);} return g;
+  const g=[]; for(let r=0;r<GR;r++){const c=[];
+    for(let row=0;row<GH;row++) c.push(randomSym(r)); g.push(c);} return g;
 }
 function refreshHash(){ $("fHash").textContent=hex(sha256(serverSeed)); }
 
@@ -5003,6 +5785,18 @@ function renderPaytable(){
     }
     t.innerHTML=h; return;
   }
+  const e=eng();
+  if(e==="cubcluster-high"){
+    $("ptTitle").textContent="Cluster size × bet, before spots multiply it";
+    let h="<tr><th>Symbol</th><th>5</th><th>6</th><th>8</th><th>10</th><th>12</th><th>15+</th></tr>";
+    for(const s of [P1,P2,M1,M2,L1,L2]){
+      h+=`<tr><td class="ptsym"><span class="ptart">${symbolHTML(s,"cubcluster")}</span>`
+        +`<span>${symName(s,"cubcluster")}</span></td>`;
+      for(const n of [5,6,8,10,12,15]) h+=`<td>${PAYS[e][s][n].toFixed(2)}</td>`;
+      h+="</tr>";
+    }
+    t.innerHTML=h; return;
+  }
   if(game==="cubcluster"){
     $("ptTitle").textContent="Cluster size × bet";
     let h="<tr><th>Symbol</th><th>5</th><th>7</th><th>9</th><th>12</th><th>16</th><th>20</th></tr>";
@@ -5017,7 +5811,7 @@ function renderPaytable(){
     }
     t.innerHTML=h; return;
   }
-  const pays=PAYS[game];
+  const pays=PAYS[e];
   $("ptTitle").textContent = game==="pride" ? "× total bet, per way" : "× line bet (40 lines)";
   let h="<tr><th>Symbol</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>";
   for(let s=SCAT;s<NSYM;s++){
@@ -5042,7 +5836,10 @@ function selectGame(g){
   }
   // Leaving mid-round abandons the PRESENTATION, never the round: doSpin
   // settles it in full the moment its presenter returns.
-  if(busy) abortRound=true;
+  // The reels stop too, whatever the market's rules on a player-led stop: this
+  // is an abort, not a stop, and a teasing reel can otherwise run on for six
+  // seconds over a board that has already left the screen.
+  if(busy){ abortRound=true; if(spinCtl) spinCtl.slam(); }
   game=g; stopAuto=true; autoLeft=0;
   setTheme(g); retuneMusic();
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.game===g)));
@@ -5056,6 +5853,7 @@ function selectGame(g){
   // sat on the slot deck showing a stale amount.
   $("cash").style.display=(isHilo&&hl.live)?"":"none";
   $("spin").style.display=isHilo?"none":"";
+  document.querySelector(".deck").classList.toggle("hilo",isHilo);
   $("speed").style.display=isHilo?"none":"";
   $("auto").style.display=isHilo?"none":"";
   $("deck").style.display=isHilo?"":"none";
@@ -5077,15 +5875,19 @@ function selectGame(g){
   // never repeat. The displayed odds are computed for exactly that model -- at
   // rank 92, "rarer 8.00%" is 8 ranks out of the 100 still drawable -- so the
   // label was the only part disagreeing with the game.
-  $("gDesc").textContent = isHilo?"rarity duel · fresh rank each turn"
-    : g==="pride"?"1024 ways · 5×4 · 10 free spins"
-    : g==="cubcluster"?"cluster pays · tumbles ×1→×8":"40 lines · row multipliers";
+  $("gDesc").textContent = isHilo?"rarity duel · fresh rank each turn" : {
+    pride:"1024 ways · 5×4 · 10 free spins",
+    cubcluster:"cluster pays · tumbles ×1→×8",
+    traitvault:"40 lines · row multipliers",
+    "pride-high":"high volatility · 1024 ways · sticky crowns",
+    "cubcluster-high":"high volatility · 7×7 clusters · multiplier spots",
+    "traitvault-high":"high volatility · 40 lines · orbs to ×100"}[eng(g)];
   $("chipMode").textContent=isHilo?"Card duel":"Base game";
   $("chipMode").classList.remove("live");
   $("chipMax").innerHTML = isHilo ? 'Round cap <b>5,000×</b>'
-    : `Max win <b>${fmt(MAXWIN[g])}×</b>`;
+    : `Max win <b>${fmt(MAXWIN[eng(g)])}×</b>`;
   $("winOut").textContent="0";
-  if(!isHilo){ syncCell(); buildReels(blankGrid()); warmSymbolImages(g); }
+  if(!isHilo){ setGrid(); syncCell(); buildReels(blankGrid()); warmSymbolImages(g); }
   else if(!hl.card){ hl.card=hlDraw(null); }
   if(isHilo) hlRender(true);
   renderPaytable(); updateHud(); fxResize();
@@ -5128,8 +5930,29 @@ function openInfo(){
       return: a direction below 5% probability, and a direction paying <b>1.00× or less</b>, which
       could not profit even when it won. At the extreme ranks both sides are refused; the
       <b>Rarity Swap stays free there</b> — redraw and play on. Multipliers compound; the round
-      caps at 5,000×.`
-  }[game];
+      caps at 5,000×.`,
+    "pride-high":`<b>High volatility.</b> The base game is Pride's: 1024 ways, each reel turning
+      entirely to Crowns on its own roll. <b>3/4/5 scatters award 10/12/15 free spins</b>, played on
+      their own reels with more wilds. In the round <b>crowns stick</b>: a reel that crowns stays
+      crowned until the round ends, so the board can fill column by column. <b>Every wild carries
+      ×2, ×3 or ×5</b>; multipliers on one way add, to ×25. <b>Three scatters add five spins.</b>
+      <br><br><b>The Lion&rsquo;s Crown.</b> Fill the board, in the base game or the round, and win a
+      Lazy Lion NFT. Crowns that stick make that far likelier inside a round, so the round rolls its
+      own, much lower, crown rate; the odds below are measured, not closed form.`,
+    "cubcluster-high":`<b>High volatility · 7×7.</b> Five or more orthogonally adjacent matching
+      symbols pay; there is no wild. Winners burst, survivors fall and new symbols drop in, until
+      nothing wins. <b>Multiplier spots:</b> the first time a cell explodes it is marked, the second
+      time it carries ×2, and every time after that its multiplier doubles, to ×128. A cluster is
+      multiplied by the <b>sum</b> of the spots under it. In the base game spots clear when the
+      tumbles end. <b>3/4/5/6/7 scatters award 10/12/15/20/30 free spins</b>, played on their own
+      reels with one low symbol removed; <b>spots stay for the whole round</b>, and the same counts
+      retrigger.`,
+    "traitvault-high":`<b>High volatility.</b> 40 lines, wild on reels 2&ndash;4. <b>Orbs can land in
+      the base game</b>: if the spin wins, the win is multiplied by the sum of the orbs on the board.
+      <b>3/4/5 scatters award 10/12/15 free spins</b> on their own reels with more wilds. Orbs stamp
+      their value onto the whole row; rows <b>stick and add</b>, to ×100, and a line takes the
+      highest row it crosses. <b>Three scatters add five spins.</b>`
+  }[HIGH_IDS.includes(eng())?eng():game];
   // Per game, because the games are not verified to the same depth and a single
   // blanket sentence quietly promotes the least-verified one to the standard of
   // the best. Trait Vault's maths was rebuilt for Lion's Share and its figure is
@@ -5147,9 +5970,17 @@ function openInfo(){
                 "production rng, after the Lion&#39;s Share rework.",
     hilo:       "<b>RTP</b> exactly 0.97 by construction &mdash; proven analytically, not sampled."
   }[game];
+  const e=eng(), hv=HIGH_VERIFIED[e];
+  const line = HIGH_IDS.includes(e)
+    ? (hv ? `<b>RTP</b> ${e==="pride-high"?"coin ":""}${hv.rtp.toFixed(5)} &plusmn;${hv.ci.toFixed(5)} measured over ` +
+            `${(hv.spins/1e6).toFixed(0)}M spins on the production rng` +
+            (hv.jackpot!=null ? `, plus ${hv.jackpot.toFixed(5)} from the Lion&#39;s Crown &mdash; <b>${(hv.rtp+hv.jackpot).toFixed(5)} total</b>.` : ".") +
+            ` Bonus about 1 in ${Math.round(hv.bonusEvery)} spins.`
+          : "<b>RTP</b> not yet verified on the production rng.")
+    : rtpLine;
   $("infoRules").innerHTML=rules+
-    `<br><br>${rtpLine}
-     <b>Max win</b> ${game==="hilo"?"5,000×":fmt(MAXWIN[game])+"×"}. Play money only.`;
+    `<br><br>${line}
+     <b>Max win</b> ${game==="hilo"?"5,000×":fmt(MAXWIN[e])+"×"}. Play money only.`;
   $("info").classList.add("on");
 }
 $("infoBtn").addEventListener("click",()=>{ modalOpener=$("infoBtn"); openInfo(); });
@@ -5181,7 +6012,7 @@ const releaseSpin=()=>{
 /* Settings. Kept in this browser only; nothing here reaches another viewer. */
 function saveSettings(){
   try{ localStorage.setItem(SETTINGS_KEY,JSON.stringify(
-    {market:marketKey,quickSpin,turboAuto,skipScreens,musicOff,sfxOff,batterySaver})); }catch(e){}
+    {market:marketKey,quickSpin,turboAuto,skipScreens,musicOff,sfxOff,batterySaver,profile:PROFILE})); }catch(e){}
 }
 function loadSettings(){
   let s=null;
@@ -5189,6 +6020,7 @@ function loadSettings(){
   if(!s||typeof s!=="object") return;
   quickSpin=!!s.quickSpin; turboAuto=!!s.turboAuto; skipScreens=!!s.skipScreens;
   musicOff=!!s.musicOff; sfxOff=!!s.sfxOff; batterySaver=!!s.batterySaver;
+  if(s.profile==="LOW"||s.profile==="HIGH") PROFILE=s.profile;
   applyMarket(s.market);
 }
 function applyMarket(key){
@@ -5207,6 +6039,7 @@ function syncSettingsUi(){
   set("setTurbo",turboAuto,MARKET.turbo);    set("apTurbo",turboAuto,MARKET.turbo);
   set("setSkip",skipScreens);                set("apSkip",skipScreens);
   set("setMusic",!musicOff); set("setSfx",!sfxOff); set("setSaver",batterySaver);
+  $("setProfile").value=PROFILE;
   $("setMarket").value=marketKey; $("marketNote").textContent=MARKET.note;
   const sp=$("speed");
   sp.textContent="Speed: "+(quickSpin?"Quick":"Normal");
@@ -5223,6 +6056,14 @@ $("settingsBtn").addEventListener("click",()=>{ modalOpener=$("settingsBtn"); sy
 $("settingsClose").addEventListener("click",()=>{ $("settings").classList.remove("on"); if(modalOpener) modalOpener.focus(); });
 $("settings").addEventListener("click",e=>{ if(e.target.id==="settings") $("settings").classList.remove("on"); });
 $("setMarket").addEventListener("change",e=>{ applyMarket(e.target.value); saveSettings(); });
+/* Switching profile mid-round abandons the presentation and settles the round,
+   exactly as a tab switch does. */
+function setProfile(p){
+  if(p!=="HIGH"&&p!=="LOW") return;
+  PROFILE=p; saveSettings();
+  if(game!=="hilo") selectGame(game);
+}
+$("setProfile").addEventListener("change",e=>setProfile(e.target.value));
 for(const id of ["setQuick","apQuick"]) $(id).addEventListener("change",e=>{ quickSpin=e.target.checked&&MARKET.quickSpin; syncSettingsUi(); saveSettings(); });
 for(const id of ["setTurbo","apTurbo"]) $(id).addEventListener("change",e=>{ turboAuto=e.target.checked&&MARKET.turbo; syncSettingsUi(); saveSettings(); });
 for(const id of ["setSkip","apSkip"]) $(id).addEventListener("change",e=>{ skipScreens=e.target.checked; syncSettingsUi(); saveSettings(); });
@@ -5241,6 +6082,15 @@ $("ante").addEventListener("click",()=>{
 $("buy").addEventListener("click",()=>{ ac(); modalOpener=$("buy"); openBuyMenu(); });
 $("buyClose").addEventListener("click",()=>$("buyMenu").classList.remove("on"));
 $("bet").addEventListener("change",refreshCostLabels);
+/* Bet minus and plus step through the same options the select offers. */
+function stepBet(d){
+  if(busy) return;
+  const sel=$("bet"), i=Math.max(0,Math.min(sel.options.length-1,sel.selectedIndex+d));
+  if(i===sel.selectedIndex) return;
+  sel.selectedIndex=i; sel.dispatchEvent(new Event("change"));
+}
+$("betDown").addEventListener("click",()=>stepBet(-1));
+$("betUp").addEventListener("click",()=>stepBet(1));
 $("sound").addEventListener("click",()=>{
   muted=!muted; $("sound").setAttribute("aria-pressed",String(!muted));
   if(muted){ stopMusic(); stopRhythm(); } else { ac(); startMusic(); startRhythm(); }

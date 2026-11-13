@@ -41,6 +41,10 @@ const exported = [
   "vaultFreeSpins", "vaultLines", "MULT_V", "MULT_W", "ROW_MULT_CAP",
   "FREE_SPINS", "SCATTERS_TO_TRIGGER", "RARITY_RANKS",
   "CROWN_NUM", "CROWN_DENOM", "drawGridPride",
+  // high profile
+  "HIGH_IDS", "HIGH_CONF", "HIGH_BUY", "HIGH_ANTE", "playEngine", "highReels",
+  "chEval", "chSpins", "phEval", "phSpins", "vhSpins", "CH_SPOT_CAP", "C7",
+  "spinPrideHigh", "spinClusterHigh", "spinVaultHigh", "buyHigh",
 ];
 const M = new Function(`${mathOnly}\nreturn {${exported.join(",")}};`)();
 
@@ -116,11 +120,12 @@ console.log("\nStructural pay rules");
     const m = vhtml.match(/const STRIPS = \{([\s\S]*?)\};/);
     const published = {};
     if (m) for (const line of m[1].split("\n")) {
-      const g = line.match(/(\w+):\s*\[([\d,\s]+)\]/);
+      // keys may be quoted -- the high profile's ids carry a hyphen
+      const g = line.match(/"?([\w-]+)"?:\s*\[([\d,\s]+)\]/);
       if (g) published[g[1]] = g[2].split(",").map((n) => +n.trim());
     }
     let mismatch = [];
-    for (const g of ["pride", "cubcluster", "traitvault"]) {
+    for (const g of ["pride", "cubcluster", "traitvault", "pride-high", "cubcluster-high", "traitvault-high"]) {
       const live = M.CONF[g].strips.map((s) => s.length);
       if (JSON.stringify(live) !== JSON.stringify(published[g] || []))
         mismatch.push(`${g}: page ${JSON.stringify(live)} vs verifier ${JSON.stringify(published[g])}`);
@@ -381,6 +386,120 @@ console.log("\nAnte and buy-feature pricing");
   check("pride ante RTP at solved stake",
         Math.abs(rtp - TARGET.pride) < 3 * ci + 0.01,
         `${rtp.toFixed(4)} at stake ${M.ANTE.pride.stake}x, feature 1 in ${(spins/Math.max(1,trig)).toFixed(0)}`);
+}
+
+/* -------------------------------------------------------- 6. high profile */
+/* The high profile is checked EXACTLY, not loosely: tests/golden/high.json
+   holds base and feature for 300 rounds per engine per mode, played by
+   crates/mathsim on the production HMAC stream, and the page must reproduce
+   every one. A reordered draw, a dropped retrigger or a misread spot rule
+   changes a round's total; a loose RTP check at a few hundred thousand spins
+   cannot see a slip that moves RTP by less than a percent. */
+console.log("\nHigh profile");
+{
+  const { execFileSync } = await import("node:child_process");
+  try {
+    execFileSync(process.execPath, [join(root, "tools", "high-conf.mjs"), "--check"], { stdio: "pipe" });
+    check("the page's HIGH_CONF is generated from the calibrated weights", true);
+  } catch (e) {
+    check("the page's HIGH_CONF is generated from the calibrated weights", false,
+          String(e.stderr || e.message).trim());
+  }
+
+  const golden = JSON.parse(readFileSync(join(root, "tests", "golden", "high.json"), "utf8"));
+  const gseed = Uint8Array.from(Buffer.from(golden.serverSeedHex, "hex"));
+  for (const id of M.HIGH_IDS) {
+    const rows = golden.engines[id] || [];
+    let bad = 0, first = "";
+    for (const [mode, nonce, base, feature] of rows) {
+      const o = M.playEngine(id, M.makeRng(gseed, golden.client, nonce, id), mode);
+      if (Math.abs(o.base - base) > 1e-9 * Math.max(1, base) ||
+          Math.abs(o.feature - feature) > 1e-9 * Math.max(1, feature)) {
+        bad++;
+        if (!first) first = `${mode} #${nonce}: page ${o.base}/${o.feature} vs rust ${base}/${feature}`;
+      }
+    }
+    const modes = new Set(rows.map((r) => r[0]));
+    check(`${id} reproduces mathsim exactly, round by round`, rows.length >= 600 && bad === 0 && modes.size === 3,
+          bad ? `${bad} of ${rows.length} differ; ${first}` : `${rows.length} rounds across ${[...modes].join("/")}`);
+  }
+
+  // structural rules
+  const SC = 1, P1 = 2, L1 = 10, L2 = 11, WILD = 0;
+  const pays = Array.from({ length: 14 }, () => new Array(16).fill(0));
+  for (let n = 5; n <= 15; n++) pays[P1][n] = 1;
+  const checker = () => Array.from({ length: 7 }, (_, c) => Array.from({ length: 7 }, (_, r) => (c + r) % 2 ? L2 : L1));
+  const zero = () => Array.from({ length: 7 }, () => new Array(7).fill(0));
+  {
+    const g = checker(); for (let c = 0; c < 4; c++) g[c][0] = P1;
+    const four = M.chEval(g, zero(), pays, new Set(), null);
+    g[4][0] = P1;
+    const five = M.chEval(g, zero(), pays, new Set(), null);
+    check("cluster high: four cells do not pay, five do", four === 0 && five === 1, `${four} / ${five}`);
+    const sp = zero(); sp[0][0] = 4; sp[3][0] = 8; sp[4][0] = 1;
+    check("cluster high: spot multipliers under one cluster ADD (x4 + x8 = x12; a mark is not a multiplier)",
+          M.chEval(g, sp, pays, new Set(), null) === 12);
+    const s = checker(); for (let c = 0; c < 6; c++) s[c][3] = SC;
+    check("cluster high: scatters never cluster", M.chEval(s, zero(), pays, new Set(), null) === 0);
+    check("cluster high: 3/4/5/6/7+ scatters award 10/12/15/20/30",
+          [2, 3, 4, 5, 6, 7, 9].map(M.chSpins).join(",") === "0,10,12,15,20,30,30");
+    check("cluster high: no wild anywhere on its reels",
+          M.HIGH_CONF["cubcluster-high"].w.every((r) => r[WILD] === 0) && M.HIGH_CONF["cubcluster-high"].w.length === 7);
+  }
+  {
+    const ppays = Array.from({ length: 14 }, () => [0, 0, 0, 0, 0, 0]);
+    ppays[7][3] = 1;                      // M2, 3 of a kind
+    const g = Array.from({ length: 5 }, () => new Array(4).fill(13));
+    g[0][0] = 7; g[1][0] = WILD; g[2][0] = WILD;
+    const m = g.map(() => new Array(4).fill(0)); m[1][0] = 3; m[2][0] = 5;
+    check("pride high: wild multipliers on a way add (x3 + x5 = x8)", Math.abs(M.phEval(g, m, ppays, null) - 8) < 1e-12);
+    m[1][0] = 25;
+    check("pride high: and cap at x25", Math.abs(M.phEval(g, m, ppays, null) - 25) < 1e-12);
+    check("pride high and vault high: 3/4/5 scatters award 10/12/15",
+          [2, 3, 4, 5, 6].map(M.phSpins).join(",") === "0,10,12,15,15" &&
+          [2, 3, 4, 5, 6].map(M.vhSpins).join(",") === "0,10,12,15,15");
+  }
+
+  // the cap is enforced inside the round, and every engine's strips are legal
+  const seed = new Uint8Array(32).map((_, i) => (i * 41 + 3) & 0xff);
+  for (const id of M.HIGH_IDS) {
+    const cap = M.HIGH_CONF[id].cap;
+    let worst = 0, capped = 0;
+    for (let n = 0; n < 4000; n++) {
+      const o = M.playEngine(id, M.makeRng(seed, "cap", n, id), "buy");
+      const t = o.base + o.feature; worst = Math.max(worst, t);
+      if (o.frames.some((f) => f.capped)) capped++;
+    }
+    check(`${id} never pays past its ${cap}x cap`, worst <= cap + 1e-9, `worst bought round ${worst.toFixed(1)}x`);
+    const lens = M.CONF[id].strips.map((s) => s.length).concat(M.CONF[id].fsStrips.map((s) => s.length));
+    check(`${id} strips >= 120, base and round reels alike`, lens.every((l) => l >= 120), lens.join("/"));
+  }
+
+  // loose convergence: catches a factor-of-two port error, not calibration
+  const rseed = new Uint8Array(32).map((_, i) => (i * 37 + 11) & 0xff);
+  for (const [id, spins, target] of [["pride-high", 250000, 0.87], ["traitvault-high", 250000, 0.97], ["cubcluster-high", 60000, 0.97]]) {
+    let sum = 0, sumSq = 0;
+    for (let n = 0; n < spins; n++) {
+      const o = M.playEngine(id, M.makeRng(rseed, "verify", n, id), "spin");
+      const t = o.base + o.feature; sum += t; sumSq += t * t;
+    }
+    const rtp = sum / spins, vol = Math.sqrt(Math.max(0, sumSq / spins - rtp * rtp)), ci = 1.96 * vol / Math.sqrt(spins);
+    check(`${id} coin RTP converges on its target`, Math.abs(rtp - target) < 3 * ci + 0.01,
+          `${rtp.toFixed(4)} vs ${target} +/-${ci.toFixed(4)} (vol ${vol.toFixed(1)})`);
+  }
+  // buy and ante prices are EV-neutral against the page's own figures
+  for (const id of M.HIGH_IDS) {
+    const target = id === "pride-high" ? 0.87 : 0.97, n = id === "cubcluster-high" ? 6000 : 20000;
+    let sum = 0, sumSq = 0;
+    for (let i = 0; i < n; i++) {
+      const o = M.playEngine(id, M.makeRng(rseed, "buy", i, id), "buy");
+      const t = o.base + o.feature; sum += t; sumSq += t * t;
+    }
+    const ev = sum / n, vol = Math.sqrt(Math.max(0, sumSq / n - ev * ev)), ci = 1.96 * vol / Math.sqrt(n);
+    const rtp = ev / M.HIGH_BUY[id];
+    check(`${id} buy price returns its target`, Math.abs(rtp - target) < 3 * ci / M.HIGH_BUY[id] + 0.02,
+          `${rtp.toFixed(4)} at ${M.HIGH_BUY[id]}x (EV ${ev.toFixed(2)}x +/- ${ci.toFixed(2)})`);
+  }
 }
 
 console.log(
