@@ -1,7 +1,7 @@
 # game: cubcluster-high
 # symbols: WILD,SCAT,P1,P2,P3,P4,M1,M2,M3,M4,L1,L2,L3,L4
 coin_probability 0.03
-pay_scale 1.4327648767827275
+pay_scale 1.4317174237056234
 reel 0 1 31 32 0 0 33 34 0 0 35 36 0 0
 reel 0 1 31 32 0 0 33 34 0 0 35 36 0 0
 reel 0 1 31 32 0 0 33 34 0 0 35 36 0 0

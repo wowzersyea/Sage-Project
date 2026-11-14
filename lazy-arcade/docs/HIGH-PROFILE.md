@@ -100,11 +100,12 @@ already holds the two streams together.
 
 **The caps bind, so calibration iterates.** Every high game reaches its cap even
 at pay scale 1, so RTP is not strictly proportional to scale and one solve
-overshoots. Each game was calibrated until a pass moved the scale by well under
-a percent.
+overshoots. Pride and Cub Cluster were calibrated until a pass moved the scale
+by well under a percent; Trait Vault's second pass also solved its orb rate, and
+the production-stream verification is what settles it (Results, below).
 
 **The exit band is +/-0.0015, not +/-0.0005.** The high profile's volatility is
-three to five times the low profile's; resolving +/-0.0005 at that volatility
+roughly three to four times the low profile's; resolving +/-0.0005 at that volatility
 takes several billion spins per run. Each verification's spin count is derived
 from that game's measured volatility so the 95% confidence interval is no wider
 than the band.
@@ -118,3 +119,81 @@ total; a loose RTP check at a few hundred thousand spins cannot see a slip that
 moves RTP by less than a percent. The page also carries no hand-kept copy of the
 weights: `tools/high-conf.mjs` generates its HIGH_CONF block from the weights
 files and the measured prices, and the parity test fails if the page is stale.
+
+## Results
+
+Every figure below is a measurement, made with the commands in the README. RTP
+is quoted only from the production HMAC stream; fast-stream figures appear only
+as calibration steps and cross-checks.
+
+### Calibration (fast stream, a search)
+
+| Game | Passes | Pay scale, pass by pass | Shipped scale | Other solved values |
+|---|---:|---|---:|---|
+| `pride-high` | 2 | 1.779396 -> 1.782402 (+0.17%) | 1.7824024 | -- |
+| `cubcluster-high` | 3 + pooled | 1.419367 -> 1.431351 -> 1.432765 (+0.10%) -> 1.431717 (-0.07%, pooled; see below) | 1.4317174 | -- |
+| `traitvault-high` | 2 | 18.790047 -> 18.455485 (-1.78%) | 18.4554846 | round orb rate 0.0655684 (feature share 0.41) |
+
+Trait Vault's second pass solved the round's orb rate as well as the scale, so
+its scale moved further than the others' did; the production-stream run below is
+what certifies the result.
+
+### Verification (production HMAC stream)
+
+| Game | Seed | Spins | Coin RTP | 95% CI | In band | Hit rate | Volatility | Base / feature | Bonus | Max win seen |
+|---|---:|---:|---:|---:|:-:|---:|---:|---:|---:|---:|
+| `pride-high` | 9101 | 450M | **0.86882 (+0.02365 Lion = 0.89247)** | +/-0.00115 | yes | 48.6% | 12.39 | 49.8 / 37.1 | 1 in 340 | 5,000x |
+| `cubcluster-high` (superseded) | 9101 | 850M | 0.97195 | +/-0.00151 | **no** | 39.0% | 22.53 | 58.4 / 38.8 | 1 in 443 | 5,000x |
+| `cubcluster-high` | 9102 | 1400M | **0.96895** | +/-0.00117 | yes | 39.0% | 22.34 | 58.3 / 38.5 | 1 in 444 | 5,000x |
+| `traitvault-high` | 9101 | 550M | **0.96996** | +/-0.00126 | yes | 17.9% | 15.05 | 57.3 / 39.7 | 1 in 364 | 10,000x |
+
+**Cub Cluster needed a second run.** Its first production run, at scale
+1.432765 on seed 9101, measured 0.97195 +/-0.00151: outside the band by 0.00045,
+and with an interval slightly wider than the band, because the game's volatility
+came out at 22.5 rather than the 22 the spin count had been sized for. The scale
+was re-solved from all three independent measurements -- both fast passes and
+that run, weighted by inverse variance, which put the RTP at 1.432765 at
+0.97071 +/-0.00067 -- and verified again on a fresh seed, 9102, at 1.4B spins.
+The run that moved the scale is not the run that certifies it. Both runs are in
+the table; only the second describes the shipped game. It sits nearer the band's
+lower edge than its upper, so the two production runs were also read together:
+the first, rescaled to the shipped scale, reads 0.97124, and pooled with the
+second by inverse variance they give 0.9698 +/-0.0009. The scale was not moved
+again; a third solve would be chasing noise.
+
+Pride's figure sits 0.0012 under target, inside the band. The fast stream's
+1B-spin check at the same scale read 0.86991 +/-0.00077, so the gap is within
+the two runs' combined noise.
+
+Hit rate counts any return, including returns below the stake. Volatility is the
+standard deviation of a spin's return in units of the bet. The exit band is
++/-0.0015 around 0.87 (Pride) and 0.97 (the others).
+
+### Prices
+
+| Game | Feature buy | EV of a bought round | Rounds played | Ante | Ante stake | Bonus, base -> ante |
+|---|---:|---:|---:|---|---:|---|
+| `pride-high` | **144.11x** | 125.37x +/-0.18 | 4,000,000 | strips x6, +3 scatters | **1.2516x** +/-0.0025 | 1 in 339 -> 1 in 213 |
+| `cubcluster-high` | **169.85x** | 164.75x +/-0.68 | 1,500,000 | strips x8, +1 scatter | **1.2172x** +/-0.0050 | 1 in 443 -> 1 in 320 |
+| `traitvault-high` | **147.18x** | 142.76x +/-0.23 | 4,000,000 | strips x6, +3 scatters | **1.2708x** +/-0.0027 | 1 in 364 -> 1 in 220 |
+
+A buy price is the bought round's EV divided by the target RTP, so buying returns
+exactly what spinning does. Bought rounds were played on the production stream;
+the ante tiers on the fast stream at 150-200M spins per tier, where each table's
++0 row came out at 1.0000x to 1.0012x, inside its own interval -- the check that
+the base calibration had not drifted. Cub Cluster's buy was re-measured at its
+recalibrated scale; its ante stake is a ratio of two returns at the same scale,
+so the -0.07% move leaves it where it was.
+
+### The Lion's Crown with sticky crowns
+
+| | |
+|---|---|
+| Rounds simulated (10-spin award, retriggers live) | 400 million |
+| Board filled | 22,892 times: 1 in 17,473 rounds |
+| Base grid alone (closed form) | 1 in 1,286,008 spins |
+| Per spin, at a bonus 1 in 340 | 1 in 1,057,243 |
+| Jackpot RTP (25,000x prize) | **0.02365** |
+
+Pride's high profile therefore returns 0.86882 in coin plus 0.02365 from the
+Lion, 0.8925 in all, against the low profile's 0.87001 + 0.02124 = 0.89125.

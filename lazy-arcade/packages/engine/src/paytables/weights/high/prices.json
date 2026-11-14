@@ -1,6 +1,6 @@
 {
-  "_note": "Measured, not guessed. buy: `mathsim buyprice` playing bought rounds directly on the production HMAC stream (4M rounds; 1.5M for Cub Cluster). ante stake: `mathsim ante --mult M --rng fast`, the tier matching ante_mult/ante_extra in each weights file. Written by hand from those runs; tools/high-conf.mjs carries them into the page.",
-  "pride-high":      {"buy": 144.1076, "ante": {"stake": 1.2516}},
-  "cubcluster-high": {"buy": 169.8087, "ante": {"stake": 1.2172}},
-  "traitvault-high": {"buy": 147.1777, "ante": {"stake": 1.2708}}
+  "_note": "Measured, not guessed. buy: `mathsim buyprice` playing bought rounds directly on the production HMAC stream (4M rounds; 1.5M for Cub Cluster). ante stake: `mathsim ante --mult M --rng fast`, the tier matching ante_mult/ante_extra in each weights file. verified: `mathsim simulate --rng hmac` at the shipped weights, seed 9101 (Cub Cluster re-verified on seed 9102 after recalibration; docs/HIGH-PROFILE.md); jackpot: `mathsim nft`, Pride only. tools/high-conf.mjs carries all of it into the page.",
+  "pride-high":      {"buy":144.1076,"ante":{"stake":1.2516},"verified":{"rtp":0.86882,"ci":0.00115,"spins":450000000,"bonusEvery":340.1,"jackpot":0.02365}},
+  "cubcluster-high": {"buy":169.8478,"ante":{"stake":1.2172},"verified":{"rtp":0.96895,"ci":0.00117,"spins":1400000000,"bonusEvery":444.4}},
+  "traitvault-high": {"buy":147.1777,"ante":{"stake":1.2708},"verified":{"rtp":0.96996,"ci":0.00126,"spins":550000000,"bonusEvery":363.6}}
 }
