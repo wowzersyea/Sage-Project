@@ -1,5 +1,21 @@
 {
-  "reviewed_dois": [],
+  "reviewed_dois": [
+    "10.1542/peds.2026-078565",
+    "10.1542/peds.2026-077964",
+    "10.1097/inf.0000000000005270",
+    "10.1001/jamanetworkopen.2026.43418",
+    "10.1542/peds.2026-077402",
+    "10.1097/inf.0000000000005281",
+    "10.1097/inf.0000000000005277",
+    "10.1097/inf.0000000000005430",
+    "10.1542/peds.2026-078012",
+    "10.1097/inf.0000000000005303",
+    "10.1097/inf.0000000000005300",
+    "10.15585/mmwr.mm7543a1",
+    "10.15585/mmwr.mm7537e1",
+    "10.15585/mmwr.mm7537a1",
+    "10.15585/mmwr.mm7543a2"
+  ],
   "reviewed_titles": [
     "Recent Meta-Analysis on Pediatric Stewardship Frameworks",
     "Recent MMWR Publications with Pediatric Relevance",
@@ -294,9 +310,51 @@
     "**DOI:** https://doi.org/10.15585/mmwr.mm7542a2 *(confirm final DOI at cdc.gov/mmwr)*",
     "**DOI:** https://doi.org/10.15585/mmwr.mm7541 *(confirm final at cdc.gov/mmwr)*",
     "This represents an increase from the 4,410 U.S. cases cited in the October 4\u201318 digest.",
-    "- **IDSA/PIDS 2026 CAP Guideline Update** (DOI: 10.1093/cid/ciag186) and companion fibrinolysis paper (DOI: 10.1093/cid/ciag191) remain the most recent actionable pediatric ID CAP guideline. Confirm local empyema and CAP protocols are concordant."
+    "- **IDSA/PIDS 2026 CAP Guideline Update** (DOI: 10.1093/cid/ciag186) and companion fibrinolysis paper (DOI: 10.1093/cid/ciag191) remain the most recent actionable pediatric ID CAP guideline. Confirm local empyema and CAP protocols are concordant.",
+    "Clinical Action Items for Pediatric ID:",
+    "https://doi.org/10.1542/peds.2026-078565",
+    "PICO Questions & Recommendations:",
+    "Key change from 2011:",
+    "**Three accompanying technical reports** (open access): https://doi.org/10.1542/peds.2026-078566 | https://doi.org/10.1542/peds.2026-078567 | https://doi.org/10.1542/peds.2026-078568",
+    "Three accompanying technical reports",
+    "Penicillin Allergy Delabeling in Children",
+    "https://doi.org/10.1542/peds.2026-077964",
+    "A Multicenter Evaluation of Gram-Negative Bloodstream Infections in Children: Predictors of Carbapenem Resistance",
+    "https://doi.org/10.1097/INF.0000000000005270",
+    "Procalcitonin- and Presepsin-Guided Antibiotics for Early-Onset Sepsis in Preterm Infants: A Randomized Clinical Trial",
+    "https://doi.org/10.1001/jamanetworkopen.2026.43418",
+    "Complications in Pediatric Cancer Patients With *Staphylococcus aureus* Bloodstream Infection",
+    "https://doi.org/10.1542/peds.2025-075263",
+    "Gestational Age\u2013Associated Pathogen Distributions in Very Preterm Infants With Sepsis",
+    "https://doi.org/10.1542/peds.2026-077402",
+    "Use of Integrase Strand Transfer Inhibitors Among Children Living With HIV in Latin America and the Caribbean",
+    "https://doi.org/10.1097/INF.0000000000005281",
+    "**PDF:** https://doi.org/10.1097/inf.0000000000005281",
+    "Current Prognostic Models Fail to Reliably Distinguish Kawasaki Disease From Pediatric Multisystem Inflammatory Syndrome Temporally Associated With COVID-19",
+    "https://doi.org/10.1097/INF.0000000000005277",
+    "**PDF:** https://doi.org/10.1097/inf.0000000000005277",
+    "Long-Acting Lipoglycopeptides for the Treatment of Gram-Positive Infections in Children: Evidence and Real-Life Experience With Dalbavancin and Oritavancin",
+    "https://doi.org/10.1097/inf.0000000000005430",
+    "Beyond Croup: A Phenotype-Based Perspective on Parainfluenza Virus Types in Children",
+    "https://doi.org/10.1542/peds.2026-078012",
+    "Postnatal Care\u2013Associated Echovirus 11 Infection in Malaysia",
+    "A Case Series of Vaccine-Strain Reactivation Varicella Zoster in Two Pediatric Patients Presenting With Headache and Rash",
+    "Clinical and Epidemiologic Characteristics of Pediatric Tularemia: A Case Series With a Waterborne Cluster",
+    "Clinical Epidemiology of Cyclosporiasis in Pediatric Patients With Acute Diarrheal Disease \u2014 Quind\u00edo, Colombia",
+    "Hantavirus Outbreak Caused by Andes Virus Linked to International Cruise Ship Travel \u2014 United States, 2026",
+    "https://doi.org/10.15585/mmwr.mm7543a1",
+    "Lessons from Measles Resurgence, Bangladesh, 2026 \u2014 EID Perspective",
+    "Notes from the Field: The First 100 Days of Five Ebola Outbreaks \u2014 Democratic Republic of the Congo, Uganda, and West Africa, 2007\u20132026",
+    "https://doi.org/10.15585/mmwr.mm7537e1",
+    "**PDF:** https://doi.org/10.15585/mmwr.mm7537e1",
+    "Hepatitis A Outbreak Associated with Cuba \u2014 Florida, June 2024\u2013February 2026",
+    "https://doi.org/10.15585/mmwr.mm7537a1",
+    "Michigan cluster (n = 2):",
+    "New York cluster (n = 3):",
+    "Limitations acknowledged by the authors:",
+    "Reminder for pediatric teams:"
   ],
-  "last_run": "2026-11-01T12:10:28.681012",
+  "last_run": "2026-11-15T13:03:00.961194",
   "articles": [
     {
       "title": "Establishing Priority Pediatric Antimicrobial Stewardship Interventions in the US: Findings from a Delphi Consensus Study",
@@ -2188,6 +2246,314 @@
       "key_finding": "Wastewater surveillance provided concurrent (not leading) epidemiologic signal for measles during Ontario outbreak; assay successfully differentiated vaccine-strain shedding from wild-type transmission.",
       "study_type": "other",
       "digest_date": "2026-10-18"
+    },
+    {
+      "title": "AAP 2026 Clinical Practice Guideline for the Diagnosis and Treatment of Urinary Tract Infection in Children From 8 Days to 5 Years of Age",
+      "doi": "https://doi.org/10.1542/peds.2026-078565",
+      "journal": "Pediatrics",
+      "date": "2026-10",
+      "topics": [
+        "urinary-tract-infection",
+        "pediatric-diagnosis",
+        "antibiotic-therapy",
+        "imaging-recommendations",
+        "clinical-practice-guideline",
+        "pyuria-thresholds"
+      ],
+      "key_finding": "Updated guideline expands UTI evaluation to 8 days\u20135 years, lowers catheterized urine culture threshold to 10,000 CFU/mL, recommends shorter antibiotic courses (\u22647 days), and eliminates routine VCUG after first febrile UTI with normal ultrasound.",
+      "study_type": "guideline",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Penicillin Allergy Delabeling in Children",
+      "doi": "https://doi.org/10.1542/peds.2026-077964",
+      "journal": "Pediatrics",
+      "date": "2026-11-04",
+      "topics": [
+        "penicillin-allergy",
+        "antimicrobial-stewardship",
+        "delabeling",
+        "beta-lactam",
+        "oral-challenge"
+      ],
+      "key_finding": "Direct oral challenge without prior skin testing for low-risk penicillin allergy labels is increasingly accepted in pediatric practice and represents a priority antimicrobial stewardship intervention.",
+      "study_type": "narrative-review",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "A Multicenter Evaluation of Gram-Negative Bloodstream Infections in Children: Predictors of Carbapenem Resistance",
+      "doi": "https://doi.org/10.1097/INF.0000000000005270",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11",
+      "topics": [
+        "carbapenem-resistance",
+        "gram-negative-bloodstream-infection",
+        "pediatric-sepsis",
+        "risk-factors",
+        "antimicrobial-stewardship"
+      ],
+      "key_finding": "Carbapenem resistance rate of 33.3% in pediatric gram-negative bloodstream infections (73.6% for A. baumannii) with independent risk factors including university hospital setting, central venous catheterization, mechanical ventilation, and steroid use.",
+      "study_type": "cross-sectional",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Procalcitonin- and Presepsin-Guided Antibiotics for Early-Onset Sepsis in Preterm Infants: A Randomized Clinical Trial",
+      "doi": "https://doi.org/10.1001/jamanetworkopen.2026.43418",
+      "journal": "JAMA Network Open",
+      "date": "2026-11-12",
+      "topics": [
+        "early-onset-sepsis",
+        "biomarker-guided-therapy",
+        "procalcitonin",
+        "presepsin",
+        "preterm-neonates",
+        "antimicrobial-stewardship",
+        "neonatal-icu"
+      ],
+      "key_finding": "Procalcitonin and presepsin-guided antibiotic initiation did not demonstrate noninferiority compared to universal antibiotic treatment for early-onset sepsis in very preterm infants.",
+      "study_type": "rct",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Complications in Pediatric Cancer Patients With Staphylococcus aureus Bloodstream Infection",
+      "doi": "https://doi.org/10.1542/peds.2025-075263",
+      "journal": "Pediatrics",
+      "date": "2026-11-04",
+      "topics": [
+        "staphylococcus-aureus",
+        "bloodstream-infection",
+        "central-venous-catheter",
+        "pediatric-oncology",
+        "catheter-removal"
+      ],
+      "key_finding": "Central venous catheter removal was associated with fewer short-term and late complications in pediatric cancer patients with S. aureus bloodstream infections.",
+      "study_type": "cohort",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Gestational Age\u2013Associated Pathogen Distributions in Very Preterm Infants With Sepsis",
+      "doi": "https://doi.org/10.1542/peds.2026-077402",
+      "journal": "Pediatrics",
+      "date": "2026-11-12",
+      "topics": [
+        "neonatal-sepsis",
+        "gestational-age",
+        "pathogen-distribution",
+        "very-preterm-infants",
+        "empiric-therapy"
+      ],
+      "key_finding": "Pathogen distribution varies by gestational age stratum in very preterm neonates, potentially enabling precision empiric antibiotic selection.",
+      "study_type": "other",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Use of Integrase Strand Transfer Inhibitors Among Children Living With HIV in Latin America and the Caribbean",
+      "doi": "https://doi.org/10.1097/INF.0000000000005281",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11",
+      "topics": [
+        "HIV-treatment",
+        "dolutegravir",
+        "integrase-inhibitor",
+        "pediatric-antiretroviral",
+        "Latin-America-Caribbean"
+      ],
+      "key_finding": "Dolutegravir use increased from 0% to 93% among ART-na\u00efve children initiating therapy between 2016 and 2022, with longer first-regimen durability compared to other antiretrovirals.",
+      "study_type": "cohort",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Current Prognostic Models Fail to Reliably Distinguish Kawasaki Disease From Pediatric Multisystem Inflammatory Syndrome Temporally Associated With COVID-19",
+      "doi": "https://doi.org/10.1097/INF.0000000000005277",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11",
+      "topics": [
+        "Kawasaki-disease",
+        "MIS-C",
+        "diagnostic-discrimination",
+        "prognostic-scoring",
+        "pediatric-inflammation"
+      ],
+      "key_finding": "External validation of two published prognostic models failed to demonstrate reliable distinguishability between Kawasaki disease and MIS-C, with older age remaining the most consistent differentiating feature.",
+      "study_type": "case-control",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Long-Acting Lipoglycopeptides for the Treatment of Gram-Positive Infections in Children: Evidence and Real-Life Experience With Dalbavancin and Oritavancin",
+      "doi": "https://doi.org/10.1097/inf.0000000000005430",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-10-07",
+      "topics": [
+        "dalbavancin",
+        "oritavancin",
+        "gram-positive-infections",
+        "outpatient-antimicrobial-therapy",
+        "osteomyelitis",
+        "pediatric-infection"
+      ],
+      "key_finding": "Long-acting lipoglycopeptides (dalbavancin and oritavancin) offer emerging outpatient therapy options for pediatric gram-positive infections including osteomyelitis and complicated skin/soft tissue infections.",
+      "study_type": "systematic-review",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Beyond Croup: A Phenotype-Based Perspective on Parainfluenza Virus Types in Children",
+      "doi": "https://doi.org/10.1542/peds.2026-078012",
+      "journal": "Pediatrics",
+      "date": "2026-11-13",
+      "topics": [
+        "parainfluenza-virus",
+        "croup",
+        "respiratory-infection",
+        "pediatric-virology",
+        "phenotype-based-classification"
+      ],
+      "key_finding": "Parainfluenza viruses cause phenotypically distinct disease presentations by serotype (PIV-1/2 associated with croup, PIV-3 with bronchiolitis/pneumonia in infants), with type-specific severity patterns distinct from the traditional 'croup' label.",
+      "study_type": "narrative-review",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Postnatal Care\u2013Associated Echovirus 11 Infection in Malaysia",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11",
+      "topics": [
+        "echovirus-11",
+        "neonatal-enterovirus",
+        "confinement-center-outbreak",
+        "nosocomial-infection",
+        "Malaysia"
+      ],
+      "key_finding": "Echovirus 11 outbreak in postnatal care facility in Malaysia demonstrates the role of shared newborn care settings as amplifiers of neonatal enterovirus transmission.",
+      "study_type": "case-series",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "A Case Series of Vaccine-Strain Reactivation Varicella Zoster in Two Pediatric Patients Presenting With Headache and Rash",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11",
+      "topics": [
+        "varicella-zoster-virus",
+        "vaccine-strain",
+        "meningitis",
+        "herpes-zoster",
+        "immunocompetent-children"
+      ],
+      "key_finding": "Vaccine-strain varicella zoster virus reactivation can cause meningitis in immunocompetent vaccinated children and requires VZV PCR with Oka-strain genotyping for differentiation from wild-type reactivation.",
+      "study_type": "case-series",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Clinical and Epidemiologic Characteristics of Pediatric Tularemia: A Case Series With a Waterborne Cluster",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11-10",
+      "topics": [
+        "tularemia",
+        "waterborne-infection",
+        "Francisella-tularensis",
+        "pediatric-diagnosis",
+        "lymphadenopathy"
+      ],
+      "key_finding": "Pediatric tularemia presents with nonspecific fever and lymphadenopathy, with waterborne exposure clusters increasingly recognized in Turkey and Eastern Europe; requires serologic testing and PCR confirmation.",
+      "study_type": "case-series",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Clinical Epidemiology of Cyclosporiasis in Pediatric Patients With Acute Diarrheal Disease \u2014 Quind\u00edo, Colombia",
+      "doi": "https://journals.lww.com/pidj/pages/default.aspx",
+      "journal": "The Pediatric Infectious Disease Journal",
+      "date": "2026-11",
+      "topics": [
+        "cyclosporiasis",
+        "Cyclospora-cayetanensis",
+        "pediatric-diarrhea",
+        "molecular-diagnostics",
+        "endemic-region"
+      ],
+      "key_finding": "PCR-based detection significantly improves sensitivity for Cyclospora identification in pediatric diarrheal illness compared to standard O&P examination.",
+      "study_type": "cross-sectional",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Hantavirus Outbreak Caused by Andes Virus Linked to International Cruise Ship Travel \u2014 United States, 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7543a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "2026-11-05",
+      "topics": [
+        "Andes-virus",
+        "hantavirus-pulmonary-syndrome",
+        "cruise-ship-outbreak",
+        "person-to-person-transmission",
+        "Patagonia-travel"
+      ],
+      "key_finding": "An Andes virus hantavirus outbreak on cruise ship MV Hondius resulted in 11 confirmed cases and 3 deaths among passengers exposed during pre-embarkation travel in rural Argentina and Chile.",
+      "study_type": "case-series",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Lessons from Measles Resurgence, Bangladesh, 2026 \u2014 EID Perspective",
+      "doi": "https://wwwnc.cdc.gov/eid/article/32/11/26-1019_article",
+      "journal": "Emerging Infectious Diseases",
+      "date": "2026-11",
+      "topics": [
+        "measles-outbreak",
+        "vaccination-coverage",
+        "vaccine-procurement-disruption",
+        "infant-disease",
+        "Bangladesh"
+      ],
+      "key_finding": "Bangladesh measles outbreak (248,060 suspected cases as of mid-November 2026) demonstrates rapid herd immunity collapse when routine immunization infrastructure is disrupted, with 81% of cases in children under five.",
+      "study_type": "editorial",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "The First 100 Days of Five Ebola Outbreaks \u2014 Democratic Republic of the Congo, Uganda, and West Africa, 2007\u20132026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7537e1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "2026-09-24",
+      "topics": [
+        "Ebola-outbreak",
+        "Bundibugyo-virus",
+        "DRC",
+        "outbreak-epidemiology",
+        "reproduction-number"
+      ],
+      "key_finding": "The 2026 DRC Ebola outbreak showed 5,458 confirmed cases and 2,606 deaths in the first 100 days, with 7 times as many cases at 100 days compared to the 2014 West Africa outbreak.",
+      "study_type": "other",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Hepatitis A Outbreak Associated with Cuba \u2014 Florida, June 2024\u2013February 2026",
+      "doi": "https://doi.org/10.15585/mmwr.mm7537a1",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "2026-09-24",
+      "topics": [
+        "hepatitis-A",
+        "Cuba-travel",
+        "outbreak-investigation",
+        "vaccine-preventable-disease",
+        "travel-medicine"
+      ],
+      "key_finding": "A hepatitis A outbreak linked to Cuba affected 249 confirmed cases in Florida (2024\u20132026), with 79 cases (32%) confirmed as part of the Cuba-associated outbreak strain.",
+      "study_type": "case-series",
+      "digest_date": "2026-11-15"
+    },
+    {
+      "title": "Cutaneous Aspergillosis in Extremely Preterm Neonates \u2014 Michigan and New York, 2023\u20132024",
+      "doi": "",
+      "journal": "MMWR Morbidity and Mortality Weekly Report",
+      "date": "2026-11-05",
+      "topics": [
+        "aspergillus-fumigatus",
+        "cutaneous-aspergillosis",
+        "extremely-preterm-neonates",
+        "NICU-outbreak",
+        "infection-prevention"
+      ],
+      "key_finding": "Two clusters of cutaneous aspergillosis in neonatal intensive care units (Michigan: 2 cases, 50% mortality; New York: 3 cases, 0% mortality) caused by Aspergillus species warrant consideration in extremely preterm neonates with suspicious skin lesions.",
+      "study_type": "case-series",
+      "digest_date": "2026-11-15"
     }
   ]
 }

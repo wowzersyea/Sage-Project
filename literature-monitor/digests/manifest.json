@@ -1,6 +1,11 @@
 {
   "digests": [
     {
+      "date": "2026-11-15",
+      "date_range": "November 01 - November 15, 2026",
+      "generated": "November 15, 2026"
+    },
+    {
       "date": "2026-11-01",
       "date_range": "October 18 - November 01, 2026",
       "generated": "November 01, 2026"
